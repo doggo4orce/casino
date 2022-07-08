@@ -192,6 +192,8 @@ class baccarat_dealer(cards.card_dealer):
       player_third = self.hand.player[2].value
     if player_third == None:
       return banker_score in {0,1,2,3,4,5}
+    if banker_score in {0,1,2}:
+      return True
     if banker_score == 3:
       return player_third != 8
     if banker_score == 4:
@@ -220,7 +222,7 @@ def baccarat_dealer_intro(mud, me, ch, command, argument):
     return False
   
   help_str  = "Baccarat Commands:\n"
-  help_str += "  baccarat start - begin a baccarat shoe (no commitment)"
+  help_str += "  baccarat start - begin a baccarat shoe (no commitment)\n"
   
   if command == "baccarat":
     if argument.lower() == "start":
@@ -253,7 +255,7 @@ def baccarat_dealing(mud, me, ch, command, argument):
 
   if me.state == baccarat_dealer_state.BEGIN_SHOE:
     me.shoe = baccarat_shoe(1)
-    mud.echo_around(me, None, f"{me} assembles a new shoe consisting of 1 decks.\n")
+    mud.echo_around(me, None, f"{me} assembles a new shoe consisting of 1 deck.\n")
     me.state = baccarat_dealer_state.SHUFFLE_SHOE
     pause = 10
   elif me.state == baccarat_dealer_state.SHUFFLE_SHOE:
@@ -275,7 +277,7 @@ def baccarat_dealing(mud, me, ch, command, argument):
     pause = 10
   elif me.state == baccarat_dealer_state.DEAL_HAND:
     if me.shoe.size < 6:
-      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!\n")
+      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!\n", None, mud)
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
       return

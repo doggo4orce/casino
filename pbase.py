@@ -78,7 +78,7 @@ def load_char_by_name(name):
   if id_by_name(name) == None:
     logging.error(f"Error: Trying to load pfile for name {name} which is not contained in the index.")
     return False
-  with open(f"{config.PFILES_PATH}{name}.plr") as rf:
+  with open(f"{config.PFILES_PATH}{name.lower()}.plr") as rf:
     for line in rf:
       # this is essentially the one_arg behaviour. factor it
       var_list = line.split()

@@ -1,0 +1,10 @@
+name: Biff
+id: 2
+password: asdf
+title: the title-less
+room: 3001
+brief: off
+active: off
+width: 80
+length: 50
+color: 256

@@ -1,0 +1,13 @@
+#3000
+namelist: barrel beer
+name: a barrel
+ldesc: A beer barrel has been left here.
+desc: The barrel is made from old wooden planks.
+S
+#3001
+namelist: bottle beer
+name: a bottle
+ldesc: A beer bottle has been left here.
+desc: The bottle is made from dirty brown glass.
+S
+$

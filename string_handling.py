@@ -1,5 +1,5 @@
 def ana(noun):
-  if noun[0] in ['a', 'e', 'i', 'o', 'u']:
+  if noun[0].lower() in ['a', 'e', 'i', 'o', 'u']:
     return "an"
   else:
     return "a"
@@ -48,3 +48,8 @@ def paragraph(text, width, indent=False):
       par += '\r\n' + word + ' '
 
   return par
+
+def yesno(flag):
+  if flag == True:
+    return 'yes'
+  return 'no'

@@ -1,9 +1,11 @@
 import cards
+from color import *
 import commands
 import enum
 import event
 import logging
 import pc
+import string_handling
 import structs
 
 class baccarat_hand:
@@ -56,16 +58,112 @@ class baccarat_hand:
   def banker_natural(self):
     return self.banker_score() in {8,9} and len(self.banker) == 2
 
+  def ascii_render(self):
+    SPACE_BETWEEN_CARD = 1
+    SPACE_BETWEEN_PLAYER_BANKER = 3
+
+    ret_val  = "        Player:                     Banker:\r\n"
+
+    if len(self) == 4:
+      ret_val += "   +-----+   +-----+           +-----+   +-----+\r\n"
+      ret_val += "   |{}   |   |{}   |           |{}   |   |{}   |\r\n".format(
+        self.player[0].card_color() + self.player[0].card_rank_abbrev().ljust(2) + NORMAL,
+        self.player[1].card_color() + self.player[1].card_rank_abbrev().ljust(2) + NORMAL,
+        self.banker[0].card_color() + self.banker[0].card_rank_abbrev().ljust(2) + NORMAL,
+        self.banker[1].card_color() + self.banker[1].card_rank_abbrev().ljust(2) + NORMAL)
+      ret_val += "   |{}|   |{}|           |{}|   |{}|\r\n".format(
+        self.player[0].card_color() + self.player[0].card_suit_abbrev_5() + NORMAL,
+        self.player[1].card_color() + self.player[1].card_suit_abbrev_5() + NORMAL,
+        self.banker[0].card_color() + self.banker[0].card_suit_abbrev_5() + NORMAL,
+        self.banker[1].card_color() + self.banker[1].card_suit_abbrev_5() + NORMAL)
+      ret_val += "   |   {}|   |   {}|           |   {}|   |   {}|\r\n".format(
+        self.player[0].card_color() + self.player[0].card_rank_abbrev().rjust(2) + NORMAL,
+        self.player[1].card_color() + self.player[1].card_rank_abbrev().rjust(2) + NORMAL,
+        self.banker[0].card_color() + self.banker[0].card_rank_abbrev().rjust(2) + NORMAL,
+        self.banker[1].card_color() + self.banker[1].card_rank_abbrev().rjust(2) + NORMAL)
+      ret_val += "   +-----+   +-----+           +-----+   +-----+"
+    elif len(self) == 5:
+      if len(self.player) == 3:
+        ret_val += "+-----+ +-----+ +-----+        +-----+   +-----+\r\n"
+        ret_val += "|{}   | |{}   | |{}   |        |{}   |   |{}   |\r\n".format(
+          self.player[0].card_color() + self.player[0].card_rank_abbrev().ljust(2) + NORMAL,
+          self.player[1].card_color() + self.player[1].card_rank_abbrev().ljust(2) + NORMAL,
+          self.player[2].card_color() + self.player[2].card_rank_abbrev().ljust(2) + NORMAL,
+          self.banker[0].card_color() + self.banker[0].card_rank_abbrev().ljust(2) + NORMAL,
+          self.banker[1].card_color() + self.banker[1].card_rank_abbrev().ljust(2) + NORMAL)
+        ret_val += "|{}| |{}| |{}|        |{}|   |{}|\r\n".format(
+          self.player[0].card_color() + self.player[0].card_suit_abbrev_5() + NORMAL,
+          self.player[1].card_color() + self.player[1].card_suit_abbrev_5() + NORMAL,
+          self.player[2].card_color() + self.player[2].card_suit_abbrev_5() + NORMAL,
+          self.banker[0].card_color() + self.banker[0].card_suit_abbrev_5() + NORMAL,
+          self.banker[1].card_color() + self.banker[1].card_suit_abbrev_5() + NORMAL)
+        ret_val += "|   {}| |   {}| |   {}|        |   {}|   |   {}|\r\n".format(
+          self.player[0].card_color() + self.player[0].card_rank_abbrev().rjust(2) + NORMAL,
+          self.player[1].card_color() + self.player[1].card_rank_abbrev().rjust(2) + NORMAL,
+          self.player[2].card_color() + self.player[2].card_rank_abbrev().rjust(2) + NORMAL,
+          self.banker[0].card_color() + self.banker[0].card_rank_abbrev().rjust(2) + NORMAL,
+          self.banker[1].card_color() + self.banker[1].card_rank_abbrev().rjust(2) + NORMAL)
+        ret_val += "+-----+ +-----+ +-----+        +-----+   +-----+\r\n"
+      else:
+        ret_val += "   +-----+   +-----+        +-----+ +-----+ +-----+\r\n"
+        ret_val += "   |{}   |   |{}   |        |{}   | |{}   | |{}   |\r\n".format(
+          self.player[0].card_color() + self.player[0].card_rank_abbrev().ljust(2) + NORMAL,
+          self.player[1].card_color() + self.player[1].card_rank_abbrev().ljust(2) + NORMAL,
+          self.banker[0].card_color() + self.banker[0].card_rank_abbrev().ljust(2) + NORMAL,
+          self.banker[1].card_color() + self.banker[1].card_rank_abbrev().ljust(2) + NORMAL,
+          self.banker[2].card_color() + self.banker[2].card_rank_abbrev().ljust(2) + NORMAL)
+        ret_val += "   |{}|   |{}|        |{}| |{}| |{}|\r\n".format(
+          self.player[0].card_color() + self.player[0].card_suit_abbrev_5() + NORMAL,
+          self.player[1].card_color() + self.player[1].card_suit_abbrev_5() + NORMAL,
+          self.banker[0].card_color() + self.banker[0].card_suit_abbrev_5() + NORMAL,
+          self.banker[1].card_color() + self.banker[1].card_suit_abbrev_5() + NORMAL,
+          self.banker[2].card_color() + self.banker[2].card_suit_abbrev_5() + NORMAL)
+        ret_val += "   |   {}|   |   {}|        |   {}| |   {}| |   {}|\n".format(
+          self.player[0].card_color() + self.player[0].card_rank_abbrev().rjust(2) + NORMAL,
+          self.player[1].card_color() + self.player[1].card_rank_abbrev().rjust(2) + NORMAL,
+          self.banker[0].card_color() + self.banker[0].card_rank_abbrev().rjust(2) + NORMAL,
+          self.banker[1].card_color() + self.banker[1].card_rank_abbrev().rjust(2) + NORMAL,
+          self.banker[2].card_color() + self.banker[2].card_rank_abbrev().rjust(2) + NORMAL)
+        ret_val += "   +-----+   +-----+        +-----+ +-----+ +-----+\r\n"
+    elif len(self) == 6:
+      ret_val += "+-----+ +-----+ +-----+     +-----+ +-----+ +-----+\r\n"
+      ret_val += "|{}   | |{}   | |{}   |     |{}   | |{}   | |{}   |\r\n".format(
+        self.player[0].card_color() + self.player[0].card_rank_abbrev().ljust(2) + NORMAL,
+        self.player[1].card_color() + self.player[1].card_rank_abbrev().ljust(2) + NORMAL,
+        self.player[2].card_color() + self.player[2].card_rank_abbrev().ljust(2) + NORMAL,
+        self.banker[0].card_color() + self.banker[0].card_rank_abbrev().ljust(2) + NORMAL,
+        self.banker[1].card_color() + self.banker[1].card_rank_abbrev().ljust(2) + NORMAL,
+        self.banker[2].card_color() + self.banker[2].card_rank_abbrev().ljust(2) + NORMAL)
+      ret_val += "|{}| |{}| |{}|     |{}| |{}| |{}|\n".format(
+        self.player[0].card_color() + self.player[0].card_suit_abbrev_5() + NORMAL,
+        self.player[1].card_color() + self.player[1].card_suit_abbrev_5() + NORMAL,
+        self.player[2].card_color() + self.player[2].card_suit_abbrev_5() + NORMAL,
+        self.banker[0].card_color() + self.banker[0].card_suit_abbrev_5() + NORMAL,
+        self.banker[1].card_color() + self.banker[1].card_suit_abbrev_5() + NORMAL,
+        self.banker[2].card_color() + self.banker[2].card_suit_abbrev_5() + NORMAL)
+      ret_val += "|   {}| |   {}| |   {}|     |   {}| |   {}| |   {}|\r\n".format(
+        self.player[0].card_color() + self.player[0].card_rank_abbrev().rjust(2) + NORMAL,
+        self.player[1].card_color() + self.player[1].card_rank_abbrev().rjust(2) + NORMAL,
+        self.player[2].card_color() + self.player[2].card_rank_abbrev().rjust(2) + NORMAL,
+        self.banker[0].card_color() + self.banker[0].card_rank_abbrev().rjust(2) + NORMAL,
+        self.banker[1].card_color() + self.banker[1].card_rank_abbrev().rjust(2) + NORMAL,
+        self.banker[2].card_color() + self.banker[2].card_rank_abbrev().rjust(2) + NORMAL)
+      ret_val += "+-----+ +-----+ +-----+     +-----+ +-----+ +-----+"
+    else:
+      ret_val = "Nothing has been dealt yet!"
+
+    return ret_val
+
   def __len__(self):
     return len(self.player) + len(self.banker)
 
   def __str__(self):
-    ret_val = f"Banker has {len(self.banker)} cards:\n"
+    ret_val = f"Banker has {len(self.banker)} cards:\r\n"
     for card in self.banker:
       ret_val += f"{card}\n"
-    ret_val += f"Player has {len(self.player)} cards.\n"
+    ret_val += f"Player has {len(self.player)} cards.\r\n"
     for card in self.player:
-      ret_val += f"{card}\n"
+      ret_val += f"{card}\r\n"
     return ret_val
 
 def baccarat_deck():
@@ -95,17 +193,25 @@ def baccarat_shoe(num_decks):
   return shoe
 
 class baccarat_dealer_state(enum.IntEnum):
-  IDLE          = 1
-  BEGIN_SHOE    = 2
-  SHUFFLE_SHOE  = 3
-  FIRST_DRAW    = 4
-  BURN_CARDS    = 5
-  DEAL_HAND     = 6
-  SHOW_INITIAL  = 7
-  CHECK_NATURAL = 8
-  CHECK_PLAYER  = 9
-  CHECK_BANKER  = 10
-  REPORT_WINNER = 11
+  IDLE                = 1
+  BEGIN_SHOE          = 2
+  SHUFFLE_SHOE        = 3
+  FIRST_DRAW          = 4
+  BURN_CARDS          = 5
+  PLAYER_FIRST        = 6
+  BANKER_FIRST        = 7
+  PLAYER_SECOND       = 8
+  BANKER_SECOND       = 9 
+  SHOW_INITIAL        = 10
+  CHECK_NATURAL       = 11
+  CHECK_PLAYER        = 12
+  DEAL_PLAYER_THIRD   = 13
+  UPDATE_PLAYER_THIRD = 14
+  CHECK_BANKER        = 15
+  DEAL_BANKER_THIRD   = 16
+  UPDATE_BANKER_THIRD = 17
+  REPORT_WINNER       = 18
+  CLEAR_CARDS         = 19
 
 class baccarat_dealer_report(enum.IntEnum):
   CARD_PLAYER    = 1
@@ -207,9 +313,10 @@ class baccarat_dealer(cards.card_dealer):
     return False
 
 """Special Procedures for the Baccarat dealer:
-   
+
    baccarat_dealer_intro()  <- called as a basic response to a greeting
    baccarat_syntax_parser() <- handles all syntax associated with the baccarat game
+   baccarat_table_render()  <- renders a snapshot of the current hand in ascii
    baccarat_dealing()       <- handles the baccarat game"""
 
 def baccarat_dealer_intro(mud, me, ch, command, argument):
@@ -224,21 +331,36 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
-  help_str  = "Baccarat Commands:\n"
-  help_str += "  baccarat start - begin a baccarat shoe (no commitment)\n"
+  help_str  = "Baccarat Commands:\r\n"
+  help_str += "  baccarat start - begin a baccarat shoe (no commitment)\r\n"
   if command == "baccarat":
     if argument.lower() == "start":
       if me.state != baccarat_dealer_state.IDLE:
-        commands.do_say(me, None, "Excuse me, there is already a game in progress.", None, mud)
+        ch.write("There is already a game in progress!\r\n")
         return structs.command_trigger_messages.BLOCK_INTERPRETER
-      commands.do_say(me, None, f"OK, I'm starting a shoe.  Don't try to interact with me until it's over!", None, mud)
-
+      ch.write("You signal to the dealer to start the next shoe.\r\n")
+      me.paused = True
       me.state = baccarat_dealer_state.BEGIN_SHOE
+      mud.events.add_event(event.event(me, unpause_dealer, None, 30))
     else:
       ch.write(help_str)
     return structs.command_trigger_messages.BLOCK_INTERPRETER
 
+def baccarat_table_render(mud, me, ch, command, argument):
+  if not isinstance(me, baccarat_dealer):
+    logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
+    return
+
+  if command == "table":
+    if me.hand == None:
+      ch.write("The table is empty.\r\n")
+    else:
+      ch.write(me.hand.ascii_render() + "\r\n")
+    return structs.command_trigger_messages.BLOCK_INTERPRETER
+
 def baccarat_dealing(mud, me):
+  NUM_DECKS = 6
+
   if me.state == baccarat_dealer_state.IDLE:
     return
   if me.paused:
@@ -249,28 +371,32 @@ def baccarat_dealing(mud, me):
   me.paused = True
   pause = 0
   if me.state == baccarat_dealer_state.BEGIN_SHOE:
-    me.shoe = baccarat_shoe(1)
-    mud.echo_around(me, None, f"{me} assembles a new shoe consisting of 1 deck.\n")
+    me.shoe = baccarat_shoe(NUM_DECKS)
+    mud.echo_around(me, None, f"{me} assembles a new shoe consisting of {NUM_DECKS} deck{'s' if NUM_DECKS > 0 else ' '}.\r\n")
     me.state = baccarat_dealer_state.SHUFFLE_SHOE
-    pause = 10
+    pause = 30
   elif me.state == baccarat_dealer_state.SHUFFLE_SHOE:
     me.shuffle()
-    mud.echo_around(me, None, f"{me} shuffles the shoe.\n")
+    mud.echo_around(me, None, f"{me} shuffles the shoe.\r\n")
     me.state = baccarat_dealer_state.FIRST_DRAW
-    pause = 10
+    pause = 30
   elif me.state == baccarat_dealer_state.FIRST_DRAW:
     first_card = me.draw()
     me.initial_card_val = first_card.value
-    mud.echo_around(me, None, f"{me} draws and reveals the first card ({first_card.ascii_rep()}).\n")
+    mud.echo_around(me, None, "{} draws and reveals the first card, which is {} {}.\r\n".format(
+      me,
+      string_handling.ana(cards.card_rank(first_card.rank).name),
+      first_card.text_rep()
+      ))
     me.state = baccarat_dealer_state.BURN_CARDS
-    pause = 10
+    pause = 30
   elif me.state == baccarat_dealer_state.BURN_CARDS:
     for j in range(0, me.initial_card_val):
       me.draw()
     mud.echo_around(me, None, f"{me} burns {me.initial_card_val} cards.\n")
-    me.state = baccarat_dealer_state.DEAL_HAND
-    pause = 10
-  elif me.state == baccarat_dealer_state.DEAL_HAND:
+    me.state = baccarat_dealer_state.PLAYER_FIRST
+    pause = 30
+  elif me.state == baccarat_dealer_state.PLAYER_FIRST:
     if me.shoe.size < 6:
       commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud)
       me.shoe = None
@@ -278,56 +404,101 @@ def baccarat_dealing(mud, me):
       me.paused = False
       return
     me.hand = baccarat_hand()
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player').ascii_rep()}) to the player.\n")
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('banker').ascii_rep()}) to the banker.\n")
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player').ascii_rep()}) to the player.\n")
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('banker').ascii_rep()}) to the banker.\n")
+    me.deal_next_card('player')
+    mud.echo_around(me, None, f"{me} deals a card to the player.\r\n")
+    me.state = baccarat_dealer_state.BANKER_FIRST
+    pause = 10
+  elif me.state == baccarat_dealer_state.BANKER_FIRST:
+    me.deal_next_card('banker')
+    mud.echo_around(me, None, f"{me} deals a card to the banker.\r\n")
+    me.state = baccarat_dealer_state.PLAYER_SECOND
+    pause = 10
+  elif me.state == baccarat_dealer_state.PLAYER_SECOND:
+    me.deal_next_card('player')
+    mud.echo_around(me, None, f"{me} deals a card to the player.\r\n")
+    me.state = baccarat_dealer_state.BANKER_SECOND
+    pause = 10
+  elif me.state == baccarat_dealer_state.BANKER_SECOND:
+    me.deal_next_card('banker')
+    mud.echo_around(me, None, f"{me} deals a card to the banker.\r\n")
     me.state = baccarat_dealer_state.SHOW_INITIAL
     pause = 10
   elif me.state == baccarat_dealer_state.SHOW_INITIAL:
+    mud.echo_around(me, None, me.hand.ascii_render() + "\n\n")
     commands.do_say(me, None, f"Player shows {me.hand.player_score()}. Banker shows {me.hand.banker_score()}.", None, mud)
     me.state = baccarat_dealer_state.CHECK_NATURAL
-    pause = 10
+    pause = 60
   elif me.state == baccarat_dealer_state.CHECK_NATURAL:
     if me.hand.player_natural():
-      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more draw.", None, mud)
+      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more draws.", None, mud)
       me.state = baccarat_dealer_state.REPORT_WINNER
-      pause = 10
+      pause = 30
     elif me.hand.banker_natural():
-      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more draw.", None, mud)
+      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more draws.", None, mud)
       me.state = baccarat_dealer_state.REPORT_WINNER
-      pause = 10
+      pause = 30
     else:
       me.state = baccarat_dealer_state.CHECK_PLAYER
-      pause = 10 # already paused before checking naturals
+      pause = 30
   elif me.state == baccarat_dealer_state.CHECK_PLAYER:
     if me.check_player_third():
       commands.do_say(me, None, "Card for player.", None, mud)
-      mud.echo_around(me, None, f"{me} deals a card ({me.deal_next_card('player').ascii_rep()}) to the player.\n")
+      me.state = baccarat_dealer_state.DEAL_PLAYER_THIRD
     else:
       commands.do_say(me, None, "Player stands.", None, mud)
-    me.state = baccarat_dealer_state.CHECK_BANKER
+      me.state = baccarat_dealer_state.CHECK_BANKER
     pause = 10
+  elif me.state == baccarat_dealer_state.DEAL_PLAYER_THIRD:
+    player_third = me.deal_next_card('player')
+    mud.echo_around(me, None, "{} deals {} {} to the player.\r\n".format(
+      me,
+      string_handling.ana(cards.card_rank(player_third.rank).name),
+      player_third.text_rep()
+      ))
+    me.state = baccarat_dealer_state.UPDATE_PLAYER_THIRD
+    pause = 10
+  elif me.state == baccarat_dealer_state.UPDATE_PLAYER_THIRD:
+    mud.echo_around(me, None, "\n" + me.hand.ascii_render() + "\r\n")
+    me.state = baccarat_dealer_state.CHECK_BANKER
+    pause = 60
   elif me.state == baccarat_dealer_state.CHECK_BANKER:
     if me.check_banker_third():
       commands.do_say(me, None, "Card for banker.", None, mud)
-      mud.echo_around(me, None, f"{me} deals a card ({me.deal_next_card('banker').ascii_rep()}) to the banker.\n")
+      me.state = baccarat_dealer_state.DEAL_BANKER_THIRD
+      pause = 10
     else:
       commands.do_say(me, None, "Banker stands.", None, mud)
-    me.state = baccarat_dealer_state.REPORT_WINNER
+      me.state = baccarat_dealer_state.REPORT_WINNER
+      pause = 30
+  elif me.state == baccarat_dealer_state.DEAL_BANKER_THIRD:
+    banker_third = me.deal_next_card('banker')
+    mud.echo_around(me, None, "{} deals {} {} to the banker.\r\n".format(
+      me,
+      string_handling.ana(cards.card_rank(banker_third.rank).name),
+      banker_third.text_rep()
+      ))
+    me.state = baccarat_dealer_state.UPDATE_BANKER_THIRD
     pause = 10
+  elif me.state == baccarat_dealer_state.UPDATE_BANKER_THIRD:
+    mud.echo_around(me, None, "\n" + me.hand.ascii_render() + "\r\n")
+    me.state = baccarat_dealer_state.REPORT_WINNER
+    pause = 60
   elif me.state == baccarat_dealer_state.REPORT_WINNER:
     if me.hand.player_score() > me.hand.banker_score():
       commands.do_say(me, None, f"Player wins {me.hand.player_score()} over {me.hand.banker_score()}.", None, mud)
     elif me.hand.player_score() < me.hand.banker_score():
       commands.do_say(me, None, f"Banker wins {me.hand.banker_score()} over {me.hand.player_score()}.", None, mud)
     else:
-      commands.do_say(me, None, f"Player and banker tie!\n", None, mud)
+      commands.do_say(me, None, f"Player and banker tie!", None, mud)
     me.hand = None
-    me.state = baccarat_dealer_state.DEAL_HAND
+    me.state = baccarat_dealer_state.CLEAR_CARDS
     pause = 60
+  elif me.state == baccarat_dealer_state.CLEAR_CARDS:
+    mud.echo_around(me, None, f"{me} clears the cards from the table.\n")
+    me.state = baccarat_dealer_state.PLAYER_FIRST
+    pause = 120
   if pause != 0:
-    mud.events.add_event(event.event(me, dealer_ready, None, pause))
+    mud.events.add_event(event.event(me, unpause_dealer, None, pause))
   return
 
 """This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.
@@ -336,5 +507,16 @@ def baccarat_dealing(mud, me):
      the_dealer.paused=True
 
    and then attach to it an event which calls this function with a countdown of 30."""
-def dealer_ready(ch, mud):
+def unpause_dealer(ch, mud):
   ch.paused = False
+
+if __name__ == '__main__':
+  test_hand = baccarat_hand()
+
+  test_hand.add_card(cards.card(cards.card_suit.SPADES, cards.card_rank.KING, 10), "player")
+  test_hand.add_card(cards.card(cards.card_suit.HEARTS, cards.card_rank.QUEEN, 10), "player")
+  test_hand.add_card(cards.card(cards.card_suit.SPADES, cards.card_rank.JACK, 10), "banker")
+  test_hand.add_card(cards.card(cards.card_suit.SPADES, cards.card_rank.FIVE, 5), "banker")
+  test_hand.add_card(cards.card(cards.card_suit.DIAMONDS, cards.card_rank.TEN, 10), "player")
+
+  print(test_hand.ascii_render() + "\n")

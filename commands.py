@@ -1,3 +1,4 @@
+import baccarat
 import descriptor
 import logging
 import math
@@ -396,7 +397,11 @@ def show_char_to_char(ch, tch):
     out_buf += "  Nothing.\r\n"
 
   if ch.prefs.debug_mode == 'on':
-    out_buf += f"\nType: {type(tch)}\n"
+    out_buf += "\r\nDebug Info:"
+    out_buf += f"\nType: {type(tch)}\r\n"
+    if type(tch) == baccarat.baccarat_dealer:
+      out_buf += f"State: {baccarat.baccarat_dealer_state(tch.state).name}\r\n"
+      out_buf += f"Paused: {string_handling.yesno(tch.paused)}"
 
   ch.write(out_buf)
 

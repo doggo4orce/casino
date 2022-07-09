@@ -5,10 +5,10 @@ import pc
 import random
 
 class card_suit(enum.IntEnum):
-  SPADE   = 0
-  HEART   = 1
-  CLUB    = 2
-  DIAMOND = 3
+  SPADES   = 0
+  HEARTS   = 1
+  CLUBS    = 2
+  DIAMONDS = 3
 
 class card_rank(enum.IntEnum):
   ACE   = 1
@@ -63,21 +63,45 @@ class card:
     else:
       return self.rank.name[0] # J, Q, or K
 
+  def card_color(self):
+    if self.suit in {card_suit.SPADES, card_suit.CLUBS}:
+      return DARK_GRAY
+    else:
+      return RED
+
+  def card_rank_abbrev(self):
+    if self.rank in {2,3,4,5,6,7,8,9}:
+      return str(int(self.rank))
+    elif self.rank == 10:
+      return '10'
+    else:
+      return self.rank.name[0] # J, Q, or K
+
+  def card_suit_abbrev_5(self):
+    if self.suit == card_suit.SPADES:
+      return "SPADE"
+    if self.suit == card_suit.CLUBS:
+      return "CLUBS"
+    if self.suit == card_suit.HEARTS:
+      return "HEART"
+    if self.suit == card_suit.DIAMONDS:
+      return "DIAMD"
+
   def ascii_suit(self):
-    if self.suit == card_suit.SPADE:
+    if self.suit == card_suit.SPADES:
       return "\U00002660"
-    if self.suit == card_suit.CLUB:
+    if self.suit == card_suit.CLUBS:
       return "\U00002663"
-    if self.suit == card_suit.HEART:
+    if self.suit == card_suit.HEARTS:
       return "\U00002665"
-    if self.suit == card_suit.DIAMOND:
+    if self.suit == card_suit.DIAMONDS:
       return "\U00002666"
 
+  def text_rep(self):
+    return card_rank(self.rank).name.lower() + " of " + card_suit(self.suit).name.lower()
+
   def ascii_rep(self):
-    if self.suit in {card_suit.SPADE, card_suit.CLUB}:
-      return DARK_GRAY + self.ascii_rank() + self.ascii_suit() + NORMAL
-    else:
-      return RED + self.ascii_rank() + self.ascii_suit() + NORMAL
+    return self.card_color() + self.ascii_rank() + self.ascii_suit() + NORMAL
 
   def __str__(self):
     return f"{card_rank(self.rank).name} of {card_suit(self.suit).name}"

@@ -96,12 +96,10 @@ class room:
     tch = self.pc_by_name(name)
     if tch != None:
       return tch
-
     # if nothing found, then check for npc
     tch = self.npc_by_alias(name)
     if tch != None:
       return tch
-
     # by now we have nothing
     return None
 

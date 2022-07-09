@@ -1,4 +1,5 @@
 import collections
+from color import *
 import enum
 import pc
 import random
@@ -53,6 +54,30 @@ class card:
   @value.setter
   def value(self, new_value):
     self._rank = new_value
+
+  def ascii_rank(self):
+    if self.rank in {2,3,4,5,6,7,8,9}:
+      return str(int(self.rank))
+    elif self.rank == 10:
+      return '10'
+    else:
+      return self.rank.name[0] # J, Q, or K
+
+  def ascii_suit(self):
+    if self.suit == card_suit.SPADE:
+      return "\U00002660"
+    if self.suit == card_suit.CLUB:
+      return "\U00002663"
+    if self.suit == card_suit.HEART:
+      return "\U00002665"
+    if self.suit == card_suit.DIAMOND:
+      return "\U00002666"
+
+  def ascii_rep(self):
+    if self.suit in {card_suit.SPADE, card_suit.CLUB}:
+      return DARK_GRAY + self.ascii_rank() + self.ascii_suit() + NORMAL
+    else:
+      return RED + self.ascii_rank() + self.ascii_suit() + NORMAL
 
   def __str__(self):
     return f"{card_rank(self.rank).name} of {card_suit(self.suit).name}"

@@ -261,7 +261,7 @@ def baccarat_dealing(mud, me):
   elif me.state == baccarat_dealer_state.FIRST_DRAW:
     first_card = me.draw()
     me.initial_card_val = first_card.value
-    mud.echo_around(me, None, f"{me} draws and reveals the first card ({first_card}).\n")
+    mud.echo_around(me, None, f"{me} draws and reveals the first card ({first_card.ascii_rep()}).\n")
     me.state = baccarat_dealer_state.BURN_CARDS
     pause = 10
   elif me.state == baccarat_dealer_state.BURN_CARDS:
@@ -278,10 +278,10 @@ def baccarat_dealing(mud, me):
       me.paused = False
       return
     me.hand = baccarat_hand()
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player')}) to the player.\n")
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('banker')}) to the banker.\n")
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player')}) to the player.\n")
-    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('banker')}) to the banker.\n")
+    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player').ascii_rep()}) to the player.\n")
+    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('banker').ascii_rep()}) to the banker.\n")
+    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player').ascii_rep()}) to the player.\n")
+    mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('banker').ascii_rep()}) to the banker.\n")
     me.state = baccarat_dealer_state.SHOW_INITIAL
     pause = 10
   elif me.state == baccarat_dealer_state.SHOW_INITIAL:
@@ -290,11 +290,11 @@ def baccarat_dealing(mud, me):
     pause = 10
   elif me.state == baccarat_dealer_state.CHECK_NATURAL:
     if me.hand.player_natural():
-      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more cards.", None, mud)
+      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more draw.", None, mud)
       me.state = baccarat_dealer_state.REPORT_WINNER
       pause = 10
     elif me.hand.banker_natural():
-      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more cards.", None, mud)
+      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more draw.", None, mud)
       me.state = baccarat_dealer_state.REPORT_WINNER
       pause = 10
     else:
@@ -303,7 +303,7 @@ def baccarat_dealing(mud, me):
   elif me.state == baccarat_dealer_state.CHECK_PLAYER:
     if me.check_player_third():
       commands.do_say(me, None, "Card for player.", None, mud)
-      mud.echo_around(me, None, f"{me} deals a card ({me.deal_next_card('player')}) to the player.\n")
+      mud.echo_around(me, None, f"{me} deals a card ({me.deal_next_card('player').ascii_rep()}) to the player.\n")
     else:
       commands.do_say(me, None, "Player stands.", None, mud)
     me.state = baccarat_dealer_state.CHECK_BANKER
@@ -311,7 +311,7 @@ def baccarat_dealing(mud, me):
   elif me.state == baccarat_dealer_state.CHECK_BANKER:
     if me.check_banker_third():
       commands.do_say(me, None, "Card for banker.", None, mud)
-      mud.echo_around(me, None, f"{me} deals a card ({me.deal_next_card('banker')}) to the banker.\n")
+      mud.echo_around(me, None, f"{me} deals a card ({me.deal_next_card('banker').ascii_rep()}) to the banker.\n")
     else:
       commands.do_say(me, None, "Banker stands.", None, mud)
     me.state = baccarat_dealer_state.REPORT_WINNER

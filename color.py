@@ -10,3 +10,4 @@ WHITE   = "\x1B[37m"
 
 # extended 256 colors
 ORANGE = u"\u001b[38;5;208m"
+DARK_GRAY = u"\u001b[38;5;246m"

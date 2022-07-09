@@ -58,7 +58,7 @@ class card:
     return f"{card_rank(self.rank).name} of {card_suit(self.suit).name}"
 
 class shoe:
-  """Creates a new shoe (may be thought of as a deck but need not be)
+  """Creates a new shoe (may be thought of as a deck but is more general)
      contents = a double-ended queue containing the cards in the shoe"""
   def __init__(self):
     self._contents = collections.deque()

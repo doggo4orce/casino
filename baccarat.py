@@ -4,6 +4,7 @@ import enum
 import event
 import logging
 import pc
+import structs
 
 class baccarat_hand:
   def __init__(self):
@@ -157,7 +158,7 @@ class baccarat_dealer(cards.card_dealer):
     ret_val.inventory = dealer.inventory
     # copy npc attributes
     ret_val.vnum = dealer.vnum
-    ret_val.spec = dealer.spec
+    ret_val.specs = dealer.specs
     ret_val.hand = baccarat_hand()
     ret_val.state = baccarat_dealer_state.IDLE
     # copy dealer attributes
@@ -212,47 +213,37 @@ def dealer_ready(ch, mud):
 def baccarat_dealer_intro(mud, me, ch, command, argument):
   if ch == None:
     return
-
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
-    return False
-
+    return
   if command == "say" and argument.lower() == "hi":
     mud.events.add_event(event.speech_event(me, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, 10))
-    return False
-  
+    return
   help_str  = "Baccarat Commands:\n"
   help_str += "  baccarat start - begin a baccarat shoe (no commitment)\n"
-  
   if command == "baccarat":
     if argument.lower() == "start":
       if me.state != baccarat_dealer_state.IDLE:
         commands.do_say(me, None, "Excuse me, there is already a game in progress.", None, mud)
-        return True
-
+        return {structs.spec_proc_features.BLOCK_INTERPRETER}
       commands.do_say(me, None, "OK, I'm starting a shoe.  Don't try to interact with me until it's over!", None, mud)
       me.state = baccarat_dealer_state.BEGIN_SHOE
     else:
       ch.write(help_str)
-    return True
+    return {structs.spec_proc_features.BLOCK_INTERPRETER}
 
 def baccarat_dealing(mud, me, ch, command, argument):
   if ch != None:
-    return False
-
+    return
   if me.state == baccarat_dealer_state.IDLE:
     return
-
   if me.paused:
     return
-
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealing' on npc {me}.")
     return
-
   me.paused = True
   pause = 0
-
   if me.state == baccarat_dealer_state.BEGIN_SHOE:
     me.shoe = baccarat_shoe(1)
     mud.echo_around(me, None, f"{me} assembles a new shoe consisting of 1 deck.\n")
@@ -277,11 +268,10 @@ def baccarat_dealing(mud, me, ch, command, argument):
     pause = 10
   elif me.state == baccarat_dealer_state.DEAL_HAND:
     if me.shoe.size < 6:
-      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!\n", None, mud)
+      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud)
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
       return
-
     me.hand = baccarat_hand()
     mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player')}) to the player.\n")
     mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('banker')}) to the banker.\n")
@@ -331,71 +321,6 @@ def baccarat_dealing(mud, me, ch, command, argument):
     me.hand = None
     me.state = baccarat_dealer_state.DEAL_HAND
     pause = 60
-
   if pause != 0:
     mud.events.add_event(event.event(me, dealer_ready, None, pause))
-
-
-if __name__ == '__main__':
-  the_shoe = baccarat_shoe(1)
-  the_dealer = baccarat_dealer()
-  the_dealer.entity.name = "the dealer"
-
-  print(f"{the_dealer} assembles a new shoe.\n")
-  the_dealer.shoe = the_shoe
-  the_dealer.state = baccarat_dealer_state.SHUFFLE_SHOE
-
-  print(f"{the_dealer} shuffles the shoe.\n")
-  the_dealer.shuffle()
-  the_dealer.state = baccarat_dealer_state.FIRST_DRAW
-
-  print(f"{the_dealer} draws and reveals the first card.\n")
-  first_card = the_dealer.draw()
-  print(f"A {first_card} is drawn.\n")
-  the_dealer.initial_card_val = first_card.value
-  the_dealer.state = baccarat_dealer_state.BURN_CARDS
-
-  for j in range(0, the_dealer.initial_card_val):
-    print(f"{the_dealer} burns a card.")
-    the_dealer.draw() # discard return value
-  print("")
-  the_dealer.state = baccarat_dealer_state.DEAL_HAND
-
-  print(f"{the_dealer} deals a card ({the_dealer.deal_next_card('player')}) to the player.")
-  print(f"{the_dealer} deals a card ({the_dealer.deal_next_card('banker')}) to the banker.")
-  print(f"{the_dealer} deals a card ({the_dealer.deal_next_card('player')}) to the player.")
-  print(f"{the_dealer} deals a card ({the_dealer.deal_next_card('banker')}) to the banker.\n")
-  the_dealer.state = baccarat_dealer_state.SHOW_INITIAL
-
-  print("Score:")
-  print(f"Player: {the_dealer.hand.player_score()}.")
-  print(f"Banker: {the_dealer.hand.banker_score()}.\n")
-  the_dealer.state = baccarat_dealer_state.CHECK_NATURAL
-
-  if the_dealer.hand.player_natural():
-    print(f"Player shows natural {the_dealer.hand.player_score()}.  No more cards.")
-    the_dealer.state = baccarat_dealer_state.REPORT_WINNER
-    exit()
-  elif the_dealer.hand.banker_natural():
-    print(f"Banker shows natural {the_dealer.hand.banker_score()}.  No more cards.")
-    the_dealer.state = baccarat_dealer_state.REPORT_WINNER
-    exit()
-  the_dealer.state = baccarat_dealer_state.CHECK_PLAYER
-
-  if the_dealer.check_player_third():
-    print("Card for player.")
-    print(f"{the_dealer} deals a card ({the_dealer.deal_next_card('player')}) to the player.\n")
-  else:
-    print("Player stands.")
-  the_dealer.state = baccarat_dealer_state.CHECK_BANKER
-
-  if the_dealer.check_banker_third():
-    print("Card for banker.")
-    print(f"{the_dealer} deals a card ({the_dealer.deal_next_card('banker')}) to the banker.\n")
-  else:
-    print("Banker stands.")
-  the_dealer.state = baccarat_dealer_state.REPORT_WINNER
-
-
-
-
+  return

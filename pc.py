@@ -11,33 +11,40 @@ import structs
 class character:
   #Creates a new char(acter) which can act within the world.
   def __init__(self):
-    self.entity     = structs.entity()
+    self._entity     = structs.entity()
     self._inventory = object.inventory()
 
   # Getters
+  @property
+  def entity(self):
+    return self._entity
+  @property
+  def inventory(self):
+    return self._inventory
   @property
   def ldesc(self):
     return self.entity.ldesc
   @property
   def room(self):
     return self.entity.room
-  @property
-  def inventory(self):
-    return self._inventory
+
   @property
   def name(self):
     return self.entity.name
   
   # Setters
+  @entity.setter
+  def entity(self, new_ent):
+    self._entity = new_ent
+  @inventory.setter
+  def inventory(self, new_inv):
+    self._inventory = new_inv
   @name.setter
   def name(self, new_name):
     self.entity.name = new_name
   @room.setter
   def room(self, new_room):
     self.entity.room = new_room
-  @inventory.setter
-  def inventory(self, new_inv):
-    self._inventory = new_inv
 
   def write(self, message):
     logging.warning(f"Attempting to send message {message} to non-PC character {self.entity.name}")
@@ -77,7 +84,6 @@ class pc(character):
   @property
   def prefs(self):
     return self._prefs
-
   @property
   def ldesc(self):
     out_str = f"{self} {self.title}"
@@ -100,6 +106,10 @@ class pc(character):
   def id(self, new_id):
     self._id = new_id
 
+  """update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
+     save_char()           <- saves character data to player file
+     write(msg)            <- sends msg to descriptor controlling self"""
+
   def update_pref(self, attr_str, new_val):
     if hasattr(self._prefs, attr_str):
       setattr(self._prefs, attr_str, new_val)
@@ -108,7 +118,6 @@ class pc(character):
 
   def save_char(self):
     file_name = config.PFILES_PATH + self.name.lower() + ".plr"
-
     with open(file_name, "w") as wf:
       wf.write(f"name: {self.name}\r\n".format(self.name))
       wf.write(f"id: {self.id}\r\n")
@@ -128,56 +137,69 @@ class pc(character):
 class npc(character):
   """Creates a new NPC (non-playable character).
      vnum = virtual number of npc or None
-     spec = list of special procedure functions which define mob behaviour
+     specs = list of special procedure functions which define mob behaviour
 
-     TODO: document spec functions here"""
-  def __init__(self, new_vnum = None, new_spec = None):
+     See structs.py for more information about special procedures."""
+  def __init__(self, new_vnum = None, new_specs = None):
     super().__init__()
     self._vnum = new_vnum
-    if new_spec != None:
-      self._spec = new_spec
+    if new_specs != None:
+      self._specs = new_specs
     else:
-      self._spec = [ ]
+      self._specs = [ ]
 
-  # Upgrades a character to an NPC
-  @classmethod
-  def from_char(cls, ch):
-    ret_val = cls()
-
-    ret_val.entity = ch.entity
-    ret_val.inventory = ch.inventory
-
-    return ret_val
 
   # Getters
   @property
   def vnum(self):
     return self._vnum
   @property
-  def spec(self):
-    return self._spec
+  def specs(self):
+    return self._specs
 
   # Setters
   @vnum.setter
   def vnum(self, new_vnum):
     self._vnum = new_vnum
+  @specs.setter
+  def specs(self, new_specs):
+    self._specs = new_specs
 
-  @spec.setter
-  def spec(self, new_spec):
-    self._spec = new_spec
+  """from_char(ch)                       <- returns an npc built from attributes of ch
+     write(msg)                          <- does nothing (see below)
+     assign_spec_proc(new_proc)          <- adds new_proc to self.specs
+     call_spec_procs(mud, ch, cmd, arg)  <- calls all spec procs in self.specs with input (cmd,arg)"""
+     
+  @classmethod
+  def from_char(cls, ch):
+    ret_val = cls()
+    ret_val.entity = ch.entity
+    ret_val.inventory = ch.inventory
+    return ret_val
 
+  # it's unclear what should be done with message, but since I'd like pcs and npcs
+  # to be as interchangeable as possible, I want to have this functionality.  
+  # Perhaps this function could:
+  #   -process speech triggers (if and when such things are implemented), or
+  #   -send the message to a player who is controlling the mob (eg. with a spell)?
   def write(self, message):
-    # process speech triggers?
     pass
 
+  def assign_spec_proc(self, spec_proc):
+    self.specs.append(spec_proc)
+
   def call_spec_procs(self, mud, ch, command, argument):
-    handled_command = False
-
-    for func in self.spec:
-      if func(mud, self, ch, command, argument):
-        handled_command = True
-
-    return handled_command
+    block_interpreter = False
+    for procedure in self.specs:
+      features = procedure.func(mud, self, ch, command, argument)
+      if features == None:
+        continue
+      # otherwise process the requested features
+      if structs.spec_proc_features.BLOCK_INTERPRETER in features:
+        block_interpreter = True
+      if structs.spec_proc_features.BLOCK_OTHER_SPECS in features:
+        break
+    return block_interpreter
 
 if __name__ == '__main__':
   ch1 = character()

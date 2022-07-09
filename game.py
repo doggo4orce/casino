@@ -9,7 +9,7 @@ import logging
 import object
 import pc
 import room
-# import spec_procs
+import structs
 
 class game:
   def __init__(self):
@@ -40,7 +40,8 @@ class game:
      init_wld()              <- calls read_wld_file on every .wld file in 'lib/world/wld' 
      init_npcs()             <- calls read_npc_file on every .npc file in 'lib/world/npc'
      init_objs()             <- calls read_obj_file on every .obj file in 'lib/world/obj'
-     startup()               <- calls each of the init_*() functions
+     assign_spec_procs()     <- assigns special procedures to elements of npc_proto
+     startup()               <- calls each of the init_*() functions and assign_spec_procs()
      load_npc(vnum)          <- looks up the npc in self.npc_proto and returns a copy or None
      load_obj(vnum)          <- looks up the obj in self.objs and return a copy or None
      read_wld_file(filename) <- reads all the rooms stored in filename
@@ -156,32 +157,32 @@ class game:
     for file in glob.glob(config.OBJ_FOLDER + "*.obj"):
       self.read_obj_file(file)
 
+  def assign_spec_procs(self):
+    self.npc_proto[3002].specs.append(structs.special_procedure("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
+    self.npc_proto[3002].specs.append(structs.special_procedure("baccarat deals a shoe",    baccarat.baccarat_dealing))
+
   def startup(self):
     self.init_wld()
     self.init_npcs()
     self.init_objs()
 
-    # temporary
+    # temporary, will be replaced with self.init_zones() one day
     mob = self.load_npc(3000)
     mob.room = 3000
     self.add_char(mob)
 
-    # temporary
     mob = self.load_npc(3001)
     mob.room = 3001
     self.add_char(mob)
 
-    # temporary
     obj = self.load_obj(3000)
     obj.room = 3000
     self.add_obj(obj)
 
-    # temporary
     obj = self.load_obj(3001)
     obj.room = 3001
     self.add_obj(obj)
 
-    # temporary
     mob = self.load_npc(3002)
     mob.room = 3002
 
@@ -191,10 +192,10 @@ class game:
     # now promote them to a baccarat dealer
     mob = baccarat.baccarat_dealer.from_card_dealer(mob)
 
-    # assign behaviour
-    mob.spec = [ baccarat.baccarat_dealing, baccarat.baccarat_dealer_intro ]
-
     self.add_char(mob)
+
+    self.assign_spec_procs()
+
 
   def load_npc(self, vnum):
     if vnum not in self.npc_proto:
@@ -203,6 +204,7 @@ class game:
     new_npc = pc.npc()
     new_npc.entity = self.npc_proto[vnum].entity
     new_npc.vnum = vnum
+    new_npc.specs = self.npc_proto[vnum].specs
     return new_npc
 
   def load_obj(self, vnum):

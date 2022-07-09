@@ -5,7 +5,8 @@ import room
 
 npc_proto_data = collections.namedtuple(
   'mob_proto_data', [
-    'entity'
+    'entity',
+    'specs'
     # put stuff below like stats, gold, hp, etc.
   ]
 )
@@ -47,7 +48,7 @@ def parse_npc(rf):
     else:
       logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
   # all the data is loaded, now we can store it to the proto
-  return npc_proto_data(ret_val_ent)
+  return npc_proto_data(ret_val_ent, [ ])
 
 def parse_obj(rf):
   ret_val_ent = structs.entity()

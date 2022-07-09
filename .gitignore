@@ -1,0 +1,7 @@
+lib/pfiles/
+lib/copyover.dat
+__pycache__/
+test.py
+*.pyc
+.DS_Store
+.killscript

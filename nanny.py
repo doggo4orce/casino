@@ -40,15 +40,14 @@ def interpret_msg(d, command, argument, server, mud):
   if command == "":
     d.has_prompt = False
     return
-  
-  handled_by_spec = False
+
+  block_interpreter = False
 
   for mob in mud.wld[d.char.room].people:
     if isinstance(mob, pc.npc):
-      if mob.call_spec_procs(mud, d.char, command, argument):
-        handled_by_spec = True
+      block_interpreter = mob.call_spec_procs(mud, d.char, command, argument)
 
-  if handled_by_spec:
+  if block_interpreter:
     return
 
   for c in cmd_dict:

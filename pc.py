@@ -9,7 +9,13 @@ import string_handling
 import structs
 
 class character:
-  #Creates a new char(acter) which can act within the world.
+  """Creates a new char(acter) which can act within the world.
+    entity = dataclass encapsulating name, appearance and location (see structs.py)
+    inventory = iterable container consisting of all objects held (see object.py)
+
+    Note: This class is meant to encapsulate the functionality shared by pcs/npcs,
+    so that they need not be distinguished between throughout this codebase.  While
+    there is nothing stopping one from instantiating it directly, such use is not intended."""
   def __init__(self):
     self._entity     = structs.entity()
     self._inventory = object.inventory()
@@ -27,7 +33,6 @@ class character:
   @property
   def room(self):
     return self.entity.room
-
   @property
   def name(self):
     return self.entity.name
@@ -46,8 +51,9 @@ class character:
   def room(self, new_room):
     self.entity.room = new_room
 
+  # This function should never be called.  It should be overridden by any derived classes.
   def write(self, message):
-    logging.warning(f"Attempting to send message {message} to non-PC character {self.entity.name}")
+    logging.warning(f"Attempting to send message {message} to character {self.entity.name}")
     return
 
   def __str__(self):
@@ -137,9 +143,7 @@ class pc(character):
 class npc(character):
   """Creates a new NPC (non-playable character).
      vnum = virtual number of npc or None
-     specs = list of special procedure functions which define mob behaviour
-
-     See structs.py for more information about special procedures."""
+     specs = list of special procedure functions which define mob behaviour (see structs.py)"""
   def __init__(self, new_vnum = None, new_specs = None):
     super().__init__()
     self._vnum = new_vnum
@@ -165,10 +169,10 @@ class npc(character):
   def specs(self, new_specs):
     self._specs = new_specs
 
-  """from_char(ch)                       <- returns an npc built from attributes of ch
-     write(msg)                          <- does nothing (see below)
-     assign_spec_proc(new_proc)          <- adds new_proc to self.specs
-     call_spec_procs(mud, ch, cmd, arg)  <- calls all spec procs in self.specs with input (cmd,arg)"""
+  """from_char(ch)                      <- returns an npc built from attributes of ch
+     write(msg)                         <- does nothing (see below)
+     assign_spec_proc(new_proc)         <- adds new_proc to self.specs
+     call_spec_procs(mud, ch, cmd, arg) <- calls all spec procs in self.specs with input (cmd,arg)"""
      
   @classmethod
   def from_char(cls, ch):
@@ -177,11 +181,12 @@ class npc(character):
     ret_val.inventory = ch.inventory
     return ret_val
 
-  # it's unclear what should be done with message, but since I'd like pcs and npcs
-  # to be as interchangeable as possible, I want to have this functionality.  
-  # Perhaps this function could:
-  #   -process speech triggers (if and when such things are implemented), or
-  #   -send the message to a player who is controlling the mob (eg. with a spell)?
+  """it's unclear what should be done with message, but since I'd like pcs and npcs
+     to be as interchangeable as possible, this function ought to exist.
+
+     Perhaps this function could:
+       -process speech triggers (if such things were to be implemented), or
+       -route the message to a player who is controlling the npc (eg. with a spell)?"""
   def write(self, message):
     pass
 
@@ -200,12 +205,4 @@ class npc(character):
       if structs.spec_proc_features.BLOCK_OTHER_SPECS in features:
         break
     return block_interpreter
-
-if __name__ == '__main__':
-  ch1 = character()
-  print(type(ch1))
-
-  ch2 = npc.from_char(ch1)
-  print(type(ch2))
-
 

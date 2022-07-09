@@ -21,12 +21,14 @@ class input:
     self._data   = data
     self._unread = unread
 
+  # getters
   @property
   def data(self):
     return self._data
   @property
   def unread(self):
     return self._unread
+
   @property
   def overflow(self):
     return self._unread > 0

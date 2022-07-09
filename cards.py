@@ -26,9 +26,9 @@ class card_rank(enum.IntEnum):
 
 class card:
   """Creates a a new card.
-    suit = spades, hearts, etc.
-    rank = seven, jack, king, etc.
-    value = a number between 1-13, assigned depending on game"""
+     suit = spades, hearts, etc.
+     rank = seven, jack, king, etc.
+     value = a number between 1-13, assigned depending on game"""
   def __init__(self, suit, rank, value):
     self._suit = suit
     self._rank = rank
@@ -37,11 +37,9 @@ class card:
   @property
   def suit(self):
   	return self._suit
-  
   @property
   def rank(self):
   	return self._rank
-
   @property
   def value(self):
     return self._value
@@ -49,11 +47,9 @@ class card:
   @suit.setter
   def suit(self, new_suit):
   	self._suit = new_suit
-
   @rank.setter
   def rank(self, new_rank):
   	self._rank = new_rank
-
   @value.setter
   def value(self, new_value):
     self._rank = new_value
@@ -62,8 +58,8 @@ class card:
     return f"{card_rank(self.rank).name} of {card_suit(self.suit).name}"
 
 class shoe:
-  """Creates a new shoe (generalization of a deck), which consists of a double-ended
-    queue of cards."""
+  """Creates a new shoe (may be thought of as a deck but need not be)
+     contents = a double-ended queue containing the cards in the shoe"""
   def __init__(self):
     self._contents = collections.deque()
 

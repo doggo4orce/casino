@@ -60,6 +60,7 @@ class room:
   def inventory(self):
     return self._inventory
 
+  # Setters
   @name.setter
   def name(self, new_name):
     self._name = new_name
@@ -70,6 +71,18 @@ class room:
   def desc(self, new_desc):
     self._desc = new_desc
 
+  """add_char(ch)         <-
+     remove_char(ch)      <-
+     char_by_name(ch)     <-
+     pc_by_name(name)     <-
+     npc_by_alias(alias)  <-
+     connect(dir, dest)   <-
+     disconnect(dir)      <-
+     list_exits()         <-
+     show_exits()         <-
+     echo(msg)            <-
+     get_destination(dir) <-
+     exit_exists(dir)     <-"""
   def add_char(self, ch):
     ch.room = self.vnum
     self._people.append(ch)
@@ -142,10 +155,3 @@ class room:
 
   def exit_exists(self, direction):
     return self.get_destination(direction) != -1
-
-if __name__ == '__main__':
-  x = print([y.name.lower() for y in list(direction)])
-  rm = room()
-
-  setattr(rm, '_name', "The Temple of Midgaard")
-  print(getattr(rm, '_name'))

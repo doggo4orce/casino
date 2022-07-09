@@ -14,12 +14,12 @@ import structs
 class game:
   def __init__(self):
     """Creates a game world with rooms, objects, and characters.
-     wld       = a dictionary for which rooms may be looked up by their vnums
-     chars     = a list of characters (including NPCS and PCs) in the game
-     objects   = a list of objects which are in the game
-     npc_proto = a dictionary of npc prototypes which can be loaded from
-     obj_proto = a dictionary of object prototypes which can be loaded from
-     events    = handles all events to take place in the future"""
+       wld       = a dictionary for which rooms may be looked up by their vnums
+       chars     = a list of characters (including NPCS and PCs) in the game
+       objects   = a list of objects which are in the game
+       npc_proto = a dictionary of npc prototypes which can be loaded from
+       obj_proto = a dictionary of object prototypes which can be loaded from
+       events    = handles all events to take place in the future"""
     self.wld       = dict()
     self.chars     = list()
     self.objects   = list()
@@ -28,7 +28,7 @@ class game:
     self.events    = event.event_table()
 
   """heart_beat()            <- calls the event handlers heart_beat() function
-     call_spec_procs()       <- calls all special procedures for npcs
+     call_heart_beat_procs() <- calls all pulsing special procedures for npcs
      next_room_vnum()        <- next unused virtual number in self.wld
      next_npc_vnum()         <- next unused virtual number in self.npc_proto
      room_by_vnum(vnum)      <- look up room by virtual number in self.wld
@@ -54,10 +54,10 @@ class game:
   def heart_beat(self):
     self.events.heart_beat(self)
 
-  def call_spec_procs(self):
+  def call_heart_beat_procs(self):
     for mob in self.chars:
       if isinstance(mob, pc.npc):
-        mob.call_spec_procs(self, None, None, None)
+        mob.call_heart_beat_procs(self)
 
   def next_room_vnum(self):
     # if the world is empty, 0 is the next vnum
@@ -158,9 +158,9 @@ class game:
       self.read_obj_file(file)
 
   def assign_spec_procs(self):
-    self.npc_proto[3002].specs.append(structs.special_procedure("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
-    self.npc_proto[3002].specs.append(structs.special_procedure("baccarat syntax handling", baccarat.baccarat_syntax_parser))
-    self.npc_proto[3002].specs.append(structs.special_procedure("baccarat deals a shoe",    baccarat.baccarat_dealing))
+    self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
+    self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
+    self.npc_proto[3002].heart_beat_procs.append(structs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
   def startup(self):
     self.init_wld()
@@ -205,7 +205,8 @@ class game:
     new_npc = pc.npc()
     new_npc.entity = self.npc_proto[vnum].entity
     new_npc.vnum = vnum
-    new_npc.specs = self.npc_proto[vnum].specs
+    new_npc.command_triggers = self.npc_proto[vnum].command_triggers
+    new_npc.heart_beat_procs = self.npc_proto[vnum].heart_beat_procs
     return new_npc
 
   def load_obj(self, vnum):

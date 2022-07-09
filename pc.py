@@ -143,14 +143,13 @@ class pc(character):
 class npc(character):
   """Creates a new NPC (non-playable character).
      vnum = virtual number of npc or None
-     specs = list of special procedure functions which define mob behaviour (see structs.py)"""
-  def __init__(self, new_vnum = None, new_specs = None):
+     command_triggers = list of command triggered special procedures (see structs.py)
+     heart_beat_procs = list of pulsing special procedures (see structs.py)"""
+  def __init__(self, new_vnum = None):
     super().__init__()
     self._vnum = new_vnum
-    if new_specs != None:
-      self._specs = new_specs
-    else:
-      self._specs = [ ]
+    self._command_triggers = list()
+    self._heart_beat_procs = list()
 
 
   # Getters
@@ -158,21 +157,28 @@ class npc(character):
   def vnum(self):
     return self._vnum
   @property
-  def specs(self):
-    return self._specs
+  def command_triggers(self):
+    return self._command_triggers
+  @property
+  def heart_beat_procs(self):
+    return self._heart_beat_procs
 
   # Setters
   @vnum.setter
   def vnum(self, new_vnum):
     self._vnum = new_vnum
-  @specs.setter
-  def specs(self, new_specs):
-    self._specs = new_specs
+  @command_triggers.setter
+  def command_triggers(self, new_triggers):
+    self._command_triggers = new_triggers
+  @heart_beat_procs.setter
+  def heart_beat_procs(self, new_procs):
+    self._heart_beat_procs = new_procs
 
-  """from_char(ch)                      <- returns an npc built from attributes of ch
-     write(msg)                         <- does nothing (see below)
-     assign_spec_proc(new_proc)         <- adds new_proc to self.specs
-     call_spec_procs(mud, ch, cmd, arg) <- calls all spec procs in self.specs with input (cmd,arg)"""
+  """from_char(ch)                            <- returns an npc built from attributes of ch
+     write(msg)                               <- does nothing (see below)
+     assign_spec_proc(new_proc)               <- adds new_proc to self.specs
+     call_command_triggers(mud, ch, cmd, arg) <- calls all command trigger spec procs
+     call_heart_beat_procs(mud)               <- calls all heart beat procs"""
      
   @classmethod
   def from_char(cls, ch):
@@ -193,16 +199,14 @@ class npc(character):
   def assign_spec_proc(self, spec_proc):
     self.specs.append(spec_proc)
 
-  def call_spec_procs(self, mud, ch, command, argument):
+  def call_command_triggers(self, mud, ch, command, argument):
     block_interpreter = False
-    for procedure in self.specs:
-      features = procedure.func(mud, self, ch, command, argument)
-      if features == None:
-        continue
-      # otherwise process the requested features
-      if structs.spec_proc_features.BLOCK_INTERPRETER in features:
+    for procedure in self.command_triggers:
+      if procedure.func(mud, self, ch, command, argument) == structs.command_trigger_messages.BLOCK_INTERPRETER:
         block_interpreter = True
-      if structs.spec_proc_features.BLOCK_OTHER_SPECS in features:
-        break
     return block_interpreter
+
+  def call_heart_beat_procs(self, mud):
+    for procedure in self.heart_beat_procs:
+      features = procedure.func(mud, self)
 

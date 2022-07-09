@@ -158,7 +158,8 @@ class baccarat_dealer(cards.card_dealer):
     ret_val.inventory = dealer.inventory
     # copy npc attributes
     ret_val.vnum = dealer.vnum
-    ret_val.specs = dealer.specs
+    ret_val.command_triggers = dealer.command_triggers
+    ret_val.heart_beat_procs = dealer.heart_beat_procs
     ret_val.hand = baccarat_hand()
     ret_val.state = baccarat_dealer_state.IDLE
     # copy dealer attributes
@@ -212,8 +213,6 @@ class baccarat_dealer(cards.card_dealer):
    baccarat_dealing()       <- handles the baccarat game"""
 
 def baccarat_dealer_intro(mud, me, ch, command, argument):
-  if ch == None:
-    return
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
@@ -222,8 +221,6 @@ def baccarat_dealer_intro(mud, me, ch, command, argument):
     return
 
 def baccarat_syntax_parser(mud, me, ch, command, argument):
-  if ch == None:
-    return
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
@@ -233,17 +230,15 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
     if argument.lower() == "start":
       if me.state != baccarat_dealer_state.IDLE:
         commands.do_say(me, None, "Excuse me, there is already a game in progress.", None, mud)
-        return {structs.spec_proc_features.BLOCK_INTERPRETER}
+        return structs.command_trigger_messages.BLOCK_INTERPRETER
       commands.do_say(me, None, f"OK, I'm starting a shoe.  Don't try to interact with me until it's over!", None, mud)
 
       me.state = baccarat_dealer_state.BEGIN_SHOE
     else:
       ch.write(help_str)
-    return {structs.spec_proc_features.BLOCK_INTERPRETER}
+    return structs.command_trigger_messages.BLOCK_INTERPRETER
 
-def baccarat_dealing(mud, me, ch, command, argument):
-  if ch != None:
-    return
+def baccarat_dealing(mud, me):
   if me.state == baccarat_dealer_state.IDLE:
     return
   if me.paused:

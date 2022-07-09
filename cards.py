@@ -144,7 +144,8 @@ class card_dealer(pc.npc):
 
     # copy npc attributes
     ret_val.vnum = old_npc.vnum
-    ret_val.specs = old_npc.specs
+    ret_val.command_triggers = old_npc.command_triggers
+    ret_val.heart_beat_procs = old_npc.heart_beat_procs
     
     return ret_val
 

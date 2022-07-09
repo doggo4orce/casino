@@ -60,13 +60,22 @@ class preferences:
       setattr(self, field, off)
 
 @dataclasses.dataclass
-class special_procedure:
+class command_trigger:
   """name = representation as a string
-     func = behaviour function -- returns a set of spec_proc_features with None taken to be empty"""
+     func = behaviour function -- returns one of the messages below"""
   name: str="an unnamed spec proc"
   func: function=None
 
-class spec_proc_features(enum.IntEnum):
-  BLOCK_INTERPRETER = 1 # command that triggered spec proc is not processed by the command line interpreter
-  BLOCK_OTHER_SPECS = 2 # subsequent special procedures are ignored
+"""These are messages which may be returned by command_trigger.func when called by
+   interpret_msg() in nanny.py.  Depending on whether and how much this list of
+   messages grows, command_trigger.func might be adjusted to return a set"""
+class command_trigger_messages(enum.IntEnum):
+  BLOCK_INTERPRETER = 1 # command to be ignored by the command line interpreter
+
+@dataclasses.dataclass
+class heart_beat_proc:
+  """name = representation as a string
+     func = behaviour function"""
+  name: str="an unnamed spec proc"
+  func: function=None
 

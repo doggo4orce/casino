@@ -45,7 +45,7 @@ def interpret_msg(d, command, argument, server, mud):
 
   for mob in mud.wld[d.char.room].people:
     if isinstance(mob, pc.npc):
-      block_interpreter = mob.call_spec_procs(mud, d.char, command, argument)
+      block_interpreter = mob.call_command_triggers(mud, d.char, command, argument)
 
   if block_interpreter:
     return

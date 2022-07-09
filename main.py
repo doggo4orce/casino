@@ -53,7 +53,7 @@ try:
     mud_server.loop(o_mud)
     time.sleep(time_per_loop)
     o_mud.heart_beat()
-    o_mud.call_spec_procs()
+    o_mud.call_heart_beat_procs()
     # TODO: find out how long this function took to call and adjust sleep time accordingly
 
 except KeyboardInterrupt:

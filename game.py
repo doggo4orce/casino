@@ -159,6 +159,7 @@ class game:
 
   def assign_spec_procs(self):
     self.npc_proto[3002].specs.append(structs.special_procedure("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
+    self.npc_proto[3002].specs.append(structs.special_procedure("baccarat syntax handling", baccarat.baccarat_syntax_parser))
     self.npc_proto[3002].specs.append(structs.special_procedure("baccarat deals a shoe",    baccarat.baccarat_dealing))
 
   def startup(self):

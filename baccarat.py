@@ -205,11 +205,12 @@ class baccarat_dealer(cards.card_dealer):
       return player_third in {6,7}
     return False
 
-# event function to toggle the working flag for dealer
-def dealer_ready(ch, mud):
-  ch.paused = False
+"""Special Procedures for the Baccarat dealer:
+   
+   baccarat_dealer_intro()  <- called as a basic response to a greeting
+   baccarat_syntax_parser() <- handles all syntax associated with the baccarat game
+   baccarat_dealing()       <- handles the baccarat game"""
 
-# special procedures for baccarat dealer
 def baccarat_dealer_intro(mud, me, ch, command, argument):
   if ch == None:
     return
@@ -219,6 +220,13 @@ def baccarat_dealer_intro(mud, me, ch, command, argument):
   if command == "say" and argument.lower() == "hi":
     mud.events.add_event(event.speech_event(me, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, 10))
     return
+
+def baccarat_syntax_parser(mud, me, ch, command, argument):
+  if ch == None:
+    return
+  if not isinstance(me, baccarat_dealer):
+    logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
+    return
   help_str  = "Baccarat Commands:\n"
   help_str += "  baccarat start - begin a baccarat shoe (no commitment)\n"
   if command == "baccarat":
@@ -226,7 +234,8 @@ def baccarat_dealer_intro(mud, me, ch, command, argument):
       if me.state != baccarat_dealer_state.IDLE:
         commands.do_say(me, None, "Excuse me, there is already a game in progress.", None, mud)
         return {structs.spec_proc_features.BLOCK_INTERPRETER}
-      commands.do_say(me, None, "OK, I'm starting a shoe.  Don't try to interact with me until it's over!", None, mud)
+      commands.do_say(me, None, f"OK, I'm starting a shoe.  Don't try to interact with me until it's over!", None, mud)
+
       me.state = baccarat_dealer_state.BEGIN_SHOE
     else:
       ch.write(help_str)
@@ -271,6 +280,7 @@ def baccarat_dealing(mud, me, ch, command, argument):
       commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud)
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
+      me.paused = False
       return
     me.hand = baccarat_hand()
     mud.echo_around(me, None, f"{me} deals ({me.deal_next_card('player')}) to the player.\n")
@@ -285,11 +295,11 @@ def baccarat_dealing(mud, me, ch, command, argument):
     pause = 10
   elif me.state == baccarat_dealer_state.CHECK_NATURAL:
     if me.hand.player_natural():
-      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more cards.\n", None, mud)
+      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more cards.", None, mud)
       me.state = baccarat_dealer_state.REPORT_WINNER
       pause = 10
     elif me.hand.banker_natural():
-      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more cards.\n", None, mud)
+      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more cards.", None, mud)
       me.state = baccarat_dealer_state.REPORT_WINNER
       pause = 10
     else:
@@ -324,3 +334,12 @@ def baccarat_dealing(mud, me, ch, command, argument):
   if pause != 0:
     mud.events.add_event(event.event(me, dealer_ready, None, pause))
   return
+
+"""This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.
+   For example, if the dealer should pause for one second, set
+
+     the_dealer.paused=True
+
+   and then attach to it an event which calls this function with a countdown of 30."""
+def dealer_ready(ch, mud):
+  ch.paused = False

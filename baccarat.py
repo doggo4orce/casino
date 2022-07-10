@@ -73,11 +73,11 @@ class baccarat_hand:
 
   def natural_9_8(self):
     if self.player_natural() and self.banker_natural():
-      return self.player_score() == 17
+      return self.player_score() + self.banker_score() == 17
 
   def any_8_7(self):
-    x,y = self.player_score() and self.banker_score()
-    return (x == 8 and y == 7) or (x == 7 and y == 8):
+    x, y = self.player_score(), self.banker_score()
+    return (x == 8 and y == 7) or (x == 7 and y == 8)
 
   def ascii_render(self):
     SPACE_BETWEEN_CARD = 1
@@ -231,14 +231,14 @@ class baccarat_shoe(cards.shoe):
   def report_history(self, result):
     self._history.append(result)
 
-  def report_side_bet(self, result):
+  def report_extra(self, result):
     self._extras.append(result)
 
   def count_reports(self, result):
     return sum(map(lambda entry: entry == result, self._history))
 
-  def count_extras(self, side_bet):
-    return sum(map(lambda entry: side_bet == result, self._extras))
+  def count_extras(self, result):
+    return sum(map(lambda side_bet: side_bet == result, self._extras))
 
 class baccarat_dealer(cards.card_dealer):
   def __init__(self):
@@ -396,7 +396,7 @@ class baccarat_dealer_state(enum.IntEnum):
   CLEAR_CARDS         = 19
 
 def baccarat_dealing(mud, me):
-  NUM_DECKS = 6
+  NUM_DECKS = 24
 
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(
     CYAN,
@@ -461,10 +461,10 @@ def baccarat_dealing(mud, me):
         GREEN, me.shoe.count_reports(history_entry.TIE), NORMAL,
         MAGENTA, me.shoe.count_reports(history_entry.PANDA), NORMAL,
         CYAN, me.shoe.count_reports(history_entry.DRAGON), NORMAL))
-      mud.echo_around(me, None, "3-card 9/8's: {}\r\nNatural 9/8's: {}\r\nAny 8/7's: {}\r\n".format(
-        me.shoe.count_extras(extra_side_bet.THREE_CARD_9_8),
-        me.shoe.count_extras(extra_side_bet.NATURAL_9_8),
-        me.shoe.count_extras(extra_side_bet.ANY_8_7)
+      mud.echo_around(me, None, "3-card 9/8's: {}{}{}\r\nNatural 9/8's: {}{}{}\r\nAny 8/7's: {}{}{}\r\n".format(
+        YELLOW, me.shoe.count_extras(extra_side_bet.THREE_CARD_9_8), NORMAL,
+        YELLOW, me.shoe.count_extras(extra_side_bet.NATURAL_9_8), NORMAL,
+        YELLOW, me.shoe.count_extras(extra_side_bet.ANY_8_7), NORMAL
         ))
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
@@ -569,11 +569,11 @@ def baccarat_dealing(mud, me):
     
     # Check Michael's Side Bets
     if me.hand.three_card_9_8():
-      me.hand.report_extra(extra_side_bet.THREE_CARD_9_8)
+      me.shoe.report_extra(extra_side_bet.THREE_CARD_9_8)
     if me.hand.natural_9_8():
-      me.hand.report_extra(extra_side_bet.NATURAL_9_8)
+      me.shoe.report_extra(extra_side_bet.NATURAL_9_8)
     if me.hand.any_8_7():
-      me.hand_report_extra(extra_side_bet.ANY_8_7)
+      me.shoe.report_extra(extra_side_bet.ANY_8_7)
 
     me.hand = None
     me.state = baccarat_dealer_state.CLEAR_CARDS

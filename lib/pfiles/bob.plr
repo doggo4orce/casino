@@ -3,8 +3,3 @@ id: 4
 password: asdf
 title: the brave adventurer
 room: 3001
-brief: off
-active: off
-width: 80
-length: 50
-color: 256

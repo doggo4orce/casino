@@ -359,13 +359,17 @@ def baccarat_dealer_history(mud, me, ch, command, argument):
   out_str = "  EZ Baccarat".ljust(33) + "\r\n"
 
   out_str += f"{YELLOW}+--------------+".ljust(33) + f"{b_win} - banker win\r\n"
-  out_str += f"{YELLOW}|{b_win}{p_win}{p_win}           {YELLOW}|".ljust(71) + f"{b_8} - banker win with natural 8\r\n"
+  out_str += f"{YELLOW}|{BKGD_YELLOW}{b_win}{p_win}{p_win}           {YELLOW}|".ljust(76) + f"{b_8} - banker win with natural 8\r\n"
   out_str += f"{YELLOW}|{tie}{b_win}            {YELLOW}|".ljust(60) + f"{b_9} - banker win with natural 9\r\n"
-  out_str += f"{YELLOW}|{b_win}{dragon}            {YELLOW}|".ljust(60) + f"{p_8} - player win with natural 8\r\n"
-  out_str += f"{YELLOW}|{b_8}{tie}            {YELLOW}|".ljust(60) + f"{p_9} - player win with natural 9\r\n"
-  out_str += f"{YELLOW}|{p_9}{b_win}            {YELLOW}|".ljust(60) + f"{tie} - tie\r\n"
-  out_str += f"{YELLOW}|{panda}{b_win}            {YELLOW}|".ljust(60) + f"{panda} - panda\r\n"
-  out_str += f"{YELLOW}+--------------+{NORMAL}".ljust(37) + f"{dragon} - dragon\r\n"
+  out_str += f"{YELLOW}|{b_win}{FLASH}{dragon}            {YELLOW}|".ljust(64) + f"{p_8} - player win with natural 8\r\n"
+  out_str += f"{YELLOW}|{BKGD_YELLOW}{b_8}{tie}            {YELLOW}|".ljust(65) + f"{p_9} - player win with natural 9\r\n"
+  out_str += f"{YELLOW}|{BKGD_CYAN}{p_9}{b_win}            {YELLOW}|".ljust(65) + f"{tie} - tie\r\n"
+  out_str += f"{YELLOW}|{FLASH}{panda}{BKGD_WHITE}{b_9}            {YELLOW}|".ljust(69) + f"{panda} - panda\r\n"
+  out_str += f"{YELLOW}+--------------+{NORMAL}".ljust(37) + f"{dragon} - dragon\r\n\r\n"
+
+  out_str += f"{BKGD_YELLOW} {NORMAL} - any 8 over 7\r\n"
+  out_str += f"{BKGD_CYAN} {NORMAL} - three card 9 over 8\r\n"
+  out_str += f"{BKGD_WHITE} {NORMAL} - natural 9 over 8\r\n"
   ch.write(out_str)
 
   return structs.command_trigger_messages.BLOCK_INTERPRETER

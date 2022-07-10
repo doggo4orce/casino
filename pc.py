@@ -125,16 +125,18 @@ class pc(character):
   def save_char(self):
     file_name = config.PFILES_PATH + self.name.lower() + ".plr"
     with open(file_name, "w") as wf:
-      wf.write(f"name: {self.name}\r\n".format(self.name))
-      wf.write(f"id: {self.id}\r\n")
-      wf.write(f"password: {self.pwd}\r\n")
-      wf.write(f"title: {self.title}\r\n")
-      wf.write(f"room: {self.room}\r\n")
-      wf.write(f"brief: {self.prefs.brief_mode}\r\n")
-      wf.write(f"active: {self.prefs.active_idle}\r\n")
-      wf.write(f"width: {self.prefs.screen_width}\r\n")
-      wf.write(f"length: {self.prefs.screen_length}\r\n")
-      wf.write(f"color: {self.prefs.color_mode}\r\n")
+      wf.write(f"name: {self.name}\n".format(self.name))
+      wf.write(f"id: {self.id}\n")
+      wf.write(f"password: {self.pwd}\n")
+      wf.write(f"title: {self.title}\n")
+      wf.write(f"room: {self.room}\n")
+      self.save_prefs(wf)
+
+  def save_prefs(self, file_stream):
+    print(self.prefs)
+    for field in self.prefs.__dataclass_fields__:
+      print(field)
+      file_stream.write(f"{field}: {getattr(self.prefs, field)}\n")
 
   def write(self, message):
     if self._d != None:

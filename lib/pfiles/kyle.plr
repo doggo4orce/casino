@@ -3,8 +3,9 @@ id: 1
 password: Es2y0
 title: the super cool dude
 room: 3002
-brief: off
-active: off
-width: 80
-length: 50
-color: 256
+screen_width: 80
+screen_length: 50
+color_mode: 256
+active_idle: off
+brief_mode: off
+debug_mode: off

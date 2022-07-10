@@ -14,6 +14,39 @@ import pc
 import room
 import string_handling
 
+def do_colors(ch, scmd, argument, server, mud):
+  out_str = ""
+  
+  out_str += "For Reference, this is normal text.\r\n\r\n"
+
+  out_str += "-----------------------------------\r\n"
+  out_str += "Colours".ljust(21) + "Bright Colours\r\n"
+  out_str += "-----------------------------------\r\n\r\n"
+
+  out_str += f"{BLACK}Black{NORMAL}".ljust(30) + f"{BRIGHT_BLACK}Bright Black{NORMAL}\r\n"
+  out_str += f"{RED}Red{NORMAL}".ljust(30) + f"{BRIGHT_RED}Bright Red{NORMAL}\r\n"
+  out_str += f"{GREEN}Green{NORMAL}".ljust(30) + f"{BRIGHT_GREEN}Bright Green{NORMAL}\r\n"
+  out_str += f"{YELLOW}Yellow{NORMAL}".ljust(30) + f"{BRIGHT_YELLOW}Bright Yellow{NORMAL}\r\n"
+  out_str += f"{BLUE}Blue{NORMAL}".ljust(30) + f"{BRIGHT_BLUE}Bright Blue{NORMAL}\r\n"
+  out_str += f"{MAGENTA}Magenta{NORMAL}".ljust(30) + f"{BRIGHT_MAGENTA}Bright Magenta{NORMAL}\r\n"
+  out_str += f"{CYAN}Cyan{NORMAL}".ljust(30) + f"{BRIGHT_CYAN}Bright Cyan{NORMAL}\r\n"
+  out_str += f"{WHITE}Dark White{NORMAL}".ljust(30) + f"{BRIGHT_WHITE}Bright White{NORMAL}\r\n\r\n"
+
+  out_str += "------------------------------------\r\n"
+  out_str += "Background Colours".ljust(21) + "Special Effects\r\n"
+  out_str += "------------------------------------\r\n\r\n"
+
+  out_str += f"{BKGD_BLACK}Background Black{NORMAL}".ljust(30) + f"{UNDERLINE}Underline{NORMAL}\r\n"
+  out_str += f"{BKGD_RED}Background Red{NORMAL}".ljust(30) + f"{FLASH}Flashing{NORMAL}\r\n"
+  out_str += f"{BKGD_GREEN}Background Green{NORMAL}\r\n"
+  out_str += f"{BKGD_YELLOW}Background Yellow{NORMAL}\r\n"
+  out_str += f"{BKGD_BLUE}Background Blue{NORMAL}\r\n"
+  out_str += f"{BKGD_MAGENTA}Background Magenta{NORMAL}\r\n"
+  out_str += f"{BKGD_CYAN}Background Cyan{NORMAL}\r\n"
+  out_str += f"{BKGD_WHITE}Background White{NORMAL}\r\n\r\n"
+
+  ch.write(out_str)
+
 def do_give(ch, scmd, argument, server, mud):
   args = argument.split()
   num_args = len(args)

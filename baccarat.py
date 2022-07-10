@@ -330,10 +330,45 @@ class baccarat_dealer(cards.card_dealer):
 
 """Special Procedures for the Baccarat dealer:
 
-   baccarat_dealer_intro()  <- called as a basic response to a greeting
-   baccarat_syntax_parser() <- handles all syntax associated with the baccarat game
-   baccarat_table_render()  <- renders a snapshot of the current hand in ascii
-   baccarat_dealing()       <- handles the baccarat game"""
+   baccarat_dealer_history() <- display the history of the shoe
+   baccarat_dealer_intro()   <- called as a basic response to a greeting
+   baccarat_syntax_parser()  <- handles all syntax associated with the baccarat game
+   baccarat_table_render()   <- renders a snapshot of the current hand in ascii
+   baccarat_dealing()        <- handles the baccarat game"""
+
+def baccarat_dealer_history(mud, me, ch, command, argument):
+  if not isinstance(me, baccarat_dealer):
+    logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
+    return
+
+  if command != "history":
+    return
+
+  b_win = f"{BRIGHT_RED}*{NORMAL}"
+  b_8 = f"{BRIGHT_RED}8{NORMAL}"
+  b_9 = f"{BRIGHT_RED}9{NORMAL}"
+
+  p_win = f"{BRIGHT_BLUE}*{NORMAL}"
+  p_8 = f"{BRIGHT_BLUE}8{NORMAL}"
+  p_9 = f"{BRIGHT_BLUE}9{NORMAL}"
+
+  tie = f"{BRIGHT_GREEN}T{NORMAL}"
+  panda = f"{BRIGHT_MAGENTA}P{NORMAL}"
+  dragon = f"{BRIGHT_CYAN}D{NORMAL}"
+
+  out_str = "  EZ Baccarat".ljust(33) + "\r\n"
+
+  out_str += f"{YELLOW}+--------------+".ljust(33) + f"{b_win} - banker win\r\n"
+  out_str += f"{YELLOW}|{b_win}{p_win}{p_win}           {YELLOW}|".ljust(71) + f"{b_8} - banker win with natural 8\r\n"
+  out_str += f"{YELLOW}|{tie}{b_win}            {YELLOW}|".ljust(60) + f"{b_9} - banker win with natural 9\r\n"
+  out_str += f"{YELLOW}|{b_win}{dragon}            {YELLOW}|".ljust(60) + f"{p_8} - player win with natural 8\r\n"
+  out_str += f"{YELLOW}|{b_8}{tie}            {YELLOW}|".ljust(60) + f"{p_9} - player win with natural 9\r\n"
+  out_str += f"{YELLOW}|{p_9}{b_win}            {YELLOW}|".ljust(60) + f"{tie} - tie\r\n"
+  out_str += f"{YELLOW}|{panda}{b_win}            {YELLOW}|".ljust(60) + f"{panda} - panda\r\n"
+  out_str += f"{YELLOW}+--------------+{NORMAL}".ljust(37) + f"{dragon} - dragon\r\n"
+  ch.write(out_str)
+
+  return structs.command_trigger_messages.BLOCK_INTERPRETER
 
 def baccarat_dealer_intro(mud, me, ch, command, argument):
   if not isinstance(me, baccarat_dealer):

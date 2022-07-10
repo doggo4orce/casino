@@ -160,7 +160,7 @@ class game:
   def assign_spec_procs(self):
     self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
     self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
-    self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat syntax handling", baccarat.baccarat_table_render))
+    self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
     self.npc_proto[3002].heart_beat_procs.append(structs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
   def startup(self):

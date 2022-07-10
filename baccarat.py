@@ -58,6 +58,14 @@ class baccarat_hand:
   def banker_natural(self):
     return self.banker_score() in {8,9} and len(self.banker) == 2
 
+  def panda(self):
+    if len(self.player) == 3 and self.player_score() > self.banker_score():
+      return self.player_score() == 8
+  
+  def dragon(self):
+    if len(self.banker) == 3 and self.player_score() < self.banker_score():
+      return self.banker_score() == 7
+
   def ascii_render(self):
     SPACE_BETWEEN_CARD = 1
     SPACE_BETWEEN_PLAYER_BANKER = 3
@@ -166,63 +174,44 @@ class baccarat_hand:
       ret_val += f"{card}\r\n"
     return ret_val
 
-def baccarat_deck():
-  deck = cards.shoe()
-  for suit in cards.card_suit:
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.ACE), 1))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.TWO), 2))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.THREE), 3))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.FOUR), 4))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.FIVE), 5))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.SIX), 6))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.SEVEN), 7))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.EIGHT), 8))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.NINE), 9))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.TEN), 10))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.JACK), 10))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.QUEEN), 10))
-  	deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.KING), 10))
-  return deck
+class history_entry(enum.IntEnum):
+  PLAYER_WIN = 1
+  BANKER_WIN = 2
+  TIE        = 3
+  PANDA      = 4
+  DRAGON     = 5
 
-def baccarat_shoe(num_decks):
-  shoe = cards.shoe()
+class baccarat_shoe(cards.shoe):
+  def __init__(self, num_decks):
+    super().__init__()
+    self._history = list()
+    for j in range(0, num_decks):
+      self.absorb_bottom(baccarat_shoe.baccarat_deck())
 
-  for j in range(0, num_decks):
-  	shoe.absorb_bottom(baccarat_deck())
+  @classmethod
+  def baccarat_deck(cls):
+    deck = cards.shoe()
+    for suit in cards.card_suit:
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.ACE), 1))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.TWO), 2))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.THREE), 3))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.FOUR), 4))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.FIVE), 5))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.SIX), 6))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.SEVEN), 7))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.EIGHT), 8))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.NINE), 9))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.TEN), 10))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.JACK), 10))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.QUEEN), 10))
+      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.KING), 10))
+    return deck
 
-  return shoe
+  def add_report(self, result):
+    self._history.append(result)
 
-class baccarat_dealer_state(enum.IntEnum):
-  IDLE                = 1
-  BEGIN_SHOE          = 2
-  SHUFFLE_SHOE        = 3
-  FIRST_DRAW          = 4
-  BURN_CARDS          = 5
-  PLAYER_FIRST        = 6
-  BANKER_FIRST        = 7
-  PLAYER_SECOND       = 8
-  BANKER_SECOND       = 9 
-  SHOW_INITIAL        = 10
-  CHECK_NATURAL       = 11
-  CHECK_PLAYER        = 12
-  DEAL_PLAYER_THIRD   = 13
-  UPDATE_PLAYER_THIRD = 14
-  CHECK_BANKER        = 15
-  DEAL_BANKER_THIRD   = 16
-  UPDATE_BANKER_THIRD = 17
-  REPORT_WINNER       = 18
-  CLEAR_CARDS         = 19
-
-class baccarat_dealer_report(enum.IntEnum):
-  CARD_PLAYER    = 1
-  CARD_BANKER    = 2
-  PLAYER_NATURAL = 3
-  BANKER_NATURAL = 4
-  PLAYER_WIN     = 5
-  BANKER_WIN     = 6
-  TIE            = 7
-  PANDA          = 8
-  DRAGON         = 9
+  def count_reports(self, result):
+    return sum(map(lambda entry: entry == result, self._history))
 
 class baccarat_dealer(cards.card_dealer):
   def __init__(self):
@@ -358,8 +347,48 @@ def baccarat_table_render(mud, me, ch, command, argument):
       ch.write(me.hand.ascii_render() + "\r\n")
     return structs.command_trigger_messages.BLOCK_INTERPRETER
 
+class baccarat_dealer_state(enum.IntEnum):
+  IDLE                = 1
+  BEGIN_SHOE          = 2
+  SHUFFLE_SHOE        = 3
+  FIRST_DRAW          = 4
+  BURN_CARDS          = 5
+  PLAYER_FIRST        = 6
+  BANKER_FIRST        = 7
+  PLAYER_SECOND       = 8
+  BANKER_SECOND       = 9 
+  SHOW_INITIAL        = 10
+  CHECK_NATURAL       = 11
+  CHECK_PLAYER        = 12
+  DEAL_PLAYER_THIRD   = 13
+  UPDATE_PLAYER_THIRD = 14
+  CHECK_BANKER        = 15
+  DEAL_BANKER_THIRD   = 16
+  UPDATE_BANKER_THIRD = 17
+  REPORT_WINNER       = 18
+  CLEAR_CARDS         = 19
+
 def baccarat_dealing(mud, me):
   NUM_DECKS = 6
+
+  panda_string = "{}P{}a{}n{}d{}a{}!{}".format(
+    CYAN,
+    DARK_GRAY,
+    CYAN,
+    DARK_GRAY,
+    CYAN,
+    DARK_GRAY,
+    NORMAL)
+
+  dragon_string = "{}D{}r{}a{}g{}o{}n{}!{}".format(
+    CYAN,
+    GREEN,
+    CYAN,
+    GREEN,
+    CYAN,
+    GREEN,
+    CYAN,
+    NORMAL)
 
   if me.state == baccarat_dealer_state.IDLE:
     return
@@ -399,6 +428,12 @@ def baccarat_dealing(mud, me):
   elif me.state == baccarat_dealer_state.PLAYER_FIRST:
     if me.shoe.size < 6:
       commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud)
+      mud.echo_around(me, None, "Player wins: {}{}{} (including pandas)\r\nBanker wins: {}{}{}\r\nTies: {}{}{}\r\nPandas: {}{}{}\r\nDragons: {}{}{}\r\n".format(
+        BLUE, me.shoe.count_reports(history_entry.PLAYER_WIN) + me.shoe.count_reports(history_entry.PANDA), NORMAL,
+        RED, me.shoe.count_reports(history_entry.BANKER_WIN), NORMAL,
+        GREEN, me.shoe.count_reports(history_entry.TIE), NORMAL,
+        MAGENTA, me.shoe.count_reports(history_entry.PANDA), NORMAL,
+        CYAN, me.shoe.count_reports(history_entry.DRAGON), NORMAL))
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
       me.paused = False
@@ -484,12 +519,21 @@ def baccarat_dealing(mud, me):
     me.state = baccarat_dealer_state.REPORT_WINNER
     pause = 60
   elif me.state == baccarat_dealer_state.REPORT_WINNER:
-    if me.hand.player_score() > me.hand.banker_score():
+    if me.hand.panda():
+      commands.do_say(me, None, panda_string, None, mud)
+      me.shoe.add_report(history_entry.PANDA)
+    elif me.hand.dragon():
+      commands.do_say(me, None, dragon_string, None, mud)
+      me.shoe.add_report(history_entry.DRAGON)
+    elif me.hand.player_score() > me.hand.banker_score():
       commands.do_say(me, None, f"Player wins {me.hand.player_score()} over {me.hand.banker_score()}.", None, mud)
+      me.shoe.add_report(history_entry.PLAYER_WIN)
     elif me.hand.player_score() < me.hand.banker_score():
       commands.do_say(me, None, f"Banker wins {me.hand.banker_score()} over {me.hand.player_score()}.", None, mud)
+      me.shoe.add_report(history_entry.BANKER_WIN)
     else:
       commands.do_say(me, None, f"Player and banker tie!", None, mud)
+      me.shoe.add_report(history_entry.TIE)
     me.hand = None
     me.state = baccarat_dealer_state.CLEAR_CARDS
     pause = 60
@@ -498,7 +542,7 @@ def baccarat_dealing(mud, me):
     me.state = baccarat_dealer_state.PLAYER_FIRST
     pause = 120
   if pause != 0:
-    mud.events.add_event(event.event(me, unpause_dealer, None, pause))
+    mud.events.add_event(event.event(me, unpause_dealer, None, 1))
   return
 
 """This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.
@@ -511,12 +555,10 @@ def unpause_dealer(ch, mud):
   ch.paused = False
 
 if __name__ == '__main__':
-  test_hand = baccarat_hand()
-
-  test_hand.add_card(cards.card(cards.card_suit.SPADES, cards.card_rank.KING, 10), "player")
-  test_hand.add_card(cards.card(cards.card_suit.HEARTS, cards.card_rank.QUEEN, 10), "player")
-  test_hand.add_card(cards.card(cards.card_suit.SPADES, cards.card_rank.JACK, 10), "banker")
-  test_hand.add_card(cards.card(cards.card_suit.SPADES, cards.card_rank.FIVE, 5), "banker")
-  test_hand.add_card(cards.card(cards.card_suit.DIAMONDS, cards.card_rank.TEN, 10), "player")
-
-  print(test_hand.ascii_render() + "\n")
+  new_shoe = baccarat_shoe(6)
+  new_shoe.add_report(history_entry.PLAYER_WIN)
+  new_shoe.add_report(history_entry.PANDA)
+  new_shoe.add_report(history_entry.BANKER_WIN)
+  print(f"Player wins: {new_shoe.count_reports(history_entry.PLAYER_WIN)} (including pandas)")
+  print(f"Banker wins: {new_shoe.count_reports(history_entry.BANKER_WIN)}")
+  print(f"Ties: {new_shoe.count_reports(history_entry.TIE)}")

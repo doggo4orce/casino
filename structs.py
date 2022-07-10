@@ -40,12 +40,16 @@ class entity:
 
 @dataclasses.dataclass
 class preferences:
+  """Caution: any new fields added below will be automatically saved.  But unless an
+     exception is added to load_char_by_name, as is done for screen_width and
+     screen_length, they will be loaded as strings.  Depending on how many numerical
+     values end up being added here, it may make sense to split this into two classes."""
   screen_width:  int=config.DEFAULT_SCREEN_WIDTH
   screen_length: int=config.DEFAULT_SCREEN_LENGTH
   color_mode:    str=config.DEFAULT_COLOR_MODE
   active_idle:   str=config.DEFAULT_ACTIVE_IDLE
   brief_mode:    str=config.DEFAULT_BRIEF_MODE
-  debug_mode:    int=config.DEFAULT_DEBUG_MODE
+  debug_mode:    str=config.DEFAULT_DEBUG_MODE
 
   def set(self, field, value):
     setattr(self, field, value)
@@ -58,6 +62,22 @@ class preferences:
     else:
       logging.warning(f"switch function called on {field}, which was neither {on} nor {off} - turning {off}.")
       setattr(self, field, off)
+
+"""Note: any new fields added to
+     pc_save_data_numerical or pc_save_data_non_numerical
+   will be automatically saved."""
+@dataclasses.dataclass
+class pc_save_data_numerical:
+  hp: int=1
+
+@dataclasses.dataclass
+class pc_save_data_strings:
+  title: str=config.DEFAULT_TITLE
+
+@dataclasses.dataclass
+class pc_save_data:
+  numerical: pc_save_data_numerical=dataclasses.field(default_factory=lambda:pc_save_data_numerical())
+  non_numerical: pc_save_data_strings=dataclasses.field(default_factory=lambda:pc_save_data_strings())
 
 @dataclasses.dataclass
 class command_trigger:

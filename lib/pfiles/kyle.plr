@@ -1,8 +1,14 @@
+# Administrative Data
 name: Kyle
 id: 1
 password: Es2y0
-title: the super cool dude
+
+# Game Data
+title: the title-less
+hp: 1
 room: 3002
+
+# Preferences
 screen_width: 80
 screen_length: 50
 color_mode: 256

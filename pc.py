@@ -61,11 +61,12 @@ class character:
 
 class pc(character):
   """Creates a new PC (playable character).
-     d      = descriptor controlling the character
-     pwd    = password used to log in
-     title  = what the player calls themself
-     id     = unique player ID
-     prefs  = player preferences such as screen height, width, etc."""
+     d         = descriptor controlling the character
+     pwd       = password used to log in
+     title     = what the player calls themself
+     id        = unique player ID
+     prefs     = player preferences such as screen height, width, etc. (structs.py)
+     save_data = game data that is saved to player files               (structs.py)"""
   def __init__(self):
     super().__init__()
     self._d = None
@@ -73,6 +74,7 @@ class pc(character):
     self._title = config.DEFAULT_TITLE
     self._id = None
     self._prefs = structs.preferences()
+    self._save_data = structs.pc_save_data()
 
   # Getters
   @property
@@ -97,6 +99,9 @@ class pc(character):
       out_str += " (linkless)"
     out_str += " is here."
     return out_str
+  @property
+  def save_data(self):
+    return self._save_data
   
   # Setters
   @d.setter
@@ -111,6 +116,9 @@ class pc(character):
   @id.setter
   def id(self, new_id):
     self._id = new_id
+  @save_data.setter
+  def save_data(self, new_data):
+    self._save_data = new_data
 
   """update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
      save_char()           <- saves character data to player file
@@ -125,17 +133,27 @@ class pc(character):
   def save_char(self):
     file_name = config.PFILES_PATH + self.name.lower() + ".plr"
     with open(file_name, "w") as wf:
+      wf.write("# Administrative Data\n")
+
       wf.write(f"name: {self.name}\n".format(self.name))
       wf.write(f"id: {self.id}\n")
       wf.write(f"password: {self.pwd}\n")
-      wf.write(f"title: {self.title}\n")
+
+      wf.write("\n# Game Data\n")
+
+      for field in self.save_data.non_numerical.__dataclass_fields__:
+        wf.write(f"{field}: {getattr(self._save_data.non_numerical, field)}\n")
+
+      for field in self.save_data.numerical.__dataclass_fields__:
+        wf.write(f"{field}: {getattr(self._save_data.numerical, field)}\n")
+
       wf.write(f"room: {self.room}\n")
+
+      wf.write("\n# Preferences\n")
       self.save_prefs(wf)
 
   def save_prefs(self, file_stream):
-    print(self.prefs)
     for field in self.prefs.__dataclass_fields__:
-      print(field)
       file_stream.write(f"{field}: {getattr(self.prefs, field)}\n")
 
   def write(self, message):

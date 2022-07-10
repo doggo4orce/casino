@@ -11,14 +11,21 @@ PF_DEFAULT_ROOM = config.VOID_ROOM
 
 ptable = list()
 
+# TODO: this code is repeated in load_char_by_name, can it be factored?
 def field_by_name(name, field):
   with open(f"{config.PFILES_PATH}{name.lower()}.plr") as rf:
+    line_number = 0
     for line in rf:
+      line_number += 1
+      # allows us to ignore comments and blank lines
+      if line == "\n" or line[0] == '#':
+        continue
       var_list = line.split()
       tag = var_list[0]
       value = " ".join(var_list[1:])
       if tag[-1] != ":":
-        logging.error(f"Error: Expected ':' at the end of tag while loading {name}.plr")
+        logging.error(f"Line ({line_number}) -- Error: Expected ':' at the end of tag while loading {name}.plr")
+        logging.error("See field_by_name.")
         return False
       tag = tag[0:len(tag) - 1] # remove the semi-colon after confirming it's there
       if tag == field:
@@ -75,19 +82,32 @@ def load_char_by_name(name):
   result = pc.pc()
   result.room = PF_DEFAULT_ROOM
   result.title = PF_DEFAULT_TITLE
+  line_number = 0
+
   if id_by_name(name) == None:
     logging.error(f"Error: Trying to load pfile for name {name} which is not contained in the index.")
     return False
+
   with open(f"{config.PFILES_PATH}{name.lower()}.plr") as rf:
     for line in rf:
+      line_number += 1
+
+      # allows us to ignore comments and blank lines
+      if line == "\n" or line[0] == '#':
+        continue
+
       # this is essentially the one_arg behaviour. factor it
       var_list = line.split()
       tag = var_list[0]
       value = " ".join(var_list[1:])
+
       if tag[-1] != ":":
-        logging.error(f"Error: Expected ':' at the end of tag while loading {name}.plr")
+        logging.error(f"Line ({line_number}) -- Error: Expected ':' at the end of tag while loading {name}.plr")
+        logging.error("See load_char_by_name.")
         return False
       tag = tag[0:len(tag) - 1] # remove the semi-colon after confirming it's there
+
+      # Load Administrative Data
       if tag == "name":
         result.name = value
         result.entity.namelist = [value]
@@ -95,21 +115,26 @@ def load_char_by_name(name):
         result.id = value
       elif tag == "password":
         result.pwd = value
-      elif tag == "title":
-        result.title = value
-      elif tag == "room":
+      elif tag == "room": # this one could be moved to game data
         if value == "None":
           result.room = config.VOID_ROOM
         else:
           result.room = int(value)
-      elif tag == "brief":
-        result.prefs.brief_mode = value
-      elif tag == "active":
-        result.prefs.active_idle = value
-      elif tag == "width":
-        result.prefs.screen_width = int(value)
-      elif tag == "length":
-        result.prefs.screen_length = int(value)
+
+      # Load Game Data
+      elif hasattr(result.save_data.numerical, tag):
+        setattr(result.prefs, tag, int(value))
+      elif hasattr(result.save_data.non_numerical, tag):
+        setattr(result.prefs, tag, value)
+
+      # Load Preferences
+      elif hasattr(result.prefs, tag):
+        if tag in ['screen_width', 'screen_length']:
+          setattr(result.prefs, tag, int(value))
+        else:
+          setattr(result.prefs, tag, value)
+      else:
+        logging.warning(f"Line ({line_number}) -- Trying to assign value to unrecognized tag {tag} while loading {name}.")
 
   result.id = id_by_name(name)
   return result

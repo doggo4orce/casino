@@ -66,6 +66,19 @@ class baccarat_hand:
     if len(self.banker) == 3 and self.player_score() < self.banker_score():
       return self.banker_score() == 7
 
+  def three_card_9_8(self):
+    if len(self) == 6:
+      # only way get 17 is a 9 and and 8
+      return self.player_score() + self.banker_score() == 17
+
+  def natural_9_8(self):
+    if self.player_natural() and self.banker_natural():
+      return self.player_score() == 17
+
+  def any_8_7(self):
+    x,y = self.player_score() and self.banker_score()
+    return (x == 8 and y == 7) or (x == 7 and y == 8):
+
   def ascii_render(self):
     SPACE_BETWEEN_CARD = 1
     SPACE_BETWEEN_PLAYER_BANKER = 3
@@ -181,10 +194,18 @@ class history_entry(enum.IntEnum):
   PANDA      = 4
   DRAGON     = 5
 
+class extra_side_bet(enum.IntEnum):
+  THREE_CARD_9_8 = 1
+  NATURAL_9_8    = 2
+  ANY_8_7        = 3
+
 class baccarat_shoe(cards.shoe):
   def __init__(self, num_decks):
     super().__init__()
-    self._history = list()
+
+    self._history = list() # keeps track of standard history entries
+    self._extras = list()  # keeps track of extra side bets
+
     for j in range(0, num_decks):
       self.absorb_bottom(baccarat_shoe.baccarat_deck())
 
@@ -207,11 +228,17 @@ class baccarat_shoe(cards.shoe):
       deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.KING), 10))
     return deck
 
-  def add_report(self, result):
+  def report_history(self, result):
     self._history.append(result)
+
+  def report_side_bet(self, result):
+    self._extras.append(result)
 
   def count_reports(self, result):
     return sum(map(lambda entry: entry == result, self._history))
+
+  def count_extras(self, side_bet):
+    return sum(map(lambda entry: side_bet == result, self._extras))
 
 class baccarat_dealer(cards.card_dealer):
   def __init__(self):
@@ -434,6 +461,11 @@ def baccarat_dealing(mud, me):
         GREEN, me.shoe.count_reports(history_entry.TIE), NORMAL,
         MAGENTA, me.shoe.count_reports(history_entry.PANDA), NORMAL,
         CYAN, me.shoe.count_reports(history_entry.DRAGON), NORMAL))
+      mud.echo_around(me, None, "3-card 9/8's: {}\r\nNatural 9/8's: {}\r\nAny 8/7's: {}\r\n".format(
+        me.shoe.count_extras(extra_side_bet.THREE_CARD_9_8),
+        me.shoe.count_extras(extra_side_bet.NATURAL_9_8),
+        me.shoe.count_extras(extra_side_bet.ANY_8_7)
+        ))
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
       me.paused = False
@@ -521,19 +553,28 @@ def baccarat_dealing(mud, me):
   elif me.state == baccarat_dealer_state.REPORT_WINNER:
     if me.hand.panda():
       commands.do_say(me, None, panda_string, None, mud)
-      me.shoe.add_report(history_entry.PANDA)
+      me.shoe.report_history(history_entry.PANDA)
     elif me.hand.dragon():
       commands.do_say(me, None, dragon_string, None, mud)
-      me.shoe.add_report(history_entry.DRAGON)
+      me.shoe.report_history(history_entry.DRAGON)
     elif me.hand.player_score() > me.hand.banker_score():
       commands.do_say(me, None, f"Player wins {me.hand.player_score()} over {me.hand.banker_score()}.", None, mud)
-      me.shoe.add_report(history_entry.PLAYER_WIN)
+      me.shoe.report_history(history_entry.PLAYER_WIN)
     elif me.hand.player_score() < me.hand.banker_score():
       commands.do_say(me, None, f"Banker wins {me.hand.banker_score()} over {me.hand.player_score()}.", None, mud)
-      me.shoe.add_report(history_entry.BANKER_WIN)
+      me.shoe.report_history(history_entry.BANKER_WIN)
     else:
       commands.do_say(me, None, f"Player and banker tie!", None, mud)
-      me.shoe.add_report(history_entry.TIE)
+      me.shoe.report_history(history_entry.TIE)
+    
+    # Check Michael's Side Bets
+    if me.hand.three_card_9_8():
+      me.hand.report_extra(extra_side_bet.THREE_CARD_9_8)
+    if me.hand.natural_9_8():
+      me.hand.report_extra(extra_side_bet.NATURAL_9_8)
+    if me.hand.any_8_7():
+      me.hand_report_extra(extra_side_bet.ANY_8_7)
+
     me.hand = None
     me.state = baccarat_dealer_state.CLEAR_CARDS
     pause = 60

@@ -396,7 +396,7 @@ class baccarat_dealer_state(enum.IntEnum):
   CLEAR_CARDS         = 19
 
 def baccarat_dealing(mud, me):
-  NUM_DECKS = 24
+  NUM_DECKS = 6
 
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(
     CYAN,

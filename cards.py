@@ -97,14 +97,11 @@ class card:
     if self.suit == card_suit.DIAMONDS:
       return "\U00002666"
 
-  def text_rep(self):
-    return card_rank(self.rank).name.lower() + " of " + card_suit(self.suit).name.lower()
-
   def ascii_rep(self):
     return self.card_color() + self.ascii_rank() + self.ascii_suit() + NORMAL
 
   def __str__(self):
-    return f"{card_rank(self.rank).name} of {card_suit(self.suit).name}"
+    return card_rank(self.rank).name.lower() + " of " + card_suit(self.suit).name.lower()
 
 class shoe:
   """Creates a new shoe (may be thought of as a deck but is more general)

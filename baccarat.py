@@ -243,12 +243,12 @@ class baccarat_shoe(cards.shoe):
 class baccarat_dealer(cards.card_dealer):
   def __init__(self):
     """Creates a baccarat dealer
-     state = keep track of what dealer will do next, FIRST_DRAW etc.
-     working = True when dealer's next step has been initiated"""
+     state = keep track of what dealer will do next, FIRST_DRAW etc."""
     super().__init__()
     self._hand = None
     self._state = baccarat_dealer_state.IDLE
     self._initial_card_val = None
+    self._simulation_mode = False
 
   # getters
   @property
@@ -260,6 +260,9 @@ class baccarat_dealer(cards.card_dealer):
   @property
   def initial_card_val(self):
     return self._initial_card_val
+  @property
+  def simulation_mode(self):
+    return self._simulation_mode
 
   # setters
   @hand.setter
@@ -271,6 +274,9 @@ class baccarat_dealer(cards.card_dealer):
   @initial_card_val.setter
   def initial_card_val(self, new_val):
     self._initial_card_val = new_val
+  @simulation_mode.setter
+  def simulation_mode(self, new_mode):
+    self._simulation_mode = new_mode
 
   @classmethod
   def from_card_dealer(cls, dealer):
@@ -386,17 +392,23 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
+
   help_str  = "Baccarat Commands:\r\n"
-  help_str += "  baccarat start - begin a baccarat shoe (no commitment)\r\n"
+  help_str += "  baccarat start - play a baccarat shoe\r\n"
+  help_str += "  baccarat simulate - simulate a baccarat shoe (fast)\r\n"
+
   if command == "baccarat":
-    if argument.lower() == "start":
+    if argument.lower() in ["start", "simulate"]:
       if me.state != baccarat_dealer_state.IDLE:
         ch.write("There is already a game in progress!\r\n")
         return structs.command_trigger_messages.BLOCK_INTERPRETER
       ch.write("You signal to the dealer to start the next shoe.\r\n")
       me.paused = True
       me.state = baccarat_dealer_state.BEGIN_SHOE
-      mud.events.add_event(event.event(me, unpause_dealer, None, 30))
+      mud.events.add_event(event.event(me, unpause_dealer, None, 10))
+      
+      me.simulation_mode = argument.lower() == "simulate"
+
     else:
       ch.write(help_str)
     return structs.command_trigger_messages.BLOCK_INTERPRETER
@@ -467,7 +479,7 @@ def baccarat_dealing(mud, me):
   pause = 0
   if me.state == baccarat_dealer_state.BEGIN_SHOE:
     me.shoe = baccarat_shoe(NUM_DECKS)
-    mud.echo_around(me, None, f"{me} assembles a new shoe consisting of {NUM_DECKS} deck{'s' if NUM_DECKS > 0 else ' '}.\r\n")
+    mud.echo_around(me, None, f"{me} assembles a new shoe consisting of {NUM_DECKS} deck{'s' if NUM_DECKS > 1 else ' '}.\r\n")
     me.state = baccarat_dealer_state.SHUFFLE_SHOE
     pause = 30
   elif me.state == baccarat_dealer_state.SHUFFLE_SHOE:
@@ -481,7 +493,7 @@ def baccarat_dealing(mud, me):
     mud.echo_around(me, None, "{} draws and reveals the first card, which is {} {}.\r\n".format(
       me,
       string_handling.ana(cards.card_rank(first_card.rank).name),
-      first_card.text_rep()
+      first_card
       ))
     me.state = baccarat_dealer_state.BURN_CARDS
     pause = 30
@@ -508,25 +520,22 @@ def baccarat_dealing(mud, me):
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
       me.paused = False
+      me.simulation_mode = False
       return
     me.hand = baccarat_hand()
-    me.deal_next_card('player')
-    mud.echo_around(me, None, f"{me} deals a card to the player.\r\n")
+    mud.echo_around(me, None, f"{me} deals {me.deal_next_card('player')} to the player.\r\n")
     me.state = baccarat_dealer_state.BANKER_FIRST
     pause = 10
   elif me.state == baccarat_dealer_state.BANKER_FIRST:
-    me.deal_next_card('banker')
-    mud.echo_around(me, None, f"{me} deals a card to the banker.\r\n")
+    mud.echo_around(me, None, f"{me} deals {me.deal_next_card('banker')} to the banker.\r\n")
     me.state = baccarat_dealer_state.PLAYER_SECOND
     pause = 10
   elif me.state == baccarat_dealer_state.PLAYER_SECOND:
-    me.deal_next_card('player')
-    mud.echo_around(me, None, f"{me} deals a card to the player.\r\n")
+    mud.echo_around(me, None, f"{me} deals {me.deal_next_card('player')} to the player.\r\n")
     me.state = baccarat_dealer_state.BANKER_SECOND
     pause = 10
   elif me.state == baccarat_dealer_state.BANKER_SECOND:
-    me.deal_next_card('banker')
-    mud.echo_around(me, None, f"{me} deals a card to the banker.\r\n")
+    mud.echo_around(me, None, f"{me} deals {me.deal_next_card('banker')} to the banker.\r\n")
     me.state = baccarat_dealer_state.SHOW_INITIAL
     pause = 10
   elif me.state == baccarat_dealer_state.SHOW_INITIAL:
@@ -559,7 +568,7 @@ def baccarat_dealing(mud, me):
     mud.echo_around(me, None, "{} deals {} {} to the player.\r\n".format(
       me,
       string_handling.ana(cards.card_rank(player_third.rank).name),
-      player_third.text_rep()
+      player_third
       ))
     me.state = baccarat_dealer_state.UPDATE_PLAYER_THIRD
     pause = 10
@@ -581,7 +590,7 @@ def baccarat_dealing(mud, me):
     mud.echo_around(me, None, "{} deals {} {} to the banker.\r\n".format(
       me,
       string_handling.ana(cards.card_rank(banker_third.rank).name),
-      banker_third.text_rep()
+      banker_third
       ))
     me.state = baccarat_dealer_state.UPDATE_BANKER_THIRD
     pause = 10
@@ -622,7 +631,7 @@ def baccarat_dealing(mud, me):
     me.state = baccarat_dealer_state.PLAYER_FIRST
     pause = 120
   if pause != 0:
-    mud.events.add_event(event.event(me, unpause_dealer, None, 1))
+    mud.events.add_event(event.event(me, unpause_dealer, None, 1 if me.simulation_mode else pause))
   return
 
 """This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.

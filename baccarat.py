@@ -633,7 +633,10 @@ def baccarat_dealing(mud, me):
     me.state = baccarat_dealer_state.PLAYER_FIRST
     pause = 120
   if pause != 0:
-    mud.events.add_event(event.event(me, unpause_dealer, None, 1 if me.simulation_mode else pause))
+    if me.simulation_mode:
+      me.paused = False
+    else:
+      mud.events.add_event(event.event(me, unpause_dealer, None, paused))
   return
 
 """This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.

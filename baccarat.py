@@ -403,6 +403,7 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
         ch.write("There is already a game in progress!\r\n")
         return structs.command_trigger_messages.BLOCK_INTERPRETER
       ch.write("You signal to the dealer to start the next shoe.\r\n")
+      ch.echo_around(ch, None, f"{ch} signals to the dealer to start the next shoe.\r\n")
       me.paused = True
       me.state = baccarat_dealer_state.BEGIN_SHOE
       mud.events.add_event(event.event(me, unpause_dealer, None, 10))
@@ -447,7 +448,7 @@ class baccarat_dealer_state(enum.IntEnum):
   CLEAR_CARDS         = 19
 
 def baccarat_dealing(mud, me):
-  NUM_DECKS = 6
+  NUM_DECKS = 8
 
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(
     CYAN,
@@ -475,6 +476,7 @@ def baccarat_dealing(mud, me):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealing' on npc {me}.")
     return
+    
   me.paused = True
   pause = 0
   if me.state == baccarat_dealer_state.BEGIN_SHOE:

@@ -636,7 +636,7 @@ def baccarat_dealing(mud, me):
     if me.simulation_mode:
       me.paused = False
     else:
-      mud.events.add_event(event.event(me, unpause_dealer, None, paused))
+      mud.events.add_event(event.event(me, unpause_dealer, None, pause))
   return
 
 """This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.

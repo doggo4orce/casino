@@ -118,8 +118,12 @@ By what name do you wish to be known? """
       remote_sock.setblocking(False)
 
       addr, _ = remote_addr
+      
+      try:
+        host = socket.gethostbyaddr(addr)[0]
+      except Exception:
+        host = "unresolved_host"
 
-      host = socket.gethostbyaddr(addr)[0]
       logging.info(f"New connection from {host}.")
       self.new_connections.append(conn(remote_sock, host))
 

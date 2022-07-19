@@ -113,8 +113,8 @@ class descriptor:
     finished_input = ""
     parsed_msg = ""
     unread_chars = 0
-    # if we're still in the middle of processing a command, pass
-    # the buffer to the command to grab what it needs
+    # if we're still in the middle of processing a telnet command, pass
+    # the buffer to the command (not a typo) to grab what it needs
     if self.telnet:
       # it sends the rest back to us to continue parsing
       self.in_buf = self.telnet.parse_bytestream(self.in_buf[r_i:])

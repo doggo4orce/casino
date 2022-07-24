@@ -7,44 +7,38 @@ import event
 import glob
 import logging
 import object
+import os
 import pc
 import room
+import string_handling
 import structs
+import zone
 
 class game:
   def __init__(self):
     """Creates a game world with rooms, objects, and characters.
-       wld       = a dictionary for which rooms may be looked up by their vnums
+       zones     = a list of zone folders which have been loaded from WORLD_FOLDER
        chars     = a list of characters (including NPCS and PCs) in the game
        objects   = a list of objects which are in the game
-       npc_proto = a dictionary of npc prototypes which can be loaded from
-       obj_proto = a dictionary of object prototypes which can be loaded from
        events    = handles all events to take place in the future"""
-    self.wld       = dict()
+    self.zones     = list()
     self.chars     = list()
     self.objects   = list()
-    self.npc_proto = dict()
-    self.obj_proto = dict()
     self.events    = event.event_table()
 
   """heart_beat()            <- calls the event handlers heart_beat() function
      call_heart_beat_procs() <- calls all pulsing special procedures for npcs
-     next_room_vnum()        <- next unused virtual number in self.wld
-     next_npc_vnum()         <- next unused virtual number in self.npc_proto
-     room_by_vnum(vnum)      <- look up room by virtual number in self.wld
-     npc_by_vnum(vnum)       <- look up npc by virtual number in self.npc_proto
-     add_char(ch)            <- adds character ch to the wld, in the appropriate room or The Void
+     zone_by_id(id)          <- iterate through self.zones zones to find zone with identifier id
+     room_by_code(code)      <- look up room by code, e.g. 'zone_id[room_id]'
+     echo_around(ch, hide, msg) <- sends msg to all chars in room except ch and those in hide list
+     add_char(ch)            <- adds character ch to the wld, in the appropriate room or VOID_ROOM
      extract_char(ch)        <- extracts character ch from the wld and the appropriate room
      add_obj(obj)            <- these functions are the same
      extract_obj(obj)        <- except for objects instead
-     init_wld()              <- calls read_wld_file on every .wld file in 'lib/world/wld' 
-     init_npcs()             <- calls read_npc_file on every .npc file in 'lib/world/npc'
-     init_objs()             <- calls read_obj_file on every .obj file in 'lib/world/obj'
      assign_spec_procs()     <- assigns special procedures to elements of npc_proto
-     startup()               <- calls each of the init_*() functions and assign_spec_procs()
+     startup()               <- loads all of the zone folders in WORLD_FOLDER
      load_npc(vnum)          <- looks up the npc in self.npc_proto and returns a copy or None
      load_obj(vnum)          <- looks up the obj in self.objs and return a copy or None
-     read_wld_file(filename) <- reads all the rooms stored in filename
      read_npc_file(filename) <- reads all the npcs stored in filename
      read_obj_file(filename) <- reads all the objects stored in a filename
      pc_by_id(id)            <- searches chars for a pc with id and returns it if found
@@ -59,103 +53,58 @@ class game:
       if isinstance(mob, pc.npc):
         mob.call_heart_beat_procs(self)
 
-  def next_room_vnum(self):
-    # if the world is empty, 0 is the next vnum
-    if len(self.wld) == 0:
-      return 0
-    # find the next unused slot and return its index
-    for j in range(0, len(self.wld)):
-      if j not in self.wld.keys():
-        return j
+  def zone_by_id(self, id):
+    for zone in self.zones:
+      if zone.id == id:
+        return zone
+    return None
 
-  def next_npc_vnum(self):
-    # if npc_proto is empty, 0 is the next vnum
-    if len(self.npc_proto) == 0:
-      return 0
-    # find the next unused slot and return its index
-    for j in range(0, len(self.npc_proto)):
-      if j not in self.npc_proto.keys():
-        return j
-
-  def next_obj_vnum(self):
-    # if obj_proto is empty, 0 is the next vnum
-    if len(self.obj_proto) == 0:
-      return 0
-    # find the next unused slot and return its index
-    for j in range(0, len(self.obj_proto)):
-      if j not in self.obj_proto.keys():
-        return j
-
-  def room_by_vnum(self, vnum):
-    if vnum not in self.wld:
-      logging.warning(f"Trying to look up room {vnum} which was not found.")
+  def room_by_code(self, code):
+    zone_id, room_id = string_handling.parse_room_code(code)
+   
+    if zone_id == None or room_id == None:
       return None
-    else:
-      return self.wld[vnum]
 
-  def npc_by_vnum(self, vnum):
-    if vnum not in self.npc_proto:
-      logging.warning(f"Trying to look up npc {vnum} which was not found.")
-      return None
-    else:
-      return self.npc_proto[vnum]
-
-  def obj_by_vnum(self, vnum):
-    if vnum not in self.obj_proto:
-      logging.warning(f"Trying to look up object {vnum} which was not found.")
-      return None
-    else:
-      return self.obj_proto[vnum]
+    zone = self.zone_by_id(zone_id)
+    return zone.room_by_id(room_id)
 
   def echo_around(self, ch, hide_from, msg):
     if hide_from == None:
       hide_from = [ ]
       
     hide_from.append(ch)
-    self.room_by_vnum(ch.room).echo(msg, exceptions = hide_from)
+    self.room_by_code(ch.room).echo(msg, exceptions = hide_from)
 
   def add_char(self, ch):
     # place them in the world
     self.chars.append(ch)
     # check if they have a location
-    room = self.room_by_vnum(ch.room)
+    room = self.room_by_code(ch.room)
     # add them to the room if so
     if room != None:
       room.add_char(ch)
     # otherwise put them in the void
     else:
       ch.room = config.VOID_ROOM
-      self.room_by_vnum(config.VOID_ROOM).add_char(ch)
-
-  def add_obj(self, obj):
-    self.objects.append(obj)
-    room = self.room_by_vnum(obj.room)
-    if room != None:
-      room.inventory.insert(obj)
+      self.room_by_code(config.VOID_ROOM).add_char(ch)
 
   def extract_char(self, ch):
     # if they are in a room, remove them from that room
     if ch.room != None:
-      self.room_by_vnum(ch.room).remove_char(ch)
+      self.room_by_code(ch.room).remove_char(ch)
     # now remove them from the world
     self.chars.remove(ch)
 
+  def add_obj(self, obj):
+    self.objects.append(obj)
+    room = self.room_by_code(obj.room)
+    if room != None:
+      room.inventory.insert(obj)
+
   def extract_obj(self, obj):
     if obj.room != None:
-      self.room_by_vnum(ch.room).inventory.remove(obj)
+      self.room_by_code(ch.room).inventory.remove(obj)
     self.objects.remove(obj)
-
-  def init_wld(self):
-    for file in glob.glob(config.WLD_FOLDER + "*.wld"):
-      self.read_wld_file(file)
-
-  def init_npcs(self):
-    for file in glob.glob(config.NPC_FOLDER + "*.npc"):
-      self.read_npc_file(file)
-
-  def init_objs(self):
-    for file in glob.glob(config.OBJ_FOLDER + "*.obj"):
-      self.read_obj_file(file)
 
   def assign_spec_procs(self):
     self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
@@ -164,39 +113,29 @@ class game:
     self.npc_proto[3002].heart_beat_procs.append(structs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
   def startup(self):
-    self.init_wld()
-    self.init_npcs()
-    self.init_objs()
 
-    # temporary, will be replaced with self.init_zones() one day
-    mob = self.load_npc(3000)
-    mob.room = 3000
-    self.add_char(mob)
+    for folder in glob.glob(config.WORLD_FOLDER + "*"):
+      # all zones are stored in folders so ignore any loose files in here
+      if not os.path.isdir(folder):
+        continue
+      # otherwise we found a new zone folder, so load it
+      new_zone = zone.zone(folder)
 
-    mob = self.load_npc(3001)
-    mob.room = 3001
-    self.add_char(mob)
+      # TODO: load npcs and objects for this zone
 
-    obj = self.load_obj(3000)
-    obj.room = 3000
-    self.add_obj(obj)
+      # now added it to the game
+      self.zones.append(new_zone)
 
-    obj = self.load_obj(3001)
-    obj.room = 3001
-    self.add_obj(obj)
-
-    mob = self.load_npc(3002)
-    mob.room = 3002
 
     # promote the mob to a card dealer
-    mob = cards.card_dealer.from_npc(mob)
+    # mob = cards.card_dealer.from_npc(mob)
 
     # now promote them to a baccarat dealer
-    mob = baccarat.baccarat_dealer.from_card_dealer(mob)
+    # mob = baccarat.baccarat_dealer.from_card_dealer(mob)
 
-    self.add_char(mob)
+    # self.add_char(mob)
 
-    self.assign_spec_procs()
+    # self.assign_spec_procs()
 
 
   def load_npc(self, vnum):
@@ -218,20 +157,6 @@ class game:
     new_obj = object.object()
     new_obj.entity = self.obj_proto[vnum].entity
     return new_obj
-
-  def read_wld_file(self, filename):
-    rf = open(filename, 'r')
-    while True:
-      #expected #VNUM or $ (final line)
-      line = rf.readline()
-      # file is terminated with $
-      if line[0] == '$':
-        return
-      # first thing is the virtual number
-      vnum = int(line[1:])
-      # now read the rest
-      self.wld[vnum] = db.parse_room(rf)
-      self.wld[vnum].vnum = vnum
 
   def read_npc_file(self, filename):
     rf = open(filename, "r")
@@ -270,12 +195,12 @@ class game:
     ch.d = None
 
   def reconnect(self, d, ch):
-    # check if ch isn't actually linkdead
+    # they might already have a connection
     if ch.d:
-      # disconnect the imposter
+      # if so, kick it off
       ch.d.disconnected = True
       ch.d.char = None
-    # connect d to linkless ch
+    # now connect to the linkless char
     d.char = ch
     ch.d = d
 

@@ -116,10 +116,7 @@ def load_char_by_name(name):
       elif tag == "password":
         result.pwd = value
       elif tag == "room": # this one could be moved to game data
-        if value == "None":
-          result.room = config.VOID_ROOM
-        else:
-          result.room = int(value)
+        result.room = value
 
       # Load Game Data
       elif hasattr(result.save_data.numerical, tag):

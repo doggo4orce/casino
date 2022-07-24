@@ -1,7 +1,9 @@
+from color import *
 import dataclasses
 import config
 import enum
 import logging
+import string_handling
 import typing
 
 # for cleaner type hints
@@ -19,7 +21,7 @@ class client:
 
 
 @dataclasses.dataclass
-class entity:
+class entity_data:
   """name     = what to be referred to as
      namelist = list of keywords to be targetted with
      desc     = shown when closely examined
@@ -64,8 +66,7 @@ class preferences:
       setattr(self, field, off)
 
 """Note: any new fields added to
-     pc_save_data_numerical or pc_save_data_non_numerical
-   will be automatically saved."""
+     pc_save_data_numerical or pc_save_data_non_numerical will be automatically saved."""
 @dataclasses.dataclass
 class pc_save_data_numerical:
   hp: int=1
@@ -98,4 +99,24 @@ class heart_beat_proc:
      func = behaviour function"""
   name: str="an unnamed spec proc"
   func: function=None
+
+@dataclasses.dataclass
+class npc_proto_data:
+  entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
+  command_triggers: list = dataclasses.field(default_factory=lambda:list())
+  heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
+
+  def __str__(self):
+    ret_val = f"NPC: {CYAN}{self.entity.name}{NORMAL} "
+    ret_val += f"Alias: {CYAN}"
+    for name in self.entity.namelist:
+      ret_val += name + " "
+    ret_val += f"{NORMAL}\r\n"
+    ret_val += f"Desc:\r\n{string_handling.paragraph(self.entity.desc, 65, True)}\r\n"
+    ret_val += f"L-Desc: {self.entity.ldesc}\r\n"
+    return ret_val
+
+@dataclasses.dataclass
+class obj_proto_data:
+  ent: entity_data = dataclasses.field(default_factory=lambda:entity_data())
 

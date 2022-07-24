@@ -49,6 +49,17 @@ def paragraph(text, width, indent=False):
 
   return par
 
+# used to read files in lib/
+def parse_tag(line):
+  var_list = line.split()
+  return var_list[0], " ".join(var_list[1:])
+
+def parse_room_code(code):
+  n = code.find('[')
+  if n == -1:
+    return None, None
+  return code[:n], code[n+1:-1]
+
 def yesno(flag):
   if flag == True:
     return 'yes'

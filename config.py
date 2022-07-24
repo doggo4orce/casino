@@ -24,8 +24,8 @@ PACKET_SIZE           = 256 # max bytes to read from socket each poll
 OMUD_VERSION          = '1.0 alpha'
 
 # configurable gameplay constants
-STARTING_ROOM         = 3001
-VOID_ROOM             = 0
+STARTING_ROOM         = 'casino[temple]'
+VOID_ROOM             = 'casino[temple]'
 PLAYER_PROMPT         = '> '
 
 # player preferences

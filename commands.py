@@ -68,7 +68,7 @@ def do_give(ch, scmd, argument, server, mud):
 
   # who to give it to
   rm = mud.room_by_vnum(ch.room)
-  tch = rm.char_by_name(args[1])
+  tch = rm.char_by_alias(args[1])
 
   if tch == None:
     ch.write(f"There is nobody by the name {args[1]} here.\r\n")
@@ -386,7 +386,7 @@ def do_look(ch, scmd, argument, server, mud):
   args = argument.split()
   num_args = len(args)
 
-  rm = mud.room_by_vnum(ch.room)
+  rm = mud.room_by_code(ch.room)
   
   # if no args, then just look at the room
   if num_args == 0:
@@ -395,7 +395,7 @@ def do_look(ch, scmd, argument, server, mud):
       return
     show_room_to_char(ch, rm)
   elif num_args == 1:
-    tch = rm.char_by_name(args[0])
+    tch = rm.char_by_alias(args[0])
 
     if tch != None:
       show_char_to_char(ch, tch)
@@ -441,14 +441,14 @@ def show_char_to_char(ch, tch):
 
 
 def do_move(ch, scmd, argument, server, mud):
-  starting_room = mud.room_by_vnum(ch.room)
-  destination_vnum = starting_room.get_destination(scmd)
+  starting_room = mud.room_by_code(ch.room)
+  destination_code = starting_room.get_destination(scmd)
 
-  if not destination_vnum:
+  if not destination_code:
     ch.write("Alas, you cannot go that way.\r\n")
     return
 
-  ending_room = mud.room_by_vnum(destination_vnum)
+  ending_room = mud.room_by_code(destination_code)
 
   left_msg = f"{ch} leaves {scmd.name.lower()}.\r\n"
 
@@ -476,7 +476,7 @@ def do_move(ch, scmd, argument, server, mud):
 
 def do_quit(ch, scmd, argument, server, mud):
   d = ch.d
-  room = mud.room_by_vnum(ch.room)
+  room = mud.room_by_code(ch.room)
   ch.save_char()
   mud.extract_char(ch)
 

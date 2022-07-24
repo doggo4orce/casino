@@ -1,8 +1,8 @@
+from color import *
 import enum
 import object
 import pc
-
-from color import *
+import string_handling
 
 class direction(enum.IntEnum):
   NORTH = 0
@@ -13,28 +13,50 @@ class direction(enum.IntEnum):
   DOWN  = 5
 
 class exit:
-  def __init__(self, dir, vnum):
+  """Creates an exit which characters may use to travel between rooms.
+    direction = 
+    zone      =
+    room      ="""
+  def __init__(self, dir, code):
     self._direction = dir
-    self._vnum = vnum
+
+    zone_id, room_id = string_handling.parse_room_code(code)
+    
+    self._zone = zone_id
+    self._room = room_id
 
   @property
   def direction(self):
     return self._direction
   @property
-  def vnum(self):
-    return self._vnum
+  def zone(self):
+    return self._zone
+  @property
+  def room(self):
+    return self._room
+  @property
+  def destination(self):
+    return f"{self.zone}[{self.room}]"
+
+  def __str__(self):
+    if self.local():
+      return f"{self.direction.name.lower()}: {CYAN}{self.room}{NORMAL}\r\n"
+    else:
+      return f"{self.direction.name.lower()}: {CYAN}{self.zone}{NORMAL}[{CYAN}{self.room}{NORMAL}]\r\n"
 
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
       name     = the title of the room (displayed first as one line)
-      vnum     = key to access rooms as values in the in game.world dictionary
+      id       = unique (relative to zone) identifier to reference room
+      zone_id  = unique identifier for zone that the room belongs to
       desc     = the longer description of the room (shown as a following paragraph)
       exits    = exits in the cardinal directions leading to other rooms (identified by vnum)
       people   = list of characters in the room
       contents = list of objects on the ground"""
   def __init__(self):
     self._name      = "Unfinished Room"
-    self._vnum      = None
+    self._id        = "unfinished"
+    self._zone_id   = "no_zone"
     self._desc      = "  It looks unfinished."
     self._exits     = [ ]
     self._people    = [ ]
@@ -45,8 +67,11 @@ class room:
   def name(self):
     return self._name
   @property
-  def vnum(self):
-    return self._vnum
+  def id(self):
+    return self._id
+  @property
+  def zone_id(self):
+    return self._zone_id
   @property
   def desc(self):
     return self._desc
@@ -64,34 +89,38 @@ class room:
   @name.setter
   def name(self, new_name):
     self._name = new_name
-  @vnum.setter
-  def vnum(self, new_vnum):
-    self._vnum = new_vnum
+  @id.setter
+  def id(self, new_id):
+    self._id = new_id
+  @zone_id.setter
+  def zone_id(self, new_zone_id):
+    self._zone_id = new_zone_id
   @desc.setter
   def desc(self, new_desc):
     self._desc = new_desc
 
-  """add_char(ch)         <-
-     remove_char(ch)      <-
-     char_by_name(ch)     <-
-     pc_by_name(name)     <-
-     npc_by_alias(alias)  <-
-     connect(dir, dest)   <-
-     disconnect(dir)      <-
-     list_exits()         <-
-     show_exits()         <-
-     echo(msg)            <-
-     get_destination(dir) <-
-     exit_exists(dir)     <-"""
+  """add_char(ch)         <- adds character ch from the room      (does not modify ch.room)
+     remove_char(ch)      <- removes character ch from the room   (does not modify ch.room)
+     char_by_alias(name)  <- scans through people in room looking for character with name, prioritizes pc's
+     pc_by_name(name)     <- scans through pcs in room with argument as name
+     npc_by_alias(alias)  <- scans through npcs in room with argument as alias
+     connect(dir, dest)   <- creates exit to room with code dest through direction dir
+     disconnect(dir)      <- removes exit with direction dir
+     list_exits()         <- shows exit letters, e.g. n s w 
+     show_exits()         <- shows exit string, e.g. [ Exits: n s w ]
+     echo(msg)            <- sends msg to every character in the room
+     exit(dir)            <- returns exit object leading in direction dir
+     get_destination(dir) <- returns code for room that the exit in direction dir leads to
+     exit_exists(dir)     <- checks if the room has an exit leading in direction dir"""
   def add_char(self, ch):
-    ch.room = self.vnum
+    ch.room = f"{self.zone_id}[{self.id}]"
     self._people.append(ch)
 
   def remove_char(self, ch):
     ch.room = None
     self._people.remove(ch)
 
-  def char_by_name(self, name):
+  def char_by_alias(self, name):
     # first check for pc
     tch = self.pc_by_name(name)
     if tch != None:
@@ -113,8 +142,11 @@ class room:
       if isinstance(ch, pc.npc) and alias in ch.entity.namelist:
         return ch
 
-  def connect(self, direction, destination):
-    self._exits.append(exit(direction, destination))
+  def connect(self, direction, destination_code):
+    # if it's a local exit, prepend the zone_id
+    if destination_code.find('[') == -1:
+      destination_code = f"{self.zone_id}[{destination_code}]"
+    self._exits.append(exit(direction, destination_code))
 
   def disconnect(self, direction):
     target = False
@@ -145,11 +177,27 @@ class room:
       if ch not in exceptions:
         ch.write(msg)
 
-  def get_destination(self, direction):
+  def exit(self, direction):
     for ex in self._exits:
       if direction == ex.direction:
-        return ex.vnum
+        return ex
     return None
+
+  def get_destination(self, direction):
+    exit = self.exit(direction)
+    if exit == None:
+      return None
+    return exit.destination
 
   def exit_exists(self, direction):
     return self.get_destination(direction) != -1
+
+  def __str__(self):
+    ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
+    ret_val += f"Description:\r\n{string_handling.paragraph(self.desc, 65, True)}\r\n"
+    ret_val += "Exits:\r\n"
+
+    for ex in self.exits:
+      ret_val += "  " + str(ex)
+
+    return ret_val

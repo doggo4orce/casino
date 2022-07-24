@@ -17,7 +17,7 @@ class character:
     so that they need not be distinguished between throughout this codebase.  While
     there is nothing stopping one from instantiating it directly, such use is not intended."""
   def __init__(self):
-    self._entity     = structs.entity()
+    self._entity     = structs.entity_data()
     self._inventory = object.inventory()
 
   # Getters
@@ -167,15 +167,11 @@ class npc(character):
      heart_beat_procs = list of pulsing special procedures (see structs.py)"""
   def __init__(self, new_vnum = None):
     super().__init__()
-    self._vnum = new_vnum
     self._command_triggers = list()
     self._heart_beat_procs = list()
 
 
   # Getters
-  @property
-  def vnum(self):
-    return self._vnum
   @property
   def command_triggers(self):
     return self._command_triggers
@@ -184,9 +180,6 @@ class npc(character):
     return self._heart_beat_procs
 
   # Setters
-  @vnum.setter
-  def vnum(self, new_vnum):
-    self._vnum = new_vnum
   @command_triggers.setter
   def command_triggers(self, new_triggers):
     self._command_triggers = new_triggers

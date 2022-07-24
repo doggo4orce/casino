@@ -1,17 +1,5 @@
-#3000
-Name: The Reading Room
-Desc: You are in a small, simple room which is mostly empty, save a few wooden desks and benches.  To the east you hear the bustle of the Temple of Midgaard, a sharp contrast to the relative quiet of this peaceful room.
-East: 3001
-S
-#3001
 Name: The Temple Of Midgaard
+id: temple
 Desc: You are in the southern end of the temple hall in the Temple of Midgaard.  The temple has been constructed from giant marble blocks, eternal in appearance, and most of the walls are covered by ancient wall paintings picturing Gods, Giants and peasants.  Large steps lead down through the grand temple gate, descending the huge mound upon which the temple is built and ends on the temple square below.  To the west, you see the Reading Room.  The donation room is in a small alcove to your east.
-East: 3002
-West: 3000
-S
-#3002
-Name: Cash Casino
-Desc: The smell of bad decisions hangs thick in the air.
-West: 3001
-S
-$
+East: casino_room
+West: reading_room

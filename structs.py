@@ -101,10 +101,23 @@ class heart_beat_proc:
   func: function=None
 
 @dataclasses.dataclass
+class unique_identifier:
+  zone_id: str=None
+  id:      str=None
+
+  def update(self, zone_id, id):
+    self.zone_id = zone_id
+    self.id = id
+    
+  def __str__(self):
+    return f"{self.zone_id}[{self.id}]"
+
+@dataclasses.dataclass
 class npc_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
   command_triggers: list = dataclasses.field(default_factory=lambda:list())
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
+  unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
   def __str__(self):
     ret_val = f"NPC: {CYAN}{self.entity.name}{NORMAL} "
@@ -119,4 +132,4 @@ class npc_proto_data:
 @dataclasses.dataclass
 class obj_proto_data:
   ent: entity_data = dataclasses.field(default_factory=lambda:entity_data())
-
+  unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())

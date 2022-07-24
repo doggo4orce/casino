@@ -54,7 +54,7 @@ def parse_tag(line):
   var_list = line.split()
   return var_list[0], " ".join(var_list[1:])
 
-def parse_room_code(code):
+def parse_reference(code):
   n = code.find('[')
   if n == -1:
     return None, None

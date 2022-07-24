@@ -6,7 +6,7 @@ password: Es2y0
 # Game Data
 title: the title-less
 hp: 1
-room: casino[temple]
+room: casino[casino_room]
 
 # Preferences
 screen_width: 80

@@ -3,6 +3,7 @@ import enum
 import object
 import pc
 import string_handling
+import structs
 
 class direction(enum.IntEnum):
   NORTH = 0
@@ -15,25 +16,23 @@ class direction(enum.IntEnum):
 class exit:
   """Creates an exit which characters may use to travel between rooms.
     direction = 
-    zone      =
-    room      ="""
+    destination = """
   def __init__(self, dir, code):
     self._direction = dir
 
-    zone_id, room_id = string_handling.parse_room_code(code)
+    zone_id, room_id = string_handling.parse_reference(code)
     
-    self._zone = zone_id
-    self._room = room_id
+    self._destination = structs.unique_identifier(zone_id, room_id)
 
   @property
   def direction(self):
     return self._direction
   @property
   def zone(self):
-    return self._zone
+    return self._destination.zone_id
   @property
   def room(self):
-    return self._room
+    return self._destination.id
   @property
   def destination(self):
     return f"{self.zone}[{self.room}]"
@@ -46,18 +45,16 @@ class exit:
 
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
-      name     = the title of the room (displayed first as one line)
-      id       = unique (relative to zone) identifier to reference room
-      zone_id  = unique identifier for zone that the room belongs to
-      desc     = the longer description of the room (shown as a following paragraph)
-      exits    = exits in the cardinal directions leading to other rooms (identified by vnum)
-      people   = list of characters in the room
-      contents = list of objects on the ground"""
+      name      = the title of the room (displayed first as one line)
+      unique_id = for easy look-up, of the form zone[room]
+      desc      = the longer description of the room (shown as a following paragraph)
+      exits     = exits in the cardinal directions leading to other rooms (identified by vnum)
+      people    = list of characters in the room
+      contents  = list of objects on the ground"""
   def __init__(self):
     self._name      = "Unfinished Room"
-    self._id        = "unfinished"
-    self._zone_id   = "no_zone"
-    self._desc      = "  It looks unfinished."
+    self._unique_id = structs.unique_identifier()
+    self._desc      = "It looks unfinished."
     self._exits     = [ ]
     self._people    = [ ]
     self._inventory = object.inventory()
@@ -67,11 +64,14 @@ class room:
   def name(self):
     return self._name
   @property
+  def unique_id(self):
+    return self._unique_id
+  @property
   def id(self):
-    return self._id
+    return self._unique_id.id
   @property
   def zone_id(self):
-    return self._zone_id
+    return self._unique_id.zone_id
   @property
   def desc(self):
     return self._desc
@@ -89,12 +89,15 @@ class room:
   @name.setter
   def name(self, new_name):
     self._name = new_name
+  @unique_id.setter
+  def unique_id(self, new_unique_id):
+    self._unique_id = new_unique_id
   @id.setter
   def id(self, new_id):
-    self._id = new_id
+    self._unique_id.id = new_id
   @zone_id.setter
   def zone_id(self, new_zone_id):
-    self._zone_id = new_zone_id
+    self._unique_id.zone_id = new_zone_id
   @desc.setter
   def desc(self, new_desc):
     self._desc = new_desc

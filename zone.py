@@ -38,6 +38,12 @@ class zone:
         return room
     return None
 
+  def npc_by_id(self, id):
+    for npc in self.npc_proto:
+      if npc.unique_id.id == id:
+        return npc
+    return None
+
   def parse_folder(self, folder):
     rf = open(folder + "/info.zon", "r")
 
@@ -68,15 +74,9 @@ class zone:
     self.parse_rooms(folder + "/wld/")
     self.parse_npcs(folder + "/npc/")
 
-  def parse_rooms(self, path):
-    for file in glob.glob(path + "*.room"):
-      rf = open(file, "r")
-      self.parse_room(rf)
-
-  def parse_room(self, rf):
-    dir_tags = [dir.name for dir in room.direction]
-    new_room = room.room()
-    new_room.zone_id = self.id
+  def parse_object(self, rf):
+    new_object = object.object()
+    new_object.zone_id = self.id
     
     while True:
       line = rf.readline()
@@ -99,6 +99,46 @@ class zone:
         new_room.name = value
       elif tag == "id":
         new_room.id = value
+      elif tag == "desc":
+        new_room.desc = value
+      elif tag.upper() in dir_tags:
+        # found an exit
+        new_room.connect(room.direction(room.direction[tag.upper()]), value)
+      else:
+        logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
+
+    self.world.append(new_room)
+  def parse_rooms(self, path):
+    for file in glob.glob(path + "*.room"):
+      rf = open(file, "r")
+      self.parse_room(rf)
+
+  def parse_room(self, rf):
+    dir_tags = [dir.name for dir in room.direction]
+    new_room = room.room()
+    new_room.unique_id.update(self.id, "no_id")
+
+    while True:
+      line = rf.readline()
+      # check for eof
+      if line == "":
+        break
+      # allows us to ignore comments and blank/empty lines
+      if line == "\n" or line[0] == '#':
+        continue
+      # expecting a tag for sure
+      tag, value = string_handling.parse_tag(line)
+      # if we don't get a tag this file is not formatted properly
+      if tag[-1] != ":":
+        logging.error(f"Error: Expected ':' at the end of tag {tag} while parsing {rf.name}.")
+        return
+      # remove the colon and convert to lowercase
+      tag = tag[0:len(tag) - 1].lower()
+      # ready to interpret the actual tag
+      if tag == "name":
+        new_room.name = value
+      elif tag == "id":
+        new_room.unique_id.update(self.id, value)
       elif tag == "desc":
         new_room.desc = value
       elif tag.upper() in dir_tags:
@@ -136,6 +176,8 @@ class zone:
       # ready to interpret the actual tag
       if tag == "name":
         new_entity.name = value
+      elif tag == "id":
+        new_npc_proto.unique_id.update(self.id, value)
       elif tag == "namelist":
         new_entity.namelist = value.split(" ")
       elif tag == "desc":
@@ -153,10 +195,10 @@ class zone:
     ret_val = f"Zone: {CYAN}{self.name}{NORMAL} ID: {CYAN}{self.id}{NORMAL}\r\n\r\n"
     ret_val += f"Rooms:\r\n"
     for rm in self.world:
-      ret_val += f"    {rm.name} '{GREEN}{rm.zone_id}[{rm.id}]{NORMAL}'\r\n"
+      ret_val += f"    {rm.name} {GREEN}{rm.unique_id}{NORMAL}\r\n"
     ret_val += f"NPCs:\r\n"
     for npc in self.npc_proto:
-      ret_val += f"    {npc.entity.name}\r\n"
+      ret_val += f"    {npc.entity.name} {GREEN}{npc.unique_id}{NORMAL}\r\n"
     return ret_val
 
 

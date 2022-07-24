@@ -285,7 +285,6 @@ class baccarat_dealer(cards.card_dealer):
     ret_val.entity = dealer.entity
     ret_val.inventory = dealer.inventory
     # copy npc attributes
-    ret_val.vnum = dealer.vnum
     ret_val.command_triggers = dealer.command_triggers
     ret_val.heart_beat_procs = dealer.heart_beat_procs
     ret_val.hand = baccarat_hand()

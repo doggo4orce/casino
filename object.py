@@ -4,9 +4,8 @@ import logging
 class object:
   """Creates an object which characters can interact with."""
   def __init__(self):
-  	self.entity = structs.entity_data()
-  	self._room = None
-  	self._vnum = None
+    self.entity = structs.entity_data()
+    self._room = None
 
   @property
   def vnum(self):

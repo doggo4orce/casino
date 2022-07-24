@@ -30,6 +30,8 @@ class game:
      call_heart_beat_procs() <- calls all pulsing special procedures for npcs
      zone_by_id(id)          <- iterate through self.zones zones to find zone with identifier id
      room_by_code(code)      <- look up room by code, e.g. 'zone_id[room_id]'
+     npc_by_code(code)       <- look up npc prototype by code
+     obj_by_code(code)       <- look up object prototype by code
      echo_around(ch, hide, msg) <- sends msg to all chars in room except ch and those in hide list
      add_char(ch)            <- adds character ch to the wld, in the appropriate room or VOID_ROOM
      extract_char(ch)        <- extracts character ch from the wld and the appropriate room
@@ -37,7 +39,7 @@ class game:
      extract_obj(obj)        <- except for objects instead
      assign_spec_procs()     <- assigns special procedures to elements of npc_proto
      startup()               <- loads all of the zone folders in WORLD_FOLDER
-     load_npc(vnum)          <- looks up the npc in self.npc_proto and returns a copy or None
+     load_npc(code)          <- looks up the npc in self.npc_proto and returns it or None
      load_obj(vnum)          <- looks up the obj in self.objs and return a copy or None
      read_npc_file(filename) <- reads all the npcs stored in filename
      read_obj_file(filename) <- reads all the objects stored in a filename
@@ -60,13 +62,22 @@ class game:
     return None
 
   def room_by_code(self, code):
-    zone_id, room_id = string_handling.parse_room_code(code)
+    zone_id, room_id = string_handling.parse_reference(code)
    
     if zone_id == None or room_id == None:
       return None
 
     zone = self.zone_by_id(zone_id)
     return zone.room_by_id(room_id)
+
+  def npc_by_code(self, code):
+    zone_id, npc_id = string_handling.parse_reference(code)
+
+    if zone_id == None or npc_id == None:
+      return None
+
+    zone = self.zone_by_id(zone_id)
+    return zone.npc_by_id(npc_id)
 
   def echo_around(self, ch, hide_from, msg):
     if hide_from == None:
@@ -107,10 +118,11 @@ class game:
     self.objects.remove(obj)
 
   def assign_spec_procs(self):
-    self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
-    self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
-    self.npc_proto[3002].command_triggers.append(structs.command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
-    self.npc_proto[3002].heart_beat_procs.append(structs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
+    b_dealer = self.npc_by_code('casino[baccarat_dealer]')
+    b_dealer.command_triggers.append(structs.command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
+    b_dealer.command_triggers.append(structs.command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
+    b_dealer.command_triggers.append(structs.command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
+    b_dealer.heart_beat_procs.append(structs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
   def startup(self):
 
@@ -126,27 +138,28 @@ class game:
       # now added it to the game
       self.zones.append(new_zone)
 
+    # handling special mobs manually
+    mob = self.load_npc('casino[baccarat_dealer]')
+    print(mob)
+    mob = cards.card_dealer.from_npc(mob)
+    mob = baccarat.baccarat_dealer.from_card_dealer(mob)
+    mob.room = 'casino[casino_room]'
+    self.add_char(mob)
 
-    # promote the mob to a card dealer
-    # mob = cards.card_dealer.from_npc(mob)
-
-    # now promote them to a baccarat dealer
-    # mob = baccarat.baccarat_dealer.from_card_dealer(mob)
-
-    # self.add_char(mob)
-
-    # self.assign_spec_procs()
+    self.assign_spec_procs()
 
 
-  def load_npc(self, vnum):
-    if vnum not in self.npc_proto:
-      logging.warning(f"Trying to load npc [{vnum}] which was not found.")
+  def load_npc(self, code):
+    proto_type = self.npc_by_code(code)
+
+    if proto_type == None:
+      logging.warning(f"Trying to load npc [{code}] which was not found.")
       return None
+
     new_npc = pc.npc()
-    new_npc.entity = self.npc_proto[vnum].entity
-    new_npc.vnum = vnum
-    new_npc.command_triggers = self.npc_proto[vnum].command_triggers
-    new_npc.heart_beat_procs = self.npc_proto[vnum].heart_beat_procs
+    new_npc.entity = proto_type.entity
+    new_npc.command_triggers = proto_type.command_triggers
+    new_npc.heart_beat_procs = proto_type.heart_beat_procs
     return new_npc
 
   def load_obj(self, vnum):

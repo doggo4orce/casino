@@ -67,7 +67,7 @@ def do_give(ch, scmd, argument, server, mud):
     return
 
   # who to give it to
-  rm = mud.room_by_vnum(ch.room)
+  rm = mud.room_by_code(ch.room)
   tch = rm.char_by_alias(args[1])
 
   if tch == None:
@@ -108,7 +108,7 @@ def do_get(ch, scmd, argument, server, mud):
     ch.write("Usage: get <item>\r\n")
     return
 
-  rm = mud.room_by_vnum(ch.room)
+  rm = mud.room_by_code(ch.room)
   obj = rm.inventory.obj_by_alias(args[0])
 
   if obj == None:
@@ -124,7 +124,7 @@ def do_get(ch, scmd, argument, server, mud):
 def do_drop(ch, scmd, argument, server, mud):
   args = argument.split()
   num_args = len(args)
-  rm = mud.room_by_vnum(ch.room)
+  rm = mud.room_by_(ch.room)
 
   if num_args == 0:
     ch.write("Drop what?\r\n")
@@ -295,7 +295,7 @@ def do_gossip(ch, scmd, argument, server, mud):
   ch.write(f"{YELLOW}You gossip, '{argument}'{NORMAL}\r\n")
 
 def do_say(ch, scmd, argument, server, mud):
-  rm = mud.room_by_vnum(ch.room)
+  rm = mud.room_by_code(ch.room)
   rm.echo(f"{ch} says, '{argument}'\r\n", exceptions=[ch])
   ch.write(f"You say, '{argument}'\r\n")
 

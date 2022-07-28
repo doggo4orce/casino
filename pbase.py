@@ -11,7 +11,8 @@ PF_DEFAULT_ROOM = config.VOID_ROOM
 
 ptable = list()
 
-# TODO: this code is repeated in load_char_by_name, can it be factored?
+# much of this code is repeated in load_char_by_name, can it be factored?
+
 def field_by_name(name, field):
   with open(f"{config.PFILES_PATH}{name.lower()}.plr") as rf:
     line_number = 0
@@ -115,14 +116,14 @@ def load_char_by_name(name):
         result.id = value
       elif tag == "password":
         result.pwd = value
-      elif tag == "room": # this one could be moved to game data
+      elif tag == "room": # this one could be moved to game data once characters are given general game data?
         result.room = value
 
       # Load Game Data
       elif hasattr(result.save_data.numerical, tag):
-        setattr(result.prefs, tag, int(value))
+        setattr(result.save_data.numerical, tag, int(value))
       elif hasattr(result.save_data.non_numerical, tag):
-        setattr(result.prefs, tag, value)
+        setattr(result.save_data.non_numerical, tag, value)
 
       # Load Preferences
       elif hasattr(result.prefs, tag):

@@ -50,7 +50,7 @@ def paragraph(text, width, indent=False):
   return par
 
 # used to read files in lib/
-def parse_tag(line):
+def split_tag_value(line):
   var_list = line.split()
   return var_list[0], " ".join(var_list[1:])
 

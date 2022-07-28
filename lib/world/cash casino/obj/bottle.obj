@@ -1,4 +1,5 @@
 namelist: bottle
+id: bottle
 name: a bottle
 ldesc: A bottle has been left here.
 desc: The bottle is made from dirty brown glass.

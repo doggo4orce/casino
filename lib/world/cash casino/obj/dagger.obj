@@ -1,4 +1,5 @@
 namelist: dagger sharp
+id: dagger
 name: a sharp dagger
 ldesc: A dagger has been dropped here.
 desc: A hilt designed for a quick and nimble hand connects to a clean and shiny blade.

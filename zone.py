@@ -8,12 +8,18 @@ import string_handling
 import structs
 
 class zone:
+  """Creates a zone, which is a modular chunk of the game world.
+    name      = name of the zone
+    id        = unique identifier string to refer to the zone
+    world     = dictionary (key=room id) of rooms which form the landscape of the zone
+    npc_proto = dictionary (key=npc id) npc blueprints which are used to create npcs
+    obj_proto = dictionary (key=object id) of object blueprints"""
   def __init__(self, folder=None):
     self._name = "a new zone"
     self._id = "new_zone"
-    self.world = list()
-    self.npc_proto = list()
-    self.obj_proto = list()
+    self._world = dict()
+    self._npc_proto = dict()
+    self._obj_proto = dict()
 
     if folder != None:
       self.parse_folder(folder)
@@ -32,20 +38,27 @@ class zone:
   def id(self, new_id):
     self._id = new_id
 
+  """room_by_id(id)      <- look up room in self.world
+     npc_by_id(id)       <- look up npc in self.npc_proto
+     object_by_id(id)    <- look up object in self.obj_proto
+     parse_folder(path)  <- parse_room(rf)
+     parse_npc(rf)       <-
+     parse_object(rf)    <-
+     parse_rooms(path)   <-
+     parse_npcs(path)    <-
+     parse_objects(path) <-"""
+
   def room_by_id(self, id):
-    for room in self.world:
-      if room.id == id:
-        return room
-    return None
+    return self._world[id]
 
   def npc_by_id(self, id):
-    for npc in self.npc_proto:
-      if npc.unique_id.id == id:
-        return npc
-    return None
+    return self._npc_proto[id]
 
-  def parse_folder(self, folder):
-    rf = open(folder + "/info.zon", "r")
+  def object_by_id(self, id):
+    return self._obj_proto[id]
+
+  def parse_folder(self, path):
+    rf = open(path + "info.zon", "r")
 
     while True:
       line = rf.readline()
@@ -56,7 +69,7 @@ class zone:
       if line == "\n" or line[0] == '#':
         continue
       # expecting a tag for sure
-      tag, value = string_handling.parse_tag(line)
+      tag, value = string_handling.split_tag_value(line)
       # if we don't get a tag this file is not formatted properly
       if tag[-1] != ":":
         logging.error(f"Error: Expected ':' at the end of tag {tag} while parsing {rf.name}.")
@@ -71,12 +84,56 @@ class zone:
       else:
         logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
 
-    self.parse_rooms(folder + "/wld/")
-    self.parse_npcs(folder + "/npc/")
+    self.parse_rooms(path + "wld/")
+    self.parse_npcs(path + "npc/")
+    self.parse_objects(path + "obj/")
 
-  def parse_object(self, rf):
-    new_object = object.object()
-    new_object.zone_id = self.id
+  # this code can be factored if rooms, npc_proto's, and obj_proto's all have their own parse_tag function
+  # then have a general parse_rno_file function for zones which accepts a generic reference that could be
+  # a room/obj/npc
+  def parse_room(self, new_room, rf):
+
+    while True:
+      line = rf.readline()
+      # check for eof
+      if line == "":
+        break
+      # allows us to ignore comments and blank/empty lines
+      if line == "\n" or line[0] == '#':
+        continue
+      # expecting a tag for sure
+      tag, value = string_handling.split_tag_value(line)
+      # if we don't get a tag this file is not formatted properly
+      if tag[-1] != ":":
+        logging.error(f"Error: Expected ':' at the end of tag {tag} while parsing {rf.name}.")
+        return
+      # remove the colon and convert to lowercase
+      tag = tag[0:len(tag) - 1].lower()
+      # ready to interpret the actual tag
+      new_room.parse_tag(tag,value)
+
+  def parse_npc(self, new_npc_proto, rf):
+
+    while True:
+      line = rf.readline()
+      # catches the end of the file
+      if line == "":
+        break
+      # allows us to ignore comments and blank/empty lines
+      if line == "\n" or line[0] == '#':
+        continue
+      # expecting a tag for sure
+      tag, value = string_handling.split_tag_value(line)
+      # if we don't get a tag this file is not formatted properly
+      if tag[-1] != ":":
+        logging.error(f"Error: Expected ':' at the end of tag {tag} while loading")
+        return
+      # remove the colon and convert to lowercase
+      tag = tag[0:len(tag) - 1].lower()
+      # ready to interpret the actual tag
+      new_npc_proto.parse_tag(tag, value)
+
+  def parse_object(self, new_obj_proto, rf):
     
     while True:
       line = rf.readline()
@@ -87,7 +144,7 @@ class zone:
       if line == "\n" or line[0] == '#':
         continue
       # expecting a tag for sure
-      tag, value = string_handling.parse_tag(line)
+      tag, value = string_handling.split_tag_value(line)
       # if we don't get a tag this file is not formatted properly
       if tag[-1] != ":":
         logging.error(f"Error: Expected ':' at the end of tag {tag} while parsing {rf.name}.")
@@ -95,110 +152,44 @@ class zone:
       # remove the colon and convert to lowercase
       tag = tag[0:len(tag) - 1].lower()
       # ready to interpret the actual tag
-      if tag == "name":
-        new_room.name = value
-      elif tag == "id":
-        new_room.id = value
-      elif tag == "desc":
-        new_room.desc = value
-      elif tag.upper() in dir_tags:
-        # found an exit
-        new_room.connect(room.direction(room.direction[tag.upper()]), value)
-      else:
-        logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
+      new_obj_proto.parse_tag(tag, value)
 
-    self.world.append(new_room)
   def parse_rooms(self, path):
     for file in glob.glob(path + "*.room"):
       rf = open(file, "r")
-      self.parse_room(rf)
-
-  def parse_room(self, rf):
-    dir_tags = [dir.name for dir in room.direction]
-    new_room = room.room()
-    new_room.unique_id.update(self.id, "no_id")
-
-    while True:
-      line = rf.readline()
-      # check for eof
-      if line == "":
-        break
-      # allows us to ignore comments and blank/empty lines
-      if line == "\n" or line[0] == '#':
-        continue
-      # expecting a tag for sure
-      tag, value = string_handling.parse_tag(line)
-      # if we don't get a tag this file is not formatted properly
-      if tag[-1] != ":":
-        logging.error(f"Error: Expected ':' at the end of tag {tag} while parsing {rf.name}.")
-        return
-      # remove the colon and convert to lowercase
-      tag = tag[0:len(tag) - 1].lower()
-      # ready to interpret the actual tag
-      if tag == "name":
-        new_room.name = value
-      elif tag == "id":
-        new_room.unique_id.update(self.id, value)
-      elif tag == "desc":
-        new_room.desc = value
-      elif tag.upper() in dir_tags:
-        # found an exit
-        new_room.connect(room.direction(room.direction[tag.upper()]), value)
-      else:
-        logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
-
-    self.world.append(new_room)
+      new_room = room.room()
+      new_room.unique_id.update(self.id, "no_id")
+      self.parse_room(new_room, rf)
+      self._world[new_room.unique_id.id] = new_room
 
   def parse_npcs(self, path):
     for file in glob.glob(path + "*.npc"):
       rf = open(file, "r")
-      self.parse_npc(rf)
+      new_npc_proto = structs.npc_proto_data()
+      new_npc_proto.unique_id.update(self.id, "no_id")
+      self.parse_npc(new_npc_proto, rf)
+      self._npc_proto[new_npc_proto.unique_id.id] = new_npc_proto
 
-  def parse_npc(self, rf):
-    new_entity = structs.entity_data()
-    new_npc_proto = structs.npc_proto_data()
-    while True:
-      line = rf.readline()
-      # catches the end of the file
-      if line == "":
-        break
-      # allows us to ignore comments and blank/empty lines
-      if line == "\n" or line[0] == '#':
-        continue
-      # expecting a tag for sure
-      tag, value = string_handling.parse_tag(line)
-      # if we don't get a tag this file is not formatted properly
-      if tag[-1] != ":":
-        logging.error(f"Error: Expected ':' at the end of tag {tag} while loading")
-        return
-      # remove the colon and convert to lowercase
-      tag = tag[0:len(tag) - 1].lower()
-      # ready to interpret the actual tag
-      if tag == "name":
-        new_entity.name = value
-      elif tag == "id":
-        new_npc_proto.unique_id.update(self.id, value)
-      elif tag == "namelist":
-        new_entity.namelist = value.split(" ")
-      elif tag == "desc":
-        new_entity.desc = value
-      elif tag == "ldesc":
-        new_entity.ldesc = value
-      else:
-        logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
-    # all the data is loaded, now we can store it to the proto
-    new_npc_proto.entity = new_entity
-
-    self.npc_proto.append(new_npc_proto)
+  def parse_objects(self, path):
+    for file in glob.glob(path + "*.obj"):
+      rf = open(file, "r")
+      new_obj_proto = structs.obj_proto_data()
+      new_obj_proto.unique_id.update(self.id, "no_id")
+      self.parse_object(new_obj_proto, rf)
+      self._obj_proto[new_obj_proto.unique_id.id] = new_obj_proto
 
   def __str__(self):
     ret_val = f"Zone: {CYAN}{self.name}{NORMAL} ID: {CYAN}{self.id}{NORMAL}\r\n\r\n"
     ret_val += f"Rooms:\r\n"
-    for rm in self.world:
+    for rm in self._world.values():
       ret_val += f"    {rm.name} {GREEN}{rm.unique_id}{NORMAL}\r\n"
     ret_val += f"NPCs:\r\n"
-    for npc in self.npc_proto:
+    for npc in self._npc_proto.values():
       ret_val += f"    {npc.entity.name} {GREEN}{npc.unique_id}{NORMAL}\r\n"
+    ret_val += f"Objs:\r\n"
+    for obj in self._obj_proto.values():
+      ret_val += f"    {obj.entity.name} {GREEN}{obj.unique_id}{NORMAL}\r\n"
+    return ret_val
     return ret_val
 
 

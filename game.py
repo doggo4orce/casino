@@ -1,7 +1,6 @@
 import baccarat
 import cards
 import config
-import db
 import enum
 import event
 import glob
@@ -110,6 +109,7 @@ class game:
     self.objects.append(obj)
     room = self.room_by_code(obj.room)
     if room != None:
+      # todo: write room.add_obj(obj) function
       room.inventory.insert(obj)
 
   def extract_obj(self, obj):
@@ -130,24 +130,21 @@ class game:
       # all zones are stored in folders so ignore any loose files in here
       if not os.path.isdir(folder):
         continue
-      # otherwise we found a new zone folder, so load it
-      new_zone = zone.zone(folder)
+      # otherwise we found a new zone
+      self.zones.append(zone.zone(folder + "/"))
 
-      # TODO: load npcs and objects for this zone
+    self.assign_spec_procs()
 
-      # now added it to the game
-      self.zones.append(new_zone)
-
-    # handling special mobs manually
+    # populating world manually at startup
     mob = self.load_npc('casino[baccarat_dealer]')
-    print(mob)
     mob = cards.card_dealer.from_npc(mob)
     mob = baccarat.baccarat_dealer.from_card_dealer(mob)
     mob.room = 'casino[casino_room]'
     self.add_char(mob)
 
-    self.assign_spec_procs()
-
+    bottle = self.load_obj('casino[bottle]')
+    bottle.room = 'casino[temple]'
+    self.add_obj(bottle)
 
   def load_npc(self, code):
     proto_type = self.npc_by_code(code)
@@ -158,8 +155,10 @@ class game:
 
     new_npc = pc.npc()
     new_npc.entity = proto_type.entity
-    new_npc.command_triggers = proto_type.command_triggers
-    new_npc.heart_beat_procs = proto_type.heart_beat_procs
+
+    new_npc.command_triggers = proto_type.command_triggers.copy()
+    new_npc.heart_beat_procs = proto_type.heart_beat_procs.copy()
+
     return new_npc
 
   def load_obj(self, vnum):

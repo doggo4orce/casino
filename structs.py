@@ -100,6 +100,7 @@ class heart_beat_proc:
   name: str="an unnamed spec proc"
   func: function=None
 
+# rooms, npcs, and objects are referenced  by a string of the form: zone_id[id]
 @dataclasses.dataclass
 class unique_identifier:
   zone_id: str=None
@@ -112,13 +113,22 @@ class unique_identifier:
   def __str__(self):
     return f"{self.zone_id}[{self.id}]"
 
-@dataclasses.dataclass
+@dataclasses.dataclass # perhaps this should be moved to pc.py
 class npc_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
   command_triggers: list = dataclasses.field(default_factory=lambda:list())
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
+  def parse_tag(self, tag, value):
+    # name, namelist, desc, ldesc
+    if tag == "id":
+      self.unique_id.id = value
+    elif hasattr(self.entity, tag):
+      setattr(self.entity, tag, value)
+    else:
+      logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
+  
   def __str__(self):
     ret_val = f"NPC: {CYAN}{self.entity.name}{NORMAL} "
     ret_val += f"Alias: {CYAN}"
@@ -131,5 +141,24 @@ class npc_proto_data:
 
 @dataclasses.dataclass
 class obj_proto_data:
-  ent: entity_data = dataclasses.field(default_factory=lambda:entity_data())
+  entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
+
+  def parse_tag(self, tag, value):
+    if tag == "id":
+      self.unique_id.id = value
+    elif hasattr(self.entity, tag):
+      setattr(self.entity, tag, value)
+    else:
+      pass # change the line below to throwing an exception
+      # logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
+
+"""name      = the title of the room (displayed first as one line)
+   desc      = the longer description of the room (shown as a following paragraph)"""
+@dataclasses.dataclass
+class room_attribute_data:
+  name: str="unnamed room"
+  desc: str="undescribed room"
+
+
+

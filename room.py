@@ -45,24 +45,24 @@ class exit:
 
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
-      name      = the title of the room (displayed first as one line)
       unique_id = for easy look-up, of the form zone[room]
-      desc      = the longer description of the room (shown as a following paragraph)
       exits     = exits in the cardinal directions leading to other rooms (identified by vnum)
       people    = list of characters in the room
       contents  = list of objects on the ground"""
   def __init__(self):
-    self._name      = "Unfinished Room"
     self._unique_id = structs.unique_identifier()
-    self._desc      = "It looks unfinished."
+    self._attributes = structs.room_attribute_data("Unfinished Room", "It looks unfinished.")
     self._exits     = [ ]
     self._people    = [ ]
     self._inventory = object.inventory()
 
   # Getters
   @property
+  def attributes(self):
+    return self._attributes
+  @property
   def name(self):
-    return self._name
+    return self.attributes.name
   @property
   def unique_id(self):
     return self._unique_id
@@ -74,7 +74,7 @@ class room:
     return self._unique_id.zone_id
   @property
   def desc(self):
-    return self._desc
+    return self._attributes.desc
   @property
   def exits(self):
     return self._exits
@@ -86,9 +86,12 @@ class room:
     return self._inventory
 
   # Setters
+  @attributes.setter
+  def attributes(self, new_attributes):
+    self._attributes = new_attributes
   @name.setter
   def name(self, new_name):
-    self._name = new_name
+    self._attributes.name = new_name
   @unique_id.setter
   def unique_id(self, new_unique_id):
     self._unique_id = new_unique_id
@@ -100,7 +103,7 @@ class room:
     self._unique_id.zone_id = new_zone_id
   @desc.setter
   def desc(self, new_desc):
-    self._desc = new_desc
+    self._attributes.desc = new_desc
 
   """add_char(ch)         <- adds character ch from the room      (does not modify ch.room)
      remove_char(ch)      <- removes character ch from the room   (does not modify ch.room)
@@ -110,6 +113,7 @@ class room:
      connect(dir, dest)   <- creates exit to room with code dest through direction dir
      disconnect(dir)      <- removes exit with direction dir
      list_exits()         <- shows exit letters, e.g. n s w 
+     parse_tag(tag, value) <- used to iterate through .room files
      show_exits()         <- shows exit string, e.g. [ Exits: n s w ]
      echo(msg)            <- sends msg to every character in the room
      exit(dir)            <- returns exit object leading in direction dir
@@ -185,6 +189,21 @@ class room:
       if direction == ex.direction:
         return ex
     return None
+
+  def parse_tag(self, tag, value):
+    dir_tags = [dir.name for dir in direction]
+
+    if tag == "id":
+        self.unique_id.id = value
+    elif tag.upper() in dir_tags:
+      # found an exit
+      self.connect(direction(direction[tag.upper()]), value)
+    # name, desc
+    elif hasattr(self.attributes, tag):
+      setattr(self.attributes, tag, value)
+    else:
+      pass# change the line below to throwing an exception
+      #logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
 
   def get_destination(self, direction):
     exit = self.exit(direction)

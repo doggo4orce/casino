@@ -19,6 +19,7 @@ class character:
   def __init__(self):
     self._entity     = structs.entity_data()
     self._inventory = object.inventory()
+    self._room = config.VOID_ROOM
 
   # Getters
   @property
@@ -32,7 +33,7 @@ class character:
     return self.entity.ldesc
   @property
   def room(self):
-    return self.entity.room
+    return self._room
   @property
   def name(self):
     return self.entity.name
@@ -49,7 +50,7 @@ class character:
     self.entity.name = new_name
   @room.setter
   def room(self, new_room):
-    self.entity.room = new_room
+    self._room = new_room
 
   # This function should never be called.  It should be overridden by any derived classes.
   def write(self, message):

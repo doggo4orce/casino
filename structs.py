@@ -120,7 +120,7 @@ class npc_proto_data:
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
-  def parse_tag(self, tag, value):
+  def parse_tag(self, tag, value, rf):
     # name, namelist, desc, ldesc
     if tag == "id":
       self.unique_id.id = value
@@ -147,7 +147,7 @@ class obj_proto_data:
   ldesc: str="An unfinished obj proto_type has been left here."
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
-  def parse_tag(self, tag, value):
+  def parse_tag(self, tag, value, rf):
     if tag == "id":
       self.unique_id.id = value
     elif tag == "ldesc":

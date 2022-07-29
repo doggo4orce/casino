@@ -102,8 +102,9 @@ class zone:
         return
       # remove the colon and convert to lowercase
       tag = tag[0:len(tag) - 1].lower()
-      # ready to interpret the actual tag
-      new_rno.parse_tag(tag, value)
+      # ready to interpret the actual tag.  pass rf along as well in case
+      # the specific file format indicates they need to read further
+      new_rno.parse_tag(tag, value, rf)
 
   def parse_rooms(self, path):
     for file in glob.glob(path + "*.room"):

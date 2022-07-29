@@ -415,7 +415,7 @@ def show_room_to_char(ch, rm):
       out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.prefs.screen_width, False)}{NORMAL}\r\n"
 
   for obj in rm.inventory:
-    out_buf += f"{GREEN}{string_handling.paragraph(obj.entity.ldesc, ch.prefs.screen_width, False)}{NORMAL}\r\n"
+    out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.prefs.screen_width, False)}{NORMAL}\r\n"
 
   ch.write(out_buf)
 

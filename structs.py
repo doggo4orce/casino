@@ -11,27 +11,26 @@ function = typing.NewType('function', typing.Any)
 
 @dataclasses.dataclass
 class client:
-  """ttype  = client name
-     width  = width of terminal window
-     length = length of terminal window"""
+  """ttype     = client name
+     width     = width of terminal window
+     length    = length of terminal window
+     host_name = name of client"""
   term_type:   str=None
   term_width:  int=None
   term_length: int=None
   host_name:   str=None
 
-
 @dataclasses.dataclass
 class entity_data:
   """name     = what to be referred to as
      namelist = list of keywords to be targetted with
-     desc     = shown when closely examined
-     ldesc    = when seen in a room
-     room     = virtual number if directly in a room"""
+     desc     = shown when closely examined (this should be moved since pc's dont need them)
+     room     = reference to room if it is in one"""
   name:     str="an unfinished entity"
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
   desc:     str="It looks unfinished."
-  ldesc:    str="An unfinished entity rests here."
+  room:     str=config.VOID_ROOM
 
   @property
   def Name(self):
@@ -116,6 +115,7 @@ class unique_identifier:
 @dataclasses.dataclass # perhaps this should be moved to pc.py
 class npc_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
+  ldesc: str="An unfinished npc proto_type stands here."
   command_triggers: list = dataclasses.field(default_factory=lambda:list())
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
@@ -124,6 +124,8 @@ class npc_proto_data:
     # name, namelist, desc, ldesc
     if tag == "id":
       self.unique_id.id = value
+    elif tag == "ldesc":
+      self.ldesc = value
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     else:
@@ -142,11 +144,14 @@ class npc_proto_data:
 @dataclasses.dataclass
 class obj_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
+  ldesc: str="An unfinished obj proto_type has been left here."
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
   def parse_tag(self, tag, value):
     if tag == "id":
       self.unique_id.id = value
+    elif tag == "ldesc":
+      self.ldesc = value
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     else:

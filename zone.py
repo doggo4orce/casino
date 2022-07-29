@@ -20,10 +20,10 @@ class zone:
     self._world = dict()
     self._npc_proto = dict()
     self._obj_proto = dict()
-
     if folder != None:
       self.parse_folder(folder)
 
+  # Getters
   @property
   def name(self):
     return self._name
@@ -31,6 +31,7 @@ class zone:
   def id(self):
     return self._id
 
+  # Setters
   @name.setter
   def name(self, new_name):
     self._name = new_name
@@ -38,28 +39,25 @@ class zone:
   def id(self, new_id):
     self._id = new_id
 
-  """room_by_id(id)      <- look up room in self.world
-     npc_by_id(id)       <- look up npc in self.npc_proto
-     object_by_id(id)    <- look up object in self.obj_proto
-     parse_folder(path)  <- parse_room(rf)
-     parse_npc(rf)       <-
-     parse_object(rf)    <-
-     parse_rooms(path)   <-
-     parse_npcs(path)    <-
-     parse_objects(path) <-"""
-
+  """room_by_id(id)         <- look up room in self.world
+     npc_by_id(id)          <- look up npc in self.npc_proto
+     obj_by_id(id)          <- look up object in self.obj_proto
+     parse_folder(path)     <- loads zone from path
+     parse_generic(var, rf) <- loads room, obj, or npc file from rf to var
+     parse_rooms(path)      <- calls parse_rno on each *.room file
+     parse_npcs(path)       <- calls parse_rno on each *.npc file
+     parse_objects(path)    <- calls parse_rno on each *.obj file"""
   def room_by_id(self, id):
     return self._world[id]
 
   def npc_by_id(self, id):
     return self._npc_proto[id]
 
-  def object_by_id(self, id):
+  def obj_by_id(self, id):
     return self._obj_proto[id]
 
   def parse_folder(self, path):
     rf = open(path + "info.zon", "r")
-
     while True:
       line = rf.readline()
       # check for eof
@@ -83,37 +81,11 @@ class zone:
         self._id = value
       else:
         logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
-
     self.parse_rooms(path + "wld/")
     self.parse_npcs(path + "npc/")
     self.parse_objects(path + "obj/")
 
-  # this code can be factored if rooms, npc_proto's, and obj_proto's all have their own parse_tag function
-  # then have a general parse_rno_file function for zones which accepts a generic reference that could be
-  # a room/obj/npc
-  def parse_room(self, new_room, rf):
-
-    while True:
-      line = rf.readline()
-      # check for eof
-      if line == "":
-        break
-      # allows us to ignore comments and blank/empty lines
-      if line == "\n" or line[0] == '#':
-        continue
-      # expecting a tag for sure
-      tag, value = string_handling.split_tag_value(line)
-      # if we don't get a tag this file is not formatted properly
-      if tag[-1] != ":":
-        logging.error(f"Error: Expected ':' at the end of tag {tag} while parsing {rf.name}.")
-        return
-      # remove the colon and convert to lowercase
-      tag = tag[0:len(tag) - 1].lower()
-      # ready to interpret the actual tag
-      new_room.parse_tag(tag,value)
-
-  def parse_npc(self, new_npc_proto, rf):
-
+  def parse_generic(self, new_rno, rf):
     while True:
       line = rf.readline()
       # catches the end of the file
@@ -131,35 +103,14 @@ class zone:
       # remove the colon and convert to lowercase
       tag = tag[0:len(tag) - 1].lower()
       # ready to interpret the actual tag
-      new_npc_proto.parse_tag(tag, value)
-
-  def parse_object(self, new_obj_proto, rf):
-    
-    while True:
-      line = rf.readline()
-      # check for eof
-      if line == "":
-        break
-      # allows us to ignore comments and blank/empty lines
-      if line == "\n" or line[0] == '#':
-        continue
-      # expecting a tag for sure
-      tag, value = string_handling.split_tag_value(line)
-      # if we don't get a tag this file is not formatted properly
-      if tag[-1] != ":":
-        logging.error(f"Error: Expected ':' at the end of tag {tag} while parsing {rf.name}.")
-        return
-      # remove the colon and convert to lowercase
-      tag = tag[0:len(tag) - 1].lower()
-      # ready to interpret the actual tag
-      new_obj_proto.parse_tag(tag, value)
+      new_rno.parse_tag(tag, value)
 
   def parse_rooms(self, path):
     for file in glob.glob(path + "*.room"):
       rf = open(file, "r")
       new_room = room.room()
       new_room.unique_id.update(self.id, "no_id")
-      self.parse_room(new_room, rf)
+      self.parse_generic(new_room, rf)
       self._world[new_room.unique_id.id] = new_room
 
   def parse_npcs(self, path):
@@ -167,7 +118,7 @@ class zone:
       rf = open(file, "r")
       new_npc_proto = structs.npc_proto_data()
       new_npc_proto.unique_id.update(self.id, "no_id")
-      self.parse_npc(new_npc_proto, rf)
+      self.parse_generic(new_npc_proto, rf)
       self._npc_proto[new_npc_proto.unique_id.id] = new_npc_proto
 
   def parse_objects(self, path):
@@ -175,7 +126,7 @@ class zone:
       rf = open(file, "r")
       new_obj_proto = structs.obj_proto_data()
       new_obj_proto.unique_id.update(self.id, "no_id")
-      self.parse_object(new_obj_proto, rf)
+      self.parse_generic(new_obj_proto, rf)
       self._obj_proto[new_obj_proto.unique_id.id] = new_obj_proto
 
   def __str__(self):
@@ -190,8 +141,6 @@ class zone:
     for obj in self._obj_proto.values():
       ret_val += f"    {obj.entity.name} {GREEN}{obj.unique_id}{NORMAL}\r\n"
     return ret_val
-    return ret_val
-
 
 if __name__ == '__main__':
   casino = zone(config.WORLD_FOLDER + "cash casino/")

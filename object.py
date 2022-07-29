@@ -2,31 +2,30 @@ import structs
 import logging
 
 class object:
-  """Creates an object which characters can interact with."""
+  """Creates an object which characters can get, drop, and otherwise interact with."""
   def __init__(self):
-    self.entity = structs.entity_data()
-    self._room = None
+    self._entity = structs.entity_data()
+    self._ldesc = "An unfinished object has been left here."
 
   @property
-  def vnum(self):
-    return self._vnum
+  def ldesc(self):
+    return self._ldesc
   @property
   def room(self):
-    return self._room
+    return self._entity.room
   @property
   def name(self):
-    return self.entity.name
+    return self._entity.name
 
-
-  @vnum.setter
-  def vnum(self, new_vnum):
-    self._vnum = new_vnum
+  @ldesc.setter
+  def ldesc(self, new_ldesc):
+    self._ldesc = new_ldesc
   @room.setter
   def room(self, new_room):
   	self._room = new_room
   @name.setter
   def name(self, new_name):
-    self.entity.name = new_name
+    self._entity.name = new_name
 
   def __str__(self):
     return self.name

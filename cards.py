@@ -186,6 +186,7 @@ class card_dealer(pc.npc):
 
     # copy character attributes
     ret_val.entity = old_npc.entity
+    ret_val.ldesc = old_npc.ldesc
     ret_val.inventory = old_npc.inventory
 
     # copy npc attributes

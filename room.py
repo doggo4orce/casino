@@ -105,20 +105,20 @@ class room:
   def desc(self, new_desc):
     self._attributes.desc = new_desc
 
-  """add_char(ch)         <- adds character ch from the room      (does not modify ch.room)
-     remove_char(ch)      <- removes character ch from the room   (does not modify ch.room)
-     char_by_alias(name)  <- scans through people in room looking for character with name, prioritizes pc's
-     pc_by_name(name)     <- scans through pcs in room with argument as name
-     npc_by_alias(alias)  <- scans through npcs in room with argument as alias
-     connect(dir, dest)   <- creates exit to room with code dest through direction dir
-     disconnect(dir)      <- removes exit with direction dir
-     list_exits()         <- shows exit letters, e.g. n s w 
+  """add_char(ch)          <- adds character ch from the room      (does not modify ch.room)
+     remove_char(ch)       <- removes character ch from the room   (does not modify ch.room)
+     char_by_alias(name)   <- scans through people in room looking for character with name, prioritizes pc's
+     pc_by_name(name)      <- scans through pcs in room with argument as name
+     npc_by_alias(alias)   <- scans through npcs in room with argument as alias
+     connect(dir, dest)    <- creates exit to room with code dest through direction dir
+     disconnect(dir)       <- removes exit with direction dir
+     list_exits()          <- shows exit letters, e.g. n s w 
      parse_tag(tag, value) <- used to iterate through .room files
-     show_exits()         <- shows exit string, e.g. [ Exits: n s w ]
-     echo(msg)            <- sends msg to every character in the room
-     exit(dir)            <- returns exit object leading in direction dir
-     get_destination(dir) <- returns code for room that the exit in direction dir leads to
-     exit_exists(dir)     <- checks if the room has an exit leading in direction dir"""
+     show_exits()          <- shows exit string, e.g. [ Exits: n s w ]
+     echo(msg)             <- sends msg to every character in the room
+     exit(dir)             <- returns exit object leading in direction dir
+     get_destination(dir)  <- returns code for room that the exit in direction dir leads to
+     exit_exists(dir)      <- checks if the room has an exit leading in direction dir"""
   def add_char(self, ch):
     ch.room = f"{self.zone_id}[{self.id}]"
     self._people.append(ch)

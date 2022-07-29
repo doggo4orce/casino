@@ -17,40 +17,39 @@ class character:
     so that they need not be distinguished between throughout this codebase.  While
     there is nothing stopping one from instantiating it directly, such use is not intended."""
   def __init__(self):
-    self._entity     = structs.entity_data()
+    self._entity    = structs.entity_data()
     self._inventory = object.inventory()
-    self._room = config.VOID_ROOM
 
   # Getters
   @property
   def entity(self):
     return self._entity
   @property
+  def name(self):
+    return self._entity.name
+  @property
+  def room(self):
+    return self._entity.room
+  @property
   def inventory(self):
     return self._inventory
   @property
   def ldesc(self):
-    return self.entity.ldesc
-  @property
-  def room(self):
-    return self._room
-  @property
-  def name(self):
-    return self.entity.name
-  
+    return "A character's ldesc should never be seen!"
+
   # Setters
   @entity.setter
   def entity(self, new_ent):
     self._entity = new_ent
+  @name.setter
+  def name(self, new_name):
+    self._entity.name = new_name
+  @room.setter
+  def room(self, new_room):
+    self._entity.room = new_room
   @inventory.setter
   def inventory(self, new_inv):
     self._inventory = new_inv
-  @name.setter
-  def name(self, new_name):
-    self.entity.name = new_name
-  @room.setter
-  def room(self, new_room):
-    self._room = new_room
 
   # This function should never be called.  It should be overridden by any derived classes.
   def write(self, message):
@@ -168,11 +167,14 @@ class npc(character):
      heart_beat_procs = list of pulsing special procedures (see structs.py)"""
   def __init__(self, new_vnum = None):
     super().__init__()
+    self._ldesc = "An unfinished npc stands here."
     self._command_triggers = list()
     self._heart_beat_procs = list()
 
-
   # Getters
+  @property
+  def ldesc(self):
+    return self._ldesc
   @property
   def command_triggers(self):
     return self._command_triggers
@@ -181,6 +183,9 @@ class npc(character):
     return self._heart_beat_procs
 
   # Setters
+  @ldesc.setter
+  def ldesc(self, new_ldesc):
+    self._ldesc = new_ldesc
   @command_triggers.setter
   def command_triggers(self, new_triggers):
     self._command_triggers = new_triggers
@@ -198,6 +203,7 @@ class npc(character):
   def from_char(cls, ch):
     ret_val = cls()
     ret_val.entity = ch.entity
+    ret_val.ldesc = ch.ldesc # should we be copying the ldesc?
     ret_val.inventory = ch.inventory
     return ret_val
 

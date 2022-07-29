@@ -78,6 +78,15 @@ class game:
     zone = self.zone_by_id(zone_id)
     return zone.npc_by_id(npc_id)
 
+  def obj_by_code(self, code):
+    zone_id, obj_id = string_handling.parse_reference(code)
+
+    if zone_id == None or obj_id == None:
+      return None
+
+    zone = self.zone_by_id(zone_id)
+    return zone.obj_by_id(obj_id)
+
   def echo_around(self, ch, hide_from, msg):
     if hide_from == None:
       hide_from = [ ]
@@ -155,19 +164,23 @@ class game:
 
     new_npc = pc.npc()
     new_npc.entity = proto_type.entity
-
+    new_npc.ldesc = proto_type.ldesc
     new_npc.command_triggers = proto_type.command_triggers.copy()
     new_npc.heart_beat_procs = proto_type.heart_beat_procs.copy()
 
     return new_npc
 
-  def load_obj(self, vnum):
-    if vnum not in self.obj_proto:
+  def load_obj(self, code):
+    proto_type = self.obj_by_code(code)
+
+    if proto_type == None:
       logging.warning(f"Trying to load object [{vnum}] which was not found.")
       return None
 
     new_obj = object.object()
-    new_obj.entity = self.obj_proto[vnum].entity
+    new_obj.entity = proto_type.entity
+    new_obj.ldesc = proto_type.ldesc
+    
     return new_obj
 
   def read_npc_file(self, filename):

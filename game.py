@@ -1,6 +1,7 @@
 import baccarat
 import cards
 import config
+import dataclasses
 import enum
 import event
 import glob
@@ -163,7 +164,7 @@ class game:
       return None
 
     new_npc = pc.npc()
-    new_npc.entity = proto_type.entity
+    new_npc.entity = dataclasses.replace(proto_type.entity)
     new_npc.ldesc = proto_type.ldesc
     new_npc.command_triggers = proto_type.command_triggers.copy()
     new_npc.heart_beat_procs = proto_type.heart_beat_procs.copy()
@@ -178,7 +179,7 @@ class game:
       return None
 
     new_obj = object.object()
-    new_obj.entity = proto_type.entity
+    new_obj.entity = dataclasses.replace(proto_type.entity)
     new_obj.ldesc = proto_type.ldesc
     
     return new_obj

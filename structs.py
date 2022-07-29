@@ -3,6 +3,7 @@ import dataclasses
 import config
 import enum
 import logging
+import object
 import string_handling
 import typing
 
@@ -155,8 +156,7 @@ class obj_proto_data:
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     else:
-      pass # change the line below to throwing an exception
-      # logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
+      logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
 
 """name      = the title of the room (displayed first as one line)
    desc      = the longer description of the room (shown as a following paragraph)"""
@@ -165,5 +165,15 @@ class room_attribute_data:
   name: str="unnamed room"
   desc: str="undescribed room"
 
+if __name__ == '__main__':
+  new_proto = obj_proto_data()
 
+  new_obj = object.object()
 
+  new_obj._entity = dataclasses.replace(new_proto.entity)
+
+  print(new_obj.name)
+
+  new_proto.entity.name = "finished entity"
+
+  print(new_obj.name)

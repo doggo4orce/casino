@@ -1,11 +1,18 @@
-import structs
+import dataclasses
 import logging
+import structs
 
 class object:
-  """Creates an object which characters can get, drop, and otherwise interact with."""
-  def __init__(self):
+  """Creates an object which characters can get, drop, and otherwise interact with.
+    entity = aggregates name, namelist, description, and room
+    ldesc = one line description shown after room description"""
+  def __init__(self, proto=None):
     self._entity = structs.entity_data()
     self._ldesc = "An unfinished object has been left here."
+
+    if proto != None:
+      self.ldesc = proto.ldesc
+      self._entity = dataclasses.replace(proto.entity)
 
   @property
   def ldesc(self):
@@ -27,11 +34,15 @@ class object:
   def name(self, new_name):
     self._entity.name = new_name
 
+  def has_alias(self, alias):
+    return self._entity.has_alias(alias)
+
   def __str__(self):
     return self.name
 
 class inventory:
-  """Creates an inventory of objects (for rooms, characters, and containers)"""
+  """Creates an inventory of objects (for rooms, characters, and containers)
+    contents = list of objects held by the inventory"""
   def __init__(self):
     self._contents = []
 
@@ -46,7 +57,7 @@ class inventory:
     
   def obj_by_alias(self, alias):
     for obj in self._contents:
-      if obj.entity.has_alias(alias):
+      if obj.has_alias(alias):
         return obj
 
   def __contains__(self, obj):

@@ -141,12 +141,12 @@ class room:
 
   def pc_by_name(self, name):
     for ch in self._people:
-      if isinstance(ch, pc.pc) and ch.name.lower() == name:
+      if isinstance(ch, pc.pc) and ch.has_alias(name):
         return ch
 
   def npc_by_alias(self, alias):
     for ch in self._people:
-      if isinstance(ch, pc.npc) and alias in ch.entity.namelist:
+      if isinstance(ch, pc.npc) and ch.has_alias(alias):
         return ch
 
   def connect(self, direction, destination_code):
@@ -199,7 +199,6 @@ class room:
       self.connect(direction(direction[tag.upper()]), value)
     # name, desc
     elif hasattr(self.attributes, tag):
-      print(tag)
       setattr(self.attributes, tag, value)
     else:
       pass# change the line below to throwing an exception

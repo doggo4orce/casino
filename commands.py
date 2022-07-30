@@ -124,7 +124,7 @@ def do_get(ch, scmd, argument, server, mud):
 def do_drop(ch, scmd, argument, server, mud):
   args = argument.split()
   num_args = len(args)
-  rm = mud.room_by_(ch.room)
+  rm = mud.room_by_code(ch.room)
 
   if num_args == 0:
     ch.write("Drop what?\r\n")

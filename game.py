@@ -174,9 +174,7 @@ class game:
       logging.warning(f"Trying to load object [{vnum}] which was not found.")
       return None
 
-    new_obj = object.object()
-    new_obj.entity = dataclasses.replace(proto_type.entity)
-    new_obj.ldesc = proto_type.ldesc
+    new_obj = object.object(proto_type)
     
     return new_obj
 

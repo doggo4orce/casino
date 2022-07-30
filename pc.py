@@ -56,6 +56,9 @@ class character:
     logging.warning(f"Attempting to send message {message} to character {self.entity.name}")
     return
 
+  def has_alias(self, alias):
+    return self._entity.has_alias(alias)
+
   def __str__(self):
     return self.name
 
@@ -190,7 +193,7 @@ class pc(character):
 
 class npc(character):
   """Creates a new NPC (non-playable character).
-     vnum = virtual number of npc or None
+     ldesc = one line description shown after room description
      command_triggers = list of command triggered special procedures (see structs.py)
      heart_beat_procs = list of pulsing special procedures (see structs.py)"""
   def __init__(self, proto=None):
@@ -200,10 +203,10 @@ class npc(character):
     self._heart_beat_procs = list()
 
     if proto != None:
-      self.entity = dataclasses.replace(proto_type.entity)
-      self.ldesc = proto_type.ldesc
-      self.command_triggers = proto_type.command_triggers.copy()
-      self.heart_beat_procs = proto_type.heart_beat_procs.copy()
+      self.entity = dataclasses.replace(proto.entity)
+      self.ldesc = proto.ldesc
+      self.command_triggers = proto.command_triggers.copy()
+      self.heart_beat_procs = proto.heart_beat_procs.copy()
 
   # Getters
   @property

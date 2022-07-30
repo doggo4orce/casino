@@ -199,6 +199,12 @@ class npc(character):
     self._command_triggers = list()
     self._heart_beat_procs = list()
 
+    if proto != None:
+      self.entity = dataclasses.replace(proto_type.entity)
+      self.ldesc = proto_type.ldesc
+      self.command_triggers = proto_type.command_triggers.copy()
+      self.heart_beat_procs = proto_type.heart_beat_procs.copy()
+
   # Getters
   @property
   def ldesc(self):

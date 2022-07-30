@@ -163,11 +163,7 @@ class game:
       logging.warning(f"Trying to load npc [{code}] which was not found.")
       return None
 
-    new_npc = pc.npc()
-    new_npc.entity = dataclasses.replace(proto_type.entity)
-    new_npc.ldesc = proto_type.ldesc
-    new_npc.command_triggers = proto_type.command_triggers.copy()
-    new_npc.heart_beat_procs = proto_type.heart_beat_procs.copy()
+    new_npc = pc.npc(proto_type)
 
     return new_npc
 

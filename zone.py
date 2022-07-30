@@ -47,7 +47,8 @@ class zone:
      parse_generic(var, rf) <- loads room, obj, or npc file from rf to var
      parse_rooms(path)      <- calls parse_rno on each *.room file
      parse_npcs(path)       <- calls parse_rno on each *.npc file
-     parse_objects(path)    <- calls parse_rno on each *.obj file"""
+     parse_objects(path)    <- calls parse_rno on each *.obj file
+     reset()                <- TODO: resets zone based on instructions in <??.filename>"""
   def room_by_id(self, id):
     return self._world[id]
 

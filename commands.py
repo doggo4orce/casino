@@ -91,9 +91,9 @@ def do_give(ch, scmd, argument, server, mud):
     def drop_it(c, mu):
       do_drop(c, None, args[0], None, mu)
 
-    mud.events.add_event(event.event(tch, check_it_out, None, 10))
-    mud.events.add_event(event.event(tch, decide_no, None, 20))
-    mud.events.add_event(event.event(tch, drop_it, None, 30))
+    mud.add_event(event.event(tch, check_it_out, None, 10))
+    mud.add_event(event.event(tch, decide_no, None, 20))
+    mud.add_event(event.event(tch, drop_it, None, 30))
 
 
 def do_get(ch, scmd, argument, server, mud):

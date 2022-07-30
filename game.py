@@ -21,12 +21,13 @@ class game:
        chars     = a list of characters (including NPCS and PCs) in the game
        objects   = a list of objects which are in the game
        events    = handles all events to take place in the future"""
-    self.zones     = list()
-    self.chars     = list()
-    self.objects   = list()
-    self.events    = event.event_table()
+    self._zones     = list()
+    self._chars     = list()
+    self._objects   = list()
+    self._events    = event.event_table()
 
-  """heart_beat()            <- calls the event handlers heart_beat() function
+  """add_event(e)            <- add event e to self_events
+     heart_beat()            <- calls the event handlers heart_beat() function
      call_heart_beat_procs() <- calls all pulsing special procedures for npcs
      zone_by_id(id)          <- iterate through self.zones zones to find zone with identifier id
      room_by_code(code)      <- look up room by code, e.g. 'zone_id[room_id]'
@@ -47,16 +48,19 @@ class game:
      lose_link(ch)           <- disconnects player from their d (seen by players)
      reconnect(d, ch)        <- reconnects player to their d (seen by players)"""
 
+  def add_event(self, e):
+    self._events.add_event(e)
+
   def heart_beat(self):
-    self.events.heart_beat(self)
+    self._events.heart_beat(self)
 
   def call_heart_beat_procs(self):
-    for mob in self.chars:
+    for mob in self._chars:
       if isinstance(mob, pc.npc):
         mob.call_heart_beat_procs(self)
 
   def zone_by_id(self, id):
-    for zone in self.zones:
+    for zone in self._zones:
       if zone.id == id:
         return zone
     return None
@@ -97,7 +101,7 @@ class game:
 
   def add_char(self, ch):
     # place them in the world
-    self.chars.append(ch)
+    self._chars.append(ch)
     # check if they have a location
     room = self.room_by_code(ch.room)
     # add them to the room if so
@@ -113,19 +117,23 @@ class game:
     if ch.room != None:
       self.room_by_code(ch.room).remove_char(ch)
     # now remove them from the world
-    self.chars.remove(ch)
+    self._chars.remove(ch)
 
   def add_obj(self, obj):
-    self.objects.append(obj)
+    self._objects.append(obj)
     room = self.room_by_code(obj.room)
     if room != None:
       # todo: write room.add_obj(obj) function
       room.inventory.insert(obj)
 
   def extract_obj(self, obj):
+    for ch in self._chars:
+      if obj in ch.inventory:
+        ch.inventory.remove(obj)
+
     if obj.room != None:
       self.room_by_code(ch.room).inventory.remove(obj)
-    self.objects.remove(obj)
+    self._objects.remove(obj)
 
   def assign_spec_procs(self):
     b_dealer = self.npc_by_code('casino[baccarat_dealer]')
@@ -141,7 +149,7 @@ class game:
       if not os.path.isdir(folder):
         continue
       # otherwise we found a new zone
-      self.zones.append(zone.zone(folder + "/"))
+      self._zones.append(zone.zone(folder + "/"))
 
     self.assign_spec_procs()
 
@@ -150,6 +158,10 @@ class game:
     mob = cards.card_dealer.from_npc(mob)
     mob = baccarat.baccarat_dealer.from_card_dealer(mob)
     mob.room = 'casino[casino_room]'
+    self.add_char(mob)
+
+    mob = self.load_npc('casino[baker]')
+    mob.room = 'casino[temple]'
     self.add_char(mob)
 
     bottle = self.load_obj('casino[bottle]')
@@ -205,7 +217,7 @@ class game:
       self.obj_proto[vnum] = db.parse_obj(rf)
 
   def pc_by_id(self, id):
-    for ch in self.chars:
+    for ch in self._chars:
       if type(ch) == pc.pc and ch.id == id:
         return ch
     return None

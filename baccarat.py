@@ -406,7 +406,7 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
       mud.echo_around(ch, None, f"{ch} signals to the dealer to start the next shoe.\r\n")
       me.paused = True
       me.state = baccarat_dealer_state.BEGIN_SHOE
-      mud.events.add_event(event.event(me, unpause_dealer, None, 10))
+      mud.add_event(event.event(me, unpause_dealer, None, 10))
       
       me.simulation_mode = argument.lower() == "simulate"
 
@@ -636,7 +636,7 @@ def baccarat_dealing(mud, me):
     if me.simulation_mode:
       me.paused = False
     else:
-      mud.events.add_event(event.event(me, unpause_dealer, None, pause))
+      mud.add_event(event.event(me, unpause_dealer, None, pause))
   return
 
 """This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.
@@ -644,7 +644,10 @@ def baccarat_dealing(mud, me):
 
      the_dealer.paused=True
 
-   and then attach to it an event which calls this function with a countdown of 30."""
+   and then attach to it an event which calls this function with a countdown of 30.
+
+   TODO:  this seems a bit silly.  would it not make more sense to just add a timer field directly
+   to NPC's if they are to be paused?"""
 def unpause_dealer(ch, mud):
   ch.paused = False
 

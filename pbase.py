@@ -12,8 +12,8 @@ PF_DEFAULT_ROOM = config.VOID_ROOM
 
 ptable = list()
 
-# much of this code is repeated in load_char_by_name, can it be factored?
-
+# much of this code is repeated in load_char_by_name, but repetition seems necessary
+# to avoid loading the entire character just to look up a single field
 def field_by_name(name, field):
   with open(f"{config.PFILES_PATH}{name.lower()}.plr") as rf:
     line_number = 0
@@ -80,9 +80,6 @@ def update_index_file():
 def add_player_to_index(name):
   ptable.append({"id": num_players() + 1, "name": name.lower()})
 
-# TODO: this code is repeated in zone.parse_generic(), which probably doesn't need to be
-# a member function for <class zone>.  pull that out into a general function, and then
-# call it here (but where do we put it?)
 def load_char_by_name(name):
   result = pc.pc()
   result.room = PF_DEFAULT_ROOM

@@ -196,10 +196,10 @@ class room:
     if tag == "id":
         self.unique_id.id = value
     elif tag.upper() in dir_tags:
-      # found an exit
       self.connect(direction(direction[tag.upper()]), value)
     # name, desc
     elif hasattr(self.attributes, tag):
+      print(tag)
       setattr(self.attributes, tag, value)
     else:
       pass# change the line below to throwing an exception

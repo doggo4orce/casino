@@ -1,4 +1,5 @@
-lib/pfiles/
+lib/pfiles/*.plr
+lib/pfiles/index
 lib/copyover.dat
 __pycache__/
 test.py

@@ -1,6 +1,7 @@
 import commands
 import config
 import descriptor
+import file_handling
 import logging
 import pbase
 import pc
@@ -81,6 +82,7 @@ def handle_next_input(d, server, mud):
     d.login_info = d.login_info._replace(name = command.capitalize())
     id = pbase.id_by_name(command)
     if id != None:
+      logging.info(f"{command.capitalize()} is logging in.")
       d.state = descriptor.descriptor_state.GET_PASSWORD
       d.send(bytes(telnet.will_echo))
       d.write("Password: ")
@@ -139,13 +141,19 @@ def handle_next_input(d, server, mud):
       ch = mud.pc_by_id(pbase.id_by_name(d.login_info.name))
       # nothing found, log in normally
       if not ch:
-        d.char = pbase.load_char_by_name(d.login_info.name)
-        d.char.d = d
-        d.write("Welcome!  Have a great time!\r\n")
-        d.state = descriptor.descriptor_state.CHATTING
-        logging.info(f"{d.login_info.name} has entered the game.")
-        mud.add_char(d.char)
-        mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
+        try:
+          d.char = pbase.load_char_by_name(d.login_info.name)
+        except file_handling.TagError as e:
+          logging.error(e.message)
+          d.write(f"\r\nYour character could not be loaded.  Please let an administrator know.\r\n\r\n")
+          d.disconnected = True
+        else:
+          d.char.d = d
+          d.write("Welcome!  Have a great time!\r\n")
+          d.state = descriptor.descriptor_state.CHATTING
+          logging.info(f"{d.login_info.name} has entered the game.")
+          mud.add_char(d.char)
+          mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
       else:
         if ch.d:
           d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")

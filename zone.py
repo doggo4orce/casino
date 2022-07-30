@@ -1,5 +1,6 @@
 from color import *
 import config
+import file_handling
 import glob
 import logging
 import os
@@ -85,33 +86,12 @@ class zone:
     self.parse_npcs(path + "npc/")
     self.parse_objects(path + "obj/")
 
-  def parse_generic(self, new_rno, rf):
-    while True:
-      line = rf.readline()
-      # catches the end of the file
-      if line == "":
-        break
-      # allows us to ignore comments and blank/empty lines
-      if line == "\n" or line[0] == '#':
-        continue
-      # expecting a tag for sure
-      tag, value = string_handling.split_tag_value(line)
-      # if we don't get a tag this file is not formatted properly
-      if tag[-1] != ":":
-        logging.error(f"Error: Expected ':' at the end of tag {tag} while loading")
-        return
-      # remove the colon and convert to lowercase
-      tag = tag[0:len(tag) - 1].lower()
-      # ready to interpret the actual tag.  pass rf along as well in case
-      # the specific file format indicates they need to read further
-      new_rno.parse_tag(tag, value, rf)
-
   def parse_rooms(self, path):
     for file in glob.glob(path + "*.room"):
       rf = open(file, "r")
       new_room = room.room()
       new_room.unique_id.update(self.id, "no_id")
-      self.parse_generic(new_room, rf)
+      file_handling.parse_generic(new_room, rf)
       self._world[new_room.unique_id.id] = new_room
 
   def parse_npcs(self, path):
@@ -119,7 +99,7 @@ class zone:
       rf = open(file, "r")
       new_npc_proto = structs.npc_proto_data()
       new_npc_proto.unique_id.update(self.id, "no_id")
-      self.parse_generic(new_npc_proto, rf)
+      file_handling.parse_generic(new_npc_proto, rf)
       self._npc_proto[new_npc_proto.unique_id.id] = new_npc_proto
 
   def parse_objects(self, path):
@@ -127,7 +107,7 @@ class zone:
       rf = open(file, "r")
       new_obj_proto = structs.obj_proto_data()
       new_obj_proto.unique_id.update(self.id, "no_id")
-      self.parse_generic(new_obj_proto, rf)
+      file_handling.parse_generic(new_obj_proto, rf)
       self._obj_proto[new_obj_proto.unique_id.id] = new_obj_proto
 
   def __str__(self):

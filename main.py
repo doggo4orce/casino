@@ -32,7 +32,7 @@ o_mud.startup()
 
 mud_server = server.server()
 
-logging.info(f"Running game on port {cl_dict['port']}")
+logging.info(f"Running game on port {cl_dict['port']}.")
 mud_server.boot("0.0.0.0", cl_dict['port'])
 
 # todo, call (and write) a function here which verifies that ever plr on the index actually exists a a .plr file

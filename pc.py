@@ -120,9 +120,37 @@ class pc(character):
   def save_data(self, new_data):
     self._save_data = new_data
 
-  """update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
+  """parse_tag(tag, value, rf) <- processes a line from a pfile through rf
+     update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
      save_char()           <- saves character data to player file
      write(msg)            <- sends msg to descriptor controlling self"""
+
+  def parse_tag(self, tag, value, rf):
+    # Load Administrative Data
+    if tag == "name":
+      self.name = value
+      self.entity.namelist = [value]
+    elif tag == "id":
+      self.id = value
+    elif tag == "password":
+      self.pwd = value
+    # Load Entity Data (not all of these will have been saved, but any of them are allowed to be)
+    elif hasattr(self.entity, tag):
+      setattr(self.entity, tag, value)
+    # Load Game Data
+    elif hasattr(self.save_data.numerical, tag):
+      setattr(self.save_data.numerical, tag, int(value))
+    elif hasattr(self.save_data.non_numerical, tag):
+      setattr(self.save_data.non_numerical, tag, value)
+    # Load Preferences
+    elif hasattr(self.prefs, tag):
+      if tag in ['screen_width', 'screen_length']:
+        setattr(self.prefs, tag, int(value))
+      else:
+        setattr(self.prefs, tag, value)
+    else:
+      # TODO: replace this with exception?
+      logging.warning(f"Line ({line_number}) -- Trying to assign value to unrecognized tag {tag} while loading {rf.name}.")
 
   def update_pref(self, attr_str, new_val):
     if hasattr(self._prefs, attr_str):
@@ -165,7 +193,7 @@ class npc(character):
      vnum = virtual number of npc or None
      command_triggers = list of command triggered special procedures (see structs.py)
      heart_beat_procs = list of pulsing special procedures (see structs.py)"""
-  def __init__(self, new_vnum = None):
+  def __init__(self, proto=None):
     super().__init__()
     self._ldesc = "An unfinished npc stands here."
     self._command_triggers = list()

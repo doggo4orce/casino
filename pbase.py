@@ -1,9 +1,10 @@
-import logging
-import os
-
 from color import *
 import config
+import file_handling
+import logging
+import os
 import pc
+import string_handling
 
 # default values to be used when loading characters from save files
 PF_DEFAULT_TITLE = config.DEFAULT_TITLE
@@ -79,6 +80,9 @@ def update_index_file():
 def add_player_to_index(name):
   ptable.append({"id": num_players() + 1, "name": name.lower()})
 
+# TODO: this code is repeated in zone.parse_generic(), which probably doesn't need to be
+# a member function for <class zone>.  pull that out into a general function, and then
+# call it here (but where do we put it?)
 def load_char_by_name(name):
   result = pc.pc()
   result.room = PF_DEFAULT_ROOM
@@ -86,55 +90,14 @@ def load_char_by_name(name):
   line_number = 0
 
   if id_by_name(name) == None:
+    # TODO: replace with index error exception
     logging.error(f"Error: Trying to load pfile for name {name} which is not contained in the index.")
-    return False
+    return
+  else:
+    result.id = id_by_name(name)
 
-  with open(f"{config.PFILES_PATH}{name.lower()}.plr") as rf:
-    for line in rf:
-      line_number += 1
-
-      # allows us to ignore comments and blank lines
-      if line == "\n" or line[0] == '#':
-        continue
-
-      # this is essentially the one_arg behaviour. factor it
-      var_list = line.split()
-      tag = var_list[0]
-      value = " ".join(var_list[1:])
-
-      if tag[-1] != ":":
-        logging.error(f"Line ({line_number}) -- Error: Expected ':' at the end of tag while loading {name}.plr")
-        logging.error("See load_char_by_name.")
-        return False
-      tag = tag[0:len(tag) - 1] # remove the semi-colon after confirming it's there
-
-      # Load Administrative Data
-      if tag == "name":
-        result.name = value
-        result.entity.namelist = [value]
-      elif tag == "id":
-        result.id = value
-      elif tag == "password":
-        result.pwd = value
-      elif tag == "room": # this one could be moved to game data once characters are given general game data?
-        result.room = value
-
-      # Load Game Data
-      elif hasattr(result.save_data.numerical, tag):
-        setattr(result.save_data.numerical, tag, int(value))
-      elif hasattr(result.save_data.non_numerical, tag):
-        setattr(result.save_data.non_numerical, tag, value)
-
-      # Load Preferences
-      elif hasattr(result.prefs, tag):
-        if tag in ['screen_width', 'screen_length']:
-          setattr(result.prefs, tag, int(value))
-        else:
-          setattr(result.prefs, tag, value)
-      else:
-        logging.warning(f"Line ({line_number}) -- Trying to assign value to unrecognized tag {tag} while loading {name}.")
-
-  result.id = id_by_name(name)
+  rf = open(f"{config.PFILES_PATH}{name.lower()}.plr")
+  file_handling.parse_generic(result, rf)
   return result
 
 def ptable_str():

@@ -1,5 +1,6 @@
 from color import *
 import enum
+import inventory
 import object
 import pc
 import string_handling
@@ -54,7 +55,7 @@ class room:
     self._attributes = structs.room_attribute_data("Unfinished Room", "It looks unfinished.")
     self._exits     = [ ]
     self._people    = [ ]
-    self._inventory = object.inventory()
+    self._inventory = inventory.inventory()
 
   # Getters
   @property

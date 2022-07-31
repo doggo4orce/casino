@@ -4,6 +4,7 @@ import logging
 import copy
 import config
 import gc
+import inventory
 import object
 import string_handling
 import structs
@@ -18,7 +19,7 @@ class character:
     there is nothing stopping one from instantiating it directly, such use is not intended."""
   def __init__(self):
     self._entity    = structs.entity_data()
-    self._inventory = object.inventory()
+    self._inventory = inventory.inventory()
 
   # Getters
   @property

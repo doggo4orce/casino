@@ -1,48 +1,11 @@
 from color import *
 import enum
+import exit
 import inventory
 import object
 import pc
 import string_handling
 import structs
-
-class direction(enum.IntEnum):
-  NORTH = 0
-  EAST  = 1
-  SOUTH = 2
-  WEST  = 3
-  UP    = 4
-  DOWN  = 5
-
-class exit:
-  """Creates an exit which characters may use to travel between rooms.
-    direction = 
-    destination = """
-  def __init__(self, dir, code):
-    self._direction = dir
-
-    zone_id, room_id = string_handling.parse_reference(code)
-    
-    self._destination = structs.unique_identifier(zone_id, room_id)
-
-  @property
-  def direction(self):
-    return self._direction
-  @property
-  def zone(self):
-    return self._destination.zone_id
-  @property
-  def room(self):
-    return self._destination.id
-  @property
-  def destination(self):
-    return f"{self.zone}[{self.room}]"
-
-  def __str__(self):
-    if self.local():
-      return f"{self.direction.name.lower()}: {CYAN}{self.room}{NORMAL}\r\n"
-    else:
-      return f"{self.direction.name.lower()}: {CYAN}{self.zone}{NORMAL}[{CYAN}{self.room}{NORMAL}]\r\n"
 
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
@@ -53,8 +16,8 @@ class room:
   def __init__(self):
     self._unique_id = structs.unique_identifier()
     self._attributes = structs.room_attribute_data("Unfinished Room", "It looks unfinished.")
-    self._exits     = [ ]
-    self._people    = [ ]
+    self._exits     = list()
+    self._people    = list()
     self._inventory = inventory.inventory()
 
   # Getters
@@ -154,7 +117,7 @@ class room:
     # if it's a local exit, prepend the zone_id
     if destination_code.find('[') == -1:
       destination_code = f"{self.zone_id}[{destination_code}]"
-    self._exits.append(exit(direction, destination_code))
+    self._exits.append(exit.exit(direction, destination_code))
 
   def disconnect(self, direction):
     target = False
@@ -192,12 +155,12 @@ class room:
     return None
 
   def parse_tag(self, tag, value, rf):
-    dir_tags = [dir.name for dir in direction]
+    dir_tags = [dir.name for dir in exit.direction]
 
     if tag == "id":
         self.unique_id.id = value
     elif tag.upper() in dir_tags:
-      self.connect(direction(direction[tag.upper()]), value)
+      self.connect(exit.direction(exit.direction[tag.upper()]), value)
     # name, desc
     elif hasattr(self.attributes, tag):
       setattr(self.attributes, tag, value)

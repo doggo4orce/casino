@@ -1,5 +1,6 @@
 import baccarat
 import descriptor
+import exit
 import logging
 import math
 import socket
@@ -438,8 +439,6 @@ def show_char_to_char(ch, tch):
 
   ch.write(out_buf)
 
-
-
 def do_move(ch, scmd, argument, server, mud):
   starting_room = mud.room_by_code(ch.room)
   destination_code = starting_room.get_destination(scmd)
@@ -453,12 +452,12 @@ def do_move(ch, scmd, argument, server, mud):
   left_msg = f"{ch} leaves {scmd.name.lower()}.\r\n"
 
   arrived_messages = {
-    room.direction.NORTH: 'the south',
-    room.direction.EAST:  'the east',
-    room.direction.SOUTH: 'the north',
-    room.direction.WEST:  'the east',
-    room.direction.UP:    'below',
-    room.direction.DOWN:  'above',
+    exit.direction.NORTH: 'the south',
+    exit.direction.EAST:  'the east',
+    exit.direction.SOUTH: 'the north',
+    exit.direction.WEST:  'the east',
+    exit.direction.UP:    'below',
+    exit.direction.DOWN:  'above',
   }
 
   arrived_msg = f"{ch} has arrived from {arrived_messages[scmd]}.\r\n"

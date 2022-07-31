@@ -1,5 +1,6 @@
 import commands
 import config
+import exit
 import descriptor
 import file_handling
 import logging
@@ -11,12 +12,12 @@ import telnet
 cmd_dict = dict()
 
 def init_commands():
-  cmd_dict["north"]     = ( commands.do_move,        room.direction.NORTH  )
-  cmd_dict["east"]      = ( commands.do_move,        room.direction.EAST   )
-  cmd_dict["south"]     = ( commands.do_move,        room.direction.SOUTH  )
-  cmd_dict["west"]      = ( commands.do_move,        room.direction.WEST   )
-  cmd_dict["up"]        = ( commands.do_move,        room.direction.UP     )
-  cmd_dict["down"]      = ( commands.do_move,        room.direction.DOWN   )
+  cmd_dict["north"]     = ( commands.do_move,        exit.direction.NORTH  )
+  cmd_dict["east"]      = ( commands.do_move,        exit.direction.EAST   )
+  cmd_dict["south"]     = ( commands.do_move,        exit.direction.SOUTH  )
+  cmd_dict["west"]      = ( commands.do_move,        exit.direction.WEST   )
+  cmd_dict["up"]        = ( commands.do_move,        exit.direction.UP     )
+  cmd_dict["down"]      = ( commands.do_move,        exit.direction.DOWN   )
 
   cmd_dict["colors"]    = ( commands.do_colors,      0 )
   cmd_dict["copyover"]  = ( commands.do_copyover,    0 )

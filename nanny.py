@@ -40,6 +40,8 @@ def init_commands():
   cmd_dict["who"]       = ( commands.do_who,         0 )
 
 def interpret_msg(d, command, argument, server, mud):
+  valid_command = False
+
   if command == "":
     d.has_prompt = False
     return
@@ -48,19 +50,22 @@ def interpret_msg(d, command, argument, server, mud):
 
   for mob in mud.room_by_code(d.char.room).people:
     if isinstance(mob, pc.npc):
-      block_interpreter = mob.call_command_triggers(mud, d.char, command, argument)
-
-  if block_interpreter:
-    return
+      block_interpreter = mob.call_prefix_command_triggers(mud, d.char, command, argument)
 
   for c in cmd_dict:
     if c.startswith(command):
       cmd_dict[c][0](d.char, cmd_dict[c][1], argument, server, mud)
       d.has_prompt = False
-      return
+      valid_command = True
+      break
 
-  d.write("Huh!?!\r\n")
-  d.has_prompt = False
+  for mob in mud.room_by_code(d.char.room).people:
+    if isinstance(mob, pc.npc):
+      mob.call_suffix_command_triggers(mud, d.char, command, argument)
+
+  if not valid_command:
+    d.write("Huh!?!\r\n")
+    d.has_prompt = False
 
 def handle_next_input(d, server, mud):
   input = d.next_input()

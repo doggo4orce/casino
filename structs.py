@@ -81,16 +81,24 @@ class pc_save_data:
   non_numerical: pc_save_data_strings=dataclasses.field(default_factory=lambda:pc_save_data_strings())
 
 @dataclasses.dataclass
-class command_trigger:
+class prefix_command_trigger:
   """name = representation as a string
      func = behaviour function -- returns one of the messages below"""
   name: str="an unnamed spec proc"
   func: function=None
 
-"""These are messages which may be returned by command_trigger.func when called by
+@dataclasses.dataclass
+class suffix_command_trigger:
+  """name = representation as a string
+     func = behaviour function -- returns one of the messages below"""
+  name: str="an unnamed spec proc"
+  func: function=None
+
+"""These are messages which may be returned by prefix_command_trigger.func when called by
    interpret_msg() in nanny.py.  Depending on whether and how much this list of
-   messages grows, command_trigger.func might be adjusted to return a set"""
-class command_trigger_messages(enum.IntEnum):
+   messages grows, command_trigger.func might be adjusted to return a set
+   TODO: consider using exceptions instead?"""
+class prefix_command_trigger_messages(enum.IntEnum):
   BLOCK_INTERPRETER = 1 # command to be ignored by the command line interpreter
 
 @dataclasses.dataclass
@@ -117,7 +125,8 @@ class unique_identifier:
 class npc_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
   ldesc: str="An unfinished npc proto_type stands here."
-  command_triggers: list = dataclasses.field(default_factory=lambda:list())
+  prefix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
+  suffix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 

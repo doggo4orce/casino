@@ -286,7 +286,8 @@ class baccarat_dealer(cards.card_dealer):
     ret_val.ldesc = dealer.ldesc
     ret_val.inventory = dealer.inventory
     # copy npc attributes
-    ret_val.command_triggers = dealer.command_triggers
+    ret_val.prefix_command_triggers = dealer.prefix_command_triggers
+    ret_val.suffix_command_triggers = dealer.suffix_command_triggers
     ret_val.heart_beat_procs = dealer.heart_beat_procs
     ret_val.hand = baccarat_hand()
     ret_val.state = baccarat_dealer_state.IDLE
@@ -378,14 +379,14 @@ def baccarat_dealer_history(mud, me, ch, command, argument):
   out_str += f"{BKGD_WHITE} {NORMAL} - natural 9 over 8\r\n"
   ch.write(out_str)
 
-  return structs.command_trigger_messages.BLOCK_INTERPRETER
+  return structs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
 def baccarat_dealer_intro(mud, me, ch, command, argument):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
   if command == "say" and argument.lower() == "hi":
-    mud.events.add_event(event.speech_event(me, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, 10))
+    commands.do_say(me, None, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, mud)
     return
 
 def baccarat_syntax_parser(mud, me, ch, command, argument):
@@ -401,7 +402,7 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
     if argument.lower() in ["start", "simulate"]:
       if me.state != baccarat_dealer_state.IDLE:
         ch.write("There is already a game in progress!\r\n")
-        return structs.command_trigger_messages.BLOCK_INTERPRETER
+        return structs.prefix_command_trigger_messages.BLOCK_INTERPRETER
       ch.write("You signal to the dealer to start the next shoe.\r\n")
       mud.echo_around(ch, None, f"{ch} signals to the dealer to start the next shoe.\r\n")
       me.paused = True
@@ -412,7 +413,7 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
 
     else:
       ch.write(help_str)
-    return structs.command_trigger_messages.BLOCK_INTERPRETER
+    return structs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
 def baccarat_table_render(mud, me, ch, command, argument):
   if not isinstance(me, baccarat_dealer):
@@ -424,7 +425,7 @@ def baccarat_table_render(mud, me, ch, command, argument):
       ch.write("The table is empty.\r\n")
     else:
       ch.write(me.hand.ascii_render() + "\r\n")
-    return structs.command_trigger_messages.BLOCK_INTERPRETER
+    return structs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
 class baccarat_dealer_state(enum.IntEnum):
   IDLE                = 1

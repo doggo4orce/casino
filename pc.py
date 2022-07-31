@@ -195,27 +195,33 @@ class pc(character):
 class npc(character):
   """Creates a new NPC (non-playable character).
      ldesc = one line description shown after room description
-     command_triggers = list of command triggered special procedures (see structs.py)
+     prefix_command_triggers = procs called before command is processed (see structs.py)
+     suffix_command_triggers = procs called after command is processed (see structs.py)
      heart_beat_procs = list of pulsing special procedures (see structs.py)"""
   def __init__(self, proto=None):
     super().__init__()
     self._ldesc = "An unfinished npc stands here."
-    self._command_triggers = list()
+    self._prefix_command_triggers = list()
+    self._suffix_command_triggers = list()
     self._heart_beat_procs = list()
 
     if proto != None:
       self.entity = dataclasses.replace(proto.entity)
-      self.ldesc = proto.ldesc
-      self.command_triggers = proto.command_triggers.copy()
-      self.heart_beat_procs = proto.heart_beat_procs.copy()
+      self._ldesc = proto.ldesc
+      self._prefix_command_triggers = proto.prefix_command_triggers.copy()
+      self._suffix_command_triggers = proto.suffix_command_triggers.copy()
+      self._heart_beat_procs = proto.heart_beat_procs.copy()
 
   # Getters
   @property
   def ldesc(self):
     return self._ldesc
   @property
-  def command_triggers(self):
-    return self._command_triggers
+  def prefix_command_triggers(self):
+    return self._prefix_command_triggers
+  @property
+  def suffix_command_triggers(self):
+    return self._suffix_command_triggers
   @property
   def heart_beat_procs(self):
     return self._heart_beat_procs
@@ -224,24 +230,27 @@ class npc(character):
   @ldesc.setter
   def ldesc(self, new_ldesc):
     self._ldesc = new_ldesc
-  @command_triggers.setter
-  def command_triggers(self, new_triggers):
-    self._command_triggers = new_triggers
+  @prefix_command_triggers.setter
+  def prefix_command_triggers(self, new_triggers):
+    self._prefix_command_triggers = new_triggers
+  @suffix_command_triggers.setter
+  def suffix_command_triggers(self, new_triggers):
+    self._suffix_command_triggers = new_triggers
   @heart_beat_procs.setter
   def heart_beat_procs(self, new_procs):
     self._heart_beat_procs = new_procs
 
-  """from_char(ch)                            <- returns an npc built from attributes of ch
-     write(msg)                               <- does nothing (see below)
-     assign_spec_proc(new_proc)               <- adds new_proc to self.specs
-     call_command_triggers(mud, ch, cmd, arg) <- calls all command trigger spec procs
-     call_heart_beat_procs(mud)               <- calls all heart beat procs"""
+  """from_char(ch)                                   <- upgrades character ch to npc
+     write(msg)                                      <- does nothing (see below)
+     assign_spec_proc(new_proc)                      <- adds new_proc to self.specs
+     call_prefix_command_triggers(mud, ch, cmd, arg) <- calls all command trigger spec procs
+     call_heart_beat_procs(mud)                      <- calls all heart beat procs"""
      
   @classmethod
   def from_char(cls, ch):
     ret_val = cls()
     ret_val.entity = ch.entity
-    ret_val.ldesc = ch.ldesc # should we be copying the ldesc?
+    ret_val.ldesc = ch.ldesc
     ret_val.inventory = ch.inventory
     return ret_val
 
@@ -257,12 +266,16 @@ class npc(character):
   def assign_spec_proc(self, spec_proc):
     self.specs.append(spec_proc)
 
-  def call_command_triggers(self, mud, ch, command, argument):
+  def call_prefix_command_triggers(self, mud, ch, command, argument):
     block_interpreter = False
-    for procedure in self.command_triggers:
-      if procedure.func(mud, self, ch, command, argument) == structs.command_trigger_messages.BLOCK_INTERPRETER:
+    for procedure in self.prefix_command_triggers:
+      if procedure.func(mud, self, ch, command, argument) == structs.prefix_command_trigger_messages.BLOCK_INTERPRETER:
         block_interpreter = True
     return block_interpreter
+
+  def call_suffix_command_triggers(self, mud, ch, command, argument):
+    for procedure in self.suffix_command_triggers:
+      procedure.func(mud, self, ch, command, argument)
 
   def call_heart_beat_procs(self, mud):
     for procedure in self.heart_beat_procs:

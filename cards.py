@@ -190,7 +190,8 @@ class card_dealer(pc.npc):
     ret_val.inventory = old_npc.inventory
 
     # copy npc attributes
-    ret_val.command_triggers = old_npc.command_triggers
+    ret_val.prefix_command_triggers = old_npc.prefix_command_triggers
+    ret_val.suffix_command_triggers = old_npc.suffix_command_triggers
     ret_val.heart_beat_procs = old_npc.heart_beat_procs
     
     return ret_val

@@ -12,12 +12,12 @@ class direction(enum.IntEnum):
 
 class exit:
   """Creates an exit which characters may use to travel between rooms.
-    direction = 
-    destination = """
-  def __init__(self, dir, code):
+    direction = one of the directions listed above
+    destination = virtual reference to another room"""
+  def __init__(self, dir, vref):
     self._direction = dir
 
-    zone_id, room_id = string_handling.parse_reference(code)
+    zone_id, room_id = string_handling.parse_reference(vref)
     
     self._destination = structs.unique_identifier(zone_id, room_id)
 

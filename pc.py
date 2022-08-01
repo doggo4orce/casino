@@ -244,7 +244,8 @@ class npc(character):
   """from_char(ch)                                   <- upgrades character ch to npc
      write(msg)                                      <- does nothing (see below)
      assign_spec_proc(new_proc)                      <- adds new_proc to self.specs
-     call_prefix_command_triggers(mud, ch, cmd, arg) <- calls all command trigger spec procs
+     call_prefix_command_triggers(mud, ch, cmd, arg) <- calls all prefix command trigger procs
+     call_prefix_command_triggers(mud, ch, cmd, arg) <- calls all suffix command trigger procs
      call_heart_beat_procs(mud)                      <- calls all heart beat procs"""
      
   @classmethod
@@ -270,13 +271,13 @@ class npc(character):
   def call_prefix_command_triggers(self, mud, ch, command, argument):
     block_interpreter = False
     for procedure in self.prefix_command_triggers:
-      if procedure.func(mud, self, ch, command, argument) == spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER:
+      if procedure.call(mud, self, ch, command, argument) == spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER:
         block_interpreter = True
     return block_interpreter
 
   def call_suffix_command_triggers(self, mud, ch, command, argument):
     for procedure in self.suffix_command_triggers:
-      procedure.func(mud, self, ch, command, argument)
+      procedure.call(mud, self, ch, command, argument)
 
   def call_heart_beat_procs(self, mud):
     for procedure in self.heart_beat_procs:

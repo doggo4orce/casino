@@ -6,25 +6,27 @@ import typing
 function = typing.NewType('function', typing.Any)
 
 @dataclasses.dataclass
-class prefix_command_trigger:
+class command_trigger:
   """name = representation as a string
      func = behaviour function -- returns one of the messages below"""
   name: str="an unnamed spec proc"
   func: function=None
 
-@dataclasses.dataclass
-class suffix_command_trigger:
-  """name = representation as a string
-     func = behaviour function -- returns one of the messages below"""
-  name: str="an unnamed spec proc"
-  func: function=None
+  def call(self, mud, me, ch, command, argument):
+    return self.func(mud, me, ch, command, argument)
 
-"""These are messages which may be returned by prefix_command_trigger.func when called by
-   interpret_msg() in nanny.py.  Depending on whether and how much this list of
-   messages grows, command_trigger.func might be adjusted to return a set
+class prefix_command_trigger(command_trigger):
+  pass
+class suffix_command_trigger(command_trigger):
+  pass
+
+"""These are messages which may be returned by func for prefix
+   command trigger procs when called by interpret_msg() in nanny.py.  
+   Depending on whether and how much this list of messages grows, 
+   command_trigger.func might be adjusted to return a set
    TODO: consider using exceptions instead?"""
 class prefix_command_trigger_messages(enum.IntEnum):
-  BLOCK_INTERPRETER = 1 # command to be ignored by the command line interpreter
+  BLOCK_INTERPRETER = 1 # blocks command and all suffix_command_triggers
 
 @dataclasses.dataclass
 class heart_beat_proc:

@@ -52,6 +52,9 @@ def interpret_msg(d, command, argument, server, mud):
     if isinstance(mob, pc.npc):
       block_interpreter = mob.call_prefix_command_triggers(mud, d.char, command, argument)
 
+  if block_interpreter:
+    return
+    
   for c in cmd_dict:
     if c.startswith(command):
       cmd_dict[c][0](d.char, cmd_dict[c][1], argument, server, mud)

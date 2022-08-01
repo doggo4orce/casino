@@ -6,6 +6,7 @@ import config
 import gc
 import inventory
 import object
+import spec_procs
 import string_handling
 import structs
 
@@ -195,9 +196,9 @@ class pc(character):
 class npc(character):
   """Creates a new NPC (non-playable character).
      ldesc = one line description shown after room description
-     prefix_command_triggers = procs called before command is processed (see structs.py)
-     suffix_command_triggers = procs called after command is processed (see structs.py)
-     heart_beat_procs = list of pulsing special procedures (see structs.py)"""
+     prefix_command_triggers = procs called before command is processed
+     suffix_command_triggers = procs called after command is processed
+     heart_beat_procs = list of pulsing special procedures"""
   def __init__(self, proto=None):
     super().__init__()
     self._ldesc = "An unfinished npc stands here."
@@ -269,7 +270,7 @@ class npc(character):
   def call_prefix_command_triggers(self, mud, ch, command, argument):
     block_interpreter = False
     for procedure in self.prefix_command_triggers:
-      if procedure.func(mud, self, ch, command, argument) == structs.prefix_command_trigger_messages.BLOCK_INTERPRETER:
+      if procedure.func(mud, self, ch, command, argument) == spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER:
         block_interpreter = True
     return block_interpreter
 

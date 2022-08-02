@@ -12,7 +12,8 @@ import structs
 
 class character:
   """Creates a new char(acter) which can act within the world.
-    entity = dataclass encapsulating name, appearance and location (see structs.py)
+
+    entity    = dataclass encapsulating name, appearance and location (see structs.py)
     inventory = iterable container consisting of all objects held (see object.py)
 
     Note: This class is meant to encapsulate the functionality shared by pcs/npcs,
@@ -37,7 +38,7 @@ class character:
     return self._inventory
   @property
   def ldesc(self):
-    return "A character's ldesc should never be seen!"
+    return "This character's ldesc should never be seen!"
 
   # Setters
   @entity.setter
@@ -245,7 +246,7 @@ class npc(character):
      write(msg)                                      <- does nothing (see below)
      assign_spec_proc(new_proc)                      <- adds new_proc to self.specs
      call_prefix_command_triggers(mud, ch, cmd, arg) <- calls all prefix command trigger procs
-     call_prefix_command_triggers(mud, ch, cmd, arg) <- calls all suffix command trigger procs
+     call_suffix_command_triggers(mud, ch, cmd, arg) <- calls all suffix command trigger procs
      call_heart_beat_procs(mud)                      <- calls all heart beat procs"""
      
   @classmethod
@@ -265,9 +266,6 @@ class npc(character):
   def write(self, message):
     pass
 
-  def assign_spec_proc(self, spec_proc):
-    self.specs.append(spec_proc)
-
   def call_prefix_command_triggers(self, mud, ch, command, argument):
     block_interpreter = False
     for procedure in self.prefix_command_triggers:
@@ -281,5 +279,5 @@ class npc(character):
 
   def call_heart_beat_procs(self, mud):
     for procedure in self.heart_beat_procs:
-      features = procedure.func(mud, self)
+      procedure.call(mud, self)
 

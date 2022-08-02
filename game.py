@@ -138,10 +138,10 @@ class game:
 
   def assign_spec_procs(self):
     b_dealer = self.npc_by_code('casino[baccarat_dealer]')
-    b_dealer.prefix_command_triggers.append(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
-    b_dealer.prefix_command_triggers.append(spec_procs.prefix_command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
-    b_dealer.suffix_command_triggers.append(spec_procs.suffix_command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
-    b_dealer.heart_beat_procs.append(spec_procs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
+    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
+    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
+    b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
+    b_dealer.assign_spec_proc(spec_procs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
   def startup(self):
 

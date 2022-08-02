@@ -4,6 +4,18 @@ def ana(noun):
   else:
     return "a"
 
+def ordinal(n):
+  first_digit = n % 10
+  if first_digit == 1:
+    suffix="st"
+  elif first_digit == 2:
+    suffix="nd"
+  elif first_digit == 3:
+    suffix="rd"
+  else:
+    suffix="th"
+  return f"{n}{suffix}"
+
 def oxford_comma(words):
   if len(words) == 0:
     return None

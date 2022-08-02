@@ -4,6 +4,7 @@ import config
 import enum
 import logging
 import object
+import spec_procs
 import string_handling
 
 @dataclasses.dataclass
@@ -108,6 +109,20 @@ class npc_proto_data:
       setattr(self.entity, tag, value)
     else:
       logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
+
+  def assign_spec_proc(self, spec_proc):
+    # will return an empty list() if the function args are correct
+    problems = spec_proc.first_fn_arg_error_full()
+    for problem in problems:
+      logging.warning(problem)
+    if len(problems) > 0:
+      return
+    if type(spec_proc) == spec_procs.prefix_command_trigger:
+      self.prefix_command_triggers.append(spec_proc)
+    elif type(spec_proc) == spec_procs.suffix_command_trigger:
+      self.suffix_command_triggers.append(spec_proc)
+    elif type(spec_proc) == spec_procs.heart_beat_proc:
+      self.heart_beat_procs.append(spec_proc)
   
   def __str__(self):
     ret_val = f"NPC: {CYAN}{self.entity.name}{NORMAL} "

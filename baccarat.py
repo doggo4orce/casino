@@ -449,7 +449,7 @@ class baccarat_dealer_state(enum.IntEnum):
   REPORT_WINNER       = 18
   CLEAR_CARDS         = 19
 
-def baccarat_dealing(mud, me):
+def baccarat_dealing(a, mud, me):
   NUM_DECKS = 8
 
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(

@@ -10,6 +10,9 @@ import spec_procs
 import structs
 
 class baccarat_hand:
+  """Creates a single hand of baccarat.
+     player = list of up to three cards used to compute player's score
+     banker = same, but for banker"""
   def __init__(self):
     self._player = [ ]
     self._banker = [ ]
@@ -35,6 +38,19 @@ class baccarat_hand:
   @state.setter
   def state(self, new_state):
     self._state = new_state
+
+  """add_card(card, target) <-- adds the card to either the player or banker's hand
+     hand_value(cards)      <-- determines the score based on list of cards
+     player_score()         <-- return's player's current score
+     banker_score()         <-- returns the banker's current score
+     player_natural()       <-- checks if player's first two cards add to 8/9
+     banker_natural()       <-- same but for player
+     panda()                <-- checks if the player won with three card 8
+     dragon()               <-- checks if banker won with three card 7
+     three_card_9_8()       <-- checks if hand won with 9 over 8 (both 3 cards)
+     natural_9_8()          <-- checks if hand won with 9 over 8 (both natural)
+     any_8_7()              <-- checks if hand won with 8 over 7
+     ascii_render()         <-- displays the cards in a string return"""
 
   def add_card(self, card, target):
     if target == "player":
@@ -69,7 +85,7 @@ class baccarat_hand:
 
   def three_card_9_8(self):
     if len(self) == 6:
-      # only way get 17 is a 9 and and 8
+      # only way to get 17 is a 9 and and 8
       return self.player_score() + self.banker_score() == 17
 
   def natural_9_8(self):
@@ -77,12 +93,12 @@ class baccarat_hand:
       return self.player_score() + self.banker_score() == 17
 
   def any_8_7(self):
-    x, y = self.player_score(), self.banker_score()
-    return (x == 8 and y == 7) or (x == 7 and y == 8)
+    return {self.player_score(), self.banker_score()} == {7, 8}
 
   def ascii_render(self):
+    # TODO: this function really needs a re-write
     SPACE_BETWEEN_CARD = 1
-    SPACE_BETWEEN_PLAYER_BANKER = 3
+    SPACE_BETWEEN_PLAYER_BANKER = 5
 
     ret_val  = "        Player:                     Banker:\r\n"
 
@@ -201,15 +217,23 @@ class extra_side_bet(enum.IntEnum):
   ANY_8_7        = 3
 
 class baccarat_shoe(cards.shoe):
+  """Keeps track of a baccarat shoe in progress.
+    history = outcomes from previous hands, e.g. player win, dragon
+    extras  = occurances of side bet winnings, e.g. three card 9 over 8"""
   def __init__(self, num_decks):
     super().__init__()
-
-    self._history = list() # keeps track of standard history entries
-    self._extras = list()  # keeps track of extra side bets
-
+    self._history = list()
+    self._extras = list()
     for j in range(0, num_decks):
       self.absorb_bottom(baccarat_shoe.baccarat_deck())
 
+  """baccarat_deck()        <-- creates a shoe of 52 cards ranked according to baccarat rules
+     report_history(result) <-- records an occurance of result to self.history
+     report_extra(result)   <-- records an occurance of result to self.extras
+     count_reports(result)  <-- counts number of occurances of result in self.history
+     count_extras(result)   <-- counts number of occurances of result in self.extras"""
+
+  # todo: this can be made much briefer
   @classmethod
   def baccarat_deck(cls):
     deck = cards.shoe()
@@ -244,20 +268,28 @@ class baccarat_shoe(cards.shoe):
 class baccarat_dealer(cards.card_dealer):
   def __init__(self):
     """Creates a baccarat dealer
-     state = keep track of what dealer will do next, FIRST_DRAW etc."""
+      hand             = the current hand in progress, or None between hands
+      state            = keep track of what dealer will do next, FIRST_DRAW etc.
+      paused           = how many heartbeats to stay paused for
+      initial_card_val = keep track of how many cards to burn
+      simulation_mode  = if True, game runs way too fast to play"""
     super().__init__()
     self._hand = None
     self._state = baccarat_dealer_state.IDLE
+    self._paused = 0
     self._initial_card_val = None
     self._simulation_mode = False
 
   # getters
   @property
+  def hand(self):
+    return self._hand
+  @property
   def state(self):
     return self._state
   @property
-  def hand(self):
-    return self._hand
+  def paused(self):
+    return self._paused
   @property
   def initial_card_val(self):
     return self._initial_card_val
@@ -272,6 +304,9 @@ class baccarat_dealer(cards.card_dealer):
   @state.setter
   def state(self, new_state):
     self._state = new_state
+  @paused.setter
+  def paused(self, new_paused):
+    self._paused = new_paused
   @initial_card_val.setter
   def initial_card_val(self, new_val):
     self._initial_card_val = new_val
@@ -339,7 +374,7 @@ class baccarat_dealer(cards.card_dealer):
 """Special Procedures for the Baccarat dealer:
 
    baccarat_dealer_history() <- display the history of the shoe
-   baccarat_dealer_intro()   <- called as a basic response to a greeting
+   baccarat_dealer_intro()   <- basic response to a greeting
    baccarat_syntax_parser()  <- handles all syntax associated with the baccarat game
    baccarat_table_render()   <- renders a snapshot of the current hand in ascii
    baccarat_dealing()        <- handles the baccarat game"""
@@ -406,11 +441,11 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
         return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
       ch.write("You signal to the dealer to start the next shoe.\r\n")
       mud.echo_around(ch, None, f"{ch} signals to the dealer to start the next shoe.\r\n")
-      me.paused = True
+      me.paused = 10
       me.state = baccarat_dealer_state.BEGIN_SHOE
-      mud.add_event(event.event(me, unpause_dealer, None, 10))
-      
-      me.simulation_mode = argument.lower() == "simulate"
+  
+      if argument.lower() == "simulate":
+        me.simulation_mode = True
 
     else:
       ch.write(help_str)
@@ -449,38 +484,21 @@ class baccarat_dealer_state(enum.IntEnum):
   REPORT_WINNER       = 18
   CLEAR_CARDS         = 19
 
-def baccarat_dealing(a, mud, me):
+def baccarat_dealing(mud, me):
   NUM_DECKS = 8
 
-  panda_string = "{}P{}a{}n{}d{}a{}!{}".format(
-    CYAN,
-    DARK_GRAY,
-    CYAN,
-    DARK_GRAY,
-    CYAN,
-    DARK_GRAY,
-    NORMAL)
-
-  dragon_string = "{}D{}r{}a{}g{}o{}n{}!{}".format(
-    CYAN,
-    GREEN,
-    CYAN,
-    GREEN,
-    CYAN,
-    GREEN,
-    CYAN,
-    NORMAL)
+  panda_string = "{}P{}a{}n{}d{}a{}!{}".format(CYAN, DARK_GRAY, CYAN, DARK_GRAY, CYAN, DARK_GRAY, NORMAL)
+  dragon_string = "{}D{}r{}a{}g{}o{}n{}!{}".format(CYAN, GREEN, CYAN, GREEN, CYAN, GREEN, CYAN, NORMAL)
 
   if me.state == baccarat_dealer_state.IDLE:
     return
-  if me.paused:
+  if me.paused > 0:
+    me.paused -= 1
     return
   if not isinstance(me, baccarat_dealer):
-    logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealing' on npc {me}.")
+    logging.warning(f"{me} attempting to call 'baccarat_dealing' but is not a baccarat dealer")
     return
-    
-  me.paused = True
-  pause = 0
+  
   if me.state == baccarat_dealer_state.BEGIN_SHOE:
     me.shoe = baccarat_shoe(NUM_DECKS)
     mud.echo_around(me, None, f"{me} assembles a new shoe consisting of {NUM_DECKS} deck{'s' if NUM_DECKS > 1 else ' '}.\r\n")
@@ -523,7 +541,7 @@ def baccarat_dealing(a, mud, me):
         ))
       me.shoe = None
       me.state = baccarat_dealer_state.IDLE
-      me.paused = False
+      me.paused = 0
       me.simulation_mode = False
       return
     me.hand = baccarat_hand()
@@ -618,7 +636,6 @@ def baccarat_dealing(a, mud, me):
     else:
       commands.do_say(me, None, f"Player and banker tie!", None, mud)
       me.shoe.report_history(history_entry.TIE)
-    
     # Check Michael's Side Bets
     if me.hand.three_card_9_8():
       me.shoe.report_extra(extra_side_bet.THREE_CARD_9_8)
@@ -626,7 +643,6 @@ def baccarat_dealing(a, mud, me):
       me.shoe.report_extra(extra_side_bet.NATURAL_9_8)
     if me.hand.any_8_7():
       me.shoe.report_extra(extra_side_bet.ANY_8_7)
-
     me.hand = None
     me.state = baccarat_dealer_state.CLEAR_CARDS
     pause = 60
@@ -634,30 +650,8 @@ def baccarat_dealing(a, mud, me):
     mud.echo_around(me, None, f"{me} clears the cards from the table.\n")
     me.state = baccarat_dealer_state.PLAYER_FIRST
     pause = 120
-  if pause != 0:
-    if me.simulation_mode:
-      me.paused = False
-    else:
-      mud.add_event(event.event(me, unpause_dealer, None, pause))
+
+  if pause != 0 and not me.simulation_mode:
+    me.paused = pause
+ 
   return
-
-"""This function is used by the preceding function to allow pauses between behaviour for the Baccarat dealer.
-   For example, if the dealer should pause for one second, set
-
-     the_dealer.paused=True
-
-   and then attach to it an event which calls this function with a countdown of 30.
-
-   TODO:  this seems a bit silly.  would it not make more sense to just add a timer field directly
-   to NPC's if they are to be paused?"""
-def unpause_dealer(ch, mud):
-  ch.paused = False
-
-if __name__ == '__main__':
-  new_shoe = baccarat_shoe(6)
-  new_shoe.add_report(history_entry.PLAYER_WIN)
-  new_shoe.add_report(history_entry.PANDA)
-  new_shoe.add_report(history_entry.BANKER_WIN)
-  print(f"Player wins: {new_shoe.count_reports(history_entry.PLAYER_WIN)} (including pandas)")
-  print(f"Banker wins: {new_shoe.count_reports(history_entry.BANKER_WIN)}")
-  print(f"Ties: {new_shoe.count_reports(history_entry.TIE)}")

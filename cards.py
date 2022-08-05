@@ -97,6 +97,8 @@ class card:
     if self.suit == card_suit.DIAMONDS:
       return "\U00002666"
 
+  # rewrite this as a list of strings, then store sapces as a list of strings too
+  # in order to display a full hand to the table in baccarat
   def ascii_rep(self):
     return self.card_color() + self.ascii_rank() + self.ascii_suit() + NORMAL
 

@@ -5,6 +5,8 @@ import logging
 import string_handling
 import typing
 
+# TODO (idea?): add 'behaviour' field to npc/npc_protos to manage the lists of spec_procs
+
 class spec_proc:
   func_args = []
   """name = representation as a string
@@ -15,7 +17,7 @@ class spec_proc:
 
   def first_fn_arg_error_brief(self):
     actual_args = inspect.getfullargspec(self.func).args
-    for idx, arg in enumerate(command_trigger.func_args):
+    for idx, arg in enumerate(self.func_args):
       if actual_args[idx] != arg:
         return f"expecting '{arg}' for {string_handling.ordinal(idx+1)} arg but found '{actual_args[idx]}'"
     return None

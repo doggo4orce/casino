@@ -28,12 +28,10 @@ class card_rank(enum.IntEnum):
 class card:
   """Creates a a new card.
      suit = spades, hearts, etc.
-     rank = seven, jack, king, etc.
-     value = a number between 1-13, assigned depending on game"""
-  def __init__(self, suit, rank, value):
+     rank = seven, jack, king, etc"""
+  def __init__(self, suit, rank):
     self._suit = suit
     self._rank = rank
-    self._value = value
 
   @property
   def suit(self):
@@ -41,9 +39,6 @@ class card:
   @property
   def rank(self):
   	return self._rank
-  @property
-  def value(self):
-    return self._value
 
   @suit.setter
   def suit(self, new_suit):
@@ -51,9 +46,6 @@ class card:
   @rank.setter
   def rank(self, new_rank):
   	self._rank = new_rank
-  @value.setter
-  def value(self, new_value):
-    self._rank = new_value
 
   """card_color()         <-- returns the designated colour code for black/red cards
      card_rank_abbrev()   <-- returns 10 for ten, Q for queen, etc.
@@ -149,13 +141,10 @@ class shoe:
 
   def pull_front_cards(self, n):
     front = shoe()
-
     if n > self.size:
       return None
-
     for j in range(0, n):
       front.add_bottom(self.draw())
-
     return front
 
   def __str__(self):
@@ -166,6 +155,7 @@ class shoe:
 
     return ret_val
 
+class card_dealer(pc.npc):
   def __init__(self):
     """shoe   = reference to the current shoe in progress if the dealer is working
        paused = a pause timer which may be set to"""
@@ -176,17 +166,14 @@ class shoe:
   @classmethod
   def from_npc(cls, old_npc):
     ret_val = cls()
-
     # copy character attributes
     ret_val.entity = old_npc.entity
     ret_val.ldesc = old_npc.ldesc
     ret_val.inventory = old_npc.inventory
-
     # copy npc attributes
     ret_val.prefix_command_triggers = old_npc.prefix_command_triggers
     ret_val.suffix_command_triggers = old_npc.suffix_command_triggers
     ret_val.heart_beat_procs = old_npc.heart_beat_procs
-    
     return ret_val
 
   # Getters

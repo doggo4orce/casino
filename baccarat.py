@@ -9,6 +9,17 @@ import string_handling
 import spec_procs
 import structs
 
+class baccarat_card(cards.card):
+  def __init__(self, suit, rank):
+    super().__init__(suit, rank)
+
+  @property
+  def value(self):
+    if int(self.suit) in range(1, 11):
+      return int(self.suit)
+    else:
+      return 10 
+
 class baccarat_hand:
   """Creates a single hand of baccarat.
      player = list of up to three cards used to compute player's score
@@ -192,24 +203,12 @@ class baccarat_shoe(cards.shoe):
      count_reports(result)  <-- counts number of occurances of result in self.history
      count_extras(result)   <-- counts number of occurances of result in self.extras"""
 
-  # todo: make this more pythonic
   @classmethod
   def baccarat_deck(cls):
     deck = cards.shoe()
     for suit in cards.card_suit:
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.ACE), 1))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.TWO), 2))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.THREE), 3))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.FOUR), 4))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.FIVE), 5))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.SIX), 6))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.SEVEN), 7))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.EIGHT), 8))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.NINE), 9))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.TEN), 10))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.JACK), 10))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.QUEEN), 10))
-      deck.add_bottom(cards.card(cards.card_suit(suit), cards.card_rank(cards.card_rank.KING), 10))
+      for rank in cards.card_rank:
+        deck.add_bottom(baccarat_card(suit, rank))
     return deck
 
   def report_history(self, result):
@@ -263,7 +262,7 @@ class baccarat_dealer(cards.card_dealer):
   @state.setter
   def state(self, new_state):
     self._state = new_state
-  @paused.setter
+  @bac_paused.setter
   def bac_paused(self, new_paused):
     self._bac_paused = new_paused
   @initial_card_val.setter

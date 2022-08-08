@@ -55,13 +55,10 @@ class card:
   def value(self, new_value):
     self._rank = new_value
 
-  def ascii_rank(self):
-    if self.rank in {2,3,4,5,6,7,8,9}:
-      return str(int(self.rank))
-    elif self.rank == 10:
-      return '10'
-    else:
-      return self.rank.name[0] # J, Q, or K
+  """card_color()         <-- returns the designated colour code for black/red cards
+     card_rank_abbrev()   <-- returns 10 for ten, Q for queen, etc.
+     card_suit_abbrev_5() <-- returns SPADE for spades, DIAMD for diamonds, etc.
+     ascii_rep()          <-- returns a list of 5 7-char strings to draw the card"""
 
   def card_color(self):
     if self.suit in {card_suit.SPADES, card_suit.CLUBS}:
@@ -87,20 +84,13 @@ class card:
     if self.suit == card_suit.DIAMONDS:
       return "DIAMD"
 
-  def ascii_suit(self):
-    if self.suit == card_suit.SPADES:
-      return "\U00002660"
-    if self.suit == card_suit.CLUBS:
-      return "\U00002663"
-    if self.suit == card_suit.HEARTS:
-      return "\U00002665"
-    if self.suit == card_suit.DIAMONDS:
-      return "\U00002666"
-
-  # rewrite this as a list of strings, then store sapces as a list of strings too
-  # in order to display a full hand to the table in baccarat
   def ascii_rep(self):
-    return self.card_color() + self.ascii_rank() + self.ascii_suit() + NORMAL
+    return [
+      "+-----+",
+      "|{}   |".format(self.card_color() + self.card_rank_abbrev().ljust(2) + NORMAL),
+      "|{}|".format(self.card_color() + self.card_suit_abbrev_5() + NORMAL),
+      "|   {}|".format(self.card_color() + self.card_rank_abbrev().rjust(2) + NORMAL),
+      "+-----+"]
 
   def __str__(self):
     return card_rank(self.rank).name.lower() + " of " + card_suit(self.suit).name.lower()
@@ -176,8 +166,9 @@ class shoe:
 
     return ret_val
 
-class card_dealer(pc.npc):
   def __init__(self):
+    """shoe   = reference to the current shoe in progress if the dealer is working
+       paused = a pause timer which may be set to"""
     super().__init__()
     self._shoe = None
     self._paused = False
@@ -227,8 +218,15 @@ class card_dealer(pc.npc):
       self._shoe.shuffle()
 
 if __name__ == '__main__':
-  ch = pc.npc()
-  dealer = card_dealer.from_npc(ch, None)
+  player_cards = [card(card_suit.SPADES, card_rank.FIVE, 5), card(card_suit.CLUBS, card_rank.TEN, 10)]
+  banker_cards = [card(card_suit.DIAMONDS, card_rank.SIX, 6), card(card_suit.SPADES, card_rank.QUEEN, 10)]
+  
+  print(display_baccarat_hand(player_cards, banker_cards))
 
-  print(dealer)
+  player_cards.append(card(card_suit.SPADES, card_rank.SEVEN, 7))
 
+  print(display_baccarat_hand(player_cards, banker_cards))
+
+  banker_cards.append(card(card_suit.CLUBS, card_rank.SEVEN, 7))
+
+  print(display_baccarat_hand(player_cards, banker_cards))

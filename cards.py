@@ -97,7 +97,8 @@ class shoe:
   def size(self):
   	return len(self._contents)
 
-  """peek_next_card()    <-- returns the top card without removing it it
+  """french_deck()       <-- returns a shoe consisting of one standard 52 card deck
+     peek_next_card()    <-- returns the top card without removing it it
      burn()              <-- discards the top card
      draw()              <-- removes and returns the top card
      add_top()           <-- adds a new card to the top of the shoe
@@ -108,6 +109,14 @@ class shoe:
      absorb_bottom()     <-- add another shoe to the bottom of this one
      pull_front_cards(n) <-- pulls the top n cards and returns it as a new shoe"""
   
+  @staticmethod
+  def french_deck():
+    deck = shoe()
+    for suit in card_suit:
+      for rank in card_rank:
+        deck.add_bottom(card(suit, rank))
+    return deck
+
   def peek_next_card(self):
     if self._contents:
       return self._contents[0]
@@ -203,17 +212,3 @@ class card_dealer(pc.npc):
   def shuffle(self):
     if self.shoe:
       self._shoe.shuffle()
-
-if __name__ == '__main__':
-  player_cards = [card(card_suit.SPADES, card_rank.FIVE, 5), card(card_suit.CLUBS, card_rank.TEN, 10)]
-  banker_cards = [card(card_suit.DIAMONDS, card_rank.SIX, 6), card(card_suit.SPADES, card_rank.QUEEN, 10)]
-  
-  print(display_baccarat_hand(player_cards, banker_cards))
-
-  player_cards.append(card(card_suit.SPADES, card_rank.SEVEN, 7))
-
-  print(display_baccarat_hand(player_cards, banker_cards))
-
-  banker_cards.append(card(card_suit.CLUBS, card_rank.SEVEN, 7))
-
-  print(display_baccarat_hand(player_cards, banker_cards))

@@ -9,17 +9,6 @@ import string_handling
 import spec_procs
 import structs
 
-class baccarat_card(cards.card):
-  def __init__(self, suit, rank):
-    super().__init__(suit, rank)
-
-  @property
-  def value(self):
-    if int(self.suit) in range(1, 11):
-      return int(self.suit)
-    else:
-      return 10 
-
 class baccarat_hand:
   """Creates a single hand of baccarat.
      player = list of up to three cards used to compute player's score
@@ -51,6 +40,7 @@ class baccarat_hand:
     self._state = new_state
 
   """add_card(card, target) <-- adds the card to either the player or banker's hand
+     card_value(card)       <-- returns 7 if card is a SEVEN, 10 for a KING, etc.
      hand_value(cards)      <-- determines the score based on list of cards
      player_score()         <-- return's player's current score
      banker_score()         <-- returns the banker's current score
@@ -70,8 +60,15 @@ class baccarat_hand:
       self.banker.append(card)
     return card
 
+  @staticmethod
+  def card_value(card):
+    if int(card.suit) in range(1, 11):
+      return int(card.suit)
+    else:
+      return 10 
+
   def hand_value(self, cards):
-    total = sum(card.value for card in cards)
+    total = sum(self.card_value(card) for card in cards)
     return total % 10
 
   def player_score(self):
@@ -195,21 +192,12 @@ class baccarat_shoe(cards.shoe):
     self._history = list()
     self._extras = list()
     for j in range(0, num_decks):
-      self.absorb_bottom(baccarat_shoe.baccarat_deck())
+      self.absorb_bottom(cards.shoe.french_deck())
 
-  """baccarat_deck()        <-- creates a shoe of 52 cards ranked according to baccarat rules
-     report_history(result) <-- records an occurance of result to self.history
+  """report_history(result) <-- records an occurance of result to self.history
      report_extra(result)   <-- records an occurance of result to self.extras
      count_reports(result)  <-- counts number of occurances of result in self.history
      count_extras(result)   <-- counts number of occurances of result in self.extras"""
-
-  @classmethod
-  def baccarat_deck(cls):
-    deck = cards.shoe()
-    for suit in cards.card_suit:
-      for rank in cards.card_rank:
-        deck.add_bottom(baccarat_card(suit, rank))
-    return deck
 
   def report_history(self, result):
     self._history.append(result)
@@ -233,7 +221,7 @@ class baccarat_dealer(cards.card_dealer):
       simulation_mode  = if True, game runs way too fast to play"""
     super().__init__()
     self._hand = None
-    self._state = baccarat_dealer_state.IDLE
+    self._bac_state = baccarat_dealer_state.IDLE
     self._bac_paused = 0
     self._initial_card_val = None
     self._simulation_mode = False
@@ -243,8 +231,8 @@ class baccarat_dealer(cards.card_dealer):
   def hand(self):
     return self._hand
   @property
-  def state(self):
-    return self._state
+  def bac_state(self):
+    return self._bac_state
   @property
   def bac_paused(self):
     return self._bac_paused
@@ -259,9 +247,9 @@ class baccarat_dealer(cards.card_dealer):
   @hand.setter
   def hand(self, new_hand):
     self._hand = new_hand
-  @state.setter
-  def state(self, new_state):
-    self._state = new_state
+  @bac_state.setter
+  def bac_state(self, new_bac_state):
+    self._bac_state = new_bac_state
   @bac_paused.setter
   def bac_paused(self, new_paused):
     self._bac_paused = new_paused
@@ -284,7 +272,7 @@ class baccarat_dealer(cards.card_dealer):
     ret_val.suffix_command_triggers = dealer.suffix_command_triggers
     ret_val.heart_beat_procs = dealer.heart_beat_procs
     ret_val.hand = baccarat_hand()
-    ret_val.state = baccarat_dealer_state.IDLE
+    ret_val.bac_state = baccarat_dealer_state.IDLE
     # copy dealer attributes
     ret_val.shoe = dealer.shoe
     return ret_val
@@ -314,7 +302,7 @@ class baccarat_dealer(cards.card_dealer):
     banker_score = self.hand.banker_score()
     player_third = None
     if len(self.hand.player) == 3:
-      player_third = self.hand.player[2].value
+      player_third = baccarat_hand.card_value(self.hand.player[2])
     if player_third == None:
       return banker_score in {0,1,2,3,4,5}
     if banker_score in {0,1,2}:
@@ -394,13 +382,13 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
 
   if command == "baccarat":
     if argument.lower() in ["start", "simulate"]:
-      if me.state != baccarat_dealer_state.IDLE:
+      if me.bac_state != baccarat_dealer_state.IDLE:
         ch.write("There is already a game in progress!\r\n")
         return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
       ch.write("You signal to the dealer to start the next shoe.\r\n")
       mud.echo_around(ch, None, f"{ch} signals to the dealer to start the next shoe.\r\n")
       me.bac_paused = 10
-      me.state = baccarat_dealer_state.BEGIN_SHOE
+      me.bac_state = baccarat_dealer_state.BEGIN_SHOE
   
       if argument.lower() == "simulate":
         me.simulation_mode = True
@@ -443,12 +431,12 @@ class baccarat_dealer_state(enum.IntEnum):
   CLEAR_CARDS         = 19
 
 def baccarat_dealing(mud, me):
-  NUM_DECKS = 8
+  NUM_DECKS = 6
 
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(CYAN, DARK_GRAY, CYAN, DARK_GRAY, CYAN, DARK_GRAY, NORMAL)
   dragon_string = "{}D{}r{}a{}g{}o{}n{}!{}".format(CYAN, GREEN, CYAN, GREEN, CYAN, GREEN, CYAN, NORMAL)
 
-  if me.state == baccarat_dealer_state.IDLE:
+  if me.bac_state == baccarat_dealer_state.IDLE:
     return
   if me.bac_paused > 0:
     me.bac_paused -= 1
@@ -457,30 +445,30 @@ def baccarat_dealing(mud, me):
     logging.warning(f"{me} attempting to call 'baccarat_dealing' but is not a baccarat dealer")
     return
   
-  if me.state == baccarat_dealer_state.BEGIN_SHOE:
+  if me.bac_state == baccarat_dealer_state.BEGIN_SHOE:
     me.shoe = baccarat_shoe(NUM_DECKS)
     mud.echo_around(me, None, f"{me} assembles a new shoe consisting of {NUM_DECKS} deck{'s' if NUM_DECKS > 1 else ' '}.\r\n")
-    me.state = baccarat_dealer_state.SHUFFLE_SHOE
+    me.bac_state = baccarat_dealer_state.SHUFFLE_SHOE
     pause = 30
-  elif me.state == baccarat_dealer_state.SHUFFLE_SHOE:
+  elif me.bac_state == baccarat_dealer_state.SHUFFLE_SHOE:
     me.shuffle()
     mud.echo_around(me, None, f"{me} shuffles the shoe.\r\n")
-    me.state = baccarat_dealer_state.FIRST_DRAW
+    me.bac_state = baccarat_dealer_state.FIRST_DRAW
     pause = 30
-  elif me.state == baccarat_dealer_state.FIRST_DRAW:
+  elif me.bac_state == baccarat_dealer_state.FIRST_DRAW:
     first_card = me.draw()
-    me.initial_card_val = first_card.value
+    me.initial_card_val = baccarat_hand.card_value(first_card)
     mud.echo_around(me, None, "{} draws and reveals the first card, which is {} {}.\r\n".format(
       me, string_handling.ana(cards.card_rank(first_card.rank).name), first_card))
-    me.state = baccarat_dealer_state.BURN_CARDS
+    me.bac_state = baccarat_dealer_state.BURN_CARDS
     pause = 30
-  elif me.state == baccarat_dealer_state.BURN_CARDS:
+  elif me.bac_state == baccarat_dealer_state.BURN_CARDS:
     for j in range(0, me.initial_card_val):
       me.draw()
     mud.echo_around(me, None, f"{me} burns {me.initial_card_val} card{'s' if me.initial_card_val > 1 else ''}.\n")
-    me.state = baccarat_dealer_state.PLAYER_FIRST
+    me.bac_state = baccarat_dealer_state.PLAYER_FIRST
     pause = 30
-  elif me.state == baccarat_dealer_state.PLAYER_FIRST:
+  elif me.bac_state == baccarat_dealer_state.PLAYER_FIRST:
     if me.shoe.size < 6:
       commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud)
       mud.echo_around(me, None, "Player wins: {}{}{} (including pandas)\r\nBanker wins: {}{}{}\r\nTies: {}{}{}\r\nPandas: {}{}{}\r\nDragons: {}{}{}\r\n".format(
@@ -495,81 +483,81 @@ def baccarat_dealing(mud, me):
         YELLOW, me.shoe.count_extras(extra_side_bet.ANY_8_7), NORMAL
         ))
       me.shoe = None
-      me.state = baccarat_dealer_state.IDLE
+      me.bac_state = baccarat_dealer_state.IDLE
       me.bac_paused = 0
       me.simulation_mode = False
       return
     me.hand = baccarat_hand()
     mud.echo_around(me, None, f"{me} deals {me.deal_next_card('player')} to the player.\r\n")
-    me.state = baccarat_dealer_state.BANKER_FIRST
+    me.bac_state = baccarat_dealer_state.BANKER_FIRST
     pause = 10
-  elif me.state == baccarat_dealer_state.BANKER_FIRST:
+  elif me.bac_state == baccarat_dealer_state.BANKER_FIRST:
     mud.echo_around(me, None, f"{me} deals {me.deal_next_card('banker')} to the banker.\r\n")
-    me.state = baccarat_dealer_state.PLAYER_SECOND
+    me.bac_state = baccarat_dealer_state.PLAYER_SECOND
     pause = 10
-  elif me.state == baccarat_dealer_state.PLAYER_SECOND:
+  elif me.bac_state == baccarat_dealer_state.PLAYER_SECOND:
     mud.echo_around(me, None, f"{me} deals {me.deal_next_card('player')} to the player.\r\n")
-    me.state = baccarat_dealer_state.BANKER_SECOND
+    me.bac_state = baccarat_dealer_state.BANKER_SECOND
     pause = 10
-  elif me.state == baccarat_dealer_state.BANKER_SECOND:
+  elif me.bac_state == baccarat_dealer_state.BANKER_SECOND:
     mud.echo_around(me, None, f"{me} deals {me.deal_next_card('banker')} to the banker.\r\n")
-    me.state = baccarat_dealer_state.SHOW_INITIAL
+    me.bac_state = baccarat_dealer_state.SHOW_INITIAL
     pause = 10
-  elif me.state == baccarat_dealer_state.SHOW_INITIAL:
+  elif me.bac_state == baccarat_dealer_state.SHOW_INITIAL:
     mud.echo_around(me, None, me.hand.display() + "\n\n")
     commands.do_say(me, None, f"Player shows {me.hand.player_score()}. Banker shows {me.hand.banker_score()}.", None, mud)
-    me.state = baccarat_dealer_state.CHECK_NATURAL
+    me.bac_state = baccarat_dealer_state.CHECK_NATURAL
     pause = 60
-  elif me.state == baccarat_dealer_state.CHECK_NATURAL:
+  elif me.bac_state == baccarat_dealer_state.CHECK_NATURAL:
     if me.hand.player_natural():
       commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more draws.", None, mud)
-      me.state = baccarat_dealer_state.REPORT_WINNER
+      me.bac_state = baccarat_dealer_state.REPORT_WINNER
       pause = 30
     elif me.hand.banker_natural():
       commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more draws.", None, mud)
-      me.state = baccarat_dealer_state.REPORT_WINNER
+      me.bac_state = baccarat_dealer_state.REPORT_WINNER
       pause = 30
     else:
-      me.state = baccarat_dealer_state.CHECK_PLAYER
+      me.bac_state = baccarat_dealer_state.CHECK_PLAYER
       pause = 30
-  elif me.state == baccarat_dealer_state.CHECK_PLAYER:
+  elif me.bac_state == baccarat_dealer_state.CHECK_PLAYER:
     if me.check_player_third():
       commands.do_say(me, None, "Card for player.", None, mud)
-      me.state = baccarat_dealer_state.DEAL_PLAYER_THIRD
+      me.bac_state = baccarat_dealer_state.DEAL_PLAYER_THIRD
     else:
       commands.do_say(me, None, "Player stands.", None, mud)
-      me.state = baccarat_dealer_state.CHECK_BANKER
+      me.bac_state = baccarat_dealer_state.CHECK_BANKER
     pause = 10
-  elif me.state == baccarat_dealer_state.DEAL_PLAYER_THIRD:
+  elif me.bac_state == baccarat_dealer_state.DEAL_PLAYER_THIRD:
     player_third = me.deal_next_card('player')
     mud.echo_around(me, None, "{} deals {} {} to the player.\r\n".format(
       me, string_handling.ana(cards.card_rank(player_third.rank).name), player_third))
-    me.state = baccarat_dealer_state.UPDATE_PLAYER_THIRD
+    me.bac_state = baccarat_dealer_state.UPDATE_PLAYER_THIRD
     pause = 10
-  elif me.state == baccarat_dealer_state.UPDATE_PLAYER_THIRD:
+  elif me.bac_state == baccarat_dealer_state.UPDATE_PLAYER_THIRD:
     mud.echo_around(me, None, "\n" + me.hand.display() + "\r\n")
-    me.state = baccarat_dealer_state.CHECK_BANKER
+    me.bac_state = baccarat_dealer_state.CHECK_BANKER
     pause = 60
-  elif me.state == baccarat_dealer_state.CHECK_BANKER:
+  elif me.bac_state == baccarat_dealer_state.CHECK_BANKER:
     if me.check_banker_third():
       commands.do_say(me, None, "Card for banker.", None, mud)
-      me.state = baccarat_dealer_state.DEAL_BANKER_THIRD
+      me.bac_state = baccarat_dealer_state.DEAL_BANKER_THIRD
       pause = 10
     else:
       commands.do_say(me, None, "Banker stands.", None, mud)
-      me.state = baccarat_dealer_state.REPORT_WINNER
+      me.bac_state = baccarat_dealer_state.REPORT_WINNER
       pause = 30
-  elif me.state == baccarat_dealer_state.DEAL_BANKER_THIRD:
+  elif me.bac_state == baccarat_dealer_state.DEAL_BANKER_THIRD:
     banker_third = me.deal_next_card('banker')
     mud.echo_around(me, None, "{} deals {} {} to the banker.\r\n".format(
       me, string_handling.ana(cards.card_rank(banker_third.rank).name), banker_third))
-    me.state = baccarat_dealer_state.UPDATE_BANKER_THIRD
+    me.bac_state = baccarat_dealer_state.UPDATE_BANKER_THIRD
     pause = 10
-  elif me.state == baccarat_dealer_state.UPDATE_BANKER_THIRD:
+  elif me.bac_state == baccarat_dealer_state.UPDATE_BANKER_THIRD:
     mud.echo_around(me, None, "\n" + me.hand.display() + "\r\n")
-    me.state = baccarat_dealer_state.REPORT_WINNER
+    me.bac_state = baccarat_dealer_state.REPORT_WINNER
     pause = 60
-  elif me.state == baccarat_dealer_state.REPORT_WINNER:
+  elif me.bac_state == baccarat_dealer_state.REPORT_WINNER:
     if me.hand.panda():
       commands.do_say(me, None, panda_string, None, mud)
       me.shoe.report_history(history_entry.PANDA)
@@ -593,11 +581,11 @@ def baccarat_dealing(mud, me):
     if me.hand.any_8_7():
       me.shoe.report_extra(extra_side_bet.ANY_8_7)
     me.hand = None
-    me.state = baccarat_dealer_state.CLEAR_CARDS
+    me.bac_state = baccarat_dealer_state.CLEAR_CARDS
     pause = 60
-  elif me.state == baccarat_dealer_state.CLEAR_CARDS:
+  elif me.bac_state == baccarat_dealer_state.CLEAR_CARDS:
     mud.echo_around(me, None, f"{me} clears the cards from the table.\n")
-    me.state = baccarat_dealer_state.PLAYER_FIRST
+    me.bac_state = baccarat_dealer_state.PLAYER_FIRST
     pause = 120
 
   if pause != 0 and not me.simulation_mode:

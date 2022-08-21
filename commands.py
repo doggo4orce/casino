@@ -449,7 +449,7 @@ def show_char_to_char(ch, tch):
       out_buf += f"  {spec.name}\r\n"
 
     if type(tch) == baccarat.baccarat_dealer:
-      out_buf += f"State: {baccarat.baccarat_dealer_state(tch.state).name}\r\n"
+      out_buf += f"State: {baccarat.baccarat_dealer_state(tch.bac_state).name}\r\n"
       out_buf += f"Paused: {string_handling.yesno(tch.paused)}"
 
   ch.write(out_buf)

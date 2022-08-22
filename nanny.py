@@ -33,7 +33,7 @@ def init_commands():
   cmd_dict["prefs"]     = ( commands.do_prefs,       0 )
   cmd_dict["save"]      = ( commands.do_save,        0 )
   cmd_dict["say"]       = ( commands.do_say,         0 )
-  cmd_dict["score"]     = ( commands.do_client,      0 )
+  cmd_dict["score"]     = ( commands.do_score,      0 )
   cmd_dict["shutdown"]  = ( commands.do_shutdown,    0 )
   cmd_dict["title"]     = ( commands.do_title,       0 )
   cmd_dict["quit"]      = ( commands.do_quit,        0 )
@@ -41,6 +41,7 @@ def init_commands():
 
 def interpret_msg(d, command, argument, server, mud):
   valid_command = False
+  initial_room = d.char.room
 
   if command == "":
     d.has_prompt = False
@@ -48,13 +49,15 @@ def interpret_msg(d, command, argument, server, mud):
 
   block_interpreter = False
 
+  # fire all prefix procs
   for mob in mud.room_by_code(d.char.room).people:
     if isinstance(mob, pc.npc):
       block_interpreter = mob.call_prefix_command_triggers(mud, d.char, command, argument)
 
   if block_interpreter:
     return
-    
+
+  # find and process the command    
   for c in cmd_dict:
     if c.startswith(command):
       cmd_dict[c][0](d.char, cmd_dict[c][1], argument, server, mud)
@@ -62,7 +65,8 @@ def interpret_msg(d, command, argument, server, mud):
       valid_command = True
       break
 
-  for mob in mud.room_by_code(d.char.room).people:
+  # fire all suffix procs
+  for mob in mud.room_by_code(initial_room).people:
     if isinstance(mob, pc.npc):
       mob.call_suffix_command_triggers(mud, d.char, command, argument)
 

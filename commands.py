@@ -316,6 +316,10 @@ def do_score(ch, scmd, argument, server, mud):
   out_str  = f"Name:      {ch}\r\n"
   out_str += f"Client:    {ch.d.client_info.term_type}\r\n"
   out_str += f"Screen:    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
+
+  if ch.prefs.debug_mode == 'on':
+    out_str += f"Room:    {ch.room}\r\n"
+    
   ch.write(out_str)
 
 def do_who(ch, scmd, argument, server, mud):

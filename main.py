@@ -63,6 +63,6 @@ else:
   mud_server.shutdown()
 
   if mud_server.copyover_cmd:
-    os.system(f"python3.7 main.py -c {config.COPYOVER_PATH} {cl_dict['port']}")
+    os.system(f"python3 main.py -c {config.COPYOVER_PATH} {cl_dict['port']}")
   else:
     logging.info("Done.")

@@ -59,10 +59,16 @@ class command_trigger(spec_proc):
   def call(self, mud, me, ch, command, argument):
     return self.func(mud, me, ch, command, argument)
 
+# fired on mobs in the room before command is processed
 class prefix_command_trigger(command_trigger):
   pass
 
+# fired on mobs in room after command is proceseed
 class suffix_command_trigger(command_trigger):
+  pass
+
+# TODO: fired when someone enters the room
+class room_entry_trigger(command_trigger):
   pass
 
 """These are messages which may be returned by func for prefix

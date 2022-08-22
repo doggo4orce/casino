@@ -62,8 +62,8 @@ class baccarat_hand:
 
   @staticmethod
   def card_value(card):
-    if int(card.suit) in range(1, 11):
-      return int(card.suit)
+    if int(card.rank) in range(1, 11):
+      return int(card.rank)
     else:
       return 10 
 

@@ -39,6 +39,7 @@ def init_commands():
   cmd_dict["title"]     = ( commands.do_title,       0 )
   cmd_dict["quit"]      = ( commands.do_quit,        0 )
   cmd_dict["who"]       = ( commands.do_who,         0 )
+  cmd_dict["zcreate"]   = ( commands.do_zcreate,     0 )
 
 def interpret_msg(d, command, argument, server, mud):
   valid_command = False

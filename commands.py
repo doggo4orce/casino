@@ -14,6 +14,7 @@ import pbase
 import pc
 import room
 import string_handling
+import zone
 
 def do_colors(ch, scmd, argument, server, mud):
   out_str = ""
@@ -492,11 +493,36 @@ def do_move(ch, scmd, argument, server, mud):
   # show them the new room
   show_room_to_char(ch, ending_room)
 
+def do_rlist(ch, scmd, argument, server, mud):
+  args = argument.split()
+  num_args = len(args)
+
+  if (num_args == 0):
+    ch.write("Usage: rlist <zone_id>\r\n")
+
+def do_zcreate(ch, scmd, argument, server, mud):
+  args = argument.split()
+  num_args = len(args)
+
+  if (num_args) < 2:
+    ch.write("Usage: zcreate <zone_id> <zone_name>\r\n")
+    return;
+
+  new_zone = zone.zone()
+
+  new_zone.author = ch.name
+  new_zone.id = args[0]
+  new_zone.name = argument[(len(new_zone.id) + 1):]
+
+  ch.write(f"You create zone[{GREEN}{new_zone.id}{NORMAL}] {CYAN}{new_zone.name}{NORMAL}.")
+  mud._zones[new_zone.id] = new_zone
+
+
 def do_show_zones(ch, scmd, argument, server, mud):
 
   ch.write(f"Code            Zone Name                      Author\r\n")
   ch.write(f"--------------- ------------------------------ ------\r\n")
-  for zone in mud._zones:
+  for zone in mud._zones.values():
     ch.write(f"[{GREEN}{zone.id:>13}{NORMAL}] {CYAN}{zone.name:<30}{NORMAL} {YELLOW}{zone.author.capitalize()}{NORMAL}\r\n")
 
   ch.write(f"\r\nThere are a total of {len(mud._zones)} zones loaded into memory.\r\n")

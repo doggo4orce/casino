@@ -22,7 +22,7 @@ class game:
        chars     = a list of characters (including NPCS and PCs) in the game
        objects   = a list of objects which are in the game
        events    = handles all events to take place in the future"""
-    self._zones     = list()
+    self._zones     = dict()
     self._chars     = list()
     self._objects   = list()
     self._events    = event.event_table()
@@ -61,10 +61,7 @@ class game:
         mob.call_heart_beat_procs(self)
 
   def zone_by_id(self, id):
-    for zone in self._zones:
-      if zone.id == id:
-        return zone
-    return None
+    return self._zones[id]
 
   def room_by_code(self, code):
     zone_id, room_id = string_handling.parse_reference(code)
@@ -144,13 +141,14 @@ class game:
     b_dealer.assign_spec_proc(spec_procs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
   def startup(self):
-
     for folder in glob.glob(config.WORLD_FOLDER + "*"):
       # all zones are stored in folders so ignore any loose files in here
       if not os.path.isdir(folder):
         continue
       # otherwise we found a new zone
-      self._zones.append(zone.zone(folder + "/"))
+      new_zone = zone.zone()
+      new_zone.parse_folder(folder + "/")
+      self._zones[new_zone.id] = new_zone
 
     self.assign_spec_procs()
 

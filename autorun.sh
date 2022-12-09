@@ -1,5 +1,5 @@
 PORT=1234
-PYTHON=python3.7
+PYTHON=python3
 PAUSE=60
 
 cyan="$(tput setaf 6)"

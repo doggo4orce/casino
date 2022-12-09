@@ -492,6 +492,15 @@ def do_move(ch, scmd, argument, server, mud):
   # show them the new room
   show_room_to_char(ch, ending_room)
 
+def do_show_zones(ch, scmd, argument, server, mud):
+
+  ch.write(f"Code            Zone Name                      Author\r\n")
+  ch.write(f"--------------- ------------------------------ ------\r\n")
+  for zone in mud._zones:
+    ch.write(f"[{GREEN}{zone.id:>13}{NORMAL}] {CYAN}{zone.name:<30}{NORMAL} {YELLOW}{zone.author.capitalize()}{NORMAL}\r\n")
+
+  ch.write(f"\r\nThere are a total of {len(mud._zones)} zones loaded into memory.\r\n")
+
 def do_quit(ch, scmd, argument, server, mud):
   d = ch.d
   room = mud.room_by_code(ch.room)
@@ -505,3 +514,13 @@ def do_quit(ch, scmd, argument, server, mud):
   ch.write("Goodbye!\r\n")
   d.has_prompt = True
   server.just_leaving.append(d.id)
+
+'''def do_zedit(ch, scmd, argument, server, mud):
+  # find zone
+  zone_id = mud.zone_by_code(ch.room)
+  room_id = mud.room_by_code(ch.room)
+
+  # show zone information
+  ch.write(f"Room: {CYAN}{}{NORMAL} Zone: {CYAN}{}{NORMAL}")
+
+  # list zone commands'''

@@ -12,12 +12,14 @@ class zone:
   """Creates a zone, which is a modular chunk of the game world.
     name      = name of the zone
     id        = unique identifier string to refer to the zone
+    author    = name of author of zone (represented as string)
     world     = dictionary (key=room id) of rooms which form the landscape of the zone
     npc_proto = dictionary (key=npc id) npc blueprints which are used to create npcs
     obj_proto = dictionary (key=object id) of object blueprints"""
   def __init__(self, folder=None):
     self._name = "a new zone"
     self._id = "new_zone"
+    self._author = "unknown author"
     self._world = dict()
     self._npc_proto = dict()
     self._obj_proto = dict()
@@ -31,7 +33,10 @@ class zone:
   @property
   def id(self):
     return self._id
-
+  @property
+  def author(self):
+    return self._author
+  
   # Setters
   @name.setter
   def name(self, new_name):
@@ -39,6 +44,9 @@ class zone:
   @id.setter
   def id(self, new_id):
     self._id = new_id
+  @author.setter
+  def author(self, new_author):
+    self._author = new_author
 
   """room_by_id(id)         <- look up room in self.world
      npc_by_id(id)          <- look up npc in self.npc_proto
@@ -78,9 +86,11 @@ class zone:
       tag = tag[0:len(tag) - 1].lower()
       # ready to interpret the actual tag
       if tag == "name":
-        self._name = value
+        self.name = value
       elif tag == "id":
-        self._id = value
+        self.id = value
+      elif tag == "author":
+        self.author = value
       else:
         logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
     self.parse_rooms(path + "wld/")

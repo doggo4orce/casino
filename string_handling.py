@@ -76,3 +76,11 @@ def yesno(flag):
   if flag == True:
     return 'yes'
   return 'no'
+
+def alpha_numeric_space(input):
+  for j in range(0, len(input)):
+    if input[j] != ' ' and not input[j].isalnum():
+      return False
+  return True
+
+

@@ -16,6 +16,7 @@ import pc
 import room
 import string_handling
 import structs
+import zedit
 import zone
 
 def do_colors(ch, scmd, argument, server, mud):
@@ -399,7 +400,7 @@ def do_look(ch, scmd, argument, server, mud):
   # if no args, then just look at the room
   if num_args == 0:
     if ch.room == None:
-      ch.write("You are nowhere!")
+      ch.write("You are nowhere!\r\n")
       return
     show_room_to_char(ch, rm)
   elif num_args == 1:
@@ -408,7 +409,7 @@ def do_look(ch, scmd, argument, server, mud):
     if tch != None:
       show_char_to_char(ch, tch)
     else:
-      ch.write(f"You see no {args[0]} here.")
+      ch.write(f"You see no {args[0]} here.\r\n")
 
 def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.prefs.screen_width, False)}{NORMAL}\r\n'
@@ -466,13 +467,14 @@ def show_char_to_char(ch, tch):
 
 def do_move(ch, scmd, argument, server, mud):
   starting_room = mud.room_by_code(ch.room)
-  destination_code = starting_room.get_destination(scmd)
+  dest_ref = starting_room.get_destination(scmd)
 
-  if not destination_code:
+  if not dest_ref:
     ch.write("Alas, you cannot go that way.\r\n")
     return
 
-  ending_room = mud.room_by_code(destination_code)
+  dest_id = structs.unique_identifier.from_string(dest_ref)
+  ending_room = mud.room_by_code(dest_id)
 
   left_msg = f"{ch} leaves {scmd.name.lower()}.\r\n"
 
@@ -566,8 +568,8 @@ def do_zedit(ch, scmd, argument, server, mud):
   d = ch.d
 
   d.state = descriptor.descriptor_state.OLC
-  d.olc = structs.olc_data(olc.olc_mode.OLC_MODE_ZEDIT, args[0], None, olc.zedit_state.ZEDIT_MAIN_MENU)
-  olc.zedit_display_main_menu(d, mud.zone_by_id(args[0]))
+  d.olc = structs.olc_data(olc.olc_mode.OLC_MODE_ZEDIT, args[0], None, zedit.zedit_state.ZEDIT_MAIN_MENU)
+  zedit.zedit_display_main_menu(d, mud.zone_by_id(args[0]))
 
 def do_zlist(ch, scmd, argument, server, mud):
 

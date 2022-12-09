@@ -13,6 +13,7 @@ class zone:
     name      = name of the zone
     id        = unique identifier string to refer to the zone
     author    = name of author of zone (represented as string)
+    path      = path to folder that contains zone files
     world     = dictionary (key=room id) of rooms which form the landscape of the zone
     npc_proto = dictionary (key=npc id) npc blueprints which are used to create npcs
     obj_proto = dictionary (key=object id) of object blueprints"""
@@ -20,6 +21,7 @@ class zone:
     self._name = "a new zone"
     self._id = "new_zone"
     self._author = "unknown author"
+    self._folder = folder
     self._world = dict()
     self._npc_proto = dict()
     self._obj_proto = dict()
@@ -36,6 +38,9 @@ class zone:
   @property
   def author(self):
     return self._author
+  @property
+  def folder(self):
+    return self._folder
   
   # Setters
   @name.setter
@@ -47,11 +52,15 @@ class zone:
   @author.setter
   def author(self, new_author):
     self._author = new_author
+  @folder.setter
+  def folder(self, new_folder):
+    self._folder = new_folder
 
   """room_by_id(id)         <- look up room in self.world
      npc_by_id(id)          <- look up npc in self.npc_proto
      obj_by_id(id)          <- look up object in self.obj_proto
      parse_folder(path)     <- loads zone from path
+     save_to_folder(path)   <- saves zone to files
      parse_generic(var, rf) <- loads room, obj, or npc file from rf to var
      parse_rooms(path)      <- calls parse_rno on each *.room file
      parse_npcs(path)       <- calls parse_rno on each *.npc file
@@ -67,6 +76,10 @@ class zone:
     return self._obj_proto[id]
 
   def parse_folder(self, path):
+
+    # this is a hack that peels off the prefix lib/world and the final /
+    self.folder = path[10:-1]
+
     rf = open(path + "info.zon", "r")
     while True:
       line = rf.readline()

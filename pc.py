@@ -39,7 +39,7 @@ class character:
   @property
   def ldesc(self):
     return "This character's ldesc should never be seen!"
-
+  
   # Setters
   @entity.setter
   def entity(self, new_ent):
@@ -58,6 +58,13 @@ class character:
   def write(self, message):
     logging.warning(f"Attempting to send message {message} to character {self.entity.name}")
     return
+
+  """in_zone()        <-- returns zone_id of the zone that character is occupying
+     has_alias(alias) <-- returns True if alias is once of the characters key-words"""
+  def in_zone(self):
+    if self.room == None:
+      return None
+    return self.room.zone_id
 
   def has_alias(self, alias):
     return self._entity.has_alias(alias)
@@ -141,6 +148,9 @@ class pc(character):
     elif tag == "password":
       self.pwd = value
     # Load Entity Data (not all of these will have been saved, but any of them are allowed to be)
+    elif tag == "room":
+      # room counts as entity data, but it needs to be parsed separately
+      self.entity.room = structs.unique_identifier.from_string(value)
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     # Load Game Data
@@ -181,7 +191,7 @@ class pc(character):
       for field in self.save_data.numerical.__dataclass_fields__:
         wf.write(f"{field}: {getattr(self._save_data.numerical, field)}\n")
 
-      wf.write(f"room: {self.room}\n")
+      wf.write(f"room: {str(self.room)}\n")
 
       wf.write("\n# Preferences\n")
       self.save_prefs(wf)

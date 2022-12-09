@@ -28,8 +28,8 @@ MAX_ZONE_NAME    = 20
 MAX_ROOM_NAME    = 20
 
 # configurable gameplay constants
-STARTING_ROOM         = 'casino[temple]'
-VOID_ROOM             = 'casino[temple]'
+STARTING_ROOM         = 'cash_casino[temple]'
+VOID_ROOM             = 'cash_casino[temple]'
 PLAYER_PROMPT         = '> '
 
 # player preferences

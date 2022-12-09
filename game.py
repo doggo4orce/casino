@@ -31,7 +31,7 @@ class game:
      heart_beat()            <- calls the event handlers heart_beat() function
      call_heart_beat_procs() <- calls all pulsing special procedures for npcs
      zone_by_id(id)          <- iterate through self.zones zones to find zone with identifier id
-     room_by_code(code)      <- look up room by code, e.g. 'zone_id[room_id]'
+     room_by_code(code)      <- look up room using unique_identifier code
      npc_by_code(code)       <- look up npc prototype by code
      obj_by_code(code)       <- look up object prototype by code
      echo_around(ch, hide, msg) <- sends msg to all chars in room except ch and those in hide list
@@ -66,8 +66,9 @@ class game:
     return self._zones[id]
 
   def room_by_code(self, code):
-    zone_id, room_id = string_handling.parse_reference(code)
-   
+    zone_id = code.zone_id
+    room_id = code.id
+
     if zone_id == None or room_id == None:
       return None
 
@@ -100,17 +101,29 @@ class game:
     self.room_by_code(ch.room).echo(msg, exceptions = hide_from)
 
   def add_char(self, ch):
+    THE_VOID = structs.unique_identifier.from_string(config.VOID_ROOM)
+
     # place them in the world
     self._chars.append(ch)
+
     # check if they have a location
+    zone_id = ch.room.zone_id
+    room_id = ch.room.id
+
+    # if either zone or room code doesn't exist, move them to the VOID
+    if zone_id == None or room_id == None:
+      ch.room = THE_VOID
+
+    # now find the actual room
     room = self.room_by_code(ch.room)
-    # add them to the room if so
-    if room != None:
-      room.add_char(ch)
-    # otherwise put them in the void
-    else:
-      ch.room = config.VOID_ROOM
-      self.room_by_code(config.VOID_ROOM).add_char(ch)
+
+    # if the room doesn't exist, again move them to the VOID
+    if room == None:
+      ch.room = THE_VOID
+      room = self.room_by_code(ch.room)
+
+    # finally we have somewhere to add them!
+    room.add_char(ch)
 
   def extract_char(self, ch):
     # if they are in a room, remove them from that room
@@ -136,7 +149,7 @@ class game:
     self._objects.remove(obj)
 
   def assign_spec_procs(self):
-    b_dealer = self.npc_by_code('casino[baccarat_dealer]')
+    b_dealer = self.npc_by_code('cash_casino[baccarat_dealer]')
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
     b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
@@ -155,18 +168,18 @@ class game:
     self.assign_spec_procs()
 
     # populating world manually at startup
-    mob = self.load_npc('casino[baccarat_dealer]')
+    mob = self.load_npc('cash_casino[baccarat_dealer]')
     mob = cards.card_dealer.from_npc(mob)
     mob = baccarat.baccarat_dealer.from_card_dealer(mob)
-    mob.room = 'casino[casino_room]'
+    mob.room = structs.unique_identifier.from_string('cash_casino[casino_room]')
     self.add_char(mob)
 
-    mob = self.load_npc('casino[baker]')
-    mob.room = 'casino[temple]'
+    mob = self.load_npc('cash_casino[baker]')
+    mob.room = structs.unique_identifier.from_string('cash_casino[temple]')
     self.add_char(mob)
 
-    bottle = self.load_obj('casino[bottle]')
-    bottle.room = 'casino[temple]'
+    bottle = self.load_obj('cash_casino[bottle]')
+    bottle.room = structs.unique_identifier.from_string('cash_casino[temple]')
     self.add_obj(bottle)
 
   def load_npc(self, code):

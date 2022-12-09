@@ -8,6 +8,24 @@ import olc
 import spec_procs
 import string_handling
 
+# (should this be moved?) rooms, npcs, and objects are referenced  by a string of the form: zone_id[id],
+@dataclasses.dataclass
+class unique_identifier:
+  zone_id: str=None
+  id:      str=None
+
+  def update(self, zone_id, id):
+    self.zone_id = zone_id
+    self.id = id
+
+  @classmethod
+  def from_string(cls, ref_string):
+    zone_id, id = string_handling.parse_reference(ref_string)
+    return unique_identifier(zone_id, id)
+    
+  def __str__(self):
+    return f"{self.zone_id}[{self.id}]"
+
 @dataclasses.dataclass
 class client:
   """ttype     = client name
@@ -29,7 +47,7 @@ class entity_data:
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
   desc:     str="It looks unfinished."
-  room:     str=config.VOID_ROOM
+  room:     unique_identifier=dataclasses.field(default_factory=lambda:unique_identifier.from_string(config.VOID_ROOM))
 
   @property
   def Name(self):
@@ -88,19 +106,6 @@ class pc_save_data_strings:
 class pc_save_data:
   numerical: pc_save_data_numerical=dataclasses.field(default_factory=lambda:pc_save_data_numerical())
   non_numerical: pc_save_data_strings=dataclasses.field(default_factory=lambda:pc_save_data_strings())
-
-# rooms, npcs, and objects are referenced  by a string of the form: zone_id[id]
-@dataclasses.dataclass
-class unique_identifier:
-  zone_id: str=None
-  id:      str=None
-
-  def update(self, zone_id, id):
-    self.zone_id = zone_id
-    self.id = id
-    
-  def __str__(self):
-    return f"{self.zone_id}[{self.id}]"
 
 @dataclasses.dataclass # perhaps this should be moved to pc.py
 class npc_proto_data:

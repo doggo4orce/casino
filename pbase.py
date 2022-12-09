@@ -5,6 +5,7 @@ import logging
 import os
 import pc
 import string_handling
+import structs
 
 # default values to be used when loading characters from save files
 PF_DEFAULT_TITLE = config.DEFAULT_TITLE
@@ -82,7 +83,7 @@ def add_player_to_index(name):
 
 def load_char_by_name(name):
   result = pc.pc()
-  result.room = PF_DEFAULT_ROOM
+  result.room = structs.unique_identifier.from_string(PF_DEFAULT_ROOM)
   result.title = PF_DEFAULT_TITLE
   line_number = 0
 

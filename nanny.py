@@ -32,7 +32,7 @@ def init_commands():
   cmd_dict["look"]      = ( commands.do_look,        0 )
   # cmd_dict["pindex"]    = ( commands.do_pindex,      0 )
   cmd_dict["prefs"]     = ( commands.do_prefs,       0 )
-  cmd_dict["rlist"]     = ( commands.do_rlist,       0 )
+  cmd_dict["rlist"]     = ( olc.do_rlist,            0 )
   cmd_dict["save"]      = ( commands.do_save,        0 )
   cmd_dict["say"]       = ( commands.do_say,         0 )
   cmd_dict["score"]     = ( commands.do_score,       0 )
@@ -40,9 +40,9 @@ def init_commands():
   cmd_dict["title"]     = ( commands.do_title,       0 )
   cmd_dict["quit"]      = ( commands.do_quit,        0 )
   cmd_dict["who"]       = ( commands.do_who,         0 )
-  cmd_dict["zcreate"]   = ( commands.do_zcreate,     0 )
-  cmd_dict["zedit"]     = ( commands.do_zedit,       0 )
-  cmd_dict["zlist"]     = ( commands.do_zlist,       0 )
+  cmd_dict["zcreate"]   = ( olc.do_zcreate,          0 )
+  cmd_dict["zedit"]     = ( olc.do_zedit,            0 )
+  cmd_dict["zlist"]     = ( olc.do_zlist,            0 )
 
 def interpret_msg(d, command, argument, server, mud):
   valid_command = False

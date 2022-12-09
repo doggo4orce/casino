@@ -84,7 +84,7 @@ class room:
      get_destination(dir)      <- returns code for room that the exit in direction dir leads to
      exit_exists(dir)          <- checks if the room has an exit leading in direction dir"""
   def add_char(self, ch):
-    ch.room = f"{self.zone_id}[{self.id}]"
+    ch.room = self.unique_id
     self._people.append(ch)
 
   def remove_char(self, ch):

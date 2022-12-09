@@ -9,11 +9,13 @@ from color import *
 import config
 import event
 import nanny
+import olc
 import os
 import pbase
 import pc
 import room
 import string_handling
+import structs
 import zone
 
 def do_colors(ch, scmd, argument, server, mud):
@@ -418,7 +420,10 @@ def show_room_to_char(ch, rm):
 
   for tch in rm.people:
     if tch != ch:
-      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.prefs.screen_width, False)}{NORMAL}\r\n"
+      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.prefs.screen_width, False)}{NORMAL}"
+      if type(tch) == pc.pc and tch.descriptor != None and tch.descriptor.state == descriptor.descriptor_state.OLC:
+        out_buf += " (olc)"
+      out_buf += "\r\n"
 
   for obj in rm.inventory:
     out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.prefs.screen_width, False)}{NORMAL}\r\n"
@@ -500,6 +505,32 @@ def do_rlist(ch, scmd, argument, server, mud):
   if (num_args == 0):
     ch.write("Usage: rlist <zone_id>\r\n")
 
+def do_rlist(ch, scmd, argument, server, mud):
+  args = argument.split()
+  num_args = len(args)
+
+  if (num_args < 1):
+    ch.write("Usage: rlist <zone_id>\r\n")
+    return
+
+  if args[0] not in mud._zones.keys():
+    ch.write("Sorry, that zone wasn't found!\r\n")
+    return
+
+  zone = mud.zone_by_id(args[0])
+
+  num_rooms = len(zone._world.items())
+
+  if num_rooms == 0:
+    ch.write("This zone has no rooms!\r\n")
+    return
+
+  ch.write(f"             ID Room Name                      Exit\r\n")
+  ch.write(f"--------------- ------------------------------ ------\r\n")
+
+  for id,room in zone._world.items():
+    ch.write(f"[{GREEN}{id:>13}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
+
 def do_zcreate(ch, scmd, argument, server, mud):
   args = argument.split()
   num_args = len(args)
@@ -517,10 +548,30 @@ def do_zcreate(ch, scmd, argument, server, mud):
   ch.write(f"You create zone[{GREEN}{new_zone.id}{NORMAL}] {CYAN}{new_zone.name}{NORMAL}.")
   mud._zones[new_zone.id] = new_zone
 
+def do_zedit(ch, scmd, argument, server, mud):
+  here = mud.room_by_code(ch.room)
+  args = argument.split()
+  num_args = len(args)
 
-def do_show_zones(ch, scmd, argument, server, mud):
+  if num_args < 1:
+    ch.write("Usage: zedit <zone_id>\r\n")
+    return
 
-  ch.write(f"Code            Zone Name                      Author\r\n")
+  if args[0] not in mud._zones.keys():
+    ch.write("Sorry, that zone wasn't found!\r\n")
+    return
+
+  mud.echo_around(ch, None, f"{ch} starts using OLC.\r\n")
+
+  d = ch.d
+
+  d.state = descriptor.descriptor_state.OLC
+  d.olc = structs.olc_data(olc.olc_mode.OLC_MODE_ZEDIT, args[0], None, olc.zedit_state.ZEDIT_MAIN_MENU)
+  olc.zedit_display_main_menu(d, mud.zone_by_id(args[0]))
+
+def do_zlist(ch, scmd, argument, server, mud):
+
+  ch.write(f"             ID Zone Name                      Author\r\n")
   ch.write(f"--------------- ------------------------------ ------\r\n")
   for zone in mud._zones.values():
     ch.write(f"[{GREEN}{zone.id:>13}{NORMAL}] {CYAN}{zone.name:<30}{NORMAL} {YELLOW}{zone.author.capitalize()}{NORMAL}\r\n")
@@ -541,12 +592,3 @@ def do_quit(ch, scmd, argument, server, mud):
   d.has_prompt = True
   server.just_leaving.append(d.id)
 
-'''def do_zedit(ch, scmd, argument, server, mud):
-  # find zone
-  zone_id = mud.zone_by_code(ch.room)
-  room_id = mud.room_by_code(ch.room)
-
-  # show zone information
-  ch.write(f"Room: {CYAN}{}{NORMAL} Zone: {CYAN}{}{NORMAL}")
-
-  # list zone commands'''

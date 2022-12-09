@@ -61,6 +61,8 @@ class game:
         mob.call_heart_beat_procs(self)
 
   def zone_by_id(self, id):
+    if id not in self._zones.keys():
+      return None
     return self._zones[id]
 
   def room_by_code(self, code):

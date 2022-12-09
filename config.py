@@ -23,6 +23,10 @@ MAX_PASSWORD_LENGTH   = 20
 PACKET_SIZE           = 256 # max bytes to read from socket each poll
 OMUD_VERSION          = '1.0 alpha'
 
+# for the world
+MAX_ZONE_NAME    = 20
+MAX_ROOM_NAME    = 20
+
 # configurable gameplay constants
 STARTING_ROOM         = 'casino[temple]'
 VOID_ROOM             = 'casino[temple]'

@@ -34,6 +34,10 @@ class exit:
   def destination(self):
     return f"{self.zone}[{self.room}]"
 
+  @zone.setter
+  def zone(self, new_zone_id):
+    self._destination.zone_id = new_zone_id
+
   def __str__(self):
     if self.local():
       return f"{self.direction.name.lower()}: {CYAN}{self.room}{NORMAL}\r\n"

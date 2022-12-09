@@ -42,6 +42,7 @@ class descriptor_state(enum.IntEnum):
   CONFIRM_PASS        = 5
   GET_PASSWORD        = 6
   GET_CONFIRM_REPLACE = 7
+  OLC                 = 8
 
 class descriptor:
   # Special Characters, probably belong somewhere else
@@ -64,7 +65,8 @@ class descriptor:
       client_info  = stores all connection information and telnet negotiation
       login_info   = login information supplied by player before char is assigned
       disconnected = the connection on the other end of the socket has been lost
-      char         = character that this connection is controlling"""
+      char         = character that this connection is controlling
+      olc_state    = used in olc.handle_input to parse input and determine menus"""
     self.socket       = socket
     self.id           = id
     self.in_buf       = bytes(0)
@@ -80,6 +82,7 @@ class descriptor:
     self.login_info   = login_data(None, None)
     self.disconnected = False
     self.char         = None
+    self.olc          = None
     # These two lines ensure that the socket is not automatically closed when oMUD
     # calls itself as a child process (which is what copyover does).
     flags = fcntl.fcntl(self.socket, fcntl.F_GETFD, 0)
@@ -102,9 +105,6 @@ class descriptor:
     if self.socket in rlist:
       read = self.socket.recv(config.PACKET_SIZE)
       if len(read) == 0:
-        # "A readable socket without data available is from a client that
-        # has disconnected, and the stream is ready to be closed."
-        # - Doug Hellman (PyMOTW blog)
         self.disconnected = True
       self.in_buf += read
 

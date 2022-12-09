@@ -4,6 +4,7 @@ import exit
 import descriptor
 import file_handling
 import logging
+import olc
 import pbase
 import pc
 import room
@@ -31,15 +32,17 @@ def init_commands():
   cmd_dict["look"]      = ( commands.do_look,        0 )
   # cmd_dict["pindex"]    = ( commands.do_pindex,      0 )
   cmd_dict["prefs"]     = ( commands.do_prefs,       0 )
+  cmd_dict["rlist"]     = ( commands.do_rlist,       0 )
   cmd_dict["save"]      = ( commands.do_save,        0 )
   cmd_dict["say"]       = ( commands.do_say,         0 )
-  cmd_dict["show"]      = ( commands.do_show_zones,  0 )
   cmd_dict["score"]     = ( commands.do_score,       0 )
   cmd_dict["shutdown"]  = ( commands.do_shutdown,    0 )
   cmd_dict["title"]     = ( commands.do_title,       0 )
   cmd_dict["quit"]      = ( commands.do_quit,        0 )
   cmd_dict["who"]       = ( commands.do_who,         0 )
   cmd_dict["zcreate"]   = ( commands.do_zcreate,     0 )
+  cmd_dict["zedit"]     = ( commands.do_zedit,       0 )
+  cmd_dict["zlist"]     = ( commands.do_zlist,       0 )
 
 def interpret_msg(d, command, argument, server, mud):
   valid_command = False
@@ -86,6 +89,8 @@ def handle_next_input(d, server, mud):
   command, argument = (stripped_msg.split(" ", 1) + ["", ""])[:2]
   if d.state == descriptor.descriptor_state.CHATTING:
     interpret_msg(d, command, argument, server, mud)
+  elif d.state == descriptor.descriptor_state.OLC:
+    olc.handle_input(d, stripped_msg, server, mud)
   elif d.state == descriptor.descriptor_state.GET_NAME:
     if command == "":
       d.disconnected = True

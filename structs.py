@@ -4,6 +4,7 @@ import config
 import enum
 import logging
 import object
+import olc
 import spec_procs
 import string_handling
 
@@ -36,6 +37,17 @@ class entity_data:
 
   def has_alias(self, alias):
     return alias in self.namelist
+
+@dataclasses.dataclass
+class olc_data:
+  """mode     = which mode, redit, zedit, etc.
+     zone_id  = zone_id of room/obj/npc being editted
+     id       = interal id of room/obj/npc being editted. or None if editing a zone
+     state    = which state in the menu system are you in"""
+  mode:    int=None
+  zone_id: int=None
+  id:      int=None
+  state:   int=None
 
 @dataclasses.dataclass
 class preferences:

@@ -69,8 +69,6 @@ class game:
     # expects a structs.unique_identifier() code
     zone_id = code.zone_id
     room_id = code.id
-
-    print(f"room_by_code claled with :zoneid = {zone_id} room_id = {room_id}")
     if zone_id == None and room_id == None:
       return None
 
@@ -78,9 +76,9 @@ class game:
 
     if zone == None:
       return None
-
+    
     return zone.room_by_id(room_id)
-
+    
   def npc_by_code(self, code):
     zone_id, npc_id = string_handling.parse_reference(code)
 

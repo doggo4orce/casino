@@ -163,7 +163,7 @@ class zone:
         wf.write(f"desc: {rm.desc}\n")
 
         for ex in rm.exits:
-          wf.write(f"{ex.direction.name.lower()}: {ex.destination}")
+          wf.write(f"{ex.direction.name.lower()}: {ex.destination}\n")
   
     if not os.path.exists(f"'{path}obj/'"):
       os.system(f"mkdir '{path}obj/'")
@@ -220,6 +220,7 @@ if __name__ == '__main__':
   rm.id = "hallway1"
   rm.desc = "This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe."
   rm.connect(exit.direction.NORTH, 'hallway2')
+  rm.connect(exit.direction.SOUTH, 'stockville[reading]')
   zone._world[rm.id] = rm
 
   rm = room.room()

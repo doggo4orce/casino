@@ -37,11 +37,11 @@ def do_rlist(ch, scmd, argument, server, mud):
     ch.write("This zone has no rooms!\r\n")
     return
 
-  ch.write(f"             ID Room Name                      Exit\r\n")
-  ch.write(f"--------------- ------------------------------ ------\r\n")
+  ch.write(f"ID{(1 + config.MAX_ROOM_ID_LENGTH)*' '}Room Name{(config.MAX_ROOM_NAME_LENGTH - 8)*' '}Exit\r\n")
+  ch.write(f"{(2 + config.MAX_ROOM_ID_LENGTH)*'-'} {config.MAX_ROOM_NAME_LENGTH*'-'} {(2 + config.MAX_ZONE_ID_LENGTH)*'-'}\r\n")
 
   for id,room in zone._world.items():
-    ch.write(f"[{GREEN}{id:>13}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
+    ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
 
 def do_redit(ch, scmd, argument, server, mud):
   USAGE = "Usage: redit [[zone_id ]room_id]"
@@ -161,7 +161,8 @@ def do_zedit(ch, scmd, argument, server, mud):
 
 def do_zlist(ch, scmd, argument, server, mud):
 
-  ch.write(f"ID                 Zone Name                                          Author\r\n")
+  ch.write(f"ID{(1 + config.MAX_ZONE_ID_LENGTH)*' '}Zone Name{(config.MAX_ZONE_NAME_LENGTH - 8)*' '}Author\r\n")
+
   ch.write(f"{(2 + config.MAX_ZONE_ID_LENGTH)*'-'} {config.MAX_ZONE_NAME_LENGTH*'-'} {config.MAX_PLAYER_NAME_LENGTH*'-'}\r\n")
 
   for zn in mud._zones.values():

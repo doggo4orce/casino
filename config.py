@@ -43,11 +43,11 @@ DEFAULT_DEBUG_MODE    = 'off'
 # string maximums
 MAX_PLAYER_NAME_LENGTH       = 16  # length of 'responsibilities'
 
-MAX_ZONE_ID_LENGTH           = 16  # length of 'dark_spider_cave', insteaad use something like 'spdr_cave1'
-MAX_ZONE_NAME_LENGTH         = 50
+MAX_ZONE_ID_LENGTH           = 12  # length of 'spider_caves'
+MAX_ZONE_NAME_LENGTH         = 40
 
-MAX_ROOM_ID_LENGTH           = 12  # length of 'north_hall12'
-MAX_ROOM_NAME_LENGTH         = 50  # length of 'Up above the spider web along the thin and narrow'
+MAX_ROOM_ID_LENGTH           = 16  # length of 'north_entrance23'
+MAX_ROOM_NAME_LENGTH         = 46  # length of 
 
 # player fields
 DEFAULT_TITLE         = "the title-less"

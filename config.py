@@ -28,8 +28,8 @@ MAX_ZONE_NAME    = 20
 MAX_ROOM_NAME    = 20
 
 # configurable gameplay constants
-STARTING_ROOM         = 'cash_casino[temple]'
-VOID_ROOM             = 'cash_casino[temple]'
+STARTING_ROOM         = 'cc[recall]'
+VOID_ROOM             = 'cc[void]'
 PLAYER_PROMPT         = '> '
 
 # player preferences
@@ -40,5 +40,17 @@ DEFAULT_BRIEF_MODE    = 'off'
 DEFAULT_ACTIVE_IDLE   = 'off'
 DEFAULT_DEBUG_MODE    = 'off'
 
+# string maximums
+MAX_PLAYER_NAME_LENGTH       = 16  # length of 'responsibilities'
+
+MAX_ZONE_ID_LENGTH           = 16  # length of 'dark_spider_cave', insteaad use something like 'spdr_cave1'
+MAX_ZONE_NAME_LENGTH         = 50
+
+MAX_ROOM_ID_LENGTH           = 12  # length of 'north_hall12'
+MAX_ROOM_NAME_LENGTH         = 50  # length of 'Up above the spider web along the thin and narrow'
+
 # player fields
 DEFAULT_TITLE         = "the title-less"
+
+# starting rooms
+VOID_ROOM             = "stockville[void]"

@@ -81,8 +81,9 @@ class room:
      show_exits()              <- shows exit string, e.g. [ Exits: n s w ]
      echo(msg)                 <- sends msg to every character in the room
      exit(dir)                 <- returns exit object leading in direction dir
-     get_destination(dir)      <- returns code for room that the exit in direction dir leads to
-     exit_exists(dir)          <- checks if the room has an exit leading in direction dir"""
+     get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
+     exit_exists(dir)          <- checks if the room has an exit leading in direction dir
+     save(path)                <- saves the room to a file with given path"""
   def add_char(self, ch):
     ch.room = self.unique_id
     self._people.append(ch)
@@ -114,9 +115,6 @@ class room:
         return ch
 
   def connect(self, direction, destination_code):
-    # if it's a local exit, prepend the zone_id
-    if destination_code.find('[') == -1:
-      destination_code = f"{self.zone_id}[{destination_code}]"
     self._exits.append(exit.exit(direction, destination_code))
 
   def disconnect(self, direction):
@@ -176,6 +174,17 @@ class room:
 
   def exit_exists(self, direction):
     return self.get_destination(direction) != -1
+
+  def save(self, path):
+    with open(path, "w") as wf:
+      wf.write(f"Name: {self.name}\n")
+      wf.write(f"id: {self.id}\n")
+      wf.write(f"Desc: {self.desc}")
+
+      for ex in self._exits:
+        wf.write(f"{ex.direction.name.capitalize()}: {ex.destination}")
+
+        
 
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"

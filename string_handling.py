@@ -67,10 +67,22 @@ def split_tag_value(line):
   return var_list[0], " ".join(var_list[1:])
 
 def parse_reference(code):
-  n = code.find('[')
-  if n == -1:
-    return None, None
-  return code[:n], code[n+1:-1]
+  # if its just a local reference, put the zone_id to None
+  if code.isalnum():
+    zone_id = None
+    id = code
+  # if it's a global reference, we'd better find [] brackets
+  else:
+    n = code.find('[')
+    # if not, then it's a broken local reference
+    if n == -1:
+      zone_id = None
+      id = None
+    # syntax is correct for global reference
+    else:
+      zone_id = code[:n]
+      id = code[n+1:-1]
+  return zone_id, id
 
 def yesno(flag):
   if flag == True:

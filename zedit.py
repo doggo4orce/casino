@@ -4,35 +4,47 @@ import descriptor
 import enum
 import os
 import string_handling
+import zone
 
 class zedit_state(enum.IntEnum):
-  ZEDIT_MAIN_MENU   = 1
-  ZEDIT_EDIT_NAME   = 2
-  ZEDIT_EDIT_AUTHOR = 3
-  ZEDIT_EDIT_ID     = 4
-  ZEDIT_EDIT_FOLDER = 5
+  ZEDIT_MAIN_MENU    = 1
+  ZEDIT_EDIT_NAME    = 2
+  ZEDIT_EDIT_AUTHOR  = 3
+  ZEDIT_EDIT_COPY    = 4
+  ZEDIT_EDIT_FOLDER  = 5
+  ZEDIT_CONFIRM_SAVE = 6
 
-def zedit_display_main_menu(d, zone):
-  d.write(f"[{GREEN}{zone.id}{NORMAL}] {CYAN}{zone.name}{NORMAL}\r\n")
+def zedit_display_main_menu(d):
+  zedit_save = d.olc.save_data
+  #todo: make sure zedit_save is structs.zedit_save_data
+
+  d.write(f"[{GREEN}{zedit_save.zone_id}{NORMAL}] {CYAN}{zedit_save.zone_name}{NORMAL}\r\n")
   d.write(f"\r\n")
-  d.write(f"{GREEN}1{NORMAL}) Author       : {YELLOW}{zone.author}{NORMAL}\r\n")
-  d.write(f"{GREEN}2{NORMAL}) Zone Name    : {YELLOW}{zone.name}{NORMAL}\r\n")
-  d.write(f"{GREEN}3{NORMAL}) Folder Name  : {YELLOW}{zone.folder}{NORMAL}\r\n")
-  #d.write(f"{GREEN}3{NORMAL}) Zone ID      : {YELLOW}{zone.id}{NORMAL}\r\n")
+  d.write(f"{GREEN}1{NORMAL}) Author       : {YELLOW}{zedit_save.zone_author}{NORMAL}\r\n")
+  d.write(f"{GREEN}2{NORMAL}) Zone Name    : {YELLOW}{zedit_save.zone_name}{NORMAL}\r\n")
+  d.write(f"{GREEN}3{NORMAL}) Folder Name  : {YELLOW}lib/world/{BRIGHT_YELLOW}{zedit_save.zone_folder}{NORMAL}{YELLOW}/{NORMAL}\r\n")
+  d.write(f"{GREEN}4{NORMAL}) Copy Zone\r\n")
   d.write(f"{GREEN}Q{NORMAL}) Quit\r\n")
   d.write(f"\r\nEnter your choice : ")
 
 def zedit_parse(d, input, server, mud):
   if d.olc.state == zedit_state.ZEDIT_MAIN_MENU:
     zedit_parse_main_menu(d, input, server, mud)
-  elif d.olc.state == zedit_state.ZEDIT_EDIT_NAME:
+    return
+
+  # we've hit at least one "non-main" menu, so there are unsaved changes
+  d.olc.changes = True
+
+  if d.olc.state == zedit_state.ZEDIT_EDIT_NAME:
     zedit_parse_edit_name(d, input, server, mud)
   elif d.olc.state == zedit_state.ZEDIT_EDIT_AUTHOR:
     zedit_parse_edit_author(d, input, server, mud)
-  elif d.olc.state == zedit_state.ZEDIT_EDIT_ID:
-    zedit_parse_edit_id(d, input, server, mud)
+  elif d.olc.state == zedit_state.ZEDIT_EDIT_COPY:
+    zedit_parse_edit_copy(d, input, server, mud)
   elif d.olc.state == zedit_state.ZEDIT_EDIT_FOLDER:
     zedit_parse_edit_folder(d, input, server, mud)
+  elif d.olc.state == zedit_state.ZEDIT_CONFIRM_SAVE:
+    zedit_parse_confirm_save(d, input, server, mud)
 
 def zedit_parse_main_menu(d, input, server, mud):
   # simple way to handle null input for now
@@ -50,53 +62,113 @@ def zedit_parse_main_menu(d, input, server, mud):
   elif response == '3':
     d.write("Enter new folder name : ")
     d.olc.state = zedit_state.ZEDIT_EDIT_FOLDER
-  else: #if response in {'q', 'Q'}:
-    d.write("Leaving editor.\r\n")
-    d.state = descriptor.descriptor_state.CHATTING
-    d.olc = None
+  elif response == '4':
+    d.write("Will create duplicate zone with new id : ")
+    d.olc.state = zedit_state.ZEDIT_EDIT_COPY
+  elif response in {'q', 'Q'}:
+    if d.olc.changes:
+      d.write("Save internally? : ")
+      d.olc.state = zedit_state.ZEDIT_CONFIRM_SAVE
+    else:
+      d.write("No changes to save.\r\n")
+      mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
+      d.state = descriptor.descriptor_state.CHATTING
+      d.olc.save_data = None
+      d.olc = None
+  else:
+    d.write("Returning to main menu.\r\n")
+    d.write(f"\r\nEnter your choice : ")
+    d.olc.state = zedit_state.ZEDIT_MAIN_MENU
 
 def zedit_parse_edit_author(d, input, server, mud):
-  zone = mud.zone_by_id(d.olc.zone_id)
-  zone.author = input
+  d.olc.save_data.zone_author = input
   d.olc.state = zedit_state.ZEDIT_MAIN_MENU
-  zedit_display_main_menu(d, zone)
+  zedit_display_main_menu(d)
 
 def zedit_parse_edit_name(d, input, server, mud):
-  zone = mud.zone_by_id(d.olc.zone_id)
-  zone.name = input
+  d.olc.save_data.zone_name = input
   d.olc.state = zedit_state.ZEDIT_MAIN_MENU
-  zedit_display_main_menu(d, zone)
+  zedit_display_main_menu(d)
 
 def zedit_parse_edit_folder(d, input, server, mud):
-  zone = mud.zone_by_id(d.olc.zone_id)
-  old_folder = zone.folder
-
   if not string_handling.alpha_numeric_space(input):
     d.write("Sorry, folder names can only have alphanumeric characters.\r\n")
     d.write("Try again : ")
     return
-
-  zone.folder = input
-  os.rename(config.WORLD_FOLDER + old_folder, config.WORLD_FOLDER + input)
-
+  d.olc.save_data.zone_folder = input
   d.olc.state = zedit_state.ZEDIT_MAIN_MENU
-  zedit_display_main_menu(d, zone)
+  zedit_display_main_menu(d)
   
-def zedit_parse_edit_id(d, input, server, mud):
-  old_zone_id = d.olc.zone_id
-  zone = mud.zone_by_id(old_zone_id)
+def zedit_parse_edit_copy(d, input, server, mud):
   args = input.split()
-
-  if zone.id == args[0]:
+  new_zone_id = args[0]
+  if new_zone_id == d.olc.save_data.zone_id:
     d.write("That's the same id!\r\n")
     d.olc.state = ZEDIT_MAIN_MENU
-    zedit_display_main_menu(d, zone)
+    zedit_display_main_menu(d)
     return
   elif args[0] in mud._zones.keys():
     d.write("That id is already being used for another zone.\r\n")
     d.write("Try again : ")
     return
-  
+  d.olc.save_data.zone_id = new_zone_id
+  d.olc.save_data.zone_name = "copy of " + d.olc.save_data.zone_name
+  d.olc.save_data.zone_folder = "copy of " + d.olc.save_data.zone_folder
+  d.olc.state = zedit_state.ZEDIT_MAIN_MENU
+  zedit_display_main_menu(d)
+
+def zedit_parse_confirm_save(d, input, server, mud):
+  zone_id = d.olc.save_data.zone_id
+
+  if input == "" or input[0] not in {'n', 'N', 'y', 'Y'}:
+    d.write("Returning to main menu.\r\n")
+    d.write("Enter your choice : ")
+    d.olc.state = zedit_state.ZEDIT_MAIN_MENU
+    return
+  elif input[0] in {'y','Y'}:
+    check_zone = mud.zone_by_id(zone_id)
+
+    zedit_save = d.olc.save_data
+    
+    if check_zone != None:
+      # we found an existing zone, overwrite it with zedit_save
+      check_zone.name = "copy of " + zedit_save.zone_name
+      check_zone.id = zone_id
+      check_zone.author = zedit_save.zone_author
+      check_zone.folder = zedit_save.zone_folder
+      check_zone.save_to_folder()
+    else:
+      # ok we're making a brand new zone filled from zedit save
+      new_zone = zone.zone()
+      new_zone.name = zedit_save.zone_name
+      new_zone.id = zedit_save.zone_id
+      new_zone.author = zedit_save.zone_author
+      new_zone.folder = zedit_save.zone_folder
+      new_zone.save_to_folder()
+
+      # insert new zone into the world
+      mud._zones[zone_id] = new_zone
+    
+    mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
+    d.state = descriptor.descriptor_state.CHATTING
+    d.olc.save_data = None
+    d.olc = None
+
+  elif input[0] in {'n', 'N'}:
+    d.write("Discarding unsaved changes.\r\n")
+    mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
+    d.state = descriptor.descriptor_state.CHATTING
+    d.olc.save_data = None
+    d.olc = None
+
+  d.write("")
+
+
+# for handling the actual saved changes
+def or_dont_call_this_function_either(d, input, server, mud):
+  os.rename(config.WORLD_FOLDER + old_folder, config.WORLD_FOLDER + input)
+
+def dont_call_this_function(d, input, server, mud):
   # move zone to have new key
   new_zone_id = args[0]
   del mud._zones[old_zone_id]
@@ -123,4 +195,4 @@ def zedit_parse_edit_id(d, input, server, mud):
           exit.zone = new_zone_id
       
   d.olc.state = zedit_state.ZEDIT_MAIN_MENU
-  zedit_display_main_menu(d, zone)
+  zedit_display_main_menu(d)

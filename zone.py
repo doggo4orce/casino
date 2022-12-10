@@ -65,8 +65,11 @@ class zone:
      parse_rooms(path)      <- calls parse_rno on each *.room file
      parse_npcs(path)       <- calls parse_rno on each *.npc file
      parse_objects(path)    <- calls parse_rno on each *.obj file
+     save_to_folder()       <- saves zone to lib/world/<self.folder>/
      reset()                <- TODO: resets zone based on instructions in <??.filename>"""
   def room_by_id(self, id):
+    if id not in self._world.keys():
+      return None
     return self._world[id]
 
   def npc_by_id(self, id):
@@ -134,6 +137,60 @@ class zone:
       file_handling.parse_generic(new_obj_proto, rf)
       self._obj_proto[new_obj_proto.unique_id.id] = new_obj_proto
 
+  def save_to_folder(self):
+    path = config.WORLD_FOLDER + self.folder + '/'
+
+    # make zone folder (it might already exist)
+    if not os.path.exists(path):
+      os.system("mkdir '{}'".format(path))
+
+    with open(path + "info.zon", "w") as wf:
+      wf.write(f"# Zone file for {self.name}\n")
+      wf.write(f"name: {self.name}\n")
+      wf.write(f"id: {self.id}\n")
+      wf.write(f"author: {self.author}\n")
+
+    # make room folder (it might already exist)
+    if not os.path.exists(f"'{path}wld/'"):
+      os.system(f"mkdir '{path}wld/'")
+
+    for rm in self._world.values():
+
+      with open(path + "wld/" + rm.id + ".room", "w") as wf:
+
+        wf.write(f"name: {rm.name}\n")
+        wf.write(f"id: {rm.id}\n")
+        wf.write(f"desc: {rm.desc}\n")
+
+        for ex in rm.exits:
+          wf.write(f"{ex.direction.name.lower()}: {ex.destination}")
+  
+    if not os.path.exists(f"'{path}obj/'"):
+      os.system(f"mkdir '{path}obj/'")
+
+    for proto in self._obj_proto.values():
+      # go ahead and criticize this choice of extension,
+      # it's Python and I'm not making any actual .obj files with C
+      with open(path + "obj/" + proto.id + ".obj", "w"):
+        wf.write(f"ldesc: {proto.ldesc}\n")
+        wf.write(f"id: {proto.id}\n")
+        wf.write(f"name: {proto.entity.name}\n")
+        wf.write(f"namelist: {proto.entity.namelist}\n")
+        wf.write(f"desc: {proto.entity.desc}\n")
+
+    if not os.path.exists(f"'{path}npc/"):
+      os.system(f"mkdir '{path}npc/'")
+
+    # switching from mob to npc was not difficult,
+    # but for some reason I refuse to change .obj to .item (see above)
+    for proto in self._npc_proto.values():
+      with open(path + "npc/" + proto.id + ".npc", "w") as wf:
+        wf.write(f"namelist: {proto.entity.namelist}\n")
+        wf.write(f"id: {proto.id}\n")
+        wf.write(f"name: {proto.entity.name}\n")
+        wf.write(f"ldesc: {proto.ldesc}\n")
+        wf.write(f"desc: {proto.entity.desc}\n")
+
   def __str__(self):
     ret_val = f"Zone: {CYAN}{self.name}{NORMAL} ID: {CYAN}{self.id}{NORMAL}\r\n\r\n"
     ret_val += f"Rooms:\r\n"
@@ -148,7 +205,35 @@ class zone:
     return ret_val
 
 if __name__ == '__main__':
-  casino = zone(config.WORLD_FOLDER + "cash casino/")
+  import exit
 
-  print(casino)
+  os.system(f"rm -rf 'lib/world/the newbie zone'")
+  zone = zone()
+
+  zone.name = "the newbie zone"
+  zone.folder = "the newbie zone"
+  zone.id = "newbie_zone"
+
+  rm = room.room()
+
+  rm.name = "The Beginning of a Damp Hallway"
+  rm.id = "hallway1"
+  rm.desc = "This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe."
+  rm.connect(exit.direction.NORTH, 'hallway2')
+  zone._world[rm.id] = rm
+
+  rm = room.room()
   
+  rm.name = "A Dark Corner in the Hallway"
+  rm.id = "hallway2"
+  rm.desc = "The hallway makes a sharp corner here, leading both east or south."
+  rm.connect(exit.direction.SOUTH, 'hallway1')
+
+  zone._world[rm.id] = rm
+
+  zone.save_to_folder()
+
+
+
+
+

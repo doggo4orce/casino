@@ -42,7 +42,7 @@ class entity_data:
   """name     = what to be referred to as
      namelist = list of keywords to be targetted with
      desc     = shown when closely examined (this should be moved since pc's dont need them)
-     room     = reference to room if it is in one"""
+     room     = reference to room if it is in one, and None otherwise"""
   name:     str="an unfinished entity"
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
@@ -57,15 +57,36 @@ class entity_data:
     return alias in self.namelist
 
 @dataclasses.dataclass
+class zedit_save_data:
+  """There should be a field for each of the fields in the zedit_main_menu.  Then the users
+     selection for those fields can be saved here locally until they finish OLC and save
+     their changes and make them permanent."""
+  zone_name:   str="an unsaved zone"
+  zone_id:     str="unused_id"
+  zone_author: str="unknown author"
+  zone_folder: str="unsaved folder name"
+
+@dataclasses.dataclass
+class redit_save_data:
+  """There should be a field for each of the fields in the redit_main_menu.  Then the users
+     selection for those fields can be saved here locally until they finish OLC and save
+     their changes and make them permanent."""
+  zone_id:     str="unattached"
+  room_id:     str="unfinished_room"
+  room_name:   str="An unfinished room"
+  room_desc:   str="You are in an unfinished room."
+
+@dataclasses.dataclass
 class olc_data:
-  """mode     = which mode, redit, zedit, etc.
+  """Interface for descriptor to work with their OLC data
+     mode     = which mode, redit, zedit, etc.
      zone_id  = zone_id of room/obj/npc being editted
-     id       = interal id of room/obj/npc being editted. or None if editing a zone
-     state    = which state in the menu system are you in"""
-  mode:    int=None
-  zone_id: int=None
-  id:      int=None
-  state:   int=None
+     state    = which state in the menu system are you in
+     data     = *-edit_save_data (defined immediately above), where * in 'rmoz'"""
+  mode:      int=None
+  state:     int=None
+  changes:   bool=False
+  save_data: ...=None
 
 @dataclasses.dataclass
 class preferences:
@@ -167,10 +188,17 @@ class obj_proto_data:
     else:
       logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
 
-"""name      = the title of the room (displayed first as one line)
-   desc      = the longer description of the room (shown as a following paragraph)"""
+  @property
+  def id(self):
+    return self.unique_id.id
+  @property
+  def zone_id(self):
+    return self.unique_id.zone_id
+
 @dataclasses.dataclass
 class room_attribute_data:
+  """name      = the title of the room (displayed first as one line)
+     desc      = the longer description of the room (shown as a following paragraph)"""
   name: str="unnamed room"
   desc: str="undescribed room"
 

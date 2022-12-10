@@ -66,13 +66,19 @@ class game:
     return self._zones[id]
 
   def room_by_code(self, code):
+    # expects a structs.unique_identifier() code
     zone_id = code.zone_id
     room_id = code.id
 
-    if zone_id == None or room_id == None:
+    print(f"room_by_code claled with :zoneid = {zone_id} room_id = {room_id}")
+    if zone_id == None and room_id == None:
       return None
 
     zone = self.zone_by_id(zone_id)
+
+    if zone == None:
+      return None
+
     return zone.room_by_id(room_id)
 
   def npc_by_code(self, code):
@@ -82,6 +88,10 @@ class game:
       return None
 
     zone = self.zone_by_id(zone_id)
+
+    if zone == None:
+      return None
+
     return zone.npc_by_id(npc_id)
 
   def obj_by_code(self, code):
@@ -119,8 +129,7 @@ class game:
 
     # if the room doesn't exist, again move them to the VOID
     if room == None:
-      ch.room = THE_VOID
-      room = self.room_by_code(ch.room)
+      room = self.room_by_code(structs.unique_identifier.from_string(config.VOID_ROOM))
 
     # finally we have somewhere to add them!
     room.add_char(ch)
@@ -149,7 +158,7 @@ class game:
     self._objects.remove(obj)
 
   def assign_spec_procs(self):
-    b_dealer = self.npc_by_code('cash_casino[baccarat_dealer]')
+    b_dealer = self.npc_by_code('stockville[baccarat_dealer]')
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
     b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
@@ -168,18 +177,18 @@ class game:
     self.assign_spec_procs()
 
     # populating world manually at startup
-    mob = self.load_npc('cash_casino[baccarat_dealer]')
+    mob = self.load_npc('stockville[baccarat_dealer]')
     mob = cards.card_dealer.from_npc(mob)
     mob = baccarat.baccarat_dealer.from_card_dealer(mob)
-    mob.room = structs.unique_identifier.from_string('cash_casino[casino_room]')
+    mob.room = structs.unique_identifier.from_string('stockville[casino]')
     self.add_char(mob)
 
-    mob = self.load_npc('cash_casino[baker]')
-    mob.room = structs.unique_identifier.from_string('cash_casino[temple]')
+    mob = self.load_npc('stockville[baker]')
+    mob.room = structs.unique_identifier.from_string('stockville[recall]')
     self.add_char(mob)
 
-    bottle = self.load_obj('cash_casino[bottle]')
-    bottle.room = structs.unique_identifier.from_string('cash_casino[temple]')
+    bottle = self.load_obj('stockville[bottle]')
+    bottle.room = structs.unique_identifier.from_string('stockville[reading]')
     self.add_obj(bottle)
 
   def load_npc(self, code):

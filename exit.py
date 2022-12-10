@@ -13,33 +13,36 @@ class direction(enum.IntEnum):
 class exit:
   """Creates an exit which characters may use to travel between rooms.
     direction = one of the directions listed above
-    destination = virtual reference to another room"""
-  def __init__(self, dir, vref):
+    destination = string reference to another room"""
+  def __init__(self, dir, dest_ref):
     self._direction = dir
 
-    zone_id, room_id = string_handling.parse_reference(vref)
-    
-    self._destination = structs.unique_identifier(zone_id, room_id)
+    if dest_ref.isalnum():
+      self._destination = structs.unique_identifier(None, dest_ref)
+    else:
+      zone_id, room_id = string_handling.parse_reference(dest_ref)
+      self._destination = structs.unique_identifier(zone_id, room_id)
 
   @property
   def direction(self):
     return self._direction
   @property
-  def zone(self):
+  def zone_id(self):
     return self._destination.zone_id
   @property
-  def room(self):
+  def room_id(self):
     return self._destination.id
   @property
+  def internal(self):
+    return self.zone_id == None
+  @property
   def destination(self):
-    return f"{self.zone}[{self.room}]"
-
-  @zone.setter
-  def zone(self, new_zone_id):
-    self._destination.zone_id = new_zone_id
-
-  def __str__(self):
-    if self.local():
-      return f"{self.direction.name.lower()}: {CYAN}{self.room}{NORMAL}\r\n"
+    if self.internal:
+      return self.room_id
     else:
-      return f"{self.direction.name.lower()}: {CYAN}{self.zone}{NORMAL}[{CYAN}{self.room}{NORMAL}]\r\n"
+      return f"{self.zone_id}[{self.room_id}]"
+
+
+  @zone_id.setter
+  def zone_id(self, new_zone_id):
+    self._destination.zone_id = new_zone_id

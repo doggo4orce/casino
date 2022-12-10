@@ -126,6 +126,30 @@ def do_get(ch, scmd, argument, server, mud):
   ch.write(f"You get {obj}.\r\n")
   mud.echo_around(ch, None, f"{ch} gets {obj}.\r\n")
 
+def do_goto(ch, scmd, argument, server, mud):
+  here_id = ch.room.id
+  here_zone_id = ch.room.zone_id
+  here = mud.room_by_code(ch.room)
+
+  there_zone_id, there_room_id = string_handling.parse_reference(argument)
+  there = mud.room_by_code(structs.unique_identifier(there_zone_id, there_room_id))
+
+  if there == None:
+    ch.write("I'm sorry, but that room cannot be found.\r\n")
+    return
+
+  # remove them from the old room
+  here.remove_char(ch)
+  here.echo(f"{ch.name} disappears in a puff of smoke.\r\n")
+
+  # add them to the new room
+  there.echo(f"{ch.name} appears with an ear-splitting bang.\r\n")
+  there.add_char(ch)
+
+  # show them the new room
+  show_room_to_char(ch, there)
+
+
 def do_drop(ch, scmd, argument, server, mud):
   args = argument.split()
   num_args = len(args)
@@ -322,7 +346,7 @@ def do_score(ch, scmd, argument, server, mud):
   out_str += f"Screen:    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
 
   if ch.prefs.debug_mode == 'on':
-    out_str += f"Room:    {ch.room}\r\n"
+    out_str += f"Room:      {ch.room}\r\n"
     
   ch.write(out_str)
 
@@ -422,7 +446,7 @@ def show_room_to_char(ch, rm):
   for tch in rm.people:
     if tch != ch:
       out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.prefs.screen_width, False)}{NORMAL}"
-      if type(tch) == pc.pc and tch.descriptor != None and tch.descriptor.state == descriptor.descriptor_state.OLC:
+      if type(tch) == pc.pc and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
         out_buf += " (olc)"
       out_buf += "\r\n"
 
@@ -473,7 +497,16 @@ def do_move(ch, scmd, argument, server, mud):
     ch.write("Alas, you cannot go that way.\r\n")
     return
 
-  dest_id = structs.unique_identifier.from_string(dest_ref)
+  if dest_ref.isalnum():
+    # check first to see if dest_ref is just a room_id (internal exit)
+    dest_id = structs.unique_identifier(ch.room.zone_id, dest_ref)
+  #elif: TODO: check for external exit that should be external and change it
+  else:
+    # in this case, the exit leads to a room in another zone (external exit)
+    dest_id = structs.unique_identifier.from_string(dest_ref)
+
+  print(f"{dest_id.zone_id} {dest_id.id}")
+
   ending_room = mud.room_by_code(dest_id)
 
   left_msg = f"{ch} leaves {scmd.name.lower()}.\r\n"
@@ -488,6 +521,12 @@ def do_move(ch, scmd, argument, server, mud):
   }
 
   arrived_msg = f"{ch} has arrived from {arrived_messages[scmd]}.\r\n"
+
+  if ending_room == None:
+    # uncomment to send them to the void, but for now just stop movement
+    # ending_room = mud.room_by_code(structs.unique_identifier.from_string(config.VOID_ROOM))
+    ch.write("Construction blocks your path.\r\n")
+    return
 
   # remove them from the old room
   starting_room.remove_char(ch)

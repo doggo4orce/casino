@@ -1,4 +1,4 @@
-Name: Cash Casino
-id: casino_room
+Name: The Stockville Casino
+id: casino
 Desc: The smell of bad decisions hangs thick in the air.
-West: temple
+West: recall

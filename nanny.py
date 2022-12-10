@@ -8,6 +8,7 @@ import olc
 import pbase
 import pc
 import room
+import structs
 import telnet
 
 cmd_dict = dict()
@@ -24,6 +25,7 @@ def init_commands():
   cmd_dict["copyover"]  = ( commands.do_copyover,    0 )
   cmd_dict["client"]    = ( commands.do_client,      0 )
   cmd_dict["drop"]      = ( commands.do_drop,        0 )
+  cmd_dict["goto"]      = ( commands.do_goto,        0 )
   cmd_dict["help"]      = ( commands.do_help,        0 )
   cmd_dict["inventory"] = ( commands.do_inventory,   0 )
   cmd_dict["get"]       = ( commands.do_get,         0 )
@@ -32,7 +34,6 @@ def init_commands():
   cmd_dict["look"]      = ( commands.do_look,        0 )
   # cmd_dict["pindex"]    = ( commands.do_pindex,      0 )
   cmd_dict["prefs"]     = ( commands.do_prefs,       0 )
-  cmd_dict["rlist"]     = ( olc.do_rlist,            0 )
   cmd_dict["save"]      = ( commands.do_save,        0 )
   cmd_dict["say"]       = ( commands.do_say,         0 )
   cmd_dict["score"]     = ( commands.do_score,       0 )
@@ -40,7 +41,10 @@ def init_commands():
   cmd_dict["title"]     = ( commands.do_title,       0 )
   cmd_dict["quit"]      = ( commands.do_quit,        0 )
   cmd_dict["who"]       = ( commands.do_who,         0 )
-  cmd_dict["zcreate"]   = ( olc.do_zcreate,          0 )
+
+  # OLC commands (separated purely for organization)
+  cmd_dict["redit"]     = ( olc.do_redit,            0 )
+  cmd_dict["rlist"]     = ( olc.do_rlist,            0 )
   cmd_dict["zedit"]     = ( olc.do_zedit,            0 )
   cmd_dict["zlist"]     = ( olc.do_zlist,            0 )
 
@@ -172,6 +176,11 @@ def handle_next_input(d, server, mud):
           d.write("Welcome!  Have a great time!\r\n")
           d.state = descriptor.descriptor_state.CHATTING
           logging.info(f"{d.login_info.name} has entered the game.")
+
+          # if their room has been deleted, put them in the void
+          if mud.room_by_code(d.char.room) == None:
+            d.char.room = structs.unique_identifier.from_string(config.VOID_ROOM)
+
           mud.add_char(d.char)
           mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
       else:

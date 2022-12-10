@@ -1,0 +1,5 @@
+Name: The Recall Point
+id: recall
+Desc: This is the recall point.  You can always return here by typing RECALL.
+East: casino
+West: reading

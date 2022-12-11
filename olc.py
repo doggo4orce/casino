@@ -2,6 +2,7 @@ from color import *
 import config
 import descriptor
 import enum
+import exit
 import logging
 import redit
 import string_handling
@@ -160,9 +161,8 @@ def do_redit(ch, scmd, argument, server, mud):
     redit_save.room_desc = room.desc
 
     # make a copy of all the exits as strings of either internal or external references
-    for ex in room.exits:
-      # print(ex)
-      redit_save.room_exits[ex.direction] = ex.destination
+    for dir in exit.direction:
+      redit_save.room_exits[dir] = room.get_destination(dir) # some of these will be None!
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (redit).\r\n")
   ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_REDIT, redit.redit_state.REDIT_MAIN_MENU, False, redit_save)

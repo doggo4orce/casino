@@ -29,10 +29,10 @@ def redit_display_main_menu(d):
     if dir in redit_save.room_exits.keys():
       d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}{redit_save.room_exits[dir]}{NORMAL}\r\n")
     else:
-      d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}none{NORMAL}\r\n")
+      d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}None{NORMAL}\r\n")
     k = k + 1
 
-
+  d.write(f"{GREEN}X{NORMAL}) Delete Room\r\n")
   d.write(f"{GREEN}Q{NORMAL}) Quit\r\n")
   d.write(f"\r\nEnter your choice : ")
 
@@ -128,8 +128,15 @@ def redit_parse_confirm_save(d, input, server, mud):
       check_room.id = redit_save.room_id
       check_room.desc = redit_save.room_desc
 
-      for id, dest in redit_save.room_exits.items():
-        check_room.connect(id, dest)
+      for dir in exit.direction:
+        dest = redit_save.room_exits[dir]
+        if dest != None:
+          check_room.connect(dir, dest)
+        else:
+          for ex in check_room.exits:
+            if ex.direction == dir:
+              check_room.disconnect(dir)
+              
 
     else:
       # ok we're making a brand new room filled from redit save
@@ -139,8 +146,14 @@ def redit_parse_confirm_save(d, input, server, mud):
       new_room.id = redit_save.room_id
       new_room.desc = redit_save.room_desc
 
-      for id, dest in redit_save.room_exits.items():
-        new_room.connect(id, dest)
+      for dir in exit.direction:
+        dest = redit_save.room_exits[dir]
+        if dest != None:
+          new_room.connect(dir, dest)
+        else:
+          for ex in new_room.exits:
+            if ex.direction == dir:
+              new_room.disconnect(dir)
 
       # insert new room into the zone
       # todo make this a function for zone class (add_room)
@@ -152,6 +165,7 @@ def redit_parse_confirm_save(d, input, server, mud):
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None
+
   elif input[0] in {'n', 'N'}:
     d.write("Discarding changes.\r\n")
     mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
@@ -178,7 +192,10 @@ def redit_parse_change_exit(d, input, server, mud):
 
   # for now let it be the wild west
   d.olc.save_data.room_exits[dir_edit] = args[0]
-  print(f"{d.olc.save_data.room_exits}\n")
+
+  if args[0] == "none":
+    d.olc.save_data.room_exits[dir_edit] = None
+
   d.olc.save_data.dir_edit = None
 
   d.olc.state = redit_state.REDIT_MAIN_MENU

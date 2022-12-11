@@ -23,10 +23,6 @@ MAX_PASSWORD_LENGTH   = 20
 PACKET_SIZE           = 256 # max bytes to read from socket each poll
 OMUD_VERSION          = '1.0 alpha'
 
-# for the world
-MAX_ZONE_NAME    = 20
-MAX_ROOM_NAME    = 20
-
 # configurable gameplay constants
 STARTING_ROOM         = 'stockville[recall]'
 VOID_ROOM             = 'stockville[void]'
@@ -44,10 +40,10 @@ DEFAULT_DEBUG_MODE    = 'off'
 MAX_PLAYER_NAME_LENGTH       = 16  # length of 'responsibilities'
 
 MAX_ZONE_ID_LENGTH           = 12  # length of 'spider_caves'
-MAX_ZONE_NAME_LENGTH         = 40
+MAX_ZONE_NAME_LENGTH         = 48
 
-MAX_ROOM_ID_LENGTH           = 16  # length of 'north_entrance23'
-MAX_ROOM_NAME_LENGTH         = 46  # length of 
+MAX_ROOM_ID_LENGTH           = 12  # length of 
+MAX_ROOM_NAME_LENGTH         = 48  # length of 
 
 MAX_OBJECT_ID_LENGTH         = 16  # length of
 MAX_OBJECT_NAME_LENGTH       = 46  # length of 

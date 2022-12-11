@@ -256,7 +256,7 @@ if __name__ == '__main__':
   npcp.entity.namelist = ['baccarat', 'dealer']
   npcp.entity.name = 'the baccarat card dealer'
   npcp.entity.desc = "He looks like he's straight out of a bluegrass music video."
-  npcp.ldesc = 'A dealer stands here ready to hand out cards.'
+  npcp.ldesc = 'A dealer stands here ready to hand out cards.  Maybe you should say hi?'
   npcp.unique_id.zone_id = 'stockville'
   npcp.unique_id.id = 'baccarat_dealer'
   zn._npc_proto[npcp.unique_id.id] = npcp

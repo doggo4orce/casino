@@ -18,6 +18,56 @@ def handle_input(d, input, server, mud):
   elif d.olc.mode == olc_mode.OLC_MODE_REDIT:
     redit.redit_parse(d, input, server, mud)
 
+def do_mlist(ch, scmd, argument, server, mud):
+  args = argument.split()
+  num_args = len(args)
+
+  if num_args == 0:
+    zone_id = ch.room.zone_id
+    zone = mud.zone_by_id(zone_id)
+  elif num_args == 1:
+    if args[0] not in mud._zones.keys():
+      ch.write("Sorry, that zone wasn't found.\r\n")
+      return
+    zone = mud.zone_by_id(args[0])
+
+  num_npcs = len(zone._npc_proto.items())
+
+  if num_npcs == 0:
+    ch.write("This zone has no npcs!\r\n")
+    return
+
+  ch.write(f"ID{(1 + config.MAX_NPC_ID_LENGTH)*' '}Room Name{(config.MAX_NPC_NAME_LENGTH)*' '}\r\n")
+  ch.write(f"{(2 + config.MAX_NPC_ID_LENGTH)*'-'} {config.MAX_NPC_NAME_LENGTH*'-'}\r\n")
+
+  for id, npc in zone._npc_proto.items():
+    ch.write(f"[{GREEN}{id:>{config.MAX_NPC_ID_LENGTH}}{NORMAL}] {CYAN}{npc.entity.name:<30}{NORMAL}\r\n")
+
+def do_olist(ch, scmd, argument, server, mud):
+  args = argument.split()
+  num_args = len(args)
+
+  if num_args == 0:
+    zone_id = ch.room.zone_id
+    zone = mud.zone_by_id(zone_id)
+  elif num_args == 1:
+    if args[0] not in mud._zones.keys():
+      ch.write("Sorry, that zone wasn't found.\r\n")
+      return
+    zone = mud.zone_by_id(args[0])
+
+  num_objs = len(zone._obj_proto.items())
+
+  if num_objs == 0:
+    ch.write("This zone has no objects!\r\n")
+    return
+
+  ch.write(f"ID{(1 + config.MAX_OBJECT_ID_LENGTH)*' '}Room Name{(config.MAX_OBJECT_NAME_LENGTH)*' '}\r\n")
+  ch.write(f"{(2 + config.MAX_OBJECT_ID_LENGTH)*'-'} {config.MAX_OBJECT_NAME_LENGTH*'-'}\r\n")
+
+  for id, obj in zone._obj_proto.items():
+    ch.write(f"[{GREEN}{id:>{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.entity.name:<30}{NORMAL}\r\n")
+
 def do_rlist(ch, scmd, argument, server, mud):
   args = argument.split()
   num_args = len(args)
@@ -27,7 +77,7 @@ def do_rlist(ch, scmd, argument, server, mud):
     zone = mud.zone_by_id(zone_id)
   elif num_args == 1:
     if args[0] not in mud._zones.keys():
-      ch.write("Sorry, that zone wasn't found!\r\n")
+      ch.write("Sorry, that zone wasn't found.\r\n")
       return
     zone = mud.zone_by_id(args[0])
 
@@ -40,7 +90,7 @@ def do_rlist(ch, scmd, argument, server, mud):
   ch.write(f"ID{(1 + config.MAX_ROOM_ID_LENGTH)*' '}Room Name{(config.MAX_ROOM_NAME_LENGTH - 8)*' '}Exit\r\n")
   ch.write(f"{(2 + config.MAX_ROOM_ID_LENGTH)*'-'} {config.MAX_ROOM_NAME_LENGTH*'-'} {(2 + config.MAX_ZONE_ID_LENGTH)*'-'}\r\n")
 
-  for id,room in zone._world.items():
+  for id, room in zone._world.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
 
 def do_redit(ch, scmd, argument, server, mud):
@@ -61,22 +111,26 @@ def do_redit(ch, scmd, argument, server, mud):
     return
 
   # no room or zone id specified, edit the current room
-  elif num_args == 0:
+  if num_args == 0:
     room = mud.room_by_code(ch.room)
-    redit_save.zone_id = ch.room.zone_id
-    redit_save.room_id = ch.room.id
+
+    if room == None:
+      ch.write("For some reason, we couldn't find the room you're currently in.\r\n")
+      return
+
+    redit_save.zone_id = zone_id
+    redit_save.room_id = room_id
 
   # in this case they specified the room_id, but left zone_id blank
   elif num_args == 1:
     room_id = args[0]
     room = mud.room_by_code(structs.unique_identifier(zone_id, room_id))
 
-    redit_save.zone_id = zone_id
-    redit_save.room_id = room_id
-
-    if room != None:
-      redit_save.room_name = room.name
-      redit_save.room_desc = room.desc
+    # if the room could not be found, send general error for now
+    if room == None:
+      # todo: figure out what went wrong, zone or room?
+      ch.write(f"Error: could not find room {room_id} in zone {zone_id}.")
+      return
 
     # attach it to current zone
     redit_save.zone_id = zone_id
@@ -99,6 +153,16 @@ def do_redit(ch, scmd, argument, server, mud):
   if room != None:
     redit_save.room_name = room.name
     redit_save.room_desc = room.desc
+
+    redit_save.zone_id = zone_id
+    redit_save.room_id = room_id
+    redit_save.room_name = room.name
+    redit_save.room_desc = room.desc
+
+    # make a copy of all the exits as strings of either internal or external references
+    for ex in room.exits:
+      # print(ex)
+      redit_save.room_exits[ex.direction] = ex.destination
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (redit).\r\n")
   ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_REDIT, redit.redit_state.REDIT_MAIN_MENU, False, redit_save)

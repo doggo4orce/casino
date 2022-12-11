@@ -74,7 +74,7 @@ class room:
      char_by_alias(name)       <- scans through people (pc's first) looking for name
      pc_by_name(name)          <- scans through pcs in room with argument as name
      npc_by_alias(alias)       <- scans through npcs in room with argument as alias
-     connect(dir, dest)        <- creates exit to room with code dest through direction dir
+     connect(dir, dest)        <- creates exit to room with vref string dest through direction dir
      disconnect(dir)           <- removes exit with direction dir
      list_exits()              <- shows exit letters, e.g. n s w 
      parse_tag(tag, value, rf) <- used to iterate through .room files via filestream rf
@@ -115,6 +115,10 @@ class room:
         return ch
 
   def connect(self, direction, destination_code):
+    # check if we're already connected
+    ex = self.exit(direction)
+    if ex != None:
+      self.disconnect(direction)
     self._exits.append(exit.exit(direction, destination_code))
 
   def disconnect(self, direction):

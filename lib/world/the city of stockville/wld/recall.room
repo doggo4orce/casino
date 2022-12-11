@@ -1,5 +1,0 @@
-name: The Recall Point
-id: recall
-desc: This is the recall point. You can always return here by typing RECALL.
-east: casino
-west: reading

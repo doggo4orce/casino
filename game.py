@@ -140,8 +140,10 @@ class game:
     self._chars.remove(ch)
 
   def add_obj(self, obj):
+    print(obj.room)
     self._objects.append(obj)
     room = self.room_by_code(obj.room)
+    print(room.name)
     if room != None:
       # todo: write room.add_obj(obj) function
       room.inventory.insert(obj)
@@ -156,6 +158,7 @@ class game:
     self._objects.remove(obj)
 
   def assign_spec_procs(self):
+    # todo, give out warning and avoid crash if these references don't exist
     b_dealer = self.npc_by_code('stockville[baccarat_dealer]')
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
@@ -186,7 +189,7 @@ class game:
     self.add_char(mob)
 
     bottle = self.load_obj('stockville[bottle]')
-    bottle.room = structs.unique_identifier.from_string('stockville[reading]')
+    bottle.room = structs.unique_identifier.from_string('stockville[recall]')
     self.add_obj(bottle)
 
   def load_npc(self, code):

@@ -1,0 +1,5 @@
+namelist: baccarat dealer
+id: baccarat_dealer
+name: the baccarat card dealer
+ldesc: A dealer stands here ready to hand out cards.
+desc: He looks like he's straight out of a bluegrass music video.

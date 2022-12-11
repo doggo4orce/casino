@@ -43,6 +43,8 @@ def init_commands():
   cmd_dict["who"]       = ( commands.do_who,         0 )
 
   # OLC commands (separated purely for organization)
+  cmd_dict["mlist"]     = ( olc.do_mlist,            0 )
+  cmd_dict["olist"]     = ( olc.do_olist,            0 )
   cmd_dict["redit"]     = ( olc.do_redit,            0 )
   cmd_dict["rlist"]     = ( olc.do_rlist,            0 )
   cmd_dict["zedit"]     = ( olc.do_zedit,            0 )

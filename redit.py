@@ -1,6 +1,7 @@
 from color import *
 import descriptor
 import enum
+import exit
 import room
 import string_handling
 import structs
@@ -9,9 +10,9 @@ class redit_state(enum.IntEnum):
   REDIT_MAIN_MENU      = 1
   REDIT_EDIT_NAME      = 2
   REDIT_EDIT_DESC      = 3
-  REDIT_EDIT_ID        = 4
+  REDIT_EDIT_COPY      = 4
   REDIT_CONFIRM_SAVE   = 5
-  REDIT_EXIT_MENU      = 6
+  REDIT_CHANGE_EXIT    = 6
 
 def redit_display_main_menu(d):
   redit_save = d.olc.save_data
@@ -20,7 +21,18 @@ def redit_display_main_menu(d):
   d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.room_name}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
   d.write(f"{YELLOW}{string_handling.paragraph(redit_save.room_desc, d.char.prefs.screen_width, True)}{NORMAL}\r\n")
-  d.write(f"{GREEN}3{NORMAL}) Room ID      : {YELLOW}{redit_save.room_id}{NORMAL}\r\n")
+  d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")
+
+  # index through the next 4 - 9 as exits
+  k = 4
+  for dir in exit.direction:
+    if dir in redit_save.room_exits.keys():
+      d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}{redit_save.room_exits[dir]}{NORMAL}\r\n")
+    else:
+      d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}none{NORMAL}\r\n")
+    k = k + 1
+
+
   d.write(f"{GREEN}Q{NORMAL}) Quit\r\n")
   d.write(f"\r\nEnter your choice : ")
 
@@ -36,12 +48,12 @@ def redit_parse(d, input, server, mud):
     redit_parse_edit_name(d, input, server, mud)
   elif d.olc.state == redit_state.REDIT_EDIT_DESC:
     redit_parse_edit_desc(d, input, server, mud)
-  elif d.olc.state == redit_state.REDIT_EDIT_ID:
-    redit_parse_edit_id(d, input, server, mud)
+  elif d.olc.state == redit_state.REDIT_EDIT_COPY:
+    redit_parse_edit_copy(d, input, server, mud)
   elif d.olc.state == redit_state.REDIT_CONFIRM_SAVE:
     redit_parse_confirm_save(d, input, server, mud)
-  elif d.olc.state == redit_state.REDIT_EXIT_MENU:
-    redit_parse_exit_menu(d, input, server, mud)
+  elif d.olc.state == redit_state.REDIT_CHANGE_EXIT:
+    redit_parse_change_exit(d, input, server, mud)
 
 def redit_parse_main_menu(d, input, server, mud):
   if input == "":
@@ -56,8 +68,14 @@ def redit_parse_main_menu(d, input, server, mud):
     d.write("Enter new room description : ")
     d.olc.state = redit_state.REDIT_EDIT_DESC
   elif response == '3':
-    d.write("Enter new room id : ")
-    d.olc.state = redit_state.REDIT_EDIT_ID
+    d.write("Will create duplicate room with new id : ")
+    d.olc.state = redit_state.REDIT_EDIT_COPY
+
+  elif response in {'4', '5', '6', '7', '8', '9'}:
+    # this is a bit sloppy but it works for now
+    d.write(f"Enter new room to the {exit.direction(int(response) - 4).name.lower()} : ")
+    d.olc.state = redit_state.REDIT_CHANGE_EXIT
+    d.olc.save_data.dir_edit = exit.direction(int(response) - 4)
   elif response in {'q', 'Q'}:
     if d.olc.changes:
       d.write("Save internally? : ")
@@ -83,7 +101,7 @@ def redit_parse_edit_desc(d, input, server, mud):
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
 
-def redit_parse_edit_id(d, input, server, mud):
+def redit_parse_edit_copy(d, input, server, mud):
   args = input.split()
   new_room_id = args[0]
 
@@ -109,6 +127,10 @@ def redit_parse_confirm_save(d, input, server, mud):
       check_room.name = redit_save.room_name
       check_room.id = redit_save.room_id
       check_room.desc = redit_save.room_desc
+
+      for id, dest in redit_save.room_exits.items():
+        check_room.connect(id, dest)
+
     else:
       # ok we're making a brand new room filled from redit save
       new_room = room.room()
@@ -116,6 +138,9 @@ def redit_parse_confirm_save(d, input, server, mud):
       new_room.name = redit_save.room_name
       new_room.id = redit_save.room_id
       new_room.desc = redit_save.room_desc
+
+      for id, dest in redit_save.room_exits.items():
+        new_room.connect(id, dest)
 
       # insert new room into the zone
       # todo make this a function for zone class (add_room)
@@ -134,6 +159,28 @@ def redit_parse_confirm_save(d, input, server, mud):
     d.olc.save_data = None
     d.olc = None
 
+def redit_parse_change_exit(d, input, server, mud):
+  # figure out which exit we're changing
+  dir_edit = d.olc.save_data.dir_edit
 
+  if input == "":
+    # give up editing direction for now
+    d.olc.save_data.dir_edit = None
 
+    # send them back to main menu
+    d.olc.state = redit_state.REDIT_MAIN_MENU
+    d.write("Returning to main menu.\r\n")
+    d.write("Enter your choice : ")
+    return
 
+  args = input.split()
+  num_args = len(args)
+
+  # for now let it be the wild west
+  d.olc.save_data.room_exits[dir_edit] = args[0]
+  print(f"{d.olc.save_data.room_exits}\n")
+  d.olc.save_data.dir_edit = None
+
+  d.olc.state = redit_state.REDIT_MAIN_MENU
+  redit_display_main_menu(d)
+  

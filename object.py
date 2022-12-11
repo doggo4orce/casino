@@ -29,7 +29,7 @@ class object:
     self._ldesc = new_ldesc
   @room.setter
   def room(self, new_room):
-  	self._room = new_room
+  	self._entity.room = new_room
   @name.setter
   def name(self, new_name):
     self._entity.name = new_name

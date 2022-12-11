@@ -75,6 +75,8 @@ class redit_save_data:
   room_id:     str="unfinished_room"
   room_name:   str="An unfinished room"
   room_desc:   str="You are in an unfinished room."
+  room_exits:  dict=dataclasses.field(default_factory=lambda:dict())
+  dir_edit:    int=None # to keep track of which exit direction we are editing in redit
 
 @dataclasses.dataclass
 class olc_data:

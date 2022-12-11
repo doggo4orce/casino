@@ -1,0 +1,5 @@
+name: Stockville Recall
+id: recall
+desc: This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.
+east: casino
+west: reading

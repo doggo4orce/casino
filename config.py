@@ -28,8 +28,8 @@ MAX_ZONE_NAME    = 20
 MAX_ROOM_NAME    = 20
 
 # configurable gameplay constants
-STARTING_ROOM         = 'cc[recall]'
-VOID_ROOM             = 'cc[void]'
+STARTING_ROOM         = 'stockville[recall]'
+VOID_ROOM             = 'stockville[void]'
 PLAYER_PROMPT         = '> '
 
 # player preferences
@@ -48,6 +48,12 @@ MAX_ZONE_NAME_LENGTH         = 40
 
 MAX_ROOM_ID_LENGTH           = 16  # length of 'north_entrance23'
 MAX_ROOM_NAME_LENGTH         = 46  # length of 
+
+MAX_OBJECT_ID_LENGTH         = 16  # length of
+MAX_OBJECT_NAME_LENGTH       = 46  # length of 
+
+MAX_NPC_ID_LENGTH            = 16  # length of
+MAX_NPC_NAME_LENGTH          = 46  # length of 
 
 # player fields
 DEFAULT_TITLE         = "the title-less"

@@ -505,8 +505,6 @@ def do_move(ch, scmd, argument, server, mud):
     # in this case, the exit leads to a room in another zone (external exit)
     dest_id = structs.unique_identifier.from_string(dest_ref)
 
-  print(f"{dest_id.zone_id} {dest_id.id}")
-
   ending_room = mud.room_by_code(dest_id)
 
   left_msg = f"{ch} leaves {scmd.name.lower()}.\r\n"

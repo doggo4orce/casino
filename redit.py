@@ -118,7 +118,8 @@ def redit_parse_confirm_save(d, input, server, mud):
       # todo make this a function for zone class (add_room)
       mud.zone_by_id(zone_id)._world[room_id] = new_room
     
-    d.write("Saving changes internally.\r\n")
+    d.write("Saving changes.\r\n")
+    mud.zone_by_id(zone_id).save_to_folder()
     mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None

@@ -4,6 +4,7 @@ import descriptor
 import enum
 import os
 import string_handling
+import room
 import zone
 
 class zedit_state(enum.IntEnum):
@@ -102,18 +103,51 @@ def zedit_parse_edit_folder(d, input, server, mud):
 def zedit_parse_edit_copy(d, input, server, mud):
   args = input.split()
   new_zone_id = args[0]
-  if new_zone_id == d.olc.save_data.zone_id:
+  old_zone_id = d.olc.save_data.zone_id
+  if new_zone_id == old_zone_id:
     d.write("That's the same id!\r\n")
     d.olc.state = ZEDIT_MAIN_MENU
     zedit_display_main_menu(d)
     return
-  elif args[0] in mud._zones.keys():
+  elif new_zone_id in mud._zones.keys():
     d.write("That id is already being used for another zone.\r\n")
     d.write("Try again : ")
     return
+
   d.olc.save_data.zone_id = new_zone_id
   d.olc.save_data.zone_name = "copy of " + d.olc.save_data.zone_name
   d.olc.save_data.zone_folder = "copy of " + d.olc.save_data.zone_folder
+
+  # make the new zone
+  new_zone = zone.zone()
+
+  # copy main attributes
+  new_zone.name = d.olc.save_data.zone_name
+  new_zone.id = new_zone_id
+  new_zone.author = d.olc.save_data.zone_author
+  new_zone.folder = d.olc.save_data.zone_folder
+  
+  # going through each of the rooms in the old zone
+  for rm in mud._zones[old_zone_id]._world.values():
+    # make 
+    rm2 = room.room()
+
+    # copy basic attributes
+    rm2.zone_id = new_zone_id
+    rm2.id = rm.id
+    rm2.name = rm.name
+    rm2.desc = rm.desc
+
+    # copy all the exits
+    for ex in rm.exits:
+      # just copying all the destinations, which is easily breakable
+      rm2.connect(ex.direction, ex.destination)
+
+    # insert the new room into the zone
+    new_zone._world[rm.id] = rm2
+
+  # insert the new zone into the world  
+  mud._zones[new_zone_id] = new_zone
   d.olc.state = zedit_state.ZEDIT_MAIN_MENU
   zedit_display_main_menu(d)
 
@@ -132,7 +166,7 @@ def zedit_parse_confirm_save(d, input, server, mud):
     
     if check_zone != None:
       # we found an existing zone, overwrite it with zedit_save
-      check_zone.name = "copy of " + zedit_save.zone_name
+      check_zone.name = zedit_save.zone_name
       check_zone.id = zone_id
       check_zone.author = zedit_save.zone_author
       check_zone.folder = zedit_save.zone_folder

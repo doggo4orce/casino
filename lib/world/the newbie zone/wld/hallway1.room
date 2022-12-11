@@ -1,5 +1,5 @@
 name: The Beginning of a Damp Hallway
 id: hallway1
-desc: This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.
+desc: This hallway leads onward into the darkness. The floors are made of hard, compact gravel and dirt. The walls consist of red bricks with white grout. This place gives off a real, negative vibe.
 north: hallway2
 south: stockville[reading]

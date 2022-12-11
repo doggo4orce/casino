@@ -1,5 +1,5 @@
-Name: TODO LIST
+name: TODO LIST
 id: reading
-Desc: make an editor, make room descs (like this one formattable)
-East: recall
-North: newbie_zone[hallway1]
+desc: make an editor, make room descs (like this one formattable)
+east: recall
+north: newbie_zone[hallway1]

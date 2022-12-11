@@ -6,11 +6,12 @@ import string_handling
 import structs
 
 class redit_state(enum.IntEnum):
-  REDIT_MAIN_MENU    = 1
-  REDIT_EDIT_NAME    = 2
-  REDIT_EDIT_DESC    = 3
-  REDIT_EDIT_ID      = 4
-  REDIT_CONFIRM_SAVE = 5
+  REDIT_MAIN_MENU      = 1
+  REDIT_EDIT_NAME      = 2
+  REDIT_EDIT_DESC      = 3
+  REDIT_EDIT_ID        = 4
+  REDIT_CONFIRM_SAVE   = 5
+  REDIT_EXIT_MENU      = 6
 
 def redit_display_main_menu(d):
   redit_save = d.olc.save_data
@@ -39,6 +40,8 @@ def redit_parse(d, input, server, mud):
     redit_parse_edit_id(d, input, server, mud)
   elif d.olc.state == redit_state.REDIT_CONFIRM_SAVE:
     redit_parse_confirm_save(d, input, server, mud)
+  elif d.olc.state == redit_state.REDIT_EXIT_MENU:
+    redit_parse_exit_menu(d, input, server, mud)
 
 def redit_parse_main_menu(d, input, server, mud):
   if input == "":
@@ -124,51 +127,13 @@ def redit_parse_confirm_save(d, input, server, mud):
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None
-
-
-def zedit_parse_confirm_save(d, input, server, mud):
-  zone_id = d.olc.save_data.zone_id
-
-  if input == "" or input[0] not in {'n', 'N', 'y', 'Y'}:
-    d.write("Returning to main menu.\r\n")
-    d.write("Enter your choice : ")
-    d.olc.state = zedit_state.ZEDIT_MAIN_MENU
-    return
-  elif input[0] in {'y','Y'}:
-    check_zone = mud.zone_by_id(zone_id)
-
-    zedit_save = d.olc.save_data
-    
-    if check_zone != None:
-      # we found an existing zone, overwrite it with zedit_save
-      zone.name = zedit_save.zone_name
-      zone.id = zedit_save.zone_id
-      zone.author = zedit_save.zone_author
-      zone.folder = zedit_save.zone_folder
-    else:
-      # ok we're making a brand new zone filled from zedit save
-      new_zone = zone.zone()
-      new_zone.name = zedit_save.zone_name
-      new_zone.id = zedit_save.zone_id
-      new_zone.author = zedit_save.zone_author
-      new_zone.folder = zedit_save.zone_folder
-
-      # insert new zone into the world
-      mud._zones[zone_id] = new_zone
-    
-    d.write("Saving changes internally.\r\n")
-    mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
-    d.state = descriptor.descriptor_state.CHATTING
-    d.olc.save_data = None
-    d.olc = None
-
   elif input[0] in {'n', 'N'}:
-    d.write("Discarding unsaved changes.\r\n")
+    d.write("Discarding changes.\r\n")
     mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None
 
-  d.write("")
+
 
 

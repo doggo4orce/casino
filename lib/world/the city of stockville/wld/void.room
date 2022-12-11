@@ -1,4 +1,4 @@
-name: The Void, a Catch-all for Misplaced Entities
+name: The Void
 id: void
-desc: This is a nice, calm, relaxing space.  Anything in this room probably wound up here because it's last known location no longer exists.  Head down to return to recall.
-Down: recall
+desc: This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.
+down: recall

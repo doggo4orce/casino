@@ -1,4 +1,4 @@
-name: A Dark Corner in the Hallway
+name: a very dark corner
 id: hallway2
 desc: The hallway makes a sharp corner here, leading both east or south.
 south: hallway1

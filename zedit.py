@@ -183,13 +183,14 @@ def zedit_parse_confirm_save(d, input, server, mud):
       # insert new zone into the world
       mud._zones[zone_id] = new_zone
     
+    d.write("Saving changes.\r\n")
     mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None
 
   elif input[0] in {'n', 'N'}:
-    d.write("Discarding unsaved changes.\r\n")
+    d.write("Discarding changes.\r\n")
     mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None

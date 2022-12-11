@@ -1,5 +1,5 @@
-namelist: bottle
+ldesc: A bottle has been left here.
 id: bottle
 name: a bottle
-ldesc: A bottle has been left here.
+namelist: bottle
 desc: The bottle is made from dirty brown glass.

@@ -183,6 +183,8 @@ class obj_proto_data:
       self.unique_id.id = value
     elif tag == "ldesc":
       self.ldesc = value
+    elif tag == "namelist":
+      self.entity.namelist = value.split(' ')
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     else:

@@ -174,24 +174,22 @@ class zone:
       os.system(f"mkdir '{path}obj/'")
 
     for proto in self._obj_proto.values():
-      # go ahead and criticize this choice of extension,
-      # it's Python and I'm not making any actual .obj files with C
-      with open(path + "obj/" + proto.id + ".obj", "w"):
+      # for some reason I refuse to change .obj to .item
+      with open(path + "obj/" + proto.id + ".obj", "w") as wf:
         wf.write(f"ldesc: {proto.ldesc}\n")
         wf.write(f"id: {proto.id}\n")
         wf.write(f"name: {proto.entity.name}\n")
-        wf.write(f"namelist: {proto.entity.namelist}\n")
+        wf.write(f"namelist: {' '.join(proto.entity.namelist)}\n")
         wf.write(f"desc: {proto.entity.desc}\n")
 
     if not os.path.exists(f"'{path}npc/"):
       os.system(f"mkdir '{path}npc/'")
 
     # switching from mob to npc was not difficult,
-    # but for some reason I refuse to change .obj to .item (see above)
     for proto in self._npc_proto.values():
-      with open(path + "npc/" + proto.id + ".npc", "w") as wf:
-        wf.write(f"namelist: {proto.entity.namelist}\n")
-        wf.write(f"id: {proto.id}\n")
+      with open(path + "npc/" + proto.unique_id.id + ".npc", "w") as wf:
+        wf.write(f"namelist: {' '.join(proto.entity.namelist)}\n")
+        wf.write(f"id: {proto.unique_id.id}\n")
         wf.write(f"name: {proto.entity.name}\n")
         wf.write(f"ldesc: {proto.ldesc}\n")
         wf.write(f"desc: {proto.entity.desc}\n")
@@ -238,6 +236,25 @@ if __name__ == '__main__':
 
   zone._world[rm.id] = rm
 
+  npcp = structs.npc_proto_data()
+  npcp.entity.namelist = ['newbie', 'monster']
+  npcp.entity.name = 'the newbie monster'
+  npcp.entity.desc = 'He has googly eyes and drools all over the place as he growls.'
+  npcp.ldesc = 'A newbie monster snarls furiously here.'
+  npcp.unique_id.zone_id = 'newbie_zone'
+  npcp.unique_id.id = 'newbie_monster'
+
+  zone._npc_proto[npcp.unique_id.id] = npcp
+
+  ob = structs.obj_proto_data()
+  ob.entity.namelist = ['newbie', 'dagger']
+  ob.entity.name = 'a newbie dagger'
+  ob.entity.desc = "It's so bright and shiny, even you can't lose it."
+  ob.entity.ldesk = 'Some idiot (maybe you?) left a newbie dagger here.'
+  ob.unique_id.zone_id = 'newbie_zone'
+  ob.unique_id.id = 'newbie_dagger'
+
+  zone._obj_proto[ob.unique_id.id] = ob
   zone.save_to_folder()
 
 

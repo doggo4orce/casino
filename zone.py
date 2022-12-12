@@ -1,5 +1,6 @@
 from color import *
 import config
+import exit
 import file_handling
 import glob
 import logging
@@ -168,8 +169,10 @@ class zone:
         wf.write(f"id: {rm.id}\n")
         wf.write(f"desc: {rm.desc}\n")
 
-        for ex in rm.exits:
-          wf.write(f"{ex.direction.name.lower()}: {ex.destination}\n")
+        for dir in exit.direction:
+          dest = rm.get_destination(dir)
+          if dest != None:
+            wf.write(f"{dir.name.lower()}: {dest}\n")
   
     if not os.path.exists(f"'{path}obj/'"):
       os.system(f"mkdir '{path}obj/'")
@@ -209,7 +212,6 @@ class zone:
     return ret_val
 
 if __name__ == '__main__':
-  import exit
   import object
   import pc
 

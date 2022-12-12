@@ -16,7 +16,7 @@ class room:
   def __init__(self):
     self._unique_id = structs.unique_identifier()
     self._attributes = structs.room_attribute_data("Unfinished Room", "It looks unfinished.")
-    self._exits     = list()
+    self._exits     = dict()
     self._people    = list()
     self._inventory = inventory.inventory()
 
@@ -119,22 +119,18 @@ class room:
     ex = self.exit(direction)
     if ex != None:
       self.disconnect(direction)
-    self._exits.append(exit.exit(direction, destination_code))
+    self._exits[direction] = exit.exit(direction, destination_code)
 
   def disconnect(self, direction):
-    target = False
-    for ex in self._exits:
-      if ex.direction == direction:
-        target = ex; break
-    if target:
-      self._exits.remove(target)
+    if self.exit(direction):
+      del self.exits[direction]
 
   def list_exits(self):
     exit_str = ""
-    if len(self._exits) == 0:
+    if len(self.exits) == 0:
       return "None! "
-    for ex in self._exits:
-      exit_str = exit_str + ex.direction.name[0].lower() + ' '
+    for dir, ex in self.exits.items():
+      exit_str = exit_str + dir.name[0].lower() + ' '
     return exit_str
 
   def show_exits(self):
@@ -151,7 +147,7 @@ class room:
         ch.write(msg)
 
   def exit(self, direction):
-    for ex in self._exits:
+    for dir, ex in self.exits.items():
       if direction == ex.direction:
         return ex
     return None
@@ -177,7 +173,7 @@ class room:
     return exit.destination
 
   def exit_exists(self, direction):
-    return self.get_destination(direction) != -1
+    return self.get_destination(direction) != None
 
   def save(self, path):
     with open(path, "w") as wf:

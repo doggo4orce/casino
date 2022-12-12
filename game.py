@@ -140,10 +140,8 @@ class game:
     self._chars.remove(ch)
 
   def add_obj(self, obj):
-    print(obj.room)
     self._objects.append(obj)
     room = self.room_by_code(obj.room)
-    print(room.name)
     if room != None:
       # todo: write room.add_obj(obj) function
       room.inventory.insert(obj)

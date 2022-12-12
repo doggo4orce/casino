@@ -497,9 +497,11 @@ def do_move(ch, scmd, argument, server, mud):
     ch.write("Alas, you cannot go that way.\r\n")
     return
 
-  if dest_ref.isalnum():
+  # check to see if dest_ref is an internal vref or if it has a zone specifier
+  if string_handling.valid_id(dest_ref):
     # check first to see if dest_ref is just a room_id (internal exit)
     dest_id = structs.unique_identifier(ch.room.zone_id, dest_ref)
+
   #elif: TODO: check for external exit that should be external and change it
   else:
     # in this case, the exit leads to a room in another zone (external exit)

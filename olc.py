@@ -70,8 +70,10 @@ def do_olist(ch, scmd, argument, server, mud):
     ch.write(f"[{GREEN}{id:>{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.entity.name:<30}{NORMAL}\r\n")
 
 def do_rlist(ch, scmd, argument, server, mud):
+  Usage = "Usage: rlist [zone_id]\r\n"
   args = argument.split()
   num_args = len(args)
+
 
   if num_args == 0:
     zone_id = ch.room.zone_id
@@ -81,8 +83,11 @@ def do_rlist(ch, scmd, argument, server, mud):
       ch.write("Sorry, that zone wasn't found.\r\n")
       return
     zone = mud.zone_by_id(args[0])
+  else:
+    ch.write(Usage)
+    return
 
-  num_rooms = len(zone._world.items())
+  num_rooms = len(zone._world)
 
   if num_rooms == 0:
     ch.write("This zone has no rooms!\r\n")
@@ -127,7 +132,6 @@ def do_redit(ch, scmd, argument, server, mud):
     room_id = args[0]
     room = mud.room_by_code(structs.unique_identifier(zone_id, room_id))
 
-    # if the room could not be found, send general error for now
     if room == None:
       # todo: figure out what went wrong, zone or room?
       ch.write(f"Error: could not find room {room_id} in zone {zone_id}.")
@@ -139,18 +143,16 @@ def do_redit(ch, scmd, argument, server, mud):
   # room and zone id specified
   elif num_args == 2:
     zone_id, room_id = args[0], args[1]
+    room = mud.room_by_code(structs.unique_identifier(zone_id, room_id))
 
     if mud.zone_by_id(zone_id) == None:
       ch.write("That zone doesn't exist.  You'll have to create it first!\r\n")
       return
 
     redit_save.zone_id = zone_id
-    redit_save.room_id = room_id
-    
-    room = mud.room_by_code(structs.unique_identifier(zone_id, room_id))
+    redit_save.room_id = room_id    
  
-  # by this point we either already returned, or redit_save has been initialized and
-  # room == None if we're making a new room, otherwise it is the room we're editing.
+  # check to see if we're editing an exiting room
   if room != None:
     redit_save.room_name = room.name
     redit_save.room_desc = room.desc
@@ -163,6 +165,11 @@ def do_redit(ch, scmd, argument, server, mud):
     # make a copy of all the exits as strings of either internal or external references
     for dir in exit.direction:
       redit_save.room_exits[dir] = room.get_destination(dir) # some of these will be None!
+  # otherwise we are editing a new room
+  else:
+    # initialize all the exits
+    for dir in exit.direction:
+      redit_save.room_exits[dir] = None
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (redit).\r\n")
   ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_REDIT, redit.redit_state.REDIT_MAIN_MENU, False, redit_save)
@@ -187,10 +194,10 @@ def do_zedit(ch, scmd, argument, server, mud):
   elif num_args == 1:
     zone_id = args[0]
     zone = mud.zone_by_id(zone_id)
+    zedit_save.zone_id = zone_id
 
     # the only difference is if the zone isn't found, it keeps more default values
-    if zone != None:
-      zedit_save.zone_id = zone_id
+    if zone != None:        
       zedit_save.zone_name = zone.name
       zedit_save.zone_author = zone.author
       zedit_save.zone_folder = zone.folder

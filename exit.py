@@ -17,7 +17,7 @@ class exit:
   def __init__(self, dir, dest_ref):
     self._direction = dir
 
-    if dest_ref.isalnum():
+    if string_handling.valid_id(dest_ref):
       self._destination = structs.unique_identifier(None, dest_ref)
     else:
       zone_id, room_id = string_handling.parse_reference(dest_ref)

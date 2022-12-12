@@ -133,11 +133,7 @@ def redit_parse_confirm_save(d, input, server, mud):
         if dest != None:
           check_room.connect(dir, dest)
         else:
-          for ex in check_room.exits:
-            if ex.direction == dir:
-              check_room.disconnect(dir)
-              
-
+          check_room.disconnect(dir)
     else:
       # ok we're making a brand new room filled from redit save
       new_room = room.room()
@@ -150,15 +146,15 @@ def redit_parse_confirm_save(d, input, server, mud):
         dest = redit_save.room_exits[dir]
         if dest != None:
           new_room.connect(dir, dest)
-        else:
-          for ex in new_room.exits:
-            if ex.direction == dir:
-              new_room.disconnect(dir)
 
       # insert new room into the zone
       # todo make this a function for zone class (add_room)
       mud.zone_by_id(zone_id)._world[room_id] = new_room
     
+    # do a reset for the next time.  This is sloppy and needs to be fixed
+    for dir in exit.direction:
+      redit_save.room_exits[dir] = None
+
     d.write("Saving changes.\r\n")
     mud.zone_by_id(zone_id).save_to_folder()
     mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")

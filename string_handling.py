@@ -26,6 +26,16 @@ def oxford_comma(words):
   else:
     return ', '.join(words[:-1]) + ', and ' + words[-1]
 
+# check if a vref str is a valid internal code, like a room within a zone
+def valid_id(vref):
+  valid = True
+
+  for j in range(0, len(vref)):
+    if not vref[j].isalnum() and vref[j] not in {'_'}:
+      valid = False
+
+  return valid
+
 def paragraph(text, width, indent=False):
   words = text.split(' ')
   line_length = 0

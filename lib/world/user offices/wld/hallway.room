@@ -1,0 +1,4 @@
+name: A Hallway Through the Office
+id: hallway
+desc: This is a neat and tidy hallway.
+north: kyles_office

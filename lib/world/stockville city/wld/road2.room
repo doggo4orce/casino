@@ -1,0 +1,7 @@
+name: A Cobblestone Road
+id: road2
+desc: You are in an unfinished room.
+north: bakery
+east: casino
+south: road3
+west: road1

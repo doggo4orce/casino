@@ -1,0 +1,5 @@
+name: A Cobblestone Road
+id: road1
+desc: This road runs far off east across town into the horizon, heading past several buildings before arriving at a Casino strip. Many hurried travellers come and go from both directions. To the west lies the recall square.
+east: road2
+west: recall

@@ -341,12 +341,12 @@ def do_title(ch, scmd, argument, server, mud):
     ch.write("You now have no title.\r\n")
 
 def do_score(ch, scmd, argument, server, mud):  
-  out_str  = f"Name:      {ch}\r\n"
-  out_str += f"Client:    {ch.d.client_info.term_type}\r\n"
-  out_str += f"Screen:    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
+  out_str  = f"{GREEN}Name{NORMAL})      {ch}\r\n"
+  out_str += f"{GREEN}Client{NORMAL})    {ch.d.client_info.term_type}\r\n"
+  out_str += f"{GREEN}Screen{NORMAL})    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
 
   if ch.prefs.debug_mode == 'on':
-    out_str += f"Room:      {ch.room}\r\n"
+    out_str += f"{GREEN}Room{NORMAL})      {ch.room}\r\n"
     
   ch.write(out_str)
 

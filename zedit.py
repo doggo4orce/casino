@@ -2,6 +2,7 @@ from color import *
 import config
 import descriptor
 import enum
+import exit
 import os
 import string_handling
 import room
@@ -139,12 +140,14 @@ def zedit_parse_edit_copy(d, input, server, mud):
     rm2.desc = rm.desc
 
     # copy all the exits
-    for ex in rm.exits:
-      # just copying all the destinations, which is easily breakable
-      rm2.connect(ex.direction, ex.destination)
+    for dir in exit.direction:
+      if dir in rm.exits.keys():
+        rm2.connect(dir, rm.get_destination(dir))
 
     # insert the new room into the zone
     new_zone._world[rm.id] = rm2
+
+  # todo: do the same thing for objects and npcs
 
   # insert the new zone into the world  
   mud._zones[new_zone_id] = new_zone

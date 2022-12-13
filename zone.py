@@ -145,10 +145,15 @@ class zone:
 
   # todo: factor some of this thorugh a similar function for obj_protos, npc_protos, and rooms?
   def save_to_folder(self):
+
     path = config.WORLD_FOLDER + self.folder + '/'
 
+    obj_folder = path + "obj/"
+    npc_folder = path + "npc/"
+    wld_folder = path + "wld/"
+
     # make zone folder (it might already exist)
-    if not os.path.exists(path):
+    if not os.path.isdir(path):
       os.system("mkdir '{}'".format(path))
 
     with open(path + "info.zon", "w") as wf:
@@ -158,12 +163,12 @@ class zone:
       wf.write(f"author: {self.author}\n")
 
     # make room folder (it might already exist)
-    if not os.path.exists(f"'{path}wld/'"):
-      os.system(f"mkdir '{path}wld/'")
+    if not os.path.isdir(wld_folder):
+      os.system(f"mkdir '{wld_folder}'")
 
     for rm in self._world.values():
 
-      with open(path + "wld/" + rm.id + ".room", "w") as wf:
+      with open(wld_folder + rm.id + ".room", "w") as wf:
 
         wf.write(f"name: {rm.name}\n")
         wf.write(f"id: {rm.id}\n")
@@ -174,24 +179,22 @@ class zone:
           if dest != None:
             wf.write(f"{dir.name.lower()}: {dest}\n")
   
-    if not os.path.exists(f"'{path}obj/'"):
-      os.system(f"mkdir '{path}obj/'")
+    if not os.path.isdir(obj_folder):
+      os.system(f"mkdir '{obj_folder}'")
 
     for proto in self._obj_proto.values():
-      # for some reason I refuse to change .obj to .item
-      with open(path + "obj/" + proto.unique_id.id + ".obj", "w") as wf:
+      with open(obj_folder + proto.unique_id.id + ".obj", "w") as wf:
         wf.write(f"ldesc: {proto.ldesc}\n")
         wf.write(f"id: {proto.unique_id.id}\n")
         wf.write(f"name: {proto.entity.name}\n")
         wf.write(f"namelist: {' '.join(proto.entity.namelist)}\n")
         wf.write(f"desc: {proto.entity.desc}\n")
 
-    if not os.path.exists(f"'{path}npc/"):
-      os.system(f"mkdir '{path}npc/'")
+    if not os.path.isdir(npc_folder):
+      os.system(f"mkdir '{npc_folder}'")
 
-    # but switching from mob to npc was not difficult,
     for proto in self._npc_proto.values():
-      with open(path + "npc/" + proto.unique_id.id + ".npc", "w") as wf:
+      with open(npc_folder + proto.unique_id.id + ".npc", "w") as wf:
         wf.write(f"namelist: {' '.join(proto.entity.namelist)}\n")
         wf.write(f"id: {proto.unique_id.id}\n")
         wf.write(f"name: {proto.entity.name}\n")

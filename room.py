@@ -10,7 +10,7 @@ import structs
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
       unique_id = for easy look-up, of the form zone[room]
-      exits     = exits in the cardinal directions leading to other rooms (identified by vnum)
+      exits     = exits in the cardinal directions leading to other rooms (identified by vref)
       people    = list of characters in the room
       contents  = list of objects on the ground"""
   def __init__(self):

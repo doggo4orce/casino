@@ -145,12 +145,15 @@ class npc_proto_data:
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
+  # factor an entity.parse_tag function out of all these similar parse_tag functions
   def parse_tag(self, tag, value, rf):
     # name, namelist, desc, ldesc
     if tag == "id":
       self.unique_id.id = value
     elif tag == "ldesc":
       self.ldesc = value
+    elif tag == "namelist":
+      self.entity.namelist = value.split(' ')
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     else:

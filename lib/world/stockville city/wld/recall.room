@@ -1,5 +1,5 @@
-name: Stockville Recall
+name: Stockville Square Recall
 id: recall
-desc: This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.  This paragraph should wrap words according to whatever setting you chose for your screen_width./pThis should now be a separate paragraph.  No matter what.  Let's see what happens.
-east: casino
+desc: Two cobblestone roads meet here, creating a busy intersection as travellers nearly bump inoto eachother in their haste to get to their next destination.
+east: road1
 west: reading

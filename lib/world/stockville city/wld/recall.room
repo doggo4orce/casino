@@ -1,5 +1,5 @@
 name: Stockville Recall
 id: recall
-desc: This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.
+desc: This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.  This paragraph should wrap words according to whatever setting you chose for your screen_width./pThis should now be a separate paragraph.  No matter what.  Let's see what happens.
 east: casino
 west: reading

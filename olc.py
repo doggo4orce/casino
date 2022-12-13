@@ -193,18 +193,15 @@ def do_zedit(ch, scmd, argument, server, mud):
   # if no arguments are given, then use the zone ch is standing in
   if num_args == 0:
     zone_id = ch.room.zone_id
-
   # if one argument is given, the argument should be the zone_id
   elif num_args == 1:
     zone_id = args[0]
-
   # if two arguments are given, then args[0] and args[1] are 'new' and the new zone_id
   elif num_args == 2:
     zone_id = args[1]
-
     # check to see if we're trying to use a zone_id that is already in use
     if mud.zone_by_id(zone_id) != None:
-      ch.write("That zone already exists, edit it instead!\r\n")
+      ch.write(f"That zone already exists.  Type: zedit {zone_id} to edit it instead!\r\n")
       return
 
   if not structs.string_handling.valid_id(zone_id):

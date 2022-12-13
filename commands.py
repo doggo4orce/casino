@@ -439,7 +439,7 @@ def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.prefs.screen_width, False)}{NORMAL}\r\n'
 
   if ch.prefs.brief_mode == 'off':
-    out_buf += f'{string_handling.paragraph(rm.desc, ch.prefs.screen_width, True)}\r\n'
+    out_buf += f'{string_handling.essay(rm.desc, ch.prefs.screen_width, True)}'
   
   out_buf += f'{CYAN}{rm.show_exits()}{NORMAL}\r\n'
 

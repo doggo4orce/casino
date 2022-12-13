@@ -36,6 +36,23 @@ def valid_id(vref):
 
   return valid
 
+def essay(text, width, indent=False):
+  k = text.find("/p")
+  ret_val = ""
+
+  if k == -1:
+    return paragraph(text, width, indent) + "\r\n"
+  while k != -1:
+    k = text.find('/p')
+    if k == -1:
+      ret_val += paragraph(text, width, indent) + "\r\n"
+      return ret_val
+    else:
+      ret_val += paragraph(text[0:k], width, indent) + "\r\n"
+      text = text[k+2:]
+    
+  return ret_val
+
 def paragraph(text, width, indent=False):
   words = text.split(' ')
   line_length = 0

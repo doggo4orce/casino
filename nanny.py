@@ -143,7 +143,7 @@ def handle_next_input(d, server, mud):
       new_char.name = d.login_info.name
       new_char.pwd = d.login_info.password
       new_char.d = d
-      new_char.room = config.STARTING_ROOM
+      new_char.room = structs.unique_identifier.from_string(config.STARTING_ROOM)
       new_char.id = pbase.id_by_name(new_char.name)
       new_char.save_char()
       d.char = new_char

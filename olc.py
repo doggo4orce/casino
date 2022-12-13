@@ -184,48 +184,54 @@ def do_zedit(ch, scmd, argument, server, mud):
 
   zedit_save = structs.zedit_save_data()
 
+  # if we make it past this check, correct syntax may be assumed
+  if num_args > 2 or (num_args == 2 and args[0] != 'new'):
+    ch.write(Usage1)
+    ch.write(Usage2)
+    return
+  
+  # if no arguments are given, then use the zone ch is standing in
   if num_args == 0:
     zone_id = ch.room.zone_id
-    zone = mud.zone_by_id(zone_id)
+
+  # if one argument is given, the argument should be the zone_id
+  elif num_args == 1:
+    zone_id = args[0]
+
+  # if two arguments are given, then args[0] and args[1] are 'new' and the new zone_id
+  elif num_args == 2:
+    zone_id = args[1]
+
+    # check to see if we're trying to use a zone_id that is already in use
+    if mud.zone_by_id(zone_id) != None:
+      ch.write("That zone already exists, edit it instead!\r\n")
+      return
+
+  if not structs.string_handling.valid_id(zone_id):
+    ch.write("That's not a valid zone id!\r\n")
+    return
+
+  # if zone == None here, that means we are making a new zone
+  zone = mud.zone_by_id(zone_id)
+
+  # future concern1: what if someone else creates a zone right now?
+  # answer: if they save first, we'll save over them
+  # future concern2: prevent folder collisions?
+
+  if zone == None:
+    # make OLC data for new zone
+    zedit_save.zone_id = args[1]
+    zedit_save.zone_name = "new zone"
+    zedit_save.zone_folder = "new zone"
+    zedit_save.zone_author = ch.Name
+  else:
+    # make OLC data for existing zone
     zedit_save.zone_id = zone.id
     zedit_save.zone_name = zone.name
     zedit_save.zone_folder = zone.folder
     zedit_save.zone_author = zone.author
-  elif num_args == 1:
-    zone_id = args[0]
-    zone = mud.zone_by_id(zone_id)
-    zedit_save.zone_id = zone_id
-
-    # the only difference is if the zone isn't found, it keeps more default values
-    if zone != None:        
-      zedit_save.zone_name = zone.name
-      zedit_save.zone_author = zone.author
-      zedit_save.zone_folder = zone.folder
-    
-  elif num_args == 2:
-    # zedit new new_zone?
-    if args[0] != 'new':
-      ch.write(Usage1)
-      ch.write(Usage2)
-      return
-    # otherwise its zedit new <zone_id>
-    zone_id = args[1]
-
-    zone = mud.zone_by_id(zone_id)
-
-    if zone != None:
-      ch.write("That zone already exists, edit it instead!\r\n")
-      return
-
-    zedit_save.zone_id = args[1]
-    
-  else:
-    ch.write(Usage1)
-    ch.write(Usage2)
-    return
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (zedit).\r\n")
-  ch.d.olc = structs.olc_data()
   ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_ZEDIT, zedit.zedit_state.ZEDIT_MAIN_MENU, False, zedit_save)
   ch.d.state = descriptor.descriptor_state.OLC
   zedit.zedit_display_main_menu(ch.d)

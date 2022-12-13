@@ -31,6 +31,9 @@ class character:
   def name(self):
     return self._entity.name
   @property
+  def Name(self):
+    return self._entity.Name
+  @property
   def room(self):
     return self._entity.room
   @property

@@ -61,10 +61,10 @@ class zedit_save_data:
   """There should be a field for each of the fields in the zedit_main_menu.  Then the users
      selection for those fields can be saved here locally until they finish OLC and save
      their changes and make them permanent."""
-  zone_name:   str="an unsaved zone"
-  zone_id:     str="unused_id"
-  zone_author: str="unknown author"
-  zone_folder: str="unsaved folder name"
+  zone_name:   str=None
+  zone_id:     str=None
+  zone_author: str=None
+  zone_folder: str=None
 
 @dataclasses.dataclass
 class redit_save_data:

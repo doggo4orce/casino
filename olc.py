@@ -100,8 +100,7 @@ def do_rlist(ch, scmd, argument, server, mud):
     ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
 
 def do_redit(ch, scmd, argument, server, mud):
-  USAGE = "Usage: redit [[zone_id ]room_id]"
-  room = None
+  Usage = "Usage: redit [[zone_id ]room_id]"
 
   zone_id = ch.room.zone_id
   room_id = ch.room.id
@@ -111,54 +110,49 @@ def do_redit(ch, scmd, argument, server, mud):
 
   redit_save = structs.redit_save_data()
 
-  # too many arguments, send usage and quit
-  if num_args not in {0,1,2}:
-    ch.write(USAGE)
-    return
-
-  # no room or zone id specified, edit the current room
-  if num_args == 0:
-    room = mud.room_by_code(ch.room)
-
-    if room == None:
-      ch.write("For some reason, we couldn't find the room you're currently in.\r\n")
-      return
-
-  # in this case they specified the room_id, but left zone_id blank
+  # in this case it's redit <zone_id> <room_id>
+  if num_args == 2:
+    zone_id = args[0]
+    room_id = args[1]
+    mud.room_by_code(structs.unique_identifier(zone_id, room_id))
+  # in this case it's redit <room_id>
   elif num_args == 1:
     room_id = args[0]
-    room = mud.room_by_code(structs.unique_identifier(zone_id, room_id))
+    # zone_id = ch.room.zone_id  (just copied as reminded, this is default value)
+  elif num_args == 0:
+    # zone_id and room_id are already set to appropriate default values
+    pass
+  else:
+    ch.write(Usage)
+    return
 
-    if room == None:
-      # todo: figure out what went wrong, zone or room?
-      ch.write(f"Error: could not find room {room_id} in zone {zone_id}.")
-      return
-    
-  # room and zone id specified
-  elif num_args == 2:
-    zone_id, room_id = args[0], args[1]
-    room = mud.room_by_code(structs.unique_identifier(zone_id, room_id))
+  # either it was specified as an argument, or its the zone we're in
+  zone = mud.zone_by_id(zone_id)
 
-    if mud.zone_by_id(zone_id) == None:
-      ch.write("That zone doesn't exist.  You'll have to create it first!\r\n")
-      return
+  # so the only way this could happen is if it was specified as an argument
+  if zone == None:
+    ch.write("Sorry, that zone was not found.\r\n")
+    return
 
-  # make a copy the uid for the room being edited
+  # not finished with sanity checks!
+  if not string_handling.valid_id(room_id):
+    ch.write("Sorry, that's not a valid Room ID.\r\n")
+    return
+
+  # otherwise zone was found and this is safe
+  rm = zone.room_by_id(room_id)
+  
+  # we can copy the id into the redit_save now because it's the same even if we have to create the room
   redit_save.uid = structs.unique_identifier(zone_id, room_id)
 
-  # check to see if we're editing an exiting room
-  if room != None:
-    redit_save.room_name = room.name
-    redit_save.room_desc = room.desc
+  # if a room was found we'll load it's info into redit_save now
+  if rm != None:
+    redit_save.room_name = rm.name
+    redit_save.room_desc = rm.desc
 
     # make a copy of all the exits as strings of either internal or external references
     for dir in exit.direction:
-      redit_save.room_exits[dir] = room.get_destination(dir) # some of these will be None!
-  # otherwise we are editing a new room
-  else:
-    # initialize all the exits
-    for dir in exit.direction:
-      redit_save.room_exits[dir] = None
+      redit_save.room_exits[dir] = rm.get_destination(dir) # some of these will be None!
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (redit).\r\n")
   ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_REDIT, redit.redit_state.REDIT_MAIN_MENU, False, redit_save)
@@ -166,11 +160,10 @@ def do_redit(ch, scmd, argument, server, mud):
   redit.redit_display_main_menu(ch.d)
 
 def do_zedit(ch, scmd, argument, server, mud):
-  Usage1 = "Usage: zedit <zone_id> to edit an existing zone, or\r\n"
-  Usage2 = "Usage: zedit new <zone_id> to create a new zone."
+  Usage1 = "Usage: zedit [zone_id]\r\n"
   args = argument.split()
   num_args = len(args)
-
+  print(num_args)
   zedit_save = structs.zedit_save_data()
 
   # if we make it past this check, correct syntax may be assumed
@@ -206,7 +199,7 @@ def do_zedit(ch, scmd, argument, server, mud):
 
   if zone == None:
     # make OLC data for new zone
-    zedit_save.zone_id = args[1]
+    zedit_save.zone_id = args[0]
     zedit_save.zone_name = "new zone"
     zedit_save.zone_folder = "new zone"
     zedit_save.zone_author = ch.Name

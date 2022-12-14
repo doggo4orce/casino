@@ -62,27 +62,30 @@ class zedit_save_data:
      selection for those fields can be saved here locally until they finish OLC and save
      their changes and make them permanent."""
   zone_name:   str=None
-  zone_id:     str=None
+  id:          str=None
   zone_author: str=None
   zone_folder: str=None
 
 @dataclasses.dataclass
 class redit_save_data:
-  """There should be a field for each of the fields in the redit_main_menu.  Then the users
+  """There should be a field here for each of the fields in the main menu for.  Then the users
      selection for those fields can be saved here locally until they finish OLC and save
      their changes and make them permanent.
-     zone_id    = zone_id of room being edited
-     room_id    = id of room being edited
+     uid        = unique identifier of room being edited
      room_name  = name of room being edited
      room_desc  = description of room being edited
      room_exits = dictionary of exit vrefs using directions as keys
      dir_edit   = direction specified on previous command to edit an exit"""
-  zone_id:     str="unattached"
-  room_id:     str="unfinished_room"
+  uid:         unique_identifier=None
   room_name:   str="An unfinished room"
   room_desc:   str="You are in an unfinished room."
   room_exits:  dict=dataclasses.field(default_factory=lambda:dict())
   dir_edit:    int=None 
+
+@dataclasses.dataclass
+class medit_save_data:
+  """  """
+  pass
 
 @dataclasses.dataclass
 class olc_data:

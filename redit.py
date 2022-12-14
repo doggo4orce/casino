@@ -17,7 +17,7 @@ class redit_state(enum.IntEnum):
 def redit_display_main_menu(d):
   redit_save = d.olc.save_data
   #todo: make sure zedit_save is structs.redit_save_data
-  d.write(f"-- Room ID : [{CYAN}{redit_save.room_id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.zone_id}{NORMAL}]\r\n")
+  d.write(f"-- Room ID : [{CYAN}{redit_save.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.uid.zone_id}{NORMAL}]\r\n")
   d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.room_name}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
   d.write(f"{YELLOW}{string_handling.paragraph(redit_save.room_desc, d.char.prefs.screen_width, True)}{NORMAL}\r\n")
@@ -111,8 +111,8 @@ def redit_parse_edit_copy(d, input, server, mud):
 
 def redit_parse_confirm_save(d, input, server, mud):
   redit_save = d.olc.save_data
-  zone_id = redit_save.zone_id
-  room_id = redit_save.room_id
+  zone_id = redit_save.uid.zone_id
+  room_id = redit_save.uid.id
   if input == "" or input[0] not in {'n', 'N', 'y', 'Y'}:
     d.write("Returning to main menu.\r\n")
     d.write("Enter your choice : ")
@@ -137,9 +137,9 @@ def redit_parse_confirm_save(d, input, server, mud):
     else:
       # ok we're making a brand new room filled from redit save
       new_room = room.room()
-      new_room.zone_id = redit_save.zone_id
+      new_room.zone_id = redit_save.uid.zone_id
       new_room.name = redit_save.room_name
-      new_room.id = redit_save.room_id
+      new_room.id = redit_save.uid.id
       new_room.desc = redit_save.room_desc
 
       for dir in exit.direction:

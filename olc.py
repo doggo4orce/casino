@@ -124,9 +124,6 @@ def do_redit(ch, scmd, argument, server, mud):
       ch.write("For some reason, we couldn't find the room you're currently in.\r\n")
       return
 
-    redit_save.zone_id = zone_id
-    redit_save.room_id = room_id
-
   # in this case they specified the room_id, but left zone_id blank
   elif num_args == 1:
     room_id = args[0]
@@ -136,9 +133,6 @@ def do_redit(ch, scmd, argument, server, mud):
       # todo: figure out what went wrong, zone or room?
       ch.write(f"Error: could not find room {room_id} in zone {zone_id}.")
       return
-
-    # attach it to current zone
-    redit_save.zone_id = zone_id
     
   # room and zone id specified
   elif num_args == 2:
@@ -149,16 +143,11 @@ def do_redit(ch, scmd, argument, server, mud):
       ch.write("That zone doesn't exist.  You'll have to create it first!\r\n")
       return
 
-    redit_save.zone_id = zone_id
-    redit_save.room_id = room_id    
- 
+  # make a copy the uid for the room being edited
+  redit_save.uid = structs.unique_identifier(zone_id, room_id)
+
   # check to see if we're editing an exiting room
   if room != None:
-    redit_save.room_name = room.name
-    redit_save.room_desc = room.desc
-
-    redit_save.zone_id = zone_id
-    redit_save.room_id = room_id
     redit_save.room_name = room.name
     redit_save.room_desc = room.desc
 
@@ -211,7 +200,7 @@ def do_zedit(ch, scmd, argument, server, mud):
   # if zone == None here, that means we are making a new zone
   zone = mud.zone_by_id(zone_id)
 
-  # future concern1: what if someone else creates a zone right now?
+  # future concern1: what if someone else creates a zone right now with the same id?
   # answer: if they save first, we'll save over them
   # future concern2: prevent folder collisions?
 

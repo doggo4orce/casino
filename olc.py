@@ -114,7 +114,6 @@ def do_redit(ch, scmd, argument, server, mud):
   if num_args == 2:
     zone_id = args[0]
     room_id = args[1]
-    mud.room_by_code(structs.unique_identifier(zone_id, room_id))
   # in this case it's redit <room_id>
   elif num_args == 1:
     room_id = args[0]
@@ -131,12 +130,12 @@ def do_redit(ch, scmd, argument, server, mud):
 
   # so the only way this could happen is if it was specified as an argument
   if zone == None:
-    ch.write("Sorry, that zone was not found.\r\n")
+    ch.write("Sorry, that zone was not found, you'll have to create it first with ZEDIT.\r\n")
     return
 
   # not finished with sanity checks!
   if not string_handling.valid_id(room_id):
-    ch.write("Sorry, that's not a valid Room ID.\r\n")
+    ch.write("Room ID's may consist of numbers, letters, or underscores.\r\n")
     return
 
   # otherwise zone was found and this is safe
@@ -160,16 +159,15 @@ def do_redit(ch, scmd, argument, server, mud):
   redit.redit_display_main_menu(ch.d)
 
 def do_zedit(ch, scmd, argument, server, mud):
-  Usage1 = "Usage: zedit [zone_id]\r\n"
+  Usage = "Usage: zedit [zone_id]\r\n"
   args = argument.split()
   num_args = len(args)
-  print(num_args)
+
   zedit_save = structs.zedit_save_data()
 
   # if we make it past this check, correct syntax may be assumed
   if num_args > 2 or (num_args == 2 and args[0] != 'new'):
-    ch.write(Usage1)
-    ch.write(Usage2)
+    ch.write(Usage)
     return
   
   # if no arguments are given, then use the zone ch is standing in

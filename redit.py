@@ -143,9 +143,10 @@ def redit_parse_confirm_save(d, input, server, mud):
       new_room.desc = redit_save.room_desc
 
       for dir in exit.direction:
-        dest = redit_save.room_exits[dir]
-        if dest != None:
-          new_room.connect(dir, dest)
+        if dir in redit_save.room_exits.keys():
+          dest = redit_save.room_exits[dir]
+          if dest != None:
+            new_room.connect(dir, dest)
 
       # insert new room into the zone
       # todo make this a function for zone class (add_room)

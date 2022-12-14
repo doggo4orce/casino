@@ -58,19 +58,18 @@ class entity_data:
 
 @dataclasses.dataclass
 class zedit_save_data:
-  """There should be a field for each of the fields in the zedit_main_menu.  Then the users
-     selection for those fields can be saved here locally until they finish OLC and save
+  """There should be a field here for each of the fields in the main menu for redit.  Then the users
+     selection for those fields can be saved here locally until they finish OLC and make their changes permanent.
      their changes and make them permanent."""
-  zone_name:   str=None
   id:          str=None
+  zone_name:   str=None
   zone_author: str=None
   zone_folder: str=None
 
 @dataclasses.dataclass
 class redit_save_data:
-  """There should be a field here for each of the fields in the main menu for.  Then the users
-     selection for those fields can be saved here locally until they finish OLC and save
-     their changes and make them permanent.
+  """There should be a field here for each of the fields in the main menu for redit.  Then the users
+     selection for those fields can be saved here locally until they finish OLC and make their changes permanent.
      uid        = unique identifier of room being edited
      room_name  = name of room being edited
      room_desc  = description of room being edited
@@ -80,7 +79,7 @@ class redit_save_data:
   room_name:   str="An unfinished room"
   room_desc:   str="You are in an unfinished room."
   room_exits:  dict=dataclasses.field(default_factory=lambda:dict())
-  dir_edit:    int=None 
+  dir_edit:    int=None
 
 @dataclasses.dataclass
 class medit_save_data:

@@ -1,3 +1,5 @@
+import logging
+
 def ana(noun):
   if noun[0].lower() in ['a', 'e', 'i', 'o', 'u']:
     return "an"
@@ -37,19 +39,21 @@ def valid_id(vref):
   return valid
 
 def essay(text, width, indent=False):
-  k = text.find("/p")
+  k = text.find("<p>")
   ret_val = ""
 
   if k == -1:
     return paragraph(text, width, indent) + "\r\n"
+
   while k != -1:
-    k = text.find('/p')
-    if k == -1:
+    k2 = text[k+4:].find('</p>')
+    if k2 == -1:
+      logging.warning("<p> tag appeared without </p>")
       ret_val += paragraph(text, width, indent) + "\r\n"
       return ret_val
     else:
-      ret_val += paragraph(text[0:k], width, indent) + "\r\n"
-      text = text[k+2:]
+      ret_val += paragraph(text[k+4:][k2:], width, indent) + "\r\n"
+      text = text[k+4:][k2+4:]
     
   return ret_val
 

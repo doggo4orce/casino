@@ -7,3 +7,4 @@ class document:
 
 @dataclasses.dataclass
 class editor:
+  pass

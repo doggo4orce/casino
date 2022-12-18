@@ -67,10 +67,6 @@ def peel_next_tag(str):
     str = str[open_bracket+1:]
     break
 
-
-    
-
-    
   if close_bracket == -1:
     logging.warning(f"Incomplete tag following: {pre_tag_str} -- did you mean '<<'?")
     return pre_tag_str + str, None, None

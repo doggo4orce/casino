@@ -1,6 +1,6 @@
 name: Stockville Casino
 id: casino
 desc:
-The heavy weight of bad decisions hangs thick in the air.
+<p>The heavy weight of bad decisions hangs thick in the air.</p>
 ~
 west: recall

@@ -1,3 +1,4 @@
+import config
 import dataclasses
 import enum
 import logging
@@ -18,6 +19,14 @@ class buffer:
 
   def add_line(self, line):
     self._contents.append(line)
+
+  def make_copy(self):
+    ret_val = buffer()
+
+    for line in self._contents:
+      ret_val.add_line(line)
+
+    return ret_val
 
   def __str__(self):
 
@@ -67,6 +76,17 @@ class display_buffer:
 
   def add_line(self, str):
     self._raw.add_line(str)
+
+  def clear(sel):
+    self._raw = display_buffer("")
+    self._formatted = None
+  def make_copy(self):
+    ret_val = display_buffer()
+
+    ret_val._raw = self._raw.make_copy()
+    ret_val._formatted = None
+
+    return ret_val
 
   def proc_p_tags(self, width):
     self._formatted = buffer()

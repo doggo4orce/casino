@@ -59,20 +59,34 @@ def editor_handle_input(d, input):
     width = config.DEFAULT_SCREEN_WIDTH
 
   if input == "/l":
-    d.write_buffer.proc_p_tags(width)
     d.write(d.write_buffer.raw_str())
+  elif input == "/lf":
+    d.write_buffer.proc_p_tags(width)
+    d.write(d.write_buffer.str())
   elif input == "/n":
     d.write_buffer.proc_p_tags(width)
     d.write(d.write_buffer.raw_str(numbers=True))
+  elif input == "/h":
+    help_str  = "            Smart Editor                   \r\n"
+    help_str += "-------------------------------------------\r\n"
+    help_str += "  /h         - bring up this menu          \r\n"
+    help_str += "  /l         - show unformatted buffer     \r\n"
+    help_str += "  /n         - /l but with line numbers    \r\n"
+    help_str += "  /lf        - like /l but formatted       \r\n"
+    help_str += "  /d#        - delete line #               \r\n"
+    help_str += "  /i# <text> - insert before line #        \r\n"
+    d.write(help_str)
   elif input == "/s":
     if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
       redit_save = d.olc.save_data
-      redit_save.room_desc = d.write_buffer
+      redit_save.room_desc = d.write_buffer.make_copy()
+      d.write_buffer = None
       d.olc.state = redit.redit_state.REDIT_MAIN_MENU
       redit.redit_display_main_menu(d)
     d.write_buffer = None
     d.has_prompt = False
-  
+  elif input[0] == "/":
+    d.write(f"Unrecognized command. {input[1]}")
   else:
     d.write_buffer.add_line(input)
 

@@ -41,15 +41,9 @@ def redit_display_main_menu(d):
 
 def redit_parse(d, input, server, mud):
   if d.olc.state == redit_state.REDIT_MAIN_MENU:
-    redit_parse_main_menu(d, input, server, mud)
-    # we've hit at least one "non-main" menu, so there are unsaved changes
-    d.olc.changes = True
-    return
-
-  if d.olc.state == redit_state.REDIT_EDIT_NAME:
+    redit_parse_main_menu(d, input, server, mud) 
+  elif d.olc.state == redit_state.REDIT_EDIT_NAME:
     redit_parse_edit_name(d, input, server, mud)
-  elif d.olc.state == redit_state.REDIT_EDIT_DESC:
-    redit_parse_edit_desc(d, input, server, mud)
   elif d.olc.state == redit_state.REDIT_EDIT_COPY:
     redit_parse_edit_copy(d, input, server, mud)
   elif d.olc.state == redit_state.REDIT_CONFIRM_SAVE:
@@ -63,6 +57,10 @@ def redit_parse_main_menu(d, input, server, mud):
   else:
     response = input[0]
 
+  if response not in {'q', 'Q'}:
+    # we've done at least one thing aside from quit
+    d.olc.changes = True
+
   if response == '1':
     d.write("Enter new room name : ")
     d.olc.state = redit_state.REDIT_EDIT_NAME
@@ -70,7 +68,7 @@ def redit_parse_main_menu(d, input, server, mud):
     d.write("Instructions: /s to save, /h for more options.")
     d.olc.state = redit_state.REDIT_EDIT_DESC
     redit_save = d.olc.save_data
-    d.write_buffer = redit_save.room_desc
+    d.write_buffer = redit_save.room_desc.make_copy()
   elif response == '3':
     d.write("Will create duplicate room with new id : ")
     d.olc.state = redit_state.REDIT_EDIT_COPY
@@ -88,6 +86,7 @@ def redit_parse_main_menu(d, input, server, mud):
       d.write("No changes to save.\r\n")
       mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
       d.state = descriptor.descriptor_state.CHATTING
+      d.write_buffer=None
       d.olc.save_data = None
       d.olc = None
   else:

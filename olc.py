@@ -17,7 +17,8 @@ def handle_input(d, input, server, mud):
   if d.olc.mode == olc_mode.OLC_MODE_ZEDIT:
   	zedit.zedit_parse(d, input, server, mud)
   elif d.olc.mode == olc_mode.OLC_MODE_REDIT:
-    redit.redit_parse(d, input, server, mud)
+    if d.olc.state != redit.redit_state.REDIT_EDIT_DESC:
+      redit.redit_parse(d, input, server, mud)
 
 def do_mlist(ch, scmd, argument, server, mud):
   args = argument.split()

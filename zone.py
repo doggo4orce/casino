@@ -240,21 +240,21 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "The Void"
   rm.id = "void"
-  rm.desc = editor.display_buffer("This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.")
+  rm.desc = editor.display_buffer("<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.</p>")
   rm.connect(exit.direction.DOWN, 'recall')
   zn._world[rm.id] = rm
 
   rm = room.room()
   rm.name = "Stockville Casino"
   rm.id = "casino"
-  rm.desc = editor.display_buffer("The heavy weight of bad decisions hangs thick in the air.")
+  rm.desc = editor.display_buffer("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
   rm.connect(exit.direction.WEST, 'recall')
   zn._world[rm.id] = rm
 
   rm = room.room()
   rm.name = "Stockville Recall"
   rm.id = "recall"
-  rm.desc = editor.display_buffer("This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.")
+  rm.desc = editor.display_buffer("<p>This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.</p>")
   rm.connect(exit.direction.EAST, 'casino')
   rm.connect(exit.direction.WEST, 'reading')
   zn._world[rm.id] = rm
@@ -262,7 +262,7 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "Reading Room"
   rm.id = "reading"
-  rm.desc = editor.display_buffer("This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.")
+  rm.desc = editor.display_buffer("<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>")
   rm.connect(exit.direction.EAST, 'recall')
   rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
   zn._world[rm.id] = rm
@@ -270,7 +270,7 @@ if __name__ == '__main__':
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baccarat', 'dealer']
   npcp.entity.name = 'the baccarat card dealer'
-  npcp.entity.desc = editor.display_buffer("He looks like he's straight out of a bluegrass music video.")
+  npcp.entity.desc = editor.display_buffer("<p>He looks like he's straight out of a bluegrass music video.</p>")
   npcp.ldesc = 'A dealer stands here ready to hand out cards.  Maybe you should say hi?'
   npcp.unique_id.zone_id = 'stockville'
   npcp.unique_id.id = 'baccarat_dealer'
@@ -279,7 +279,7 @@ if __name__ == '__main__':
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baker', 'fat']
   npcp.entity.name = 'the baker'
-  npcp.entity.desc = editor.display_buffer("He's a nice looking person, but you can see that he has seen battle by the many scars on his body.")
+  npcp.entity.desc = editor.display_buffer("<p>He's a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>")
   npcp.ldesc = "A baker is here, but don't give him a bottle."
   npcp.unique_id.zone_id = 'stockville'
   npcp.unique_id.id = 'baker'
@@ -288,7 +288,7 @@ if __name__ == '__main__':
   ob = structs.obj_proto_data()
   ob.entity.namelist = ['bottle']
   ob.entity.name = 'a bottle'
-  ob.entity.desc = editor.display_buffer("It's brown and smells sticky inside.")
+  ob.entity.desc = editor.display_buffer("<p>It's brown and smells sticky inside.</p>")
   ob.ldesc = 'An empty bottle has been dropped here.'
   ob.unique_id.zone_id = 'stockville'
   ob.unique_id.id = 'bottle'
@@ -307,7 +307,7 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "The Beginning of a Damp Hallway"
   rm.id = "hallway1"
-  rm.desc = editor.display_buffer("This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.")
+  rm.desc = editor.display_buffer("<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>")
   rm.connect(exit.direction.NORTH, 'hallway2')
   rm.connect(exit.direction.SOUTH, 'stockville[reading]')
   zn._world[rm.id] = rm
@@ -315,14 +315,14 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "A Dark Corner in the Hallway"
   rm.id = "hallway2"
-  rm.desc = editor.display_buffer("The hallway makes a sharp corner here, leading both east or south.")
+  rm.desc = editor.display_buffer("<p>The hallway makes a sharp corner here, leading both east or south.</p>")
   rm.connect(exit.direction.SOUTH, 'hallway1')
   zn._world[rm.id] = rm
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['newbie', 'monster']
   npcp.entity.name = 'the newbie monster'
-  npcp.entity.desc = editor.display_buffer("He has googly eyes and drools all over the place as he growls.")
+  npcp.entity.desc = editor.display_buffer("<p>He has googly eyes and drools all over the place as he growls.</p>")
   npcp.ldesc = 'A newbie monster snarls furiously here.'
   npcp.unique_id.zone_id = 'newbie_zone'
   npcp.unique_id.id = 'newbie_monster'
@@ -331,7 +331,7 @@ if __name__ == '__main__':
   ob = structs.obj_proto_data()
   ob.entity.namelist = ['newbie', 'dagger']
   ob.entity.name = 'a newbie dagger'
-  ob.entity.desc = editor.display_buffer("It's so bright and shiny, even you can't lose it.")
+  ob.entity.desc = editor.display_buffer("<p>It's so bright and shiny, even you can't lose it.</p>")
   ob.entity.ldesk = 'Some idiot (maybe you?) left a newbie dagger here.'
   ob.unique_id.zone_id = 'newbie_zone'
   ob.unique_id.id = 'newbie_dagger'

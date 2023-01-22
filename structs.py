@@ -96,7 +96,7 @@ class olc_data:
      data     = temporary parking space for OLC data specific to the object being edited"""
   mode:      int=None
   state:     int=None
-  changes:   bool=False
+  changes:   bool=True
   save_data: ...=None
 
 @dataclasses.dataclass

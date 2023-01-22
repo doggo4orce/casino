@@ -3,7 +3,15 @@ id: baccarat_dealer
 name: the baccarat card dealer
 ldesc: A dealer stands here ready to hand out cards. Maybe you should say hi?
 desc:
-He looks like he's straight out of a bluegrass music video.
+<p>He looks like he's straight out of a bluegrass music video.</p>
+
+
+
+
+
+
+
+
 
 
 

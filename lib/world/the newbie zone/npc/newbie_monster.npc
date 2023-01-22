@@ -3,5 +3,5 @@ id: newbie_monster
 name: the newbie monster
 ldesc: A newbie monster snarls furiously here.
 desc:
-He has googly eyes and drools all over the place as he growls.
+<p>He has googly eyes and drools all over the place as he growls.</p>
 ~

@@ -1,5 +1,6 @@
 from color import *
 import descriptor
+import editor
 import enum
 import exit
 import room
@@ -20,7 +21,9 @@ def redit_display_main_menu(d):
   d.write(f"-- Room ID : [{CYAN}{redit_save.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.uid.zone_id}{NORMAL}]\r\n")
   d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.room_name}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
-  d.write(f"{YELLOW}{string_handling.paragraph(redit_save.room_desc, d.char.prefs.screen_width, True)}{NORMAL}\r\n")
+  redit_save.room_desc.proc_p_tags(d.char.prefs.screen_width)
+  room_desc = redit_save.room_desc
+  d.write(f"{YELLOW}{room_desc.raw_str()}{NORMAL}")
   d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")
 
   # index through the next 4 - 9 as exits
@@ -39,10 +42,9 @@ def redit_display_main_menu(d):
 def redit_parse(d, input, server, mud):
   if d.olc.state == redit_state.REDIT_MAIN_MENU:
     redit_parse_main_menu(d, input, server, mud)
+    # we've hit at least one "non-main" menu, so there are unsaved changes
+    d.olc.changes = True
     return
-
-  # we've hit at least one "non-main" menu, so there are unsaved changes
-  d.olc.changes = True
 
   if d.olc.state == redit_state.REDIT_EDIT_NAME:
     redit_parse_edit_name(d, input, server, mud)
@@ -65,8 +67,10 @@ def redit_parse_main_menu(d, input, server, mud):
     d.write("Enter new room name : ")
     d.olc.state = redit_state.REDIT_EDIT_NAME
   elif response == '2':
-    d.write("Enter new room description : ")
+    d.write("Instructions: /s to save, /h for more options.")
     d.olc.state = redit_state.REDIT_EDIT_DESC
+    redit_save = d.olc.save_data
+    d.write_buffer = redit_save.room_desc
   elif response == '3':
     d.write("Will create duplicate room with new id : ")
     d.olc.state = redit_state.REDIT_EDIT_COPY
@@ -96,11 +100,6 @@ def redit_parse_edit_name(d, input, server, mud):
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
 
-def redit_parse_edit_desc(d, input, server, mud):
-  d.olc.save_data.room_desc = input
-  d.olc.state = redit_state.REDIT_MAIN_MENU
-  redit_display_main_menu(d)
-
 def redit_parse_edit_copy(d, input, server, mud):
   args = input.split()
   new_room_id = args[0]
@@ -123,9 +122,9 @@ def redit_parse_confirm_save(d, input, server, mud):
 
     if check_room != None:
       # we found an existing room, overwrite it with redit_save
-      check_room.zone_id = redit_save.zone_id
+      check_room.zone_id = redit_save.uid.zone_id
       check_room.name = redit_save.room_name
-      check_room.id = redit_save.room_id
+      check_room.id = redit_save.uid.id
       check_room.desc = redit_save.room_desc
 
       for dir in exit.direction:

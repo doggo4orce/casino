@@ -1,144 +1,175 @@
 import dataclasses
 import enum
 import logging
+import re
 import string_handling
 
-class format_instructions(enum.IntEnum):
-  NORMAL = 0
-  RED    = 1
+class buffer:
+  def __init__(self, str=None):
+    self._contents = list()
 
-  BEGIN_PARAGRAPH = 100
-  END_PARAGRAPH   = 101
+  @property
+  def num_lines(self):
+    return len(self._contents)
 
-def get_tag_by_instruction(instruction):
-  if instruction == format_instructions.BEGIN_PARAGRAPH:
-    return 'p'
-  elif instruction == format_instructions.END_PARAGRAPH:
-    return '/p'
-  elif instruction == format_instructions.NORMAL:
-    return '@n'
-  elif instruction == format_instructions.RED:
-    return '@r'
+  @property
+  def is_empty(self):
+    return self.num_lines == 0
 
-def get_instruction_by_tag(tag):
-  if tag == 'p':
-    return format_instructions.BEGIN_PARAGRAPH
-  elif tag == '/p':
-    return format_instructions.END_PARAGRAPH
-  elif tag == '@n':
-    return format_instructions.NORMAL
-  elif tag == '@r':
-    return format_instructions.RED
+  def add_line(self, line):
+    self._contents.append(line)
 
-# returns the triple (text1, tag, text2), where text1 is the
-# text that precedes the next tag, and text2 is everything after the first tag
-def peel_next_tag(str):
-  count = 0
+  def __str__(self):
 
-  pre_tag_str = ""
-  tag_str = ""
+    ret_val = ""
 
-  # find next open bracket index
-  while True:
-    open_bracket = str.find('<')
+    for line in self._contents:
+      ret_val += line + "\r\n"
 
-    if open_bracket == -1:
-      break
+    return ret_val
 
-    if str[open_bracket+1] == '<':
-      pre_tag_str += str[:open_bracket + 1]
-      str = str[open_bracket+2:]
-      continue
+  def __contains__(self, obj):
+    return obj in self._contents
 
-    close_bracket = str.find('>')
-    next_open_bracket = str.find('<')
+  def __iter__(self):
+    return buffer_iterator(self)
 
-    if close_bracket == -1:
-      logging.warning("Ignoring lonely '<' wit missing '>' -- did you mean '<<'?")
-      break
+  def __len__(self):
+    return len(self._contents)
 
-    if next_open_bracket < close_bracket:
-      logging.warning("Ignoring lonely '<' wit missing '>' -- did you mean '<<'?")
-      pre_tag_str += str[:next_open_bracket]
-      str = str[next_open_bracket+1:]
-      continue
+class buffer_iterator:
+  def __init__(self, buffer):
+    self._buffer = buffer
+    self._index = 0
 
-    pre_tag_str += str[:open_bracket]
-    str = str[open_bracket+1:]
-    break
+  def __next__(self):
+    if self._index < len(self._buffer._contents):
+      result = self._buffer._contents[self._index]
+      self._index += 1
+      return result
+    raise StopIteration
 
-  if close_bracket == -1:
-    logging.warning(f"Incomplete tag following: {pre_tag_str} -- did you mean '<<'?")
-    return pre_tag_str + str, None, None
+class display_buffer:
+  def __init__(self, str=None):
+    self._raw = buffer()
+    self._formatted = None
 
-  tag_str = str[:close_bracket]
+    if str != None:
+      self._raw.add_line(str)
 
-  # trim off the tag that we just found
-  str = str[close_bracket+1:]
+  @property
+  def num_lines(self):
+    return self._raw.num_lines + self._formatted.num_lines
 
-  return pre_tag_str, tag_str, str
+  @property
+  def is_formatted(self):
+    return self._raw.is_empty
 
-# this function should just return a list of paragraphs separated into lines that havent been wrapped/indented yet
-# then width/indent dont need to be passed as parameters
-def process_tags(text, width, indent=False):
-  next_paragraph = ""
-  ret_val = ""
+  def add_line(self, str):
+    self._raw.add_line(str)
 
-  # these may not even be needed, but since they sometimes are, it makes
-  # sense to define them near the top of the function
-  begin_ptag = get_tag_by_instruction(format_instructions.BEGIN_PARAGRAPH)
-  end_ptag = get_tag_by_instruction(format_instructions.END_PARAGRAPH)
-  
-  while True:
-    pre_tag_str, tag_str, post_tag_str = peel_next_tag(text)
+  def proc_p_tags(self, width):
+    self._formatted = buffer()
+    p_buffer = ""
+    p_open = False
 
-    print(f"{pre_tag_str} {tag_str} {post_tag_str}")
-    if tag_str == "":
-      break
+    # go through one line at a time
+    for line in self._raw:
 
-    instruction = get_instruction_by_tag(tag_str)
-    
-    if instruction == format_instructions.BEGIN_PARAGRAPH:
+      while (True):
+        # if we're in the middle of a paragraph, find out if it closes on this line
+        if p_open:
+          target = r'</p>'
+        # if it doesn't, then find out of a paragraph opens on this line
+        else:
+          target = r'<p>'
 
-      # figure out where the </p> happens
-      end_ptag_index = post_tag_str.find(end_ptag)
-      if end_ptag_index == -1:
-        logging.warning(f"tag {begin_ptag} occurs without {end_ptag}")
-        ret_val += pre_tag_str + process_tags(post_tag_str, width, indent)
-        break
+        # see if we find out target
+        pattern = re.compile(target)
+        match = re.search(pattern, line)
 
-      next_paragraph = string_handling.paragraph(text[:end_ptag_index - 1], width, indent)
-      ret_val += pre_tag_str + process_tags(next_paragraph, width, indent) + "\r\n"
-    elif instruction == format_instructions.NORMAL:
-      ret_val += NORMAL
-    elif instruction == format_instructions.RED:
-      ret_val += RED
-    else:
-      logging.warning(f"Unrecognized tag: {tag_str}")
+        # if not, then just carry on with whatever we're doing
+        if match == None:
+          # whether we are in the middle of a paragraph
+          if p_open:
+            p_buffer += line + " "
+          # or recording verbatim text
+          else:
+            self._formatted.add_line(line)
+          break
 
-     
-    pre_tag_str, tag_str, post_tag_str = peel_next_tag(post_tag_str)
- 
-  # copy over the last section of text that has no tags
-  ret_val += text
+        # but if we did find a match, start splicing
+        else:
+          x = match.span()[0]
+          y = match.span()[1]
 
-  return ret_val
+          # if our paragraph is open, then we found the closing tag
+          if p_open:
+            # so close the paragraph
+            p_open = False
+
+            # add the pre-tag string into the paragraph buffer
+            p_buffer += line[:x]
+
+            # then record the paragraph as a single line
+            self._formatted.add_line(string_handling.paragraph(p_buffer, width, indent=True))
+
+            # and reset the buffer for the next one
+            p_buffer = ""
+
+          # otherwise we found an opening paragraph tag
+          else:
+            # so open the paragraph
+            p_open = True
+
+            # unless its the beginning of the line
+            if x != 0:
+              # add the pre-tag string as a verbatim line
+              self._formatted.add_line(line[:x])
+
+          # get the post-tag string ready to be handled on the next iteration
+          line = line[x + len(target):]
+
+        if line == "":
+          break
+
+  def str(self, numbers=False):
+    ret_val = ""
+
+    for idx, line in enumerate(self._formatted):
+      if numbers:
+        ret_val += f"L{idx}: "
+      ret_val += line + "\r\n"
+
+    return ret_val
+
+  def raw_str(self, numbers=False):
+    ret_val = ""
+
+    for idx, line in enumerate(self._raw):
+      if numbers:
+        ret_val += f"{idx}: "
+      ret_val += line + "\r\n"
+
+    return ret_val
 
 if __name__ == '__main__':
 
-  lines = [
-    "This returns to verbatim text:  (*)====+________________/",
-    "<p>This is onext_instruction next_instruction next_instruction next_instruction next_instruction very long super long the longest super long",
-    "long longidddy long dididily next _instr uctio nnext inst uctio next_ struc ionn xt_in truc ionne xt_inst uctio nex _instr uction"
-    "long longidddy long dididily next _instr uctio nnext inst uctio next_ struc ionn xt_in truc ionne xt_inst uctio nex _instr uction"
-    "long longidddy long dididily next _instr uctio nnext inst uctio next_ struc ionn xt_in truc ionne xt_inst uctio nex _instr uction</p>"
-    "<p>This should be the start of",
-    "a new paragraph, even though the first line was not that long.</p>",
-    "This returns to verbatim text:  (*)====+________________/\n",
-    "This returns to verbatim text:  (*)====+________________/"
+  new_buf = display_buffer()
 
-  ]
+  new_buf.add_line("<p>Hi Dylan, I'm just writing to show you the awesome")
+  new_buf.add_line("asd asdf asdf asdf asdf asdf asdf asdf asdf asdf asadf ok this")
+  new_buf.add_line("sentence is erally long.")
+  new_buf.add_line("you get the idea. now.  Check out")
+  new_buf.add_line("my blue sword below.")
+  new_buf.add_line("Oh right I forgot to close this paragraph as well. </p>-\\_(\")_/-<p>Now start a new")
+  new_buf.add_line("paragraph but don't stop it until the next line at some point, so we can really find")
+  new_buf.add_line("out whether our formatting is robust.</p>Ok it stopped on two lines later.")
+  new_buf.add_line("(*) ==== +________________/  (*) ==== +________________/")
+  new_buf.add_line("<p>The quick brown fox jumped over the lazy dog who was too busy chewing on his squeaky toys to notice.</p>")
 
-  combined = ' '.join(lines)
+  new_buf.proc_p_tags(width=50)
 
-  print(process_tags(combined, 60, True))
+  print(new_buf.str(True))
+
+

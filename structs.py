@@ -1,6 +1,7 @@
 from color import *
 import dataclasses
 import config
+import editor
 import enum
 import logging
 import object
@@ -46,7 +47,7 @@ class entity_data:
   name:     str="an unfinished entity"
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
-  desc:     str="It looks unfinished."
+  desc:     editor.display_buffer=editor.display_buffer("It looks unfinished.")
   room:     unique_identifier=dataclasses.field(default_factory=lambda:unique_identifier.from_string(config.VOID_ROOM))
 
   @property
@@ -77,7 +78,7 @@ class redit_save_data:
      dir_edit   = direction specified on previous command to edit an exit"""
   uid:         unique_identifier=None
   room_name:   str="An unfinished room"
-  room_desc:   str="You are in an unfinished room."
+  room_desc:   editor.display_buffer=editor.display_buffer("You are in an unfinished room.")
   room_exits:  dict=dataclasses.field(default_factory=lambda:dict())
   dir_edit:    int=None
 
@@ -156,6 +157,15 @@ class npc_proto_data:
       self.ldesc = value
     elif tag == "namelist":
       self.entity.namelist = value.split(' ')
+    elif tag == "desc":
+      self.entity.desc = editor.display_buffer()
+      line = ""
+      while line != "~\n":
+        line = rf.readline()
+        if line != "~\n":
+          self.entity.desc.add_line(line)
+        else:
+          break;
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     else:
@@ -181,7 +191,8 @@ class npc_proto_data:
     for name in self.entity.namelist:
       ret_val += name + " "
     ret_val += f"{NORMAL}\r\n"
-    ret_val += f"Desc:\r\n{string_handling.paragraph(self.entity.desc, 65, True)}\r\n"
+    self.entity.desc.proc_p_tags(width=65)
+    ret_val += f"Desc:\r\n{self.entity.desc.str()}\r\n"
     ret_val += f"L-Desc: {self.entity.ldesc}\r\n"
     return ret_val
 
@@ -198,6 +209,17 @@ class obj_proto_data:
       self.ldesc = value
     elif tag == "namelist":
       self.entity.namelist = value.split(' ')
+    # eventually I can factor this through display_buffer.parse?
+    elif tag == "desc":
+      line = ""
+      self.entity.desc = editor.display_buffer()
+      while line != "~\n":
+        line = rf.readline()
+        if line != "~\n":
+          self.entity.desc.add_line(line)
+        else:
+          break;
+
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     else:
@@ -215,7 +237,7 @@ class room_attribute_data:
   """name      = the title of the room (displayed first as one line)
      desc      = the longer description of the room (shown as a following paragraph)"""
   name: str="unnamed room"
-  desc: str="undescribed room"
+  desc: editor.display_buffer=editor.display_buffer("undescribed room")
 
 if __name__ == '__main__':
   new_proto = obj_proto_data()

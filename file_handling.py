@@ -27,6 +27,7 @@ def parse_generic(new_rno, rf):
     tag, value = string_handling.split_tag_value(line)
     # if we don't get a tag this file is not formatted properly
     if tag[-1] != ":":
+      print(line)
       raise TagError(f"{rf.name}", line_number)
     # remove the colon and convert to lowercase
     tag = tag[0:len(tag) - 1].lower()

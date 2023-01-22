@@ -66,7 +66,8 @@ class descriptor:
       login_info   = login information supplied by player before char is assigned
       disconnected = the connection on the other end of the socket has been lost
       char         = character that this connection is controlling
-      olc_state    = used in olc.handle_input to parse input and determine menus"""
+      olc_state    = used in olc.handle_input to parse input and determine menus
+      write_buffer = a display_buffer to store player editing: descriptions, messages, etc"""
     self.socket       = socket
     self.id           = id
     self.in_buf       = bytes(0)
@@ -83,6 +84,7 @@ class descriptor:
     self.disconnected = False
     self.char         = None
     self.olc          = None
+    self.write_buffer = None
     # These two lines ensure that the socket is not automatically closed when oMUD
     # calls itself as a child process (which is what copyover does).
     flags = fcntl.fcntl(self.socket, fcntl.F_GETFD, 0)
@@ -99,6 +101,10 @@ class descriptor:
      process_telnet_cmd() <- organizes telnet commands in in_buf into telnet_q
      process_telnet_q()   <- parses any telnet commands which have been fully read
      next_input()         <- returns next complete command in input_q"""
+
+  @property
+  def writing(self):
+    return self.write_buffer != None
 
   def poll_for_input(self):
     rlist, wlist, elist = select.select([ self.socket ], [ ], [ ], 0)
@@ -177,7 +183,14 @@ class descriptor:
     self.out_buf = ""
 
   def write_prompt(self):
-    if self.state == descriptor_state.CHATTING:
+    if self.writing:
+      if self.out_buf != "":
+        self.write("\r\n" + "] ")
+      else:
+        self.write("] ")
+      self.has_prompt = True
+
+    elif self.state == descriptor_state.CHATTING:
       if self.out_buf != "":
         self.write("\r\n" + config.PLAYER_PROMPT)
       else:

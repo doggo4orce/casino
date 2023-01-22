@@ -1,5 +1,6 @@
-name: Stockville Square Recall
+name: Stockville Recall
 id: recall
-desc: Two cobblestone roads meet here, creating a busy intersection as travellers nearly bump inoto eachother in their haste to get to their next destination.
-east: road1
+desc:
+~
+east: casino
 west: reading

@@ -1,5 +1,11 @@
 name: Reading Room
 id: reading
-desc: This would a great place to catch up on news from the non-existent message board that should be here! To the north is the entrance to a different zone.
+desc:
+This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.
+asdf
+adsf
+asdf
+eat my <p>pussy bitch</p> :)
+~
 north: newbie_zone[hallway1]
 east: recall

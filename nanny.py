@@ -1,5 +1,6 @@
 import commands
 import config
+import editor
 import exit
 import descriptor
 import file_handling
@@ -7,6 +8,7 @@ import logging
 import olc
 import pbase
 import pc
+import redit
 import room
 import structs
 import telnet
@@ -50,14 +52,40 @@ def init_commands():
   cmd_dict["zedit"]     = ( olc.do_zedit,            0 )
   cmd_dict["zlist"]     = ( olc.do_zlist,            0 )
 
+def editor_handle_input(d, input):
+  if d.char:
+    width = d.char.prefs.screen_width
+  else:
+    width = config.DEFAULT_SCREEN_WIDTH
+
+  if input == "/l":
+    d.write_buffer.proc_p_tags(width)
+    d.write(d.write_buffer.raw_str())
+  elif input == "/n":
+    d.write_buffer.proc_p_tags(width)
+    d.write(d.write_buffer.raw_str(numbers=True))
+  elif input == "/s":
+    if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
+      redit_save = d.olc.save_data
+      redit_save.room_desc = d.write_buffer
+      d.olc.state = redit.redit_state.REDIT_MAIN_MENU
+      redit.redit_display_main_menu(d)
+    d.write_buffer = None
+    d.has_prompt = False
+  
+  else:
+    d.write_buffer.add_line(input)
+
 def interpret_msg(d, command, argument, server, mud):
   valid_command = False
   initial_room = d.char.room
 
+  # they might just be hitting enter to see an updated prompt
   if command == "":
     d.has_prompt = False
     return
 
+  # until a prefix_proc gives us a reason not to, we will not block the interpreter
   block_interpreter = False
 
   # fire all prefix procs
@@ -93,7 +121,9 @@ def handle_next_input(d, server, mud):
   msg = input.data
   stripped_msg = msg.strip()
   command, argument = (stripped_msg.split(" ", 1) + ["", ""])[:2]
-  if d.state == descriptor.descriptor_state.CHATTING:
+  if d.writing:
+    editor_handle_input(d, msg)
+  elif d.state == descriptor.descriptor_state.CHATTING:
     interpret_msg(d, command, argument, server, mud)
   elif d.state == descriptor.descriptor_state.OLC:
     olc.handle_input(d, stripped_msg, server, mud)

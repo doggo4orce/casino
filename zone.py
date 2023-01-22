@@ -152,11 +152,18 @@ class zone:
     npc_folder = path + "npc/"
     wld_folder = path + "wld/"
 
+    # make world folder (it might already exist)
+    if not os.path.isdir(config.WORLD_FOLDER):
+      print(f"World folder missing.  Creating it.")
+      os.system(f"mkdir '{config.WORLD_FOLDER}'")
+
     # make zone folder (it might already exist)
     if not os.path.isdir(path):
-      os.system("mkdir '{}'".format(path))
+      print(f"Zone folder missing.  Creating it.")
+      os.system(f"mkdir '{path}'")
 
-    with open(path + "info.zon", "w") as wf:
+    # make info file if it doesn't already exist
+    with open(path + "info.zon", "w+") as wf:
       wf.write(f"# Zone file for {self.name}\n")
       wf.write(f"name: {self.name}\n")
       wf.write(f"id: {self.id}\n")
@@ -172,7 +179,8 @@ class zone:
 
         wf.write(f"name: {rm.name}\n")
         wf.write(f"id: {rm.id}\n")
-        wf.write(f"desc: {rm.desc}\n")
+        wf.write(f"desc:\n")
+        wf.write(f"{rm.desc.raw_str()}~\n")
 
         for dir in exit.direction:
           dest = rm.get_destination(dir)
@@ -188,7 +196,7 @@ class zone:
         wf.write(f"id: {proto.unique_id.id}\n")
         wf.write(f"name: {proto.entity.name}\n")
         wf.write(f"namelist: {' '.join(proto.entity.namelist)}\n")
-        wf.write(f"desc: {proto.entity.desc}\n")
+        wf.write(f"desc:\n{proto.entity.desc.raw_str()}~\n")
 
     if not os.path.isdir(npc_folder):
       os.system(f"mkdir '{npc_folder}'")
@@ -199,7 +207,7 @@ class zone:
         wf.write(f"id: {proto.unique_id.id}\n")
         wf.write(f"name: {proto.entity.name}\n")
         wf.write(f"ldesc: {proto.ldesc}\n")
-        wf.write(f"desc: {proto.entity.desc}\n")
+        wf.write(f"desc:\n{proto.entity.desc.raw_str()}~\n")
 
   def __str__(self):
     ret_val = f"Zone: {CYAN}{self.name}{NORMAL} ID: {CYAN}{self.id}{NORMAL}\r\n\r\n"
@@ -217,10 +225,12 @@ class zone:
 if __name__ == '__main__':
   import object
   import pc
+  import editor
 
   os.system(f"rm -rf 'lib/world/stockville city'")
   os.system(f"rm -rf 'lib/world/the newbie zone'")
 
+  
   zn = zone()
   zn.name = "the city of stockville"
   zn.folder = "stockville city"
@@ -230,21 +240,21 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "The Void"
   rm.id = "void"
-  rm.desc = "This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall."
+  rm.desc = editor.display_buffer("This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.")
   rm.connect(exit.direction.DOWN, 'recall')
   zn._world[rm.id] = rm
 
   rm = room.room()
   rm.name = "Stockville Casino"
   rm.id = "casino"
-  rm.desc = "The heavy weight of bad decisions hangs thick in the air."
+  rm.desc = editor.display_buffer("The heavy weight of bad decisions hangs thick in the air.")
   rm.connect(exit.direction.WEST, 'recall')
   zn._world[rm.id] = rm
 
   rm = room.room()
   rm.name = "Stockville Recall"
   rm.id = "recall"
-  rm.desc = "This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time."
+  rm.desc = editor.display_buffer("This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.")
   rm.connect(exit.direction.EAST, 'casino')
   rm.connect(exit.direction.WEST, 'reading')
   zn._world[rm.id] = rm
@@ -252,7 +262,7 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "Reading Room"
   rm.id = "reading"
-  rm.desc = "This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone."
+  rm.desc = editor.display_buffer("This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.")
   rm.connect(exit.direction.EAST, 'recall')
   rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
   zn._world[rm.id] = rm
@@ -260,7 +270,7 @@ if __name__ == '__main__':
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baccarat', 'dealer']
   npcp.entity.name = 'the baccarat card dealer'
-  npcp.entity.desc = "He looks like he's straight out of a bluegrass music video."
+  npcp.entity.desc = editor.display_buffer("He looks like he's straight out of a bluegrass music video.")
   npcp.ldesc = 'A dealer stands here ready to hand out cards.  Maybe you should say hi?'
   npcp.unique_id.zone_id = 'stockville'
   npcp.unique_id.id = 'baccarat_dealer'
@@ -269,7 +279,7 @@ if __name__ == '__main__':
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baker', 'fat']
   npcp.entity.name = 'the baker'
-  npcp.entity.desc = "He's a nice looking person, but you can see that he has seen battle by the many scars on his body."
+  npcp.entity.desc = editor.display_buffer("He's a nice looking person, but you can see that he has seen battle by the many scars on his body.")
   npcp.ldesc = "A baker is here, but don't give him a bottle."
   npcp.unique_id.zone_id = 'stockville'
   npcp.unique_id.id = 'baker'
@@ -278,7 +288,7 @@ if __name__ == '__main__':
   ob = structs.obj_proto_data()
   ob.entity.namelist = ['bottle']
   ob.entity.name = 'a bottle'
-  ob.entity.desc = "It's brown and smells sticky inside."
+  ob.entity.desc = editor.display_buffer("It's brown and smells sticky inside.")
   ob.ldesc = 'An empty bottle has been dropped here.'
   ob.unique_id.zone_id = 'stockville'
   ob.unique_id.id = 'bottle'
@@ -297,7 +307,7 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "The Beginning of a Damp Hallway"
   rm.id = "hallway1"
-  rm.desc = "This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City."
+  rm.desc = editor.display_buffer("This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.")
   rm.connect(exit.direction.NORTH, 'hallway2')
   rm.connect(exit.direction.SOUTH, 'stockville[reading]')
   zn._world[rm.id] = rm
@@ -305,14 +315,14 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "A Dark Corner in the Hallway"
   rm.id = "hallway2"
-  rm.desc = "The hallway makes a sharp corner here, leading both east or south."
+  rm.desc = editor.display_buffer("The hallway makes a sharp corner here, leading both east or south.")
   rm.connect(exit.direction.SOUTH, 'hallway1')
   zn._world[rm.id] = rm
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['newbie', 'monster']
   npcp.entity.name = 'the newbie monster'
-  npcp.entity.desc = 'He has googly eyes and drools all over the place as he growls.'
+  npcp.entity.desc = editor.display_buffer("He has googly eyes and drools all over the place as he growls.")
   npcp.ldesc = 'A newbie monster snarls furiously here.'
   npcp.unique_id.zone_id = 'newbie_zone'
   npcp.unique_id.id = 'newbie_monster'
@@ -321,7 +331,7 @@ if __name__ == '__main__':
   ob = structs.obj_proto_data()
   ob.entity.namelist = ['newbie', 'dagger']
   ob.entity.name = 'a newbie dagger'
-  ob.entity.desc = "It's so bright and shiny, even you can't lose it."
+  ob.entity.desc = editor.display_buffer("It's so bright and shiny, even you can't lose it.")
   ob.entity.ldesk = 'Some idiot (maybe you?) left a newbie dagger here.'
   ob.unique_id.zone_id = 'newbie_zone'
   ob.unique_id.id = 'newbie_dagger'

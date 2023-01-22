@@ -1,5 +1,6 @@
 from color import *
 import enum
+import editor
 import exit
 import inventory
 import object
@@ -156,7 +157,17 @@ class room:
     dir_tags = [dir.name for dir in exit.direction]
 
     if tag == "id":
-        self.unique_id.id = value
+      self.unique_id.id = value
+    elif tag == "desc":
+      self.desc = editor.display_buffer()
+      line = ""
+      while line != "~":
+        line = rf.readline()
+        line = line.strip()
+        if line != "~":
+          self.desc.add_line(line)
+        else:
+          break
     elif tag.upper() in dir_tags:
       self.connect(exit.direction(exit.direction[tag.upper()]), value)
     # name, desc
@@ -175,14 +186,16 @@ class room:
   def exit_exists(self, direction):
     return self.get_destination(direction) != None
 
-  def save(self, path):
-    with open(path, "w") as wf:
-      wf.write(f"Name: {self.name}\n")
-      wf.write(f"id: {self.id}\n")
-      wf.write(f"Desc: {self.desc}")
+  # def save(self, path):
+  #   with open(path, "w+") as wf:
+  #     wf.write(f"Name: {self.name}\n")
+  #     wf.write(f"id: {self.id}\n")
+  #     wf.write(f"Desc:\n")
+  #     wf.write(f"{self.desc.raw_str()}\n")
+  #     wf.write(f"~\n")
 
-      for ex in self._exits:
-        wf.write(f"{ex.direction.name.capitalize()}: {ex.destination}")
+  #     for ex in self._exits:
+  #       wf.write(f"{ex.direction.name.capitalize()}: {ex.destination}")
 
         
 

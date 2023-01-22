@@ -3,6 +3,7 @@ import dataclasses
 import logging
 import copy
 import config
+import editor
 import gc
 import inventory
 import object
@@ -154,6 +155,13 @@ class pc(character):
     elif tag == "room":
       # room counts as entity data, but it needs to be parsed separately
       self.entity.room = structs.unique_identifier.from_string(value)
+    elif tag == "desc":
+      self.desc = editor.display_buffer()
+      line = ""
+      while line != "~\n":
+        line = rf.readline()
+        if line != "~\n":
+          self.desc.add_line(line)
     elif hasattr(self.entity, tag):
       setattr(self.entity, tag, value)
     # Load Game Data

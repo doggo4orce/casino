@@ -58,7 +58,10 @@ def editor_handle_input(d, input):
   else:
     width = config.DEFAULT_SCREEN_WIDTH
 
-  if input == "/l":
+  if input == "/c":
+    d.write("Buffer cleared.\r\n")
+    d.write_buffer = editor.display_buffer()
+  elif input == "/l":
     d.write(d.write_buffer.raw_str())
   elif input == "/lf":
     d.write_buffer.proc_p_tags(width)
@@ -67,8 +70,9 @@ def editor_handle_input(d, input):
     d.write_buffer.proc_p_tags(width)
     d.write(d.write_buffer.raw_str(numbers=True))
   elif input == "/h":
-    help_str  = "            Smart Editor                   \r\n"
+    help_str  = "               Smart Editor                \r\n"
     help_str += "-------------------------------------------\r\n"
+    help_str += "  /c         - clear current buffer        \r\n"
     help_str += "  /h         - bring up this menu          \r\n"
     help_str += "  /l         - show unformatted buffer     \r\n"
     help_str += "  /n         - /l but with line numbers    \r\n"
@@ -76,17 +80,24 @@ def editor_handle_input(d, input):
     help_str += "  /d#        - delete line #               \r\n"
     help_str += "  /i# <text> - insert before line #        \r\n"
     d.write(help_str)
+  elif input == "/a":
+    d.write("Aborting edit.\r\n")
+    d.stop_writing(save=False)
+
+    # todo: this function shouldn't have to know about redit states
+    if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
+      d.olc.state = redit.redit_state.REDIT_MAIN_MENU
+      redit.redit_display_main_menu(d)
+
   elif input == "/s":
     if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
-      redit_save = d.olc.save_data
-      redit_save.room_desc = d.write_buffer.make_copy()
+      d.write_target.copy_from(d.write_buffer)
       d.write_buffer = None
       d.olc.state = redit.redit_state.REDIT_MAIN_MENU
       redit.redit_display_main_menu(d)
     d.write_buffer = None
-    d.has_prompt = False
-  elif input[0] == "/":
-    d.write(f"Unrecognized command. {input[1]}")
+  elif input[0] == "/" and len(input) > 1:
+    d.write(f"Unrecognized command: {input[1]}\r\n")
   else:
     d.write_buffer.add_line(input)
 

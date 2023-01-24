@@ -145,10 +145,11 @@ def do_redit(ch, scmd, argument, server, mud):
   # we can copy the id into the redit_save now because it's the same even if we have to create the room
   redit_save.uid = structs.unique_identifier(zone_id, room_id)
 
+  # TODO: replace this with a function: redit_save.from_room(rm)
   # if a room was found we'll load it's info into redit_save now
   if rm != None:
     redit_save.room_name = rm.name
-    redit_save.room_desc = rm.desc
+    redit_save.room_desc = rm.desc.make_copy()
 
     # make a copy of all the exits as strings of either internal or external references
     for dir in exit.direction:

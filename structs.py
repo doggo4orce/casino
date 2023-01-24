@@ -90,10 +90,10 @@ class medit_save_data:
 @dataclasses.dataclass
 class olc_data:
   """Interface for descriptor to work with their OLC data
-     mode     = which mode, redit, zedit, etc.
-     zone_id  = zone_id of room/obj/npc being editted
-     state    = which state in the menu system are you in
-     data     = temporary parking space for OLC data specific to the object being edited"""
+     mode      = which mode, redit, zedit, etc.
+     zone_id   = zone_id of room/obj/npc being editted
+     state     = which state in the menu system are you in
+     save_data = temporary parking space for OLC data specific to the object being edited"""
   mode:      int=None
   state:     int=None
   changes:   bool=True

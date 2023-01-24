@@ -1,7 +1,7 @@
 name: Stockville Recall
 id: recall
 desc:
-<p>This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.</p>
+Hello!
 ~
 east: casino
 west: reading

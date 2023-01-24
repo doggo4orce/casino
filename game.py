@@ -245,7 +245,7 @@ class game:
     return None
 
   def lose_link(self, ch):
-    self.wld[ch.room].echo(f"{ch} has lost his link.\r\n")
+    self.room_by_code(ch.room).echo(f"{ch} has lost his link.\r\n")
     ch.d = None
 
   def reconnect(self, d, ch):

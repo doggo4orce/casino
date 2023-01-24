@@ -6,8 +6,17 @@ import re
 import string_handling
 
 class buffer:
+  """a list of lines, used to keep organize raw and formatted input
+     with the editor, but probably has other applications as well
+     contents = the raw contents of buffer, one line at a time"""
   def __init__(self, str=None):
     self._contents = list()
+
+  """num_lines()    <- returns number of lines in the buffer
+     is_empty()     <- returns True is there aren't any lines in the buffer
+     add_line()     <- adds a line to the buffer
+     make_copy()    <- returns a new buffer with identical contents
+     copy_from(buf) <- resets the contents to be identical from those of buf"""
 
   @property
   def num_lines(self):
@@ -22,19 +31,19 @@ class buffer:
 
   def make_copy(self):
     ret_val = buffer()
-
     for line in self._contents:
       ret_val.add_line(line)
-
     return ret_val
 
+  def copy_from(self, source):
+    self._contents = list()
+    for line in source._contents:
+      self.add_line(line)
+
   def __str__(self):
-
     ret_val = ""
-
     for line in self._contents:
       ret_val += line + "\r\n"
-
     return ret_val
 
   def __contains__(self, obj):
@@ -42,9 +51,6 @@ class buffer:
 
   def __iter__(self):
     return buffer_iterator(self)
-
-  def __len__(self):
-    return len(self._contents)
 
 class buffer_iterator:
   def __init__(self, buffer):
@@ -80,6 +86,7 @@ class display_buffer:
   def clear(sel):
     self._raw = display_buffer("")
     self._formatted = None
+
   def make_copy(self):
     ret_val = display_buffer()
 
@@ -87,6 +94,9 @@ class display_buffer:
     ret_val._formatted = None
 
     return ret_val
+
+  def copy_from(self, source):
+    self._raw.copy_from(source._raw)
 
   def proc_p_tags(self, width):
     self._formatted = buffer()

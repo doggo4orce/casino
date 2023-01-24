@@ -67,7 +67,8 @@ class descriptor:
       disconnected = the connection on the other end of the socket has been lost
       char         = character that this connection is controlling
       olc_state    = used in olc.handle_input to parse input and determine menus
-      write_buffer = a display_buffer to store player editing: descriptions, messages, etc"""
+      write_buffer = a display_buffer to store player editing: descriptions, messages, etc
+      write_target = where the display_buffer will be saved to upon completion"""
     self.socket       = socket
     self.id           = id
     self.in_buf       = bytes(0)
@@ -85,6 +86,7 @@ class descriptor:
     self.char         = None
     self.olc          = None
     self.write_buffer = None
+    self.write_target = None
     # These two lines ensure that the socket is not automatically closed when oMUD
     # calls itself as a child process (which is what copyover does).
     flags = fcntl.fcntl(self.socket, fcntl.F_GETFD, 0)
@@ -100,8 +102,10 @@ class descriptor:
      write(msg)           <- appends msg to out_buf
      process_telnet_cmd() <- organizes telnet commands in in_buf into telnet_q
      process_telnet_q()   <- parses any telnet commands which have been fully read
-     next_input()         <- returns next complete command in input_q"""
-
+     next_input()         <- returns next complete command in input_q
+     start_writing(source, target) <- start editting source and save to target
+     stop_writing(save)   <- save to write_target if save=True"""
+    
   @property
   def writing(self):
     return self.write_buffer != None
@@ -222,3 +226,15 @@ class descriptor:
   def next_input(self):
     if self.input_q:
       return self.input_q.popleft()
+
+  def start_writing(self, source, target):
+    self.write_buffer = source.make_copy()
+    self.write_target = target
+
+  def stop_writing(self, save):
+    if save:
+      self.write_target.copy_from(self.write_buffer)
+  
+    self.write_buffer = None
+    self.write_target = None
+

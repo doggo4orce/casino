@@ -68,7 +68,7 @@ def redit_parse_main_menu(d, input, server, mud):
     d.write("Instructions: /s to save, /h for more options.")
     d.olc.state = redit_state.REDIT_EDIT_DESC
     redit_save = d.olc.save_data
-    d.write_buffer = redit_save.room_desc.make_copy()
+    d.start_writing(redit_save.room_desc, redit_save.room_desc)
   elif response == '3':
     d.write("Will create duplicate room with new id : ")
     d.olc.state = redit_state.REDIT_EDIT_COPY

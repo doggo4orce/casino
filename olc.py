@@ -17,8 +17,15 @@ def handle_input(d, input, server, mud):
   if d.olc.mode == olc_mode.OLC_MODE_ZEDIT:
   	zedit.zedit_parse(d, input, server, mud)
   elif d.olc.mode == olc_mode.OLC_MODE_REDIT:
-    if d.olc.state != redit.redit_state.REDIT_EDIT_DESC:
-      redit.redit_parse(d, input, server, mud)
+    redit.redit_parse(d, input, server, mud)
+
+def olc_writing_follow_up(d):
+  if d.olc.mode == olc_mode.OLC_MODE_REDIT:
+    if d.olc.state == redit.redit_state.REDIT_MAIN_MENU:
+      redit.redit_display_main_menu(d)
+  else:
+    d.write("You shouldn't see this!\r\n")
+    
 
 def do_mlist(ch, scmd, argument, server, mud):
   args = argument.split()

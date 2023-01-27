@@ -179,8 +179,7 @@ class zone:
 
         wf.write(f"name: {rm.name}\n")
         wf.write(f"id: {rm.id}\n")
-        wf.write(f"desc:\n")
-        wf.write(f"{rm.desc.raw_str()}~\n")
+        wf.write(f"desc:\n{rm.desc.raw_str()}~\n")
 
         for dir in exit.direction:
           dest = rm.get_destination(dir)

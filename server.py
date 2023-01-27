@@ -147,6 +147,9 @@ By what name do you wish to be known? """
       # if they were already logged in, their char is linkless
       if d.char:
         mud.lose_link(d.char)
+      # if they were writing, it's gone
+      if d.writing:
+        d.write_buffer = None
       self.remove_descriptor_by_id(id)
     self.disconnects.clear()
 

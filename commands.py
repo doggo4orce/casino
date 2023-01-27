@@ -439,8 +439,7 @@ def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.prefs.screen_width, False)}{NORMAL}\r\n'
 
   if ch.prefs.brief_mode == 'off':
-    rm.desc.proc_p_tags(ch.prefs.screen_width)
-    out_buf += f"{rm.desc.str()}"
+    out_buf += rm.desc.display(ch.prefs.screen_width, format=True, indent=True, numbers=False)
   
   out_buf += f'{CYAN}{rm.show_exits()}{NORMAL}\r\n'
 
@@ -457,7 +456,7 @@ def show_room_to_char(ch, rm):
   ch.write(out_buf)
 
 def show_char_to_char(ch, tch):
-  out_buf = f"{string_handling.paragraph(tch.entity.desc, ch.prefs.screen_width, False)}\r\n"
+  out_buf = tch.entity.desc.display(ch.prefs.screen_width, format=True, indent=False, numbers=False) + "\r\n"
   out_buf += "\r\n"
   out_buf += "You attempt to peek at his inventory:\r\n"
 

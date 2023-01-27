@@ -37,3 +37,6 @@ REVERSE = "\x1B[6m"
 # extended 256 colors
 ORANGE = u"\u001b[38;5;208m"
 DARK_GRAY = u"\u001b[38;5;246m"
+
+if __name__ == '__main__':
+  print(f"{RED}red{BRIGHT_RED}bright{NORMAL}")

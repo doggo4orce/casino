@@ -52,55 +52,6 @@ def init_commands():
   cmd_dict["zedit"]     = ( olc.do_zedit,            0 )
   cmd_dict["zlist"]     = ( olc.do_zlist,            0 )
 
-def editor_handle_input(d, input):
-  if d.char:
-    width = d.char.prefs.screen_width
-  else:
-    width = config.DEFAULT_SCREEN_WIDTH
-
-  if input == "/c":
-    d.write("Buffer cleared.\r\n")
-    d.write_buffer = editor.display_buffer()
-  elif input == "/l":
-    d.write(d.write_buffer.raw_str())
-  elif input == "/lf":
-    d.write_buffer.proc_p_tags(width)
-    d.write(d.write_buffer.str())
-  elif input == "/n":
-    d.write_buffer.proc_p_tags(width)
-    d.write(d.write_buffer.raw_str(numbers=True))
-  elif input == "/h":
-    help_str  = "               Smart Editor                \r\n"
-    help_str += "-------------------------------------------\r\n"
-    help_str += "  /c         - clear current buffer        \r\n"
-    help_str += "  /h         - bring up this menu          \r\n"
-    help_str += "  /l         - show unformatted buffer     \r\n"
-    help_str += "  /n         - /l but with line numbers    \r\n"
-    help_str += "  /lf        - like /l but formatted       \r\n"
-    help_str += "  /d#        - delete line #               \r\n"
-    help_str += "  /i# <text> - insert before line #        \r\n"
-    d.write(help_str)
-  elif input == "/a":
-    d.write("Aborting edit.\r\n")
-    d.stop_writing(save=False)
-
-    # todo: this function shouldn't have to know about redit states
-    if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
-      d.olc.state = redit.redit_state.REDIT_MAIN_MENU
-      redit.redit_display_main_menu(d)
-
-  elif input == "/s":
-    if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
-      d.write_target.copy_from(d.write_buffer)
-      d.write_buffer = None
-      d.olc.state = redit.redit_state.REDIT_MAIN_MENU
-      redit.redit_display_main_menu(d)
-    d.write_buffer = None
-  elif input[0] == "/" and len(input) > 1:
-    d.write(f"Unrecognized command: {input[1]}\r\n")
-  else:
-    d.write_buffer.add_line(input)
-
 def interpret_msg(d, command, argument, server, mud):
   valid_command = False
   initial_room = d.char.room
@@ -138,6 +89,13 @@ def interpret_msg(d, command, argument, server, mud):
     d.write("Huh!?!\r\n")
     d.has_prompt = False
 
+# What should they see when they finish writing? menu? etc.
+def writing_follow_up(d):
+  if d.state == descriptor.descriptor_state.OLC:
+    olc.olc_writing_follow_up(d)
+  # other possibilities:
+  #   reporting_bug, mailing letter, scribing scroll, etc.
+
 def handle_next_input(d, server, mud):
   input = d.next_input()
   if not input:
@@ -147,7 +105,9 @@ def handle_next_input(d, server, mud):
   stripped_msg = msg.strip()
   command, argument = (stripped_msg.split(" ", 1) + ["", ""])[:2]
   if d.writing:
-    editor_handle_input(d, msg)
+    done_writing = editor.editor_handle_input(d, msg)
+    if done_writing:
+      writing_follow_up(d)
   elif d.state == descriptor.descriptor_state.CHATTING:
     interpret_msg(d, command, argument, server, mud)
   elif d.state == descriptor.descriptor_state.OLC:

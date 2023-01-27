@@ -1,7 +1,19 @@
 name: Stockville Recall
 id: recall
 desc:
-Hello!
+<p>This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.</p>
+<p>
+Hi Bob, I'm just writing to show you the awesome
+asd asdf asdf asdf asdf asdf asdf asdf asdf asdf asadf ok this
+sentence is erally long.
+you get the idea. now.  Check out
+my blue sword below.
+Oh right I forgot to close this paragraph as well. </p>-\\_(\")_/-<p>Now start a new
+paragraph but don't stop it until the next line at some point, so we can really find
+out whether our formatting is robust.</p>Ok it stopped on two lines later.
+Keep this line verbatim:
+(*) ==== +________________/  (*) ==== +________________/
+<p>The quick brown fox jumped over the lazy dog who was too busy chewing on his squeaky toys to notice.</p>
 ~
 east: casino
 west: reading

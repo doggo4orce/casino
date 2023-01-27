@@ -160,9 +160,10 @@ class npc_proto_data:
     elif tag == "desc":
       self.entity.desc = editor.display_buffer()
       line = ""
-      while line != "~\n":
+      while line != "~":
         line = rf.readline()
-        if line != "~\n":
+        line = line.rstrip()
+        if line != "~":
           self.entity.desc.add_line(line)
         else:
           break;
@@ -191,7 +192,7 @@ class npc_proto_data:
     for name in self.entity.namelist:
       ret_val += name + " "
     ret_val += f"{NORMAL}\r\n"
-    self.entity.desc.proc_p_tags(width=65)
+    ret_val += self.entity.desc.display(width=65, indent=True)
     ret_val += f"Desc:\r\n{self.entity.desc.str()}\r\n"
     ret_val += f"L-Desc: {self.entity.ldesc}\r\n"
     return ret_val
@@ -213,9 +214,10 @@ class obj_proto_data:
     elif tag == "desc":
       line = ""
       self.entity.desc = editor.display_buffer()
-      while line != "~\n":
+      while line != "~":
         line = rf.readline()
-        if line != "~\n":
+        line = line.rstrip()
+        if line != "~":
           self.entity.desc.add_line(line)
         else:
           break;

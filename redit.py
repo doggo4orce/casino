@@ -21,9 +21,7 @@ def redit_display_main_menu(d):
   d.write(f"-- Room ID : [{CYAN}{redit_save.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.uid.zone_id}{NORMAL}]\r\n")
   d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.room_name}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
-  redit_save.room_desc.proc_p_tags(d.char.prefs.screen_width)
-  room_desc = redit_save.room_desc
-  d.write(f"{YELLOW}{room_desc.raw_str()}{NORMAL}")
+  d.write(f"{YELLOW}{redit_save.room_desc.display(d.char.prefs.screen_width, indent=True)}{NORMAL}")
   d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")
 
   # index through the next 4 - 9 as exits
@@ -66,7 +64,6 @@ def redit_parse_main_menu(d, input, server, mud):
     d.olc.state = redit_state.REDIT_EDIT_NAME
   elif response == '2':
     d.write("Instructions: /s to save, /h for more options.")
-    d.olc.state = redit_state.REDIT_EDIT_DESC
     redit_save = d.olc.save_data
     d.start_writing(redit_save.room_desc, redit_save.room_desc)
   elif response == '3':

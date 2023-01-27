@@ -392,7 +392,6 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
   
       if argument.lower() == "simulate":
         me.simulation_mode = True
-
     else:
       ch.write(help_str)
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER

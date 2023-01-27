@@ -163,7 +163,7 @@ class room:
       line = ""
       while line != "~":
         line = rf.readline()
-        line = line.strip()
+        line = line.rstrip()
         if line != "~":
           self.desc.add_line(line)
         else:
@@ -185,19 +185,6 @@ class room:
 
   def exit_exists(self, direction):
     return self.get_destination(direction) != None
-
-  # def save(self, path):
-  #   with open(path, "w+") as wf:
-  #     wf.write(f"Name: {self.name}\n")
-  #     wf.write(f"id: {self.id}\n")
-  #     wf.write(f"Desc:\n")
-  #     wf.write(f"{self.desc.raw_str()}\n")
-  #     wf.write(f"~\n")
-
-  #     for ex in self._exits:
-  #       wf.write(f"{ex.direction.name.capitalize()}: {ex.destination}")
-
-        
 
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"

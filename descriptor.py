@@ -67,8 +67,8 @@ class descriptor:
       disconnected = the connection on the other end of the socket has been lost
       char         = character that this connection is controlling
       olc_state    = used in olc.handle_input to parse input and determine menus
-      write_buffer = a display_buffer to store player editing: descriptions, messages, etc
-      write_target = where the display_buffer will be saved to upon completion"""
+      write_buffer = a buffer to store player editing: descriptions, messages, etc
+      write_target = where the buffer will be saved to upon completion"""
     self.socket       = socket
     self.id           = id
     self.in_buf       = bytes(0)

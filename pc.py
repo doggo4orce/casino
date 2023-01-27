@@ -156,7 +156,7 @@ class pc(character):
       # room counts as entity data, but it needs to be parsed separately
       self.entity.room = structs.unique_identifier.from_string(value)
     elif tag == "desc":
-      self.desc = editor.display_buffer()
+      self.desc = editor.buffer()
       line = ""
       while line != "~\n":
         line = rf.readline()

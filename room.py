@@ -159,7 +159,7 @@ class room:
     if tag == "id":
       self.unique_id.id = value
     elif tag == "desc":
-      self.desc = editor.display_buffer()
+      self.desc = editor.buffer()
       line = ""
       while line != "~":
         line = rf.readline()

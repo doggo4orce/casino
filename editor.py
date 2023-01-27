@@ -195,56 +195,6 @@ class buffer_iterator:
       return result
     raise StopIteration
 
-class display_buffer:
-  def __init__(self, str=None):
-    self._raw = buffer()
-
-    if str != None:
-      self._raw.add_line(str)
-
-  def __getitem__(self, key):
-    return self._raw[key]
-  def __setitem__(self, key, value):
-    self._raw[key] = value
-
-  @property
-  def raw(self):
-    return self._raw
-  @property
-  def num_lines(self):
-    return self.raw.num_lines
-
-  def add_line(self, str):
-    self._raw.add_line(str)
-
-  def insert_line(self, idx, str):
-    self._raw.insert_line(idx, str)
-
-  def delete_line(self, idx):
-    self._raw.delete_line(idx)
-
-  def clear(self):
-    self._raw.clear()
-
-  def make_copy(self):
-    ret_val = display_buffer()
-
-    ret_val._raw = self.raw.make_copy()
-
-    return ret_val
-
-  def copy_from(self, source):
-    self._raw.copy_from(source._raw)
-
-  def clean_up(self):
-    self._raw = self._raw.clean_up()
-
-  def display(self, width, format=True, indent=True, numbers=False):
-    return self.raw.display(width, format, indent, numbers)
-
-  def str(self, numbers=False):
-    return self.raw.str(numbers)
-
 def editor_split_line(d, split):
   pattern = re.compile(r'(\d+) \'(.*)\'')
   match = re.search(pattern, split)
@@ -309,7 +259,7 @@ def editor_find_replace_text(d, replace, replace_all=False):
   found_target = False
   replace_complete = False
   num_replaced = 0
-  new_buffer = display_buffer()
+  new_buffer = buffer()
   pattern = re.compile(r'\'(.+)\' \'(.+)\'')
   match = re.search(pattern, replace)
 
@@ -367,7 +317,7 @@ def editor_handle_input(d, input):
     d.write_buffer.add_line(input)
   elif input == "/c":
     d.write("Buffer cleared.\r\n")
-    d.write_buffer = display_buffer()
+    d.write_buffer = buffer()
   elif input[:3] == "/ra":
     editor_find_replace_text(d, input[3:], replace_all=True)
   elif input[:2] == "/r":
@@ -379,9 +329,10 @@ def editor_handle_input(d, input):
   elif input[:2] == "/x":
     editor_split_line(d, input[2:])
   elif input == "/l":
-    d.write(d.write_buffer.raw_str())
+    d.write(d.write_buffer.str())
   elif input == "/f":
-    d.write_buffer.clean_up()
+    d.write("Formatting buffer.\r\n")
+    d.write_buffer = d.write_buffer.clean_up()
   elif input == "/n":
     d.write(d.write_buffer.str(numbers=True))
   elif input == "/h":
@@ -403,7 +354,7 @@ def editor_handle_input(d, input):
 
 if __name__ == '__main__':
 
-  new_buf = display_buffer()
+  new_buf = buffer()
 
   new_buf.add_line("<p>Hi Bob, I'm just writing to show you the awesome")
   new_buf.add_line("asd asdf asdf asdf asdf asdf asdf asdf asdf asdf asadf ok this")

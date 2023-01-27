@@ -47,7 +47,7 @@ class entity_data:
   name:     str="an unfinished entity"
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
-  desc:     editor.display_buffer=editor.display_buffer("It looks unfinished.")
+  desc:     editor.buffer=editor.buffer("It looks unfinished.")
   room:     unique_identifier=dataclasses.field(default_factory=lambda:unique_identifier.from_string(config.VOID_ROOM))
 
   @property
@@ -78,7 +78,7 @@ class redit_save_data:
      dir_edit   = direction specified on previous command to edit an exit"""
   uid:         unique_identifier=None
   room_name:   str="An unfinished room"
-  room_desc:   editor.display_buffer=editor.display_buffer("You are in an unfinished room.")
+  room_desc:   editor.buffer=editor.buffer("You are in an unfinished room.")
   room_exits:  dict=dataclasses.field(default_factory=lambda:dict())
   dir_edit:    int=None
 
@@ -157,8 +157,9 @@ class npc_proto_data:
       self.ldesc = value
     elif tag == "namelist":
       self.entity.namelist = value.split(' ')
+    # TODO: write buffer.parse() function to take over here
     elif tag == "desc":
-      self.entity.desc = editor.display_buffer()
+      self.entity.desc = editor.buffer()
       line = ""
       while line != "~":
         line = rf.readline()
@@ -210,10 +211,10 @@ class obj_proto_data:
       self.ldesc = value
     elif tag == "namelist":
       self.entity.namelist = value.split(' ')
-    # eventually I can factor this through display_buffer.parse?
+    # TODO: write buffer.parse() function to take over here
     elif tag == "desc":
       line = ""
-      self.entity.desc = editor.display_buffer()
+      self.entity.desc = editor.buffer()
       while line != "~":
         line = rf.readline()
         line = line.rstrip()
@@ -239,7 +240,7 @@ class room_attribute_data:
   """name      = the title of the room (displayed first as one line)
      desc      = the longer description of the room (shown as a following paragraph)"""
   name: str="unnamed room"
-  desc: editor.display_buffer=editor.display_buffer("undescribed room")
+  desc: editor.buffer=editor.buffer("undescribed room")
 
 if __name__ == '__main__':
   new_proto = obj_proto_data()

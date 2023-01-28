@@ -1,23 +1,36 @@
-# basic 8 foreground colors
+# normal text color
 NORMAL  = "\x1B[0m"
-BLACK   = "\x1B[30m"
-RED     = "\x1B[31m"
-GREEN   = "\x1B[32m"
-YELLOW  = "\x1B[33m"
-BLUE    = "\x1B[34m"
-MAGENTA = "\x1B[35m"
-CYAN    = "\x1B[36m"
-WHITE   = "\x1B[37m"
+
+def ansi_color_sequence(num):
+  if num == 0:
+    return NORMAL
+
+  return u"\u001b[38;5;{}m".format(num)
+
+# basic 8 foreground colors
+# BLACK   = ansi_color_sequence(0)
+# for now, 0 reserved for NORMAL
+RED     = ansi_color_sequence(1)
+GREEN   = ansi_color_sequence(2)
+YELLOW  = ansi_color_sequence(3)
+BLUE    = ansi_color_sequence(4)
+MAGENTA = ansi_color_sequence(5)
+CYAN    = ansi_color_sequence(6)
+WHITE   = ansi_color_sequence(7)
 
 # brightened versions
-BRIGHT_BLACK   = "\x1B[1;30m"
-BRIGHT_RED     = "\x1B[1;31m"
-BRIGHT_GREEN   = "\x1B[1;32m"
-BRIGHT_YELLOW  = "\x1B[1;33m"
-BRIGHT_BLUE    = "\x1B[1;34m"
-BRIGHT_MAGENTA = "\x1B[1;35m"
-BRIGHT_CYAN    = "\x1B[1;36m"
-BRIGHT_WHITE   = "\x1B[1;37m"
+BRIGHT_BLACK   = ansi_color_sequence(8)
+BRIGHT_RED     = ansi_color_sequence(9)
+BRIGHT_GREEN   = ansi_color_sequence(10)
+BRIGHT_YELLOW  = ansi_color_sequence(11)
+BRIGHT_BLUE    = ansi_color_sequence(12)
+BRIGHT_MAGENTA = ansi_color_sequence(13)
+BRIGHT_CYAN    = ansi_color_sequence(14)
+BRIGHT_WHITE   = ansi_color_sequence(15)
+
+# extended 256 colors
+ORANGE    = ansi_color_sequence(208)
+DARK_GRAY = ansi_color_sequence(246)
 
 # background colors
 BKGD_BLACK   = "\x1B[40m"
@@ -34,9 +47,7 @@ UNDERLINE = "\x1B[4m"
 FLASH = "\x1B[5m"
 REVERSE = "\x1B[6m"
 
-# extended 256 colors
-ORANGE = u"\u001b[38;5;208m"
-DARK_GRAY = u"\u001b[38;5;246m"
+
 
 if __name__ == '__main__':
-  print(f"{RED}red{BRIGHT_RED}bright{NORMAL}")
+  print(f"{RED}red{BRIGHT_RED}bright{NORMAL}test")

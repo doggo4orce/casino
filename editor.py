@@ -1,3 +1,4 @@
+from color import *
 import config
 import dataclasses
 import enum
@@ -5,30 +6,29 @@ import logging
 import re
 import string_handling
 
+OPEN_PARAGRAPH  = "<p>"
+CLOSE_PARAGRAPH = "</p>"
+
 class buffer:
-  """a list of lines, used to keep organize raw and formatted input
-     with the editor, but probably has other applications as well
+  """Used to keep organize editor input for writing rooms, messages, etc.
      contents = the raw contents of buffer, one line at a time"""
   def __init__(self, str=None):
     self._contents = list()
 
-  """num_lines()           <- returns number of lines in the buffer
-     is_empty()            <- returns True is there aren't any lines in the buffer
-     add_line()            <- adds a line to the buffer
+  """add_line()            <- adds a line to the buffer
      insert_line(idx, str) <- adds a line in position idx and re-orders if necessary
      delete_line(idx)      <- deletes the line and re-orders
      clear()               <- empty self._contents
      make_copy()           <- returns a new buffer with identical contents
      copy_from(buf)        <- resets the contents to be identical from those of buf
      display(width)        <- returns buffer as string formatted to width.
-                              optional flags: format, indent, numbers
-     clean_up()            <- merge paragraphs spread across multiple lines
-     str(numbers)          <- converts to string, with optional line numbers"""
+     clean_up()            <- returns lines with paragraphs tidied up, optionally fix typos
+     str()                 <- converts to string"""
 
-  def __getline__(self, key):
+  def __getitem__(self, key):
     return self._contents[key]
 
-  def __setline__(self, key, value):
+  def __setitem__(self, key, value):
     self._contents[key] = value
 
   @property
@@ -46,7 +46,7 @@ class buffer:
     if idx < 0 or idx > self.num_lines:
       return
 
-    # we can insert before the line after our last line
+    # this is equivalent to just adding a line
     if idx == self.num_lines:
       self.add_line(line)
       return
@@ -77,18 +77,24 @@ class buffer:
     for line in buffer._contents:
       self.add_line(line)
 
-  def display(self, width, format=True, indent=True, numbers=False):
+  def display(self, width, format=True, indent=True, numbers=False, color=True):
+    
+    if color:
+      buf = self.proc_color_codes()
+    else:
+      buf = self
+
     ret_val = ""
 
     if format:
-      lines = self.clean_up()
+      lines = buf.clean_up()
     else:
-      lines = self
+      lines = buf
 
     for idx, line in enumerate(lines):
-      if line[:3] == '<p>' and line[-4:] == '</p>':
-        line = line[3:]
-        line = line[:-4]
+      if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
+        line = line[len(OPEN_PARAGRAPH):]
+        line = line[:(-1)*len(CLOSE_PARAGRAPH)]
         ret_val += string_handling.paragraph(line, width, indent)
       else:
         ret_val += line
@@ -96,6 +102,38 @@ class buffer:
       if numbers:
         ret_val = f"L{idx + 1}: " + ret_val
       ret_val += "\r\n"
+
+    return ret_val
+
+  def proc_color_codes(self):
+    ret_val = buffer()
+    line_buffer = ""
+    
+    for line in self._contents:
+      pattern = re.compile(r'(.*?)<c(\d)+>(.*)')
+      match = re.search(pattern, line)
+
+      if match == None:
+        ret_val.add_line(line)
+
+      while match != None:
+        x = match.span()[0]
+        y = match.span()[1]
+
+        pre_tag_str = match.group(1)
+        color_index = int(match.group(2))
+        text = match.group(3)
+
+        if color_index == 0:
+          color_code = NORMAL
+        elif color_index in range(1, 16):
+          color_code = ansi_color_sequence(color_index)
+
+        line = pre_tag_str + color_code + text
+        pattern = re.compile(r'(.*?)<c(\d)+>(.*)')
+        match = re.search(pattern, line)
+        
+      ret_val.add_line(line)
 
     return ret_val
 
@@ -110,10 +148,10 @@ class buffer:
       while (True):
         # if we're in the middle of a paragraph, find out if it closes on this line
         if p_open:
-          target = r'</p>'
+          target = CLOSE_PARAGRAPH
         # if it doesn't, then find out if a paragraph opens on this line
         else:
-          target = r'<p>'
+          target = OPEN_PARAGRAPH
 
         # see if we find out target
         pattern = re.compile(target)
@@ -142,8 +180,8 @@ class buffer:
             # add the pre-tag string into the paragraph buffer
             p_buffer += line[:x]
 
-            # then record the paragraph as a single line
-            ret_val.add_line(f"<p>{p_buffer}</p>")
+            # now record the paragraph as a single line
+            ret_val.add_line(f"{OPEN_PARAGRAPH}{p_buffer}{CLOSE_PARAGRAPH}")
 
             # and reset the buffer for the next one
             p_buffer = ""
@@ -195,6 +233,69 @@ class buffer_iterator:
       return result
     raise StopIteration
 
+EDITOR_HELP_STR = """Editor Commands
+---------------------------------------------------
+  /c                      - clear current buffer    
+  /h                      - bring up this menu      
+  /l                      - show unformatted buffer 
+  /n                      - /l but with line numbers
+  /f                      - merge multi-line paragraphs
+  /p#                     - proofread line (paragraph only)
+  /i#                     - insert before line #
+  /d#                     - delete line #
+  /x# '<text>'            - split line # at text
+  /r '<text1>' '<text2>'  - replace text1 with text2
+  /ra '<text1>' '<text2>' - all occurances
+"""
+
+# returns True if the player is done writing
+def editor_handle_input(d, input):
+  if d.char:
+    width = d.char.prefs.screen_width
+  else:
+    width = config.DEFAULT_SCREEN_WIDTH
+
+  if input == "":
+    d.write_buffer.add_line(input)
+  elif input == "/a":
+    d.write("Aborting edit.\r\n")
+    d.stop_writing(save=False)
+    return True
+  elif input == "/c":
+    d.write("Buffer cleared.\r\n")
+    d.write_buffer = buffer()
+  elif input[:2] == "/d":
+    editor_delete_line(d, input[2:])
+  elif input == "/f":
+    d.write("Merging separated paragraphs.\r\n")
+    d.write_buffer = d.write_buffer.clean_up()
+  elif input == "/h":
+    d.write(EDITOR_HELP_STR)
+  elif input[:2] == "/i":
+    editor_insert_line(d, input[2:])
+  elif input == "/l":
+    d.write(d.write_buffer.str())
+  elif input == "/n":
+    d.write(d.write_buffer.str(numbers=True))
+  elif input[:2] == "/p":
+    editor_proofread_line(d, input[2:])
+  elif input[:3] == "/ra":
+    editor_find_replace_text(d, input[3:], replace_all=True)
+  elif input[:2] == "/r":
+    editor_find_replace_text(d, input[2:], replace_all=False)
+  elif input == "/s":
+    d.write("Saving buffer.\r\n")
+    d.stop_writing(save=True)
+    return True
+  elif input[:2] == "/x":
+    editor_split_line(d, input[2:])
+  elif input[0] == "/" and len(input) > 1:
+    d.write(f"Unrecognized command: {input[1]}\r\n")
+  else:
+    d.write_buffer.add_line(input)
+
+  return False
+
 def editor_split_line(d, split):
   pattern = re.compile(r'(\d+) \'(.*)\'')
   match = re.search(pattern, split)
@@ -221,6 +322,28 @@ def editor_split_line(d, split):
   d.write_buffer.delete_line(line_num - 1)
   d.write_buffer.insert_line(line_num - 1, second_half)
   d.write_buffer.insert_line(line_num - 1, first_half)
+
+def editor_proofread_line(d, proofread):
+  pattern = re.compile(r'(\d+)')
+  match = re.search(pattern, proofread)
+  if match == None:
+    d.write("Proofread which line?")
+    return
+  line_num = int(match.group(1))
+
+  if line_num < 1 or line_num > d.write_buffer.num_lines + 1:
+    d.write(f"There is no line #{line_num}.\r\n")
+    return
+
+  d.write(f"Proofreading line #{line_num}.\r\n")
+  line = d.write_buffer[line_num - 1]
+
+  if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
+    line = line[len(OPEN_PARAGRAPH):]
+    line = line[:(-1)*len(CLOSE_PARAGRAPH)]
+
+  line = string_handling.proofread(line)
+  d.write_buffer[line_num - 1] = OPEN_PARAGRAPH + line + CLOSE_PARAGRAPH
 
 def editor_insert_line(d, insert):
   pattern = re.compile(r'(\d+) (.*)')
@@ -273,10 +396,10 @@ def editor_find_replace_text(d, replace, replace_all=False):
 
   if replace_all:
     d.write(f"Replacing all occurances of '{old_text}' with '{new_text}'.")
-    for line in d.write_buffer._raw:
+    for line in d.write_buffer:
       new_buffer.add_line(line.replace(old_text, new_text))
   else:
-    for line in d.write_buffer._raw:
+    for line in d.write_buffer:
       # once replace_complete flag is set, simply copy the rest without changing anything
       if replace_complete or old_text not in line:
         new_buffer.add_line(line)
@@ -290,84 +413,8 @@ def editor_find_replace_text(d, replace, replace_all=False):
 
   d.write_buffer = new_buffer
 
-# all implemented except /r
-EDITOR_HELP_STR = """Editor Commands
----------------------------------------------------
-  /c                      - clear current buffer    
-  /h                      - bring up this menu      
-  /l                      - show unformatted buffer 
-  /n                      - /l but with line numbers
-  /f                      - format paragraphs  
-  /i#                     - insert before line #
-  /d#                     - delete line #
-  /x# '<text>'            - split line # at text
-  /r '<text1>' '<text2>'  - replace text1 with text2
-  /ra '<text1>' '<text2>' - all occurances
-"""
-
-# returns True if the player is done writing
-def editor_handle_input(d, input):
-  if d.char:
-    width = d.char.prefs.screen_width
-  else:
-    width = config.DEFAULT_SCREEN_WIDTH
-
-  # put this check first so that all other checks may assume index[0] exists
-  if input == "":
-    d.write_buffer.add_line(input)
-  elif input == "/c":
-    d.write("Buffer cleared.\r\n")
-    d.write_buffer = buffer()
-  elif input[:3] == "/ra":
-    editor_find_replace_text(d, input[3:], replace_all=True)
-  elif input[:2] == "/r":
-    editor_find_replace_text(d, input[2:], replace_all=False)
-  elif input[:2] == "/i":
-    editor_insert_line(d, input[2:])
-  elif input[:2] == "/d":
-    editor_delete_line(d, input[2:])
-  elif input[:2] == "/x":
-    editor_split_line(d, input[2:])
-  elif input == "/l":
-    d.write(d.write_buffer.str())
-  elif input == "/f":
-    d.write("Formatting buffer.\r\n")
-    d.write_buffer = d.write_buffer.clean_up()
-  elif input == "/n":
-    d.write(d.write_buffer.str(numbers=True))
-  elif input == "/h":
-    d.write(EDITOR_HELP_STR)
-  elif input == "/a":
-    d.write("Aborting edit.\r\n")
-    d.stop_writing(save=False)
-    return True
-  elif input == "/s":
-    d.write("Saving buffer.\r\n")
-    d.stop_writing(save=True)
-    return True
-  elif input[0] == "/" and len(input) > 1:
-    d.write(f"Unrecognized command: {input[1]}\r\n")
-  else:
-    d.write_buffer.add_line(input)
-
-  return False
-
 if __name__ == '__main__':
+  buf = buffer()
 
-  new_buf = buffer()
-
-  new_buf.add_line("<p>Hi Bob, I'm just writing to show you the awesome")
-  new_buf.add_line("asd asdf asdf asdf asdf asdf asdf asdf asdf asdf asadf ok this")
-  new_buf.add_line("sentence is erally long.")
-  new_buf.add_line("you get the idea. now.  Check out")
-  new_buf.add_line("my blue sword below.")
-  new_buf.add_line("Oh right I forgot to close this paragraph as well. </p>-\\_(\")_/-<p>Now start a new")
-  new_buf.add_line("paragraph but don't stop it until the next line at some point, so we can really find")
-  new_buf.add_line("out whether our formatting is robust.</p>Ok it stopped on two lines later.")
-  new_buf.add_line("Keep this line verbatim:")
-  new_buf.add_line("(*) ==== +________________/  (*) ==== +________________/")
-  new_buf.add_line("<p>The quick brown fox jumped over the lazy dog who was too busy chewing on his squeaky toys to notice.</p>")
-
-  print(new_buf.display(50, True))
-
-
+  buf.add_line("Hello <princess> you sonofa<bitch>.\r\n")
+  buf.proc_color_codes()

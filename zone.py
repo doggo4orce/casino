@@ -179,7 +179,7 @@ class zone:
 
         wf.write(f"name: {rm.name}\n")
         wf.write(f"id: {rm.id}\n")
-        wf.write(f"desc:\n{rm.desc.raw_str()}~\n")
+        wf.write(f"desc:\n{rm.desc.str()}~\n")
 
         for dir in exit.direction:
           dest = rm.get_destination(dir)
@@ -195,7 +195,7 @@ class zone:
         wf.write(f"id: {proto.unique_id.id}\n")
         wf.write(f"name: {proto.entity.name}\n")
         wf.write(f"namelist: {' '.join(proto.entity.namelist)}\n")
-        wf.write(f"desc:\n{proto.entity.desc.raw_str()}~\n")
+        wf.write(f"desc:\n{proto.entity.desc.str()}~\n")
 
     if not os.path.isdir(npc_folder):
       os.system(f"mkdir '{npc_folder}'")
@@ -206,7 +206,7 @@ class zone:
         wf.write(f"id: {proto.unique_id.id}\n")
         wf.write(f"name: {proto.entity.name}\n")
         wf.write(f"ldesc: {proto.ldesc}\n")
-        wf.write(f"desc:\n{proto.entity.desc.raw_str()}~\n")
+        wf.write(f"desc:\n{proto.entity.desc.str()}~\n")
 
   def __str__(self):
     ret_val = f"Zone: {CYAN}{self.name}{NORMAL} ID: {CYAN}{self.id}{NORMAL}\r\n\r\n"

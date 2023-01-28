@@ -29,33 +29,14 @@ def oxford_comma(words):
     return ', '.join(words[:-1]) + ', and ' + words[-1]
 
 # check if a vref str is a valid internal code, like a room within a zone
-def valid_id(vref):
+def valid_id(str):
   valid = True
 
-  for j in range(0, len(vref)):
-    if not vref[j].isalnum() and vref[j] not in {'_'}:
+  for j in range(0, len(str)):
+    if not str[j].isalnum() and str[j] not in {'_'}:
       valid = False
 
   return valid
-
-def essay(text, width, indent=False):
-  k = text.find("<p>")
-  ret_val = ""
-
-  if k == -1:
-    return paragraph(text, width, indent) + "\r\n"
-
-  while k != -1:
-    k2 = text[k+4:].find('</p>')
-    if k2 == -1:
-      logging.warning("<p> tag appeared without </p>")
-      ret_val += paragraph(text, width, indent) + "\r\n"
-      return ret_val
-    else:
-      ret_val += paragraph(text[k+4:][k2:], width, indent) + "\r\n"
-      text = text[k+4:][k2+4:]
-    
-  return ret_val
 
 def paragraph(text, width, indent=False):
   words = text.split(' ')
@@ -90,7 +71,7 @@ def paragraph(text, width, indent=False):
       line_length = len(word) + 1
       par += '\r\n' + word + ' '
 
-  return par
+  return par.rstrip()
 
 # used to read files in lib/
 def split_tag_value(line):
@@ -114,6 +95,42 @@ def parse_reference(code):
       zone_id = code[:n]
       id = code[n+1:-1]
   return zone_id, id
+
+# returns a cleaned up version of "Hello , how are     you guys ?"
+def proofread(paragraph):
+
+  formatted = ""
+
+  lines = paragraph.split(' ')
+
+  begin_sentence = True
+
+  for word in lines:
+
+    word = word.strip()
+
+    if word == '':
+      continue
+
+    if word in {'.', '?'}:
+      formatted += word + ' '
+      begin_sentence = True
+      continue
+    elif word == ',':
+      formatted += ','
+      continue
+
+    if begin_sentence:
+      formatted += word.capitalize()
+      begin_sentence = False
+    else:
+      formatted += ' ' + word
+
+    if word[-1:] in {'.', '?'}:
+      formatted += ' '
+      begin_sentence = True
+
+  return formatted.rstrip()
 
 def yesno(flag):
   if flag == True:

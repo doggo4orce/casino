@@ -2,7 +2,6 @@ name: A Dark Corner in the Hallway
 id: hallway2
 desc:
 <p>The hallway makes a sharp corner here, leading both east or south.</p>
-asdf
-asdf
+<p>Asdf asdf wefn wenf't?</p>
 ~
 south: hallway1

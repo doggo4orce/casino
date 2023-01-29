@@ -540,7 +540,15 @@ def do_move(ch, scmd, argument, server, mud):
   show_room_to_char(ch, ending_room)
 
 def do_colors(ch, scmd, argument, server, mud):
-  pass
+  import editor
+
+  buf = editor.buffer()
+
+  for j in range(0, 16):
+    line = ""
+    for i in range(0, 16):
+      line += f"{ansi_color_sequence(10*j + i)}*"
+    ch.d.write(line + "\r\n" + NORMAL)
 
 def do_quit(ch, scmd, argument, server, mud):
   d = ch.d

@@ -21,7 +21,7 @@ def redit_display_main_menu(d):
   d.write(f"-- Room ID : [{CYAN}{redit_save.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.uid.zone_id}{NORMAL}]\r\n")
   d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.room_name}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
-  d.write(f"{YELLOW}{redit_save.room_desc.display(d.char.prefs.screen_width, indent=True, color=True)}{NORMAL}")
+  d.write(f"{redit_save.room_desc.display(d.char.prefs.screen_width, indent=True, color=True)}{NORMAL}")
   d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")
 
   # index through the next 4 - 9 as exits

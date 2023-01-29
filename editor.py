@@ -15,6 +15,9 @@ class buffer:
   def __init__(self, str=None):
     self._contents = list()
 
+    if str != None:
+      self._contents.append(str)
+
   """add_line()            <- adds a line to the buffer
      insert_line(idx, str) <- adds a line in position idx and re-orders if necessary
      delete_line(idx)      <- deletes the line and re-orders
@@ -78,62 +81,25 @@ class buffer:
       self.add_line(line)
 
   def display(self, width, format=True, indent=True, numbers=False, color=True):
-    
-    if color:
-      buf = self.proc_color_codes()
-    else:
-      buf = self
-
     ret_val = ""
+    buf = self.make_copy()
 
     if format:
-      lines = buf.clean_up()
-    else:
-      lines = buf
+      buf = buf.clean_up()
 
-    for idx, line in enumerate(lines):
+    for idx, line in enumerate(buf._contents):
       if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
         line = line[len(OPEN_PARAGRAPH):]
         line = line[:(-1)*len(CLOSE_PARAGRAPH)]
-        ret_val += string_handling.paragraph(line, width, indent)
-      else:
-        ret_val += line
+        line = string_handling.paragraph(line, width, indent)
+
+        if color:
+          line = string_handling.proc_color_codes(line)
 
       if numbers:
-        ret_val = f"L{idx + 1}: " + ret_val
-      ret_val += "\r\n"
-
-    return ret_val
-
-  def proc_color_codes(self):
-    ret_val = buffer()
-    line_buffer = ""
-    
-    for line in self._contents:
-      pattern = re.compile(r'(.*?)<c(\d)+>(.*)')
-      match = re.search(pattern, line)
-
-      if match == None:
-        ret_val.add_line(line)
-
-      while match != None:
-        x = match.span()[0]
-        y = match.span()[1]
-
-        pre_tag_str = match.group(1)
-        color_index = int(match.group(2))
-        text = match.group(3)
-
-        if color_index == 0:
-          color_code = NORMAL
-        elif color_index in range(1, 16):
-          color_code = ansi_color_sequence(color_index)
-
-        line = pre_tag_str + color_code + text
-        pattern = re.compile(r'(.*?)<c(\d)+>(.*)')
-        match = re.search(pattern, line)
-        
-      ret_val.add_line(line)
+        line = f"L{idx + 1}: " + line
+      
+      ret_val += line + "\r\n"
 
     return ret_val
 
@@ -274,7 +240,7 @@ def editor_handle_input(d, input):
   elif input[:2] == "/i":
     editor_insert_line(d, input[2:])
   elif input == "/l":
-    d.write(d.write_buffer.str())
+    d.write(d.write_buffer.str(numbers=False))
   elif input == "/n":
     d.write(d.write_buffer.str(numbers=True))
   elif input[:2] == "/p":
@@ -319,6 +285,7 @@ def editor_split_line(d, split):
   first_half = d.write_buffer[line_num - 1][:k]
   second_half = d.write_buffer[line_num - 1][k:]
 
+  d.write(f"Splitting line #{line_num} at '{target}'.")
   d.write_buffer.delete_line(line_num - 1)
   d.write_buffer.insert_line(line_num - 1, second_half)
   d.write_buffer.insert_line(line_num - 1, first_half)
@@ -342,7 +309,9 @@ def editor_proofread_line(d, proofread):
     line = line[len(OPEN_PARAGRAPH):]
     line = line[:(-1)*len(CLOSE_PARAGRAPH)]
 
+  line = string_handling.tidy_color_tags(line)
   line = string_handling.proofread(line)
+
   d.write_buffer[line_num - 1] = OPEN_PARAGRAPH + line + CLOSE_PARAGRAPH
 
 def editor_insert_line(d, insert):
@@ -414,7 +383,6 @@ def editor_find_replace_text(d, replace, replace_all=False):
   d.write_buffer = new_buffer
 
 if __name__ == '__main__':
-  buf = buffer()
+  buf = buffer("<p>This would a <c3>great<c0> place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>")
 
-  buf.add_line("Hello <princess> you sonofa<bitch>.\r\n")
-  buf.proc_color_codes()
+  print(buf.display(width=60, format=True, indent=True, color=True))

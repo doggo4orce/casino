@@ -253,7 +253,7 @@ if __name__ == '__main__':
   rm = room.room()
   rm.name = "Stockville Recall"
   rm.id = "recall"
-  rm.desc = editor.buffer("<p>This is the recall point of Stockville City.  You should be able to get here by typing RECALL at any time.</p>")
+  rm.desc = editor.buffer("<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>")
   rm.connect(exit.direction.EAST, 'casino')
   rm.connect(exit.direction.WEST, 'reading')
   zn._world[rm.id] = rm

@@ -1,4 +1,6 @@
+from color import *
 import logging
+import re
 
 def ana(noun):
   if noun[0].lower() in ['a', 'e', 'i', 'o', 'u']:
@@ -38,6 +40,23 @@ def valid_id(str):
 
   return valid
 
+def strip_tags(str):
+  pattern = re.compile(r'(.*)<c(\d{1,2})>(.*)')
+  match = re.search(pattern, str)
+
+  while match != None:
+    str = match.group(1) + match.group(3)
+    match = re.search(pattern, str)
+
+  pattern = re.compile(r'(.*)(</?p>)(.*)')
+  match = re.search(pattern, str)
+
+  while match != None:
+    str = match.group(1) + match.group(3)
+    match = re.search(pattern, str)
+
+  return str
+  
 def paragraph(text, width, indent=False):
   words = text.split(' ')
   line_length = 0
@@ -49,7 +68,7 @@ def paragraph(text, width, indent=False):
 
   for idx, word in enumerate(words):
     # it fits perfectly
-    if line_length + len(word) == width:
+    if line_length + len(strip_tags(word)) == width:
       par += word
 
       # are we done?
@@ -61,14 +80,14 @@ def paragraph(text, width, indent=False):
       par += '\r\n'
 
     # it fits with room to spare
-    elif line_length + len(word) < width:
+    elif line_length + len(strip_tags(word)) < width:
       # add the word, and a space afterwards
-      line_length += len(word) + 1
+      line_length += len(strip_tags(word)) + 1
       par += word + ' '
 
     # it doesn't fit, so start a new line
     else:
-      line_length = len(word) + 1
+      line_length = len(strip_tags(word)) + 1
       par += '\r\n' + word + ' '
 
   return par.rstrip()
@@ -137,10 +156,43 @@ def yesno(flag):
     return 'yes'
   return 'no'
 
+def tidy_color_tags(line):
+  tidy = False
+
+  # first push all color tags forward to the next word
+  while True:
+    pattern = re.compile(r' (<c\d+>) ')
+    match = re.search(pattern, line)
+
+    if match == None:
+      break
+
+    line = line.replace(f"{match.group(0)}", f"  {match.group(1)}")
+
+  # then pull the last one backwards if necessary
+  while True:
+    pattern = re.compile(r' (<c\d+>)$')
+    match = re.search(pattern, line)
+
+    if match == None:
+      break
+
+    line = line.replace(f"{match.group(0)}", f"{match.group(1)}")
+  return line
+
+def proc_color_codes(line):
+  for j in range(0,256):
+    line = line.replace(f'<c{j}>', ansi_color_sequence(j))
+  return line
+
 def alpha_numeric_space(input):
   for j in range(0, len(input)):
     if input[j] != ' ' and not input[j].isalnum():
       return False
   return True
 
+if __name__ == '__main__':
+  str = "Hello <c333> world! <c0>    OK Bye\r\n" + "Hi <c12> again <c0> ok finally bye bye.      <c3>"
+  str = tidy_color_tags(str)
+  print(str)
 

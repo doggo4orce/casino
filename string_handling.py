@@ -31,6 +31,8 @@ def oxford_comma(words):
     return ', '.join(words[:-1]) + ', and ' + words[-1]
 
 # check if a vref str is a valid internal code, like a room within a zone
+# so if valid_id('zn') and valid_id('rm') both return True, then 'zn[rm]'
+# is a sensible full identifier
 def valid_id(str):
   valid = True
 
@@ -131,7 +133,7 @@ def proofread(paragraph):
     if word == '':
       continue
 
-    if word in {'.', '?'}:
+    if word in {'.', '?', '!'}:
       formatted += word + ' '
       begin_sentence = True
       continue
@@ -145,7 +147,7 @@ def proofread(paragraph):
     else:
       formatted += ' ' + word
 
-    if word[-1:] in {'.', '?'}:
+    if word[-1:] in {'.', '?', '!'}:
       formatted += ' '
       begin_sentence = True
 

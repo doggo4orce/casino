@@ -17,6 +17,8 @@ class exit:
   def __init__(self, dir, dest_ref):
     self._direction = dir
 
+    # this should be handled more cleanly, but who has the time?
+    # why not just use regex and search for (\w\w*)[(\w\w*)]
     if string_handling.valid_id(dest_ref):
       self._destination = structs.unique_identifier(None, dest_ref)
     else:

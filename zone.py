@@ -331,7 +331,7 @@ if __name__ == '__main__':
   ob.entity.namelist = ['newbie', 'dagger']
   ob.entity.name = 'a newbie dagger'
   ob.entity.desc = editor.buffer("<p>It's so bright and shiny, even you can't lose it.</p>")
-  ob.entity.ldesk = 'Some idiot (maybe you?) left a newbie dagger here.'
+  ob.entity.ldesk = 'Some idiot left a newbie dagger here.'
   ob.unique_id.zone_id = 'newbie_zone'
   ob.unique_id.id = 'newbie_dagger'
   zn._obj_proto[ob.unique_id.id] = ob

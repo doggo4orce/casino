@@ -93,8 +93,8 @@ class buffer:
         line = line[:(-1)*len(CLOSE_PARAGRAPH)]
         line = string_handling.paragraph(line, width, indent)
 
-        if color:
-          line = string_handling.proc_color_codes(line)
+      if color:
+        line = string_handling.proc_color_codes(line)
 
       if numbers:
         line = f"L{idx + 1}: " + line

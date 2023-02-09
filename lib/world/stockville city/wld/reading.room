@@ -2,6 +2,17 @@ name: Reading Room
 id: reading
 desc:
 <p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
+
+  <c9>HINT HINT<c0>:  Time to make a message board!
+  ---------
+       But you can see here that this text
+       is not formatted along with the
+       paragraph above.  I can even use the
+       format command while editing this
+       room and this mini pargraph will not
+       be harmed!  <(^_^)7   6(*-*)^
+
+<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>
 ~
 north: newbie_zone[hallway1]
-east: recall
+east: stockville[recall]

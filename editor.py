@@ -16,7 +16,10 @@ class buffer:
     self._contents = list()
 
     if str != None:
-      self._contents.append(str)
+      lines = str.split('\n')
+      
+      for line in lines:
+        self._contents.append(line.strip('\r'))
 
   """add_line()            <- adds a line to the buffer
      insert_line(idx, str) <- adds a line in position idx and re-orders if necessary
@@ -26,7 +29,8 @@ class buffer:
      copy_from(buf)        <- resets the contents to be identical from those of buf
      display(width)        <- returns buffer as string formatted to width.
      clean_up()            <- returns lines with paragraphs tidied up, optionally fix typos
-     str()                 <- converts to string"""
+     str()                 <- converts to string
+     preview(max_len)      <- shows up to the first max_len chars of first line"""
 
   def __getitem__(self, key):
     return self._contents[key]
@@ -177,6 +181,14 @@ class buffer:
         ret_val += f"L{idx+1}: "
       ret_val += line + "\r\n"
     return ret_val
+
+  def preview(self, max_len):
+    if self.is_empty:
+      return ""
+    return string_handling.strip_tags(self[0])[:max_len]
+
+  def __str__(self):
+    return self.str(numbers=False)
 
   def __contains__(self, obj):
     return obj in self._contents

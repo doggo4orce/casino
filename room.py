@@ -84,7 +84,7 @@ class room:
      exit(dir)                 <- returns exit object leading in direction dir
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
      exit_exists(dir)          <- checks if the room has an exit leading in direction dir
-     save(path)                <- saves the room to a file with given path"""
+     save_to_db(c)             <- saves the room to cursor c"""
   def add_char(self, ch):
     ch.room = self.unique_id
     self._people.append(ch)
@@ -186,6 +186,13 @@ class room:
   def exit_exists(self, direction):
     return self.get_destination(direction) != None
 
+  def save_to_db(self, c):
+    # check if this room is already in the db
+    # if so, update it
+    else:
+      database.add_room_to_table(c, self.zone_id, self)
+
+# if not, add it
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"Description:\r\n{string_handling.paragraph(self.desc, 65, True)}\r\n"

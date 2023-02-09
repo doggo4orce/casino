@@ -3,5 +3,5 @@ id: hallway1
 desc:
 <p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>
 ~
-north: hallway2
+north: newbie_zone[hallway2]
 south: stockville[reading]

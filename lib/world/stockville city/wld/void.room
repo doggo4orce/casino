@@ -3,4 +3,4 @@ id: void
 desc:
 <p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.</p>
 ~
-down: recall
+down: stockville[recall]

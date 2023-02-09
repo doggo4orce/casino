@@ -1,7 +1,7 @@
 name: Stockville Recall
 id: recall
 desc:
-<p>This is the recall point of <c1>STOCKville<c0> City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>
+<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>
 ~
-east: casino
-west: reading
+east: stockville[casino]
+west: stockville[reading]

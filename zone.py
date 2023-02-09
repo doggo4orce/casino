@@ -1,5 +1,6 @@
 from color import *
 import config
+import database
 import exit
 import file_handling
 import glob
@@ -143,6 +144,9 @@ class zone:
       file_handling.parse_generic(new_obj_proto, rf)
       self._obj_proto[new_obj_proto.unique_id.id] = new_obj_proto
 
+  def save_to_db(self, db):
+    pass
+
   # todo: factor some of this thorugh a similar function for obj_protos, npc_protos, and rooms?
   def save_to_folder(self):
 
@@ -226,16 +230,25 @@ if __name__ == '__main__':
   import pc
   import editor
 
+  conn = database.create_database(':memory:')
+  c = conn.cursor()
+
   os.system(f"rm -rf 'lib/world/stockville city'")
   os.system(f"rm -rf 'lib/world/the newbie zone'")
 
-  
+  database.create_exit_table(c)
+  database.create_player_table(c)
+  database.create_wld_table(c)
+  database.create_zone_table(c)
+
   zn = zone()
   zn.name = "the city of stockville"
   zn.folder = "stockville city"
   zn.id = "stockville"
   zn.author = "kyle"
 
+  database.add_zone_to_table(c, zn)
+  
   rm = room.room()
   rm.name = "The Void"
   rm.id = "void"
@@ -243,12 +256,20 @@ if __name__ == '__main__':
   rm.connect(exit.direction.DOWN, 'recall')
   zn._world[rm.id] = rm
 
+  database.add_room_to_table(c, 'stockville', rm)
+  for ex in rm.exits.values():
+    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+
   rm = room.room()
   rm.name = "Stockville Casino"
   rm.id = "casino"
   rm.desc = editor.buffer("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
   rm.connect(exit.direction.WEST, 'recall')
   zn._world[rm.id] = rm
+
+  database.add_room_to_table(c, 'stockville', rm)
+  for ex in rm.exits.values():
+    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
 
   rm = room.room()
   rm.name = "Stockville Recall"
@@ -258,13 +279,33 @@ if __name__ == '__main__':
   rm.connect(exit.direction.WEST, 'reading')
   zn._world[rm.id] = rm
 
+  database.add_room_to_table(c, 'stockville', rm)
+  for ex in rm.exits.values():
+    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+
   rm = room.room()
   rm.name = "Reading Room"
   rm.id = "reading"
-  rm.desc = editor.buffer("<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>")
+  rm.desc = editor.buffer("""<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
+
+  <c9>HINT HINT<c0>:  Time to make a message board!
+  ---------
+       But you can see here that this text
+       is not formatted along with the
+       paragraph above.  I can even use the
+       format command while editing this
+       room and this mini pargraph will not
+       be harmed!  <(^_^)7   6(*-*)^
+
+<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>""")
+  print(string_handling.strip_tags(rm.desc.str()))
   rm.connect(exit.direction.EAST, 'recall')
   rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
   zn._world[rm.id] = rm
+
+  database.add_room_to_table(c, 'stockville', rm)
+  for ex in rm.exits.values():
+    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baccarat', 'dealer']
@@ -303,6 +344,8 @@ if __name__ == '__main__':
   zn.id = "newbie_zone"
   zn.author = "kyle"
 
+  database.add_zone_to_table(c, zn)
+
   rm = room.room()
   rm.name = "The Beginning of a Damp Hallway"
   rm.id = "hallway1"
@@ -311,12 +354,27 @@ if __name__ == '__main__':
   rm.connect(exit.direction.SOUTH, 'stockville[reading]')
   zn._world[rm.id] = rm
 
+  database.add_room_to_table(c, 'newbie_zone', rm)
+  for ex in rm.exits.values():
+    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+
   rm = room.room()
   rm.name = "A Dark Corner in the Hallway"
   rm.id = "hallway2"
-  rm.desc = editor.buffer("<p>The hallway makes a sharp corner here, leading both east or south.</p>")
+  rm.desc = editor.buffer(
+"""<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
+them. Then I can close the tag whenever I want to, and I will!</p>
+
+<p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
+<c0>awkard spaces between words and tags. Just simply due to the way you enter words through the
+editor, they may come through one at a time. And you may put a period after some spaces and forget to
+capitalize a word.</p>""")
   rm.connect(exit.direction.SOUTH, 'hallway1')
   zn._world[rm.id] = rm
+
+  database.add_room_to_table(c, 'newbie_zone', rm)
+  for ex in rm.exits.values():
+    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['newbie', 'monster']
@@ -338,7 +396,15 @@ if __name__ == '__main__':
 
   zn.save_to_folder()
 
+  #print(database.zone_table_to_str(c) + "\r\n")
+  print(database.wld_table_to_str(c) + "\r\n")
+  #print(database.ex_table_to_str(c) + "\r\n")
 
+  # c.execute("""SELECT * FROM wld_table""")
 
+  # for line in c.fetchall():
+  #   print(line)
+
+  c.close()
 
 

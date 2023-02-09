@@ -43,18 +43,22 @@ def valid_id(str):
   return valid
 
 def strip_tags(str):
-  pattern = re.compile(r'(.*)<c(\d{1,2})>(.*)')
+  pattern = re.compile(r'<c(\d{1,2})>')
   match = re.search(pattern, str)
-
+  
   while match != None:
-    str = match.group(1) + match.group(3)
+    x = match.span()[0]
+    y = match.span()[1]
+    str = str[:x] + str[y:]
     match = re.search(pattern, str)
 
-  pattern = re.compile(r'(.*)(</?p>)(.*)')
+  pattern = re.compile(r'</?p>')
   match = re.search(pattern, str)
 
   while match != None:
-    str = match.group(1) + match.group(3)
+    x = match.span()[0]
+    y = match.span()[1]
+    str = str[:x] + str[y:]
     match = re.search(pattern, str)
 
   return str

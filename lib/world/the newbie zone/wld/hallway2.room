@@ -1,8 +1,12 @@
 name: A Dark Corner in the Hallway
 id: hallway2
 desc:
-<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of them. Then I can close the tag whenever I want to, and I will!</p>
-<p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really <c0>awkard spaces between words and tags. 
-Just simply due to the way you enter words through the editor, they may come through one at a time. And you may put a period after some spaces and forget to capitalize a word.</p>
+<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
+them. Then I can close the tag whenever I want to, and I will!</p>
+
+<p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
+<c0>awkard spaces between words and tags. Just simply due to the way you enter words through the
+editor, they may come through one at a time. And you may put a period after some spaces and forget to
+capitalize a word.</p>
 ~
-south: hallway1
+south: newbie_zone[hallway1]

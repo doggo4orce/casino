@@ -1,4 +1,5 @@
 from color import *
+import database
 import enum
 import editor
 import exit
@@ -187,12 +188,15 @@ class room:
     return self.get_destination(direction) != None
 
   def save_to_db(self, c):
-    # check if this room is already in the db
-    # if so, update it
-    else:
-      database.add_room_to_table(c, self.zone_id, self)
+    """Saves the room through to the database through connection c"""
 
-# if not, add it
+    # chek if the room already exists in the database
+    if database.wld_table_contains_room(c, self.zone_id, self.id):
+      # if so, then delete it so we can re-add it below
+      database.wld_table_delete_room(c, self)
+
+    database.wld_table_add_room(c, self)
+
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"Description:\r\n{string_handling.paragraph(self.desc, 65, True)}\r\n"

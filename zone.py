@@ -233,13 +233,7 @@ if __name__ == '__main__':
   conn = database.create_database(':memory:')
   c = conn.cursor()
 
-  os.system(f"rm -rf 'lib/world/stockville city'")
-  os.system(f"rm -rf 'lib/world/the newbie zone'")
-
-  database.create_exit_table(c)
-  database.create_player_table(c)
-  database.create_wld_table(c)
-  database.create_zone_table(c)
+  database.create_tables(c)
 
   zn = zone()
   zn.name = "the city of stockville"
@@ -251,40 +245,44 @@ if __name__ == '__main__':
   
   rm = room.room()
   rm.name = "The Void"
+  rm.zone_id = "stockville"
   rm.id = "void"
   rm.desc = editor.buffer("<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.</p>")
   rm.connect(exit.direction.DOWN, 'recall')
   zn._world[rm.id] = rm
 
-  database.add_room_to_table(c, 'stockville', rm)
+  rm.save_to_db(c)
   for ex in rm.exits.values():
-    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
 
   rm = room.room()
   rm.name = "Stockville Casino"
+  rm.zone_id = "stockville"
   rm.id = "casino"
   rm.desc = editor.buffer("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
   rm.connect(exit.direction.WEST, 'recall')
   zn._world[rm.id] = rm
 
-  database.add_room_to_table(c, 'stockville', rm)
+  rm.save_to_db(c)
   for ex in rm.exits.values():
-    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
 
   rm = room.room()
   rm.name = "Stockville Recall"
+  rm.zone_id = "stockville"
   rm.id = "recall"
   rm.desc = editor.buffer("<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>")
   rm.connect(exit.direction.EAST, 'casino')
   rm.connect(exit.direction.WEST, 'reading')
   zn._world[rm.id] = rm
 
-  database.add_room_to_table(c, 'stockville', rm)
+  rm.save_to_db(c)
   for ex in rm.exits.values():
-    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
 
   rm = room.room()
   rm.name = "Reading Room"
+  rm.zone_id = "stockville"
   rm.id = "reading"
   rm.desc = editor.buffer("""<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
 
@@ -303,9 +301,9 @@ if __name__ == '__main__':
   rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
   zn._world[rm.id] = rm
 
-  database.add_room_to_table(c, 'stockville', rm)
+  rm.save_to_db(c)
   for ex in rm.exits.values():
-    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baccarat', 'dealer']
@@ -348,18 +346,20 @@ if __name__ == '__main__':
 
   rm = room.room()
   rm.name = "The Beginning of a Damp Hallway"
+  rm.zone_id = "newbie_zone"
   rm.id = "hallway1"
   rm.desc = editor.buffer("<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>")
   rm.connect(exit.direction.NORTH, 'hallway2')
   rm.connect(exit.direction.SOUTH, 'stockville[reading]')
   zn._world[rm.id] = rm
 
-  database.add_room_to_table(c, 'newbie_zone', rm)
+  rm.save_to_db(c)
   for ex in rm.exits.values():
-    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
 
   rm = room.room()
   rm.name = "A Dark Corner in the Hallway"
+  rm.zone_id = "newbie_zone"
   rm.id = "hallway2"
   rm.desc = editor.buffer(
 """<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
@@ -372,9 +372,9 @@ capitalize a word.</p>""")
   rm.connect(exit.direction.SOUTH, 'hallway1')
   zn._world[rm.id] = rm
 
-  database.add_room_to_table(c, 'newbie_zone', rm)
+  rm.save_to_db(c)
   for ex in rm.exits.values():
-    database.add_exit_to_table(c, f"{zn.id}[{rm.id}]", ex)
+    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['newbie', 'monster']
@@ -394,11 +394,19 @@ capitalize a word.</p>""")
   ob.unique_id.id = 'newbie_dagger'
   zn._obj_proto[ob.unique_id.id] = ob
 
+  zone_id = "stockville"
+  id = "recall"
+
   zn.save_to_folder()
 
   #print(database.zone_table_to_str(c) + "\r\n")
   print(database.wld_table_to_str(c) + "\r\n")
   #print(database.ex_table_to_str(c) + "\r\n")
+
+  if database.wld_table_contains_room(c, zone_id, id):
+    print(f"The wld_table contains room {zone_id}[{id}]")
+  else:
+    print(f"The wld_table does not contain room {zone_id}[{id}]")
 
   # c.execute("""SELECT * FROM wld_table""")
 

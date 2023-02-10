@@ -44,6 +44,15 @@ class exit:
     else:
       return f"{self.zone_id}[{self.room_id}]"
 
+  def save_to_db(self, c):
+    """Saves the exit through to the database through connection c"""
+
+    # check if the room already exists in the database
+    if database.exit_table_has_exit(c, self.zone_id, self.id, self.direction):
+      # if so, then delete it so we can re-add it below
+      database.exit_table_delete_exit(c, self)
+
+    database.exit_table_add_exit(c, self)
 
   @zone_id.setter
   def zone_id(self, new_zone_id):

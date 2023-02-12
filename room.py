@@ -188,14 +188,17 @@ class room:
     return self.get_destination(direction) != None
 
   def save_to_db(self, c):
-    """Saves the room through to the database through connection c"""
+    """Saves the room and calls corresponding function for each exit through to database connection c"""
 
-    # chek if the room already exists in the database
-    if database.wld_table_contains_room(c, self.zone_id, self.id):
+    # check if the room already exists in the database
+    if database.wld_table_contains_room(c, self):
       # if so, then delete it so we can re-add it below
       database.wld_table_delete_room(c, self)
 
     database.wld_table_add_room(c, self)
+
+    for ex in self.exits.values():
+      ex.save_to_db(self, c)
 
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"

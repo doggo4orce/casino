@@ -69,7 +69,7 @@ class zone:
      parse_npcs(path)       <- calls parse_rno on each *.npc file
      parse_objects(path)    <- calls parse_rno on each *.obj file
      save_to_folder()       <- saves zone to lib/world/<self.folder>/
-     reset()                <- TODO: resets zone based on instructions in <??.filename>"""
+     reset()                <- TODO: resets zone based on instructions"""
 
   def add_room(self, id, new_room):
     self._world[id] = new_room
@@ -145,7 +145,8 @@ class zone:
       self._obj_proto[new_obj_proto.unique_id.id] = new_obj_proto
 
   def save_to_db(self, db):
-    pass
+    for rm in self._world.values():
+      rm.save_to_db()
 
   # todo: factor some of this thorugh a similar function for obj_protos, npc_protos, and rooms?
   def save_to_folder(self):
@@ -224,195 +225,4 @@ class zone:
     for obj in self._obj_proto.values():
       ret_val += f"    {obj.entity.name} {GREEN}{obj.unique_id}{NORMAL}\r\n"
     return ret_val
-
-if __name__ == '__main__':
-  import object
-  import pc
-  import editor
-
-  conn = database.create_database(':memory:')
-  c = conn.cursor()
-
-  database.create_tables(c)
-
-  zn = zone()
-  zn.name = "the city of stockville"
-  zn.folder = "stockville city"
-  zn.id = "stockville"
-  zn.author = "kyle"
-
-  database.add_zone_to_table(c, zn)
-  
-  rm = room.room()
-  rm.name = "The Void"
-  rm.zone_id = "stockville"
-  rm.id = "void"
-  rm.desc = editor.buffer("<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.</p>")
-  rm.connect(exit.direction.DOWN, 'recall')
-  zn._world[rm.id] = rm
-
-  rm.save_to_db(c)
-  for ex in rm.exits.values():
-    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
-
-  rm = room.room()
-  rm.name = "Stockville Casino"
-  rm.zone_id = "stockville"
-  rm.id = "casino"
-  rm.desc = editor.buffer("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
-  rm.connect(exit.direction.WEST, 'recall')
-  zn._world[rm.id] = rm
-
-  rm.save_to_db(c)
-  for ex in rm.exits.values():
-    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
-
-  rm = room.room()
-  rm.name = "Stockville Recall"
-  rm.zone_id = "stockville"
-  rm.id = "recall"
-  rm.desc = editor.buffer("<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>")
-  rm.connect(exit.direction.EAST, 'casino')
-  rm.connect(exit.direction.WEST, 'reading')
-  zn._world[rm.id] = rm
-
-  rm.save_to_db(c)
-  for ex in rm.exits.values():
-    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
-
-  rm = room.room()
-  rm.name = "Reading Room"
-  rm.zone_id = "stockville"
-  rm.id = "reading"
-  rm.desc = editor.buffer("""<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
-
-  <c9>HINT HINT<c0>:  Time to make a message board!
-  ---------
-       But you can see here that this text
-       is not formatted along with the
-       paragraph above.  I can even use the
-       format command while editing this
-       room and this mini pargraph will not
-       be harmed!  <(^_^)7   6(*-*)^
-
-<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>""")
-  print(string_handling.strip_tags(rm.desc.str()))
-  rm.connect(exit.direction.EAST, 'recall')
-  rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
-  zn._world[rm.id] = rm
-
-  rm.save_to_db(c)
-  for ex in rm.exits.values():
-    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
-
-  npcp = structs.npc_proto_data()
-  npcp.entity.namelist = ['baccarat', 'dealer']
-  npcp.entity.name = 'the baccarat card dealer'
-  npcp.entity.desc = editor.buffer("<p>He looks like he's straight out of a bluegrass music video.</p>")
-  npcp.ldesc = 'A dealer stands here ready to hand out cards.  Maybe you should say hi?'
-  npcp.unique_id.zone_id = 'stockville'
-  npcp.unique_id.id = 'baccarat_dealer'
-  zn._npc_proto[npcp.unique_id.id] = npcp
-
-  npcp = structs.npc_proto_data()
-  npcp.entity.namelist = ['baker', 'fat']
-  npcp.entity.name = 'the baker'
-  npcp.entity.desc = editor.buffer("<p>He's a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>")
-  npcp.ldesc = "A baker is here, but don't give him a bottle."
-  npcp.unique_id.zone_id = 'stockville'
-  npcp.unique_id.id = 'baker'
-  zn._npc_proto[npcp.unique_id.id] = npcp
-  
-  ob = structs.obj_proto_data()
-  ob.entity.namelist = ['bottle']
-  ob.entity.name = 'a bottle'
-  ob.entity.desc = editor.buffer("<p>It's brown and smells sticky inside.</p>")
-  ob.ldesc = 'An empty bottle has been dropped here.'
-  ob.unique_id.zone_id = 'stockville'
-  ob.unique_id.id = 'bottle'
-  zn._obj_proto[ob.unique_id.id] = ob
-
-  zn.save_to_folder()
-
-  # now do the same for the newbie zone
-  zn = zone()
-
-  zn.name = "the newbie zone"
-  zn.folder = "the newbie zone"
-  zn.id = "newbie_zone"
-  zn.author = "kyle"
-
-  database.add_zone_to_table(c, zn)
-
-  rm = room.room()
-  rm.name = "The Beginning of a Damp Hallway"
-  rm.zone_id = "newbie_zone"
-  rm.id = "hallway1"
-  rm.desc = editor.buffer("<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>")
-  rm.connect(exit.direction.NORTH, 'hallway2')
-  rm.connect(exit.direction.SOUTH, 'stockville[reading]')
-  zn._world[rm.id] = rm
-
-  rm.save_to_db(c)
-  for ex in rm.exits.values():
-    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
-
-  rm = room.room()
-  rm.name = "A Dark Corner in the Hallway"
-  rm.zone_id = "newbie_zone"
-  rm.id = "hallway2"
-  rm.desc = editor.buffer(
-"""<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
-them. Then I can close the tag whenever I want to, and I will!</p>
-
-<p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
-<c0>awkard spaces between words and tags. Just simply due to the way you enter words through the
-editor, they may come through one at a time. And you may put a period after some spaces and forget to
-capitalize a word.</p>""")
-  rm.connect(exit.direction.SOUTH, 'hallway1')
-  zn._world[rm.id] = rm
-
-  rm.save_to_db(c)
-  for ex in rm.exits.values():
-    database.exit_table_add_exit(c, f"{zn.id}[{rm.id}]", ex)
-
-  npcp = structs.npc_proto_data()
-  npcp.entity.namelist = ['newbie', 'monster']
-  npcp.entity.name = 'the newbie monster'
-  npcp.entity.desc = editor.buffer("<p>He has googly eyes and drools all over the place as he growls.</p>")
-  npcp.ldesc = 'A newbie monster snarls furiously here.'
-  npcp.unique_id.zone_id = 'newbie_zone'
-  npcp.unique_id.id = 'newbie_monster'
-  zn._npc_proto[npcp.unique_id.id] = npcp
-
-  ob = structs.obj_proto_data()
-  ob.entity.namelist = ['newbie', 'dagger']
-  ob.entity.name = 'a newbie dagger'
-  ob.entity.desc = editor.buffer("<p>It's so bright and shiny, even you can't lose it.</p>")
-  ob.entity.ldesk = 'Some idiot left a newbie dagger here.'
-  ob.unique_id.zone_id = 'newbie_zone'
-  ob.unique_id.id = 'newbie_dagger'
-  zn._obj_proto[ob.unique_id.id] = ob
-
-  zone_id = "stockville"
-  id = "recall"
-
-  zn.save_to_folder()
-
-  #print(database.zone_table_to_str(c) + "\r\n")
-  print(database.wld_table_to_str(c) + "\r\n")
-  #print(database.ex_table_to_str(c) + "\r\n")
-
-  if database.wld_table_contains_room(c, zone_id, id):
-    print(f"The wld_table contains room {zone_id}[{id}]")
-  else:
-    print(f"The wld_table does not contain room {zone_id}[{id}]")
-
-  # c.execute("""SELECT * FROM wld_table""")
-
-  # for line in c.fetchall():
-  #   print(line)
-
-  c.close()
-
 

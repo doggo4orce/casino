@@ -10,9 +10,9 @@ import sqlite3
 import zone
 
 class database:
-  def __init__(self, db):
-    self._name = db
-    self._conn = sqlite3.connect(db)
+  def __init__(self, name):
+    self._name = name
+    self._conn = sqlite3.connect(name)
     self._cursor = self._conn.cursor()
 
   """create_tables()       <-- creates all database tables
@@ -28,6 +28,11 @@ class database:
      _add_player(p)        <-- add p to the database
      _delete_player(p)     <-- delete p from the database
      save_player(p)        <-- creates or updates p in the database
+
+     contains_npc(np)      <-- checks whether np (npc_proto) will collide with existing entry
+     _add_npc(np)          <-- add np to the database
+     _delete_npc(np)       <-- deletes np from the database
+     save_npc(np)          <-- creates or updates np in the database
 
      contains_room(rm)     <-- check whether rm will collide with an existing room
      _add_room(rm)         <-- adds rm to the database
@@ -47,38 +52,35 @@ class database:
      close_database()      <-- closes _conn"""
 
   def create_tables(self):
-    """Creates all the database tables:
-      ex_table     Exit Table
-      p_table      Player Table
-      wld_table    Room Table
-      z_table      Zone Table"""
-    syntax = ["""
-      CREATE TABLE ex_table (
+
+    self.execute("""CREATE TABLE ex_table (
         direction   integer,
         o_zone_id   text,
         o_id        text,
         d_zone_id   text,
-        d_id        text
-      )""", """
-      CREATE TABLE p_table (
+        d_id        text)""")
+
+    self.execute("""CREATE TABLE p_table (
         id          integer,
-        name        text
-      )""", """
-      CREATE TABLE wld_table (
+        name        text)""")
+
+    self.execute("""CREATE TABLE npc_table (
         zone_id     text,
         id          text,
         name        text,
-        description text
-      )""", """
-      CREATE TABLE z_table (
+        ldesc       text,
+        dscn        text)""")
+
+    self.execute("""CREATE TABLE wld_table (
+        zone_id     text,
         id          text,
         name        text,
-        author      text
-      )"""
-    ]
+        description text)""")
 
-    for line in syntax:
-      self.execute(line)
+    self.execute("""CREATE TABLE z_table (
+        id          text,
+        name        text,
+        author      text)""")
 
   def execute(self, line, parameters=()):
     self._cursor.execute(line, parameters)
@@ -149,6 +151,34 @@ class database:
       self._delete_player(p)
     self._add_player(p)
 
+  def contains_npc(self, np):
+    self.execute("SELECT * from npc_table WHERE zone_id=:zone_id AND id=:id", {
+      'zone_id' : np.unique_id.zone_id,
+      'id':       np.unique_id.id})
+
+    if len(self.fetchall()) == 0:
+      return False
+
+    return True
+
+  def _add_npc(self, np):
+    self.execute("INSERT INTO npc_table VALUES (:zone_id, :id, :name, :ldesc, :dscn)", {
+      'zone_id': np.unique_id.zone_id,
+      'id': np.unique_id.id,
+      'name': np.entity.name,
+      'ldesc': np.ldesc,
+      'dscn': np.entity.desc.str()})
+
+  def _delete_npc(self, np):
+    self.execute("DELETE * FROM npc_table WHERE zone_id=:zone_id AND id=:id", {
+      'zone_id': np.unique_id.zone_id,
+      'id':      np.unique_id.id})
+
+  def save_npc(self, np):
+    if self.contains_npc(np):
+      self._delete_npc(np)
+    self._add_npc(np)
+
   def contains_room(self, rm):
     self.execute("SELECT * FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
       'zone_id': rm.zone_id,
@@ -213,6 +243,17 @@ class database:
 
     for item in self.fetchall():
       ret_val += f"{exit.direction(item[0]).name:<12} {item[1]:<15} {item[2]:<15} {item[3]:<15} {item[4]:<15}\r\n"
+
+    return ret_val
+
+  def npc_table(self):
+    self.execute("SELECT * FROM npc_table")
+
+    ret_val = string_handling.proc_color_codes(f"<c6>Zone:         Id:              Name:                         Desc:<c0>\r\n")
+ 
+    for item in self.fetchall():
+      desc_buffer = editor.buffer(item[4])
+      ret_val += f"{item[0]:<14}{item[1]:<17}{item[2]:<30}{desc_buffer.preview(30)}\r\n"
 
     return ret_val
 
@@ -335,6 +376,7 @@ if __name__ == '__main__':
   npcp.unique_id.zone_id = 'stockville'
   npcp.unique_id.id = 'baccarat_dealer'
   stockville._npc_proto[npcp.unique_id.id] = npcp
+  db.save_npc(npcp)
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baker', 'fat']
@@ -344,6 +386,7 @@ if __name__ == '__main__':
   npcp.unique_id.zone_id = 'stockville'
   npcp.unique_id.id = 'baker'
   stockville._npc_proto[npcp.unique_id.id] = npcp
+  db.save_npc(npcp)
   
   ob = structs.obj_proto_data()
   ob.entity.namelist = ['bottle']
@@ -402,12 +445,12 @@ capitalize a word.</p>""")
   ob.unique_id.zone_id = 'newbie_zone'
   ob.unique_id.id = 'newbie_dagger'
   newbie_zone._obj_proto[ob.unique_id.id] = ob
-
   db.save_zone(newbie_zone)
 
   print(db.z_table() + "\r\n")
   print(db.rm_table() + "\r\n")
   print(db.p_table() + "\r\n")
   print(db.ex_table() + "\r\n")
+  print(db.npc_table() + "\r\n")
 
   db.close_database()

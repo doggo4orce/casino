@@ -1,216 +1,275 @@
 import config
 import editor
 import exit
+import object
+import pc
 import room
 import string_handling
 import structs
 import sqlite3
 import zone
 
-CREATE_EXIT_TABLE = """
-CREATE TABLE ex_table (
-  direction   integer,
-  o_zone_id   text,
-  o_id        text,
-  d_zone_id   text,
-  d_id        text
-)"""
+class database:
+  def __init__(self, db):
+    self._name = db
+    self._conn = sqlite3.connect(db)
+    self._cursor = self._conn.cursor()
 
-CREATE_PLAYER_TABLE = """
-CREATE TABLE p_table (
-  id          integer,
-  name        text
-)"""
+  """create_tables()       <-- creates all database tables
+     execute(line)         <-- execute a line of SQL code
+     fetchall()            <-- returns _cursor.fetchall()
 
-CREATE_WORLD_TABLE = """
-CREATE TABLE wld_table (
-  zone_id     text,
-  id          text,
-  name        text,
-  description text
-)"""
+     contains_exit(rm, ex) <-- check if the exit will collide with an existing exit
+     _add_exit(rm, ex)     <-- add ex from rm to the database
+     _delete_exit(rm, ex)  <-- delete ex from rm from the database
+     save_exit(rm, ex)     <-- creates or updates ex from rm in the database
 
-CREATE_ZONE_TABLE = """
-CREATE TABLE z_table (
-  id          text,
-  name        text,
-  author      text
-)"""
+     contains_player(p)    <-- check whether p will collide with an existing player
+     _add_player(p)        <-- add p to the database
+     _delete_player(p)     <-- delete p from the database
+     save_player(p)        <-- creates or updates p in the database
 
-def create_tables(c):
-  """Create's all the database tables:
-    ex_table     Exit Table
-    p_table      Player Table
-    wld_table    Room Table
-    z_table      Zone Table"""
-  c.execute(CREATE_EXIT_TABLE)
-  c.execute(CREATE_PLAYER_TABLE)
-  c.execute(CREATE_WORLD_TABLE)
-  c.execute(CREATE_ZONE_TABLE)
+     contains_room(rm)     <-- check whether rm will collide with an existing room
+     _add_room(rm)         <-- adds rm to the database
+     _delete_room(rm)      <-- deletes rm from the database
+     save_room(rm)         <-- creates or updates rm in the database
 
-def ex_table_contains_exit(c, rm, ex):
-  """Check's if a room's exit matchs with an existing entry's direction in ex_table."""
-  room_id = rm.id
-  zone_id = rm.zone_id
+     contains_zone(zn)     <-- check whether zn will collide with an existing zone
+     _add_zone(zn)         <-- add zn to the database
+     _delete_zone(zn)      <-- deletes zn from the database
+     save_zone(zn)         <-- creates or updates zn in the database
 
-  c.execute("SELECT * FROM ex_table WHERE o_zone_id=:zone_id AND o_id=:room_id AND direction=:dir", {
-    'zone_id': zone_id,
-    'room_id': room_id,
-    'dir':     ex.direction})
+     ex_table()            <-- ascii render of ex_table
+     p_table()             <-- ascii render of p_table
+     rm_table()            <-- ascii render of rm_table
+     z_table()             <-- ascii render of z_table
 
-  if len(c.fetchall()) == 0:
-    return False
+     close_database()      <-- closes _conn"""
 
-  return True
+  def create_tables(self):
+    """Creates all the database tables:
+      ex_table     Exit Table
+      p_table      Player Table
+      wld_table    Room Table
+      z_table      Zone Table"""
+    syntax = ["""
+      CREATE TABLE ex_table (
+        direction   integer,
+        o_zone_id   text,
+        o_id        text,
+        d_zone_id   text,
+        d_id        text
+      )""", """
+      CREATE TABLE p_table (
+        id          integer,
+        name        text
+      )""", """
+      CREATE TABLE wld_table (
+        zone_id     text,
+        id          text,
+        name        text,
+        description text
+      )""", """
+      CREATE TABLE z_table (
+        id          text,
+        name        text,
+        author      text
+      )"""
+    ]
 
-def ex_table_add_exit(c, rm, ex):
-  """Saves a room's exit to ex_table."""
-  id = rm.id
-  zone_id = rm.zone_id
+    for line in syntax:
+      self.execute(line)
 
-  if ex.internal:
-    ex.zone_id = zone_id
+  def execute(self, line, parameters=()):
+    self._cursor.execute(line, parameters)
 
-  c.execute("INSERT INTO ex_table VALUES (:dir, :ozid, :orid, :dzid, :did)", {
-    'dir':     ex.direction,
-    'ozid':    zone_id,
-    'orid':    id,
-    'dzid':    ex.zone_id,
-    'did':     ex.room_id})
+  def fetchall(self):
+    return self._cursor.fetchall()
 
-def ex_table_delete_exit(c, rm, ex):
-  """Delete's a room's exit to ex_table."""
-  room_id = rm.id
-  zone_id = rm.zone_id
+  def contains_exit(self, rm, ex):
+    room_id = rm.id
+    zone_id = rm.zone_id
 
-  c.execute("DELETE FROM ex_table WHERE zone_id=:zone_id AND room_id=:room_id AND dir=:dir", {
-    'zone_id': zone_id,
-    'room_id': room_id,
-    'dir':     ex.direction})
+    self.execute("SELECT * FROM ex_table WHERE o_zone_id=:zone_id AND o_id=:room_id AND direction=:dir", {
+      'zone_id': zone_id,
+      'room_id': room_id,
+      'dir':     ex.direction})
 
-def ex_table_to_str(c):
-  """Returns a string built from rows of ex_table separated by newlines, prefixed by column headers."""
-  c.execute("SELECT * FROM ex_table")
+    if len(self.fetchall()) == 0:
+      return False
 
-  ret_val = string_handling.proc_color_codes(f"<c6>Direction:   From:                           To:<c0>\r\n")
+    return True
 
-  for item in c.fetchall():
-    ret_val += f"{exit.direction(item[0]).name:<12} {item[1]:<15} {item[2]:<15} {item[3]:<15} {item[4]:<15}\r\n"
+  def _add_exit(self, rm, ex):
+    id = rm.id
+    zone_id = rm.zone_id
 
-  return ret_val
+    if ex.internal:
+      ex.zone_id = zone_id
 
-def p_table_contains_player(c, p):
-  c.execute("SELECT * FROM p_table WHERE id=:id", {'id':p.id})
+    self.execute("INSERT INTO ex_table VALUES (:dir, :ozid, :orid, :dzid, :did)", {
+      'dir':     ex.direction,
+      'ozid':    zone_id,
+      'orid':    id,
+      'dzid':    ex.zone_id,
+      'did':     ex.room_id})
 
-  if len(c.fetchall()) == 0:
-    return False
+  def _delete_exit(self, rm, ex):
+    room_id = rm.id
+    zone_id = rm.zone_id
 
-  return True
+    self.execute("DELETE FROM ex_table WHERE zone_id=:zone_id AND room_id=:room_id AND dir=:dir", {
+      'zone_id': zone_id,
+      'room_id': room_id,
+      'dir':     ex.direction})
 
-def p_table_add_player(c, p):
-  c.execute("INSERT INTO p_table VALUES (:id, :name)", {
-    'id',   p.id,
-    'name', p.name})
+  def save_exit(self, rm, ex):
+    if self.contains_exit(rm, ex):
+      self._delete_exit(rm, ex)
+    self._add_exit(rm, ex)
 
-def p_table_delete_player(c, p):
-  c.execute("DELETE FROM p_table WHERE id=:id", {'id':p.id})
+  def contains_player(self, p):
+    self.execute("SELECT * FROM p_table WHERE id=:id", {'id':p.id})
 
-def p_table_to_str(c):
-  c.execute("SELECT * FROM p_table")
+    if len(self.fetchall()) == 0:
+      return False
 
-  ret_val = string_handling.proc_color_codes(f"<c6>ID:   Name:<c0>\r\n")
+    return True
+
+  def _add_player(self, p):
+    self.execute("INSERT INTO p_table VALUES (:id, :name)", {
+      'id':   p.id,
+      'name': p.name})
+
+  def _delete_player(self, p):
+    self.execute("DELETE FROM p_table WHERE id=:id", {'id':p.id})
+
+  def save_player(self, p):
+    if self.contains_player(p):
+      self._delete_player(p)
+    self._add_player(p)
+
+  def contains_room(self, rm):
+    self.execute("SELECT * FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
+      'zone_id': rm.zone_id,
+      'id':      rm.id})
+
+    if len(self.fetchall()) == 0:
+      return False
+
+    return True
+
+  def _add_room(self, rm):
+    self.execute("INSERT INTO wld_table VALUES (:zone_id, :id, :name, :dscn)", {
+      'zone_id': rm.zone_id,
+      'id':      rm.id,
+      'name':    rm.name,
+      'dscn':    rm.desc.str()})
+
+  def _delete_room(self, rm):
+    self.execute("DELETE FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
+      'zone_id' : rm.zone_id,
+      'id' : rm.id})
+
+  def save_room(self, rm):
+    if self.contains_room(rm):
+      self._delete_room(rm)
+    self._add_room(rm)
+
+    for dir in exit.direction:
+      ex = rm.exit(dir)
+      if ex != None:
+        self.save_exit(rm, ex)
+
+  def contains_zone(self, zn):
+    self.execute("SELECT * FROM z_table WHERE id=:id", {'id' : zn.id})
+
+    if len(self.fetchall()) == 0:
+      return False
+
+    return True
+
+  def _add_zone(self, zn):
+    self.execute("INSERT INTO z_table VALUES (:id, :name, :auth)", {
+      'id':      zn.id,
+      'name':    zn.name,
+      'auth':    zn.author})
+
+  def _delete_zone(self, zn):
+    self.execute("DELETE FROM z_table where id=:id", {'id':zn.id})
+
+  def save_zone(self, zn):
+    if self.contains_zone(zn):
+      self._delete_zone(zn)
+    self._add_zone(zn)
+
+    for rm in zn._world.values():
+      self.save_room(rm)
+
+  def ex_table(self):
+    self.execute("SELECT * FROM ex_table")
+
+    ret_val = string_handling.proc_color_codes(f"<c6>Direction:   From:                           To:<c0>\r\n")
+
+    for item in self.fetchall():
+      ret_val += f"{exit.direction(item[0]).name:<12} {item[1]:<15} {item[2]:<15} {item[3]:<15} {item[4]:<15}\r\n"
+
+    return ret_val
+
+  def p_table(self):
+    self.execute("SELECT * FROM p_table")
+
+    ret_val = string_handling.proc_color_codes(f"<c6>ID:   Name:<c0>\r\n")
  
-  for item in c.fetchall():
-    ret_val += f"{item[0]:<6}{item[1]}\r\n"
+    for item in self.fetchall():
+      ret_val += f"{item[0]:<6}{item[1]}\r\n"
 
-  return ret_val
+    return ret_val
 
-def z_table_contains_zone(c, zn):
-  c.execute("SELECT * FROM z_table WHERE id=:id", {'id' : zn.id})
+  def rm_table(self):
+    ret_val = ""
+    self.execute("""SELECT * FROM wld_table""")
 
-  if len(c.fetchall()) == 0:
-    return False
+    ret_val = string_handling.proc_color_codes(f"<c6>{'Zone:':<{config.MAX_ZONE_ID_LENGTH + 2}}Id:       Name:                           Description:<c0>\r\n")
 
-  return True
+    for item in self.fetchall():
+      desc_buffer = editor.buffer(item[3])
 
-def z_table_add_zone(c, zn):
-  c.execute("INSERT INTO z_table VALUES (:id, :name, :auth)", {
-    'id':      zn.id,
-    'name':    zn.name,
-    'auth':    zn.author})
+      #todo: this will crash if item[0] == None
+      #insert a try/catch here to prevent that
+      ret_val += f"{item[0]:<{config.MAX_ZONE_ID_LENGTH + 2}}{item[1]:<10}{item[2]:<32}"
 
-def z_table_delete_zone(c, zn):
-  c.execute("DELETE FROM z_table where id=:id", {'id':zn.id})
+      if not desc_buffer.is_empty:
+        ret_val += desc_buffer.preview(30)
+ 
+      else:
+        ret_val += "(null)"
 
-def z_table_to_str(c):
-  c.execute("""SELECT * FROM z_table""")
+      ret_val += "\r\n"
 
-  ret_val = string_handling.proc_color_codes(f"<c6>{'Id:':<{config.MAX_ZONE_ID_LENGTH + 2}}{'Name:':<{config.MAX_ZONE_NAME_LENGTH + 2}}Author:<c0>\r\n")
+    return ret_val
 
-  for item in c.fetchall():
-    ret_val += f"{item[0]:<{config.MAX_ZONE_ID_LENGTH + 2}}{item[1]:<{config.MAX_ZONE_NAME_LENGTH + 2}}{item[2]:<20}" + "\r\n"
+  def z_table(self):
+    self.execute("""SELECT * FROM z_table""")
 
-  return ret_val
+    ret_val = string_handling.proc_color_codes(f"<c6>{'Id:':<{config.MAX_ZONE_ID_LENGTH + 2}}{'Name:':<{config.MAX_ZONE_NAME_LENGTH + 2}}Author:<c0>\r\n")
+    for item in self.fetchall():
+      ret_val += f"{item[0]:<{config.MAX_ZONE_ID_LENGTH + 2}}{item[1]:<{config.MAX_ZONE_NAME_LENGTH + 2}}{item[2]:<20}" + "\r\n"
 
-def wld_table_contains_room(c, rm):
-  c.execute("SELECT * FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
-    'zone_id': rm.zone_id,
-    'id': rm.id})
+    return ret_val
 
-  if len(c.fetchall()) == 0:
-    return False
-
-  return True
-
-def wld_table_add_room(c, rm):
-  c.execute("INSERT INTO wld_table VALUES (:zone_id, :id, :name, :dscn)", {
-    'zone_id': rm.zone_id,
-    'id':      rm.id,
-    'name':    rm.name,
-    'dscn':    str(rm.desc)})
-
-def wld_table_delete_room(c, rm):
-  c.execute("DELETE FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
-    'zone_id' : zone_id,
-    'id' : id})
-
-def wld_table_to_str(c, width=80, format=True, indent=False, numbers=False, color=True):
-  ret_val = ""
-  c.execute("""SELECT * FROM wld_table""")
-
-  ret_val = string_handling.proc_color_codes(f"<c6>{'Zone:':<{config.MAX_ZONE_ID_LENGTH + 2}}Id:       Name:                           Description:<c0>\r\n")
-
-  for item in c.fetchall():
-    desc_buffer = editor.buffer(item[3])
-    
-    #todo: this will crash if item[0] == None
-    #insert a try/catch here to prevent that
-    ret_val += f"{item[0]:<{config.MAX_ZONE_ID_LENGTH + 2}}{item[1]:<10}{item[2]:<32}"
-
-    if not desc_buffer.is_empty:
-      ret_val += desc_buffer.preview(30)
-    else:
-      ret_val += "(null)"
-
-    ret_val += "\r\n"
-
-  return ret_val
-
-def create_database(name):
-  return sqlite3.connect(name)
-
-def close_database(conn):
-  conn.close()
+  def close_database(self):
+    self._conn.close()
 
 if __name__ == '__main__':
-  import object
-  import pc
-  import editor
+  db = database(':memory:')
 
-  conn = create_database(':memory:')
-  c = conn.cursor()
+  db.create_tables()
 
-  create_tables(c)
+  p=pc.pc()
+  p.id = 14
+  p.name = "Charlie"
+  db.save_player(p)
 
   stockville = zone.zone()
   stockville.name = "the city of stockville"
@@ -218,17 +277,14 @@ if __name__ == '__main__':
   stockville.id = "stockville"
   stockville.author = "kyle"
 
-  z_table_add_zone(c, stockville)
-  
   rm = room.room()
   rm.name = "The Void"
   rm.zone_id = "stockville"
   rm.id = "void"
   rm.desc = editor.buffer("<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.</p>")
+  
   rm.connect(exit.direction.DOWN, 'recall')
   stockville._world[rm.id] = rm
-
-  rm.save_to_db(c)
 
   rm = room.room()
   rm.name = "Stockville Casino"
@@ -238,7 +294,7 @@ if __name__ == '__main__':
   rm.connect(exit.direction.WEST, 'recall')
   stockville._world[rm.id] = rm
 
-  rm.save_to_db(c)
+  db.save_zone(stockville)
 
   rm = room.room()
   rm.name = "Stockville Recall"
@@ -248,8 +304,7 @@ if __name__ == '__main__':
   rm.connect(exit.direction.EAST, 'casino')
   rm.connect(exit.direction.WEST, 'reading')
   stockville._world[rm.id] = rm
-
-  rm.save_to_db(c)
+  db.save_room(rm)
 
   rm = room.room()
   rm.name = "Reading Room"
@@ -270,8 +325,7 @@ if __name__ == '__main__':
   rm.connect(exit.direction.EAST, 'recall')
   rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
   stockville._world[rm.id] = rm
-
-  rm.save_to_db(c)
+  db.save_room(rm)
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['baccarat', 'dealer']
@@ -300,8 +354,6 @@ if __name__ == '__main__':
   ob.unique_id.id = 'bottle'
   stockville._obj_proto[ob.unique_id.id] = ob
 
-  stockville.save_to_folder()
-
   # now do the same for the newbie zone
   newbie_zone = zone.zone()
 
@@ -319,14 +371,11 @@ if __name__ == '__main__':
   rm.connect(exit.direction.SOUTH, 'stockville[reading]')
   newbie_zone._world[rm.id] = rm
 
-  rm.save_to_db(c)
-
   rm = room.room()
   rm.name = "A Dark Corner in the Hallway"
   rm.zone_id = "newbie_zone"
   rm.id = "hallway2"
-  rm.desc = editor.buffer(
-"""<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
+  rm.desc = editor.buffer("""<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
 them. Then I can close the tag whenever I want to, and I will!</p>
 
 <p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
@@ -335,8 +384,6 @@ editor, they may come through one at a time. And you may put a period after some
 capitalize a word.</p>""")
   rm.connect(exit.direction.SOUTH, 'hallway1')
   newbie_zone._world[rm.id] = rm
-
-  rm.save_to_db(c)
 
   npcp = structs.npc_proto_data()
   npcp.entity.namelist = ['newbie', 'monster']
@@ -356,21 +403,11 @@ capitalize a word.</p>""")
   ob.unique_id.id = 'newbie_dagger'
   newbie_zone._obj_proto[ob.unique_id.id] = ob
 
-  z_table_add_zone(c, newbie_zone)
+  db.save_zone(newbie_zone)
 
-  rm = stockville._world['recall']
+  print(db.z_table() + "\r\n")
+  print(db.rm_table() + "\r\n")
+  print(db.p_table() + "\r\n")
+  print(db.ex_table() + "\r\n")
 
-  newbie_zone.save_to_folder()
-
-  print(z_table_to_str(c) + "\r\n")
-  print(wld_table_to_str(c) + "\r\n")
-  print(ex_table_to_str(c) + "\r\n")
-
-  if wld_table_contains_room(c, rm):
-    print(f"The wld_table contains the stockville recall.")
-  else:
-    print(f"The wld_table does not contain the stockville recall.")
-
-  close_database(conn)
-
-  help(create_tables)
+  db.close_database()

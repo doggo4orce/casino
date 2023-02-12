@@ -82,7 +82,7 @@ class room:
      parse_tag(tag, value, rf) <- used to iterate through .room files via filestream rf
      show_exits()              <- shows exit string, e.g. [ Exits: n s w ]
      echo(msg)                 <- sends msg to every character in the room
-     exit(dir)                 <- returns exit object leading in direction dir
+     exit(dir)                 <- returns exit object leading in direction dir or None
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
      exit_exists(dir)          <- checks if the room has an exit leading in direction dir
      save_to_db(c)             <- saves the room to cursor c"""

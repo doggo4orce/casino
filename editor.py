@@ -183,9 +183,18 @@ class buffer:
     return ret_val
 
   def preview(self, max_len):
+    j = 0
+    txt = ""
+
     if self.is_empty:
       return ""
-    return string_handling.strip_tags(self[0])[:max_len]
+    
+    for line in self._contents:
+      txt = string_handling.strip_tags(line)[:max_len]
+      if txt != "":
+        return txt
+      
+    return ""
 
   def __str__(self):
     return self.str(numbers=False)

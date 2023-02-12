@@ -38,12 +38,18 @@ CREATE TABLE z_table (
 )"""
 
 def create_tables(c):
+  """Create's all the database tables:
+    ex_table     Exit Table
+    p_table      Player Table
+    wld_table    Room Table
+    z_table      Zone Table"""
   c.execute(CREATE_EXIT_TABLE)
   c.execute(CREATE_PLAYER_TABLE)
   c.execute(CREATE_WORLD_TABLE)
   c.execute(CREATE_ZONE_TABLE)
 
 def ex_table_contains_exit(c, rm, ex):
+  """Check's if a room's exit matchs with an existing entry's direction in ex_table."""
   room_id = rm.id
   zone_id = rm.zone_id
 
@@ -58,6 +64,7 @@ def ex_table_contains_exit(c, rm, ex):
   return True
 
 def ex_table_add_exit(c, rm, ex):
+  """Saves a room's exit to ex_table."""
   id = rm.id
   zone_id = rm.zone_id
 
@@ -72,6 +79,7 @@ def ex_table_add_exit(c, rm, ex):
     'did':     ex.room_id})
 
 def ex_table_delete_exit(c, rm, ex):
+  """Delete's a room's exit to ex_table."""
   room_id = rm.id
   zone_id = rm.zone_id
 
@@ -81,6 +89,7 @@ def ex_table_delete_exit(c, rm, ex):
     'dir':     ex.direction})
 
 def ex_table_to_str(c):
+  """Returns a string built from rows of ex_table separated by newlines, prefixed by column headers."""
   c.execute("SELECT * FROM ex_table")
 
   ret_val = string_handling.proc_color_codes(f"<c6>Direction:   From:                           To:<c0>\r\n")
@@ -363,3 +372,5 @@ capitalize a word.</p>""")
     print(f"The wld_table does not contain the stockville recall.")
 
   close_database(conn)
+
+  help(create_tables)

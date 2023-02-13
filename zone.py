@@ -144,10 +144,6 @@ class zone:
       file_handling.parse_generic(new_obj_proto, rf)
       self._obj_proto[new_obj_proto.unique_id.id] = new_obj_proto
 
-  def save_to_db(self, db):
-    for rm in self._world.values():
-      rm.save_to_db()
-
   # todo: factor some of this thorugh a similar function for obj_protos, npc_protos, and rooms?
   def save_to_folder(self):
 

@@ -71,6 +71,13 @@ class database:
         ldesc       text,
         dscn        text)""")
 
+    self.execute("""CREATE TABLE obj_table (
+        zone_id     text,
+        id          text,
+        name        text,
+        ldesc       text,
+        dscn        text)""")
+
     self.execute("""CREATE TABLE wld_table (
         zone_id     text,
         id          text,
@@ -179,6 +186,34 @@ class database:
       self._delete_npc(np)
     self._add_npc(np)
 
+  def contains_obj(self, op):
+    self.execute("SELECT * FROM obj_table WHERE zone_id=:zone_id AND id=:id", {
+      'zone_id': op.unique_id.zone_id,
+      'id':      op.unique_id.id})
+
+    if len(self.fetchall()) == 0:
+      return False
+
+    return True
+
+  def _add_obj(self, op):
+    self.execute("INSERT INTO obj_table VALUES (:zone_id, :id, :name, :ldesc, :dscn)", {
+      'zone_id': op.unique_id.zone_id,
+      'id':      op.unique_id.id,
+      'name':    op.entity.name,
+      'ldesc':   op.ldesc,
+      'dscn':    op.entity.desc.str()})
+
+  def _delete_obj(self, op):
+    self.execute("DELETE * FROM obj_table WHERE zone_id=:zone_id and id=:id", {
+      'zone_id': op.unique_id.zone_id,
+      'id':      op.unique_id.id})
+
+  def save_obj(self, op):
+    if self.contains_obj(op):
+      self.delete_obj(op)
+    self._add_obj(op)
+
   def contains_room(self, rm):
     self.execute("SELECT * FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
       'zone_id': rm.zone_id,
@@ -236,6 +271,12 @@ class database:
     for rm in zn._world.values():
       self.save_room(rm)
 
+    for np in zn._npc_proto.values():
+      self.save_npc(np)
+
+    for op in zn._obj_proto.values():
+      self.save_obj(op)      
+
   def ex_table(self):
     self.execute("SELECT * FROM ex_table")
 
@@ -248,6 +289,17 @@ class database:
 
   def npc_table(self):
     self.execute("SELECT * FROM npc_table")
+
+    ret_val = string_handling.proc_color_codes(f"<c6>Zone:         Id:              Name:                         Desc:<c0>\r\n")
+ 
+    for item in self.fetchall():
+      desc_buffer = editor.buffer(item[4])
+      ret_val += f"{item[0]:<14}{item[1]:<17}{item[2]:<30}{desc_buffer.preview(30)}\r\n"
+
+    return ret_val
+
+  def obj_table(self):
+    self.execute("SELECT * FROM obj_table")
 
     ret_val = string_handling.proc_color_codes(f"<c6>Zone:         Id:              Name:                         Desc:<c0>\r\n")
  
@@ -447,10 +499,17 @@ capitalize a word.</p>""")
   newbie_zone._obj_proto[ob.unique_id.id] = ob
   db.save_zone(newbie_zone)
 
+  print("Zone Table")
   print(db.z_table() + "\r\n")
+  print("Room Table")
   print(db.rm_table() + "\r\n")
+  print("Player Table")
   print(db.p_table() + "\r\n")
+  print("Exit Table")
   print(db.ex_table() + "\r\n")
-  print(db.npc_table() + "\r\n")
+  print("Zone Table")
+  print(db.z_table() + "\r\n")
+  print("Object Table")
+  print(db.obj_table() + "\r\n")
 
   db.close_database()

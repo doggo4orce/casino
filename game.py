@@ -18,9 +18,9 @@ import zone
 class game:
   def __init__(self):
     """Creates a game world with rooms, objects, and characters.
-       zones     = a list of zone folders which have been loaded from WORLD_FOLDER
-       chars     = a list of characters (including NPCS and PCs) in the game
-       objects   = a list of objects which are in the game
+       zones     = list of zone folders which have been loaded from WORLD_FOLDER
+       chars     = list of characters (including NPCS and PCs) in the game
+       objects   = list of objects which are in the game
        events    = handles all events to take place in the future"""
     self._zones     = dict()
     self._chars     = list()
@@ -30,11 +30,12 @@ class game:
   """add_event(e)            <- add event e to self_events
      heart_beat()            <- calls the event handlers heart_beat() function
      call_heart_beat_procs() <- calls all pulsing special procedures for npcs
+     add_zone(zone)          <- adds a zone to the game
      zone_by_id(id)          <- iterate through self.zones zones to find zone with identifier id
      room_by_code(code)      <- look up room using unique_identifier code
      npc_by_code(code)       <- look up npc prototype by code
      obj_by_code(code)       <- look up object prototype by code
-     echo_around(ch, hide, msg) <- sends msg to all chars in room except ch and those in hide list
+     echo_around(ch, hide, msg) <- sends msg to all in room except ch and those in hide list
      add_char(ch)            <- adds character ch to the wld, in the appropriate room or VOID_ROOM
      extract_char(ch)        <- extracts character ch from the wld and the appropriate room
      add_obj(obj)            <- these functions are the same
@@ -59,6 +60,12 @@ class game:
     for mob in self._chars:
       if isinstance(mob, pc.npc):
         mob.call_heart_beat_procs(self)
+
+  def add_zone(self, zn):
+    if self.zone_by_id(zn.id) == None:
+      self._zones[zn.id] = zn
+    else:
+      logging.warning("Trying to add zone {zn.name} but id '{zn.id}'' but already exists.")
 
   def zone_by_id(self, id):
     if id not in self._zones.keys():
@@ -156,6 +163,8 @@ class game:
     self._objects.remove(obj)
 
   def assign_spec_procs(self):
+    zone = self.zone_by_id("stockville")
+
     # todo, give out warning and avoid crash if these references don't exist
     b_dealer = self.npc_by_code('stockville[baccarat_dealer]')
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
@@ -163,16 +172,10 @@ class game:
     b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
     b_dealer.assign_spec_proc(spec_procs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
-  def startup(self):
-    for folder in glob.glob(config.WORLD_FOLDER + "*"):
-      # all zones are stored in folders so ignore any loose files in here
-      if not os.path.isdir(folder):
-        continue
-      # otherwise we found a new zone
-      new_zone = zone.zone()
-      new_zone.parse_folder(folder + "/")
-      self._zones[new_zone.id] = new_zone
+  def load_world(self, db):
+    db.load_world(self)
 
+  def startup(self):
     self.assign_spec_procs()
 
     # populating world manually at startup
@@ -205,7 +208,7 @@ class game:
     proto_type = self.obj_by_code(code)
 
     if proto_type == None:
-      logging.warning(f"Trying to load object [{vnum}] which was not found.")
+      logging.warning(f"Trying to load object [{code}] which was not found.")
       return None
 
     new_obj = object.object(proto_type)
@@ -259,15 +262,4 @@ class game:
     ch.d = d
 
 if __name__ == '__main__':
-  mud = game()
-  mud.init_wld()
-  mud.init_npcs()
-  mud.init_objs()
-  obj = mud.load_obj(3000)
-  npc = mud.load_npc(3001)
-  print(mud.room_by_vnum(3001).name)
-  print(mud.room_by_vnum(3001).vnum)
-  print(str(obj))
-  print(mud.obj_by_vnum(3001).entity.ldesc)
-  print(str(npc))
-  print(mud.npc_by_vnum(3001).entity.ldesc)
+  pass

@@ -58,7 +58,9 @@ class zone:
   def folder(self, new_folder):
     self._folder = new_folder
 
-  """add_room(id, new_room) <- adds room with internal id
+  """add_room(new_room)     <- adds room with internal id
+     add_npc(new_npcp)      <- adds npc_proto to _obj_protos
+     add_obj(new_op)        <- adds obj_proto to _npc_protos
      room_by_id(id)         <- look up room in self.world
      npc_by_id(id)          <- look up npc in self.npc_proto
      obj_by_id(id)          <- look up object in self.obj_proto
@@ -71,8 +73,14 @@ class zone:
      save_to_folder()       <- saves zone to lib/world/<self.folder>/
      reset()                <- TODO: resets zone based on instructions"""
 
-  def add_room(self, id, new_room):
-    self._world[id] = new_room
+  def add_room(self, new_room):
+    self._world[new_room.id] = new_room
+
+  def add_npc(self, new_npc):
+    self._npc_proto[new_npc.unique_id.id] = new_npc
+
+  def add_obj(self, new_op):
+    self._obj_proto[new_op.unique_id.id] = new_op
 
   def room_by_id(self, id):
     if id not in self._world.keys():
@@ -83,6 +91,8 @@ class zone:
     return self._npc_proto[id]
 
   def obj_by_id(self, id):
+    if id not in self._obj_proto.keys():
+      return None
     return self._obj_proto[id]
 
   def parse_folder(self, path):

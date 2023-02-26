@@ -85,6 +85,7 @@ class room:
      exit(dir)                 <- returns exit object leading in direction dir or None
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
      exit_exists(dir)          <- checks if the room has an exit leading in direction dir
+     direction(self, ex)       <- returns direction of room exit, or None
      save_to_db(c)             <- saves the room to cursor c"""
   def add_char(self, ch):
     ch.room = self.unique_id
@@ -121,7 +122,7 @@ class room:
     ex = self.exit(direction)
     if ex != None:
       self.disconnect(direction)
-    self._exits[direction] = exit.exit(direction, destination_code)
+    self._exits[direction] = exit.exit(destination_code)
 
   def disconnect(self, direction):
     if self.exit(direction):
@@ -149,9 +150,8 @@ class room:
         ch.write(msg)
 
   def exit(self, direction):
-    for dir, ex in self.exits.items():
-      if direction == ex.direction:
-        return ex
+    if direction in self._exits.keys():
+      return self._exits[direction]
     return None
 
   def parse_tag(self, tag, value, rf):
@@ -199,6 +199,16 @@ class room:
 
     for ex in self.exits.values():
       ex.save_to_db(self, c)
+
+  def direction(self, ex):
+    direction = None
+
+    # what direction does the exit lead in?
+    for dir in exit.direction:
+      if self.exit(dir) is ex:
+        direction = dir
+    
+    return direction
 
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"

@@ -16,10 +16,7 @@ class conn(NamedTuple):
   host: str
 
 class server:
-  GREETINGS = """                      OurouborosMud
-
-
-By what name do you wish to be known? """
+  GREETINGS = """                      OurouborosMud\r\n\r\n\r\nBy what name do you wish to be known? """
 
   def __init__(self):
     self.descriptors = {}

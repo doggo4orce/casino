@@ -94,17 +94,17 @@ class descriptor:
     # If they are removed, copyover will not recover the existing connections, and
     # is hence pointless.
 
-  """poll_for_input()     <- transfers any pending input into in_buf
-     parse_input()        <- organizes input in_buf into a input_q 
-     send(bytes)          <- immediately sends raw bytestream to socket
-     flush_output()       <- sends any pending output in out_buf
-     write_prompt()       <- appends prompt to out_buf
-     write(msg)           <- appends msg to out_buf
-     process_telnet_cmd() <- organizes telnet commands in in_buf into telnet_q
-     process_telnet_q()   <- parses any telnet commands which have been fully read
-     next_input()         <- returns next complete command in input_q
+  """poll_for_input()              <- transfers any pending input into in_buf
+     parse_input()                 <- organizes input in_buf into a input_q
+     send(bytes)                   <- immediately sends raw bytestream to socket
+     flush_output()                <- sends any pending output in out_buf
+     write_prompt()                <- appends prompt to out_buf
+     write(msg)                    <- appends msg to out_buf
+     process_telnet_cmd()          <- organizes telnet commands in in_buf into telnet_q
+     process_telnet_q()            <- parses any telnet commands which have been fully read
+     next_input()                  <- returns next complete command in input_q
      start_writing(source, target) <- start editting source and save to target
-     stop_writing(save)   <- save to write_target if save=True"""
+     stop_writing(save)            <- save to write_target if save=True"""
     
   @property
   def writing(self):

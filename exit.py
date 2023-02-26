@@ -13,11 +13,8 @@ class direction(enum.IntEnum):
 
 class exit:
   """Creates an exit which characters may use to travel between rooms.
-    direction = one of the directions listed above
     destination = string reference to another room"""
-  def __init__(self, dir, dest_ref):
-    self._direction = dir
-
+  def __init__(self, dest_ref):
     # this should be handled more cleanly, but who has the time?
     # why not just use regex and search for (\w\w*)[(\w\w*)]
     if string_handling.valid_id(dest_ref):
@@ -26,9 +23,6 @@ class exit:
       zone_id, room_id = string_handling.parse_reference(dest_ref)
       self._destination = structs.unique_identifier(zone_id, room_id)
 
-  @property
-  def direction(self):
-    return self._direction
   @property
   def zone_id(self):
     return self._destination.zone_id

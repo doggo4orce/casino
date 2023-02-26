@@ -1,5 +1,6 @@
 # where should copyover information be stored
 LIB_FOLDER            = 'lib/'
+DATABASE_FILE         = 'data.db'
 COPYOVER_FILE         = 'copyover.dat'
 COPYOVER_PATH         = LIB_FOLDER + COPYOVER_FILE
 

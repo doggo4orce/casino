@@ -42,7 +42,7 @@ class client:
 class entity_data:
   """name     = what to be referred to as
      namelist = list of keywords to be targetted with
-     desc     = shown when closely examined (this should be moved since pc's dont need them)
+     desc     = shown when closely examined
      room     = reference to room if it is in one, and None otherwise"""
   name:     str="an unfinished entity"
   # make sure they each get their own copy of the the namelist, not the same namelist
@@ -84,7 +84,12 @@ class redit_save_data:
 
 @dataclasses.dataclass
 class medit_save_data:
-  """  """
+  """ fill this in when medit is developed """
+  pass
+
+@dataclasses.dataclass
+class oedit_save_data:
+  """ fill this in when oedit is developed """
   pass
 
 @dataclasses.dataclass

@@ -1,17 +1,19 @@
+# python modules
+from color import *
 import logging
 import os
 import select
 import socket
+import telnet
+import typing
 
-from color import *
+# local modules
 import config
+import database
 import descriptor
 import nanny
-import pbase
-import telnet
-from typing import NamedTuple
 
-class conn(NamedTuple):
+class conn(typing.NamedTuple):
   socket: socket.socket
   host: str
 
@@ -19,15 +21,15 @@ class server:
   GREETINGS = """                      OurouborosMud\r\n\r\n\r\nBy what name do you wish to be known? """
 
   def __init__(self):
-    self.descriptors = {}
-    self.new_connections = []
-    self.disconnects = []
-    self.just_leaving = []
-    self.nextid = 0
-    self.shutdown_cmd = False
-    self.copyover_cmd = False
+    self.descriptors     = dict()
+    self.new_connections = list()
+    self.disconnects     = list()
+    self.just_leaving    = list()
+    self.nextid          = 0
+    self.shutdown_cmd    = False
+    self.copyover_cmd    = False
 
-  def copyover_recover(self, mud, file):
+  def copyover_recover(self, mud, file, db):
     logging.info("Recovering from Copyover.")
 
     with open(file) as rf:
@@ -51,7 +53,7 @@ class server:
         d.has_prompt = True
 
         # this needs to be factored through other code from when players enter the game?
-        d.char = pbase.load_char_by_name(name)
+        d.char = db.load_player(name)
         d.char.d = d
 
         mud.add_char(d.char)
@@ -182,12 +184,9 @@ class server:
       if not d.disconnected:
         d.parse_input()
 
-  def process_input(self, d, mud):
-    nanny.handle_next_input(d, self, mud)
-
-  def process_inputs(self, mud):
+  def process_inputs(self, mud, db):
     for d in self.descriptors.values():
-      self.process_input(d, mud)
+      nanny.handle_next_input(d, self, mud, db)
 
   def write_all(self, msg, exceptions=None):
     if exceptions is None:
@@ -205,7 +204,7 @@ class server:
     for d in self.descriptors.values():
       d.process_telnet_q()
 
-  def loop(self, mud):
+  def loop(self, mud, db):
     # handle any new conections
     self.check_new_connections()
     self.handle_new_connections()
@@ -214,7 +213,7 @@ class server:
     self.poll_for_input()
     self.parse_input()
     self.process_telnet_qs()
-    self.process_inputs(mud)
+    self.process_inputs(mud, db)
 
     # flush output with prompts if necessary
     self.write_prompts()

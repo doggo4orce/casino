@@ -11,7 +11,6 @@ import event
 import nanny
 import olc
 import os
-import pbase
 import pc
 import room
 import string_handling
@@ -340,14 +339,14 @@ def do_title(ch, scmd, argument, server, mud):
   else:
     ch.write("You now have no title.\r\n")
 
-def do_score(ch, scmd, argument, server, mud):  
-  out_str  = f"{GREEN}Name{NORMAL})      {ch}\r\n"
+def do_score(ch, scmd, argument, server, mud):
+  out_str  = f"{GREEN}Name{NORMAL})      {ch.Name}\r\n"
   out_str += f"{GREEN}Client{NORMAL})    {ch.d.client_info.term_type}\r\n"
   out_str += f"{GREEN}Screen{NORMAL})    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
 
   if ch.prefs.debug_mode == 'on':
     out_str += f"{GREEN}Room{NORMAL})      {ch.room}\r\n"
-    
+
   ch.write(out_str)
 
 def do_who(ch, scmd, argument, server, mud):
@@ -358,7 +357,7 @@ def do_who(ch, scmd, argument, server, mud):
 
   for d in d_dict.values():
     if d.state == descriptor.descriptor_state.CHATTING:
-      out_str += f"{d.char} {d.char.title}\r\n"
+      out_str += f"{d.char.Name} {d.char.title}\r\n"
       num_online += 1
 
   if len(d_dict) > 1:

@@ -44,14 +44,14 @@ network.boot("0.0.0.0", cl_dict['port'])
 nanny.init_commands()
 
 if cl_dict['c'] != None:
-  network.copyover_recover(mud, cl_dict['c'])
+  network.copyover_recover(mud, cl_dict['c'], db)
 
 try:
   loops_per_second = 10
   time_per_loop = float(1)/float(loops_per_second)
 
   while not network.shutdown_cmd and not network.copyover_cmd:
-    network.loop(mud)
+    network.loop(mud, db)
     time.sleep(time_per_loop)
     mud.heart_beat()
     mud.call_heart_beat_procs()
@@ -61,9 +61,10 @@ except KeyboardInterrupt:
   logging.error("SYSERR: Received SIGHUP, SIGINT, or SIGTERM.  Shutting down...")
 
 else:
-  mud_server.shutdown()
+  network.shutdown()
+  db.close()
 
-  if mud_server.copyover_cmd:
+  if network.copyover_cmd:
     os.system(f"python3 main.py -c {config.COPYOVER_PATH} {cl_dict['port']}")
   else:
     logging.info("Done.")

@@ -1,17 +1,18 @@
+# python modules
+import logging
+import telnet
+
+# local modules
 import commands
 import config
 import editor
 import exit
 import descriptor
-import file_handling
-import logging
 import olc
-import pbase
 import pc
 import redit
 import room
 import structs
-import telnet
 
 cmd_dict = dict()
 
@@ -89,14 +90,14 @@ def interpret_msg(d, command, argument, server, mud):
     d.write("Huh!?!\r\n")
     d.has_prompt = False
 
-# What should they see when they finish writing? menu? etc.
+# what should they see when they finish writing? menu? etc.
 def writing_follow_up(d):
   if d.state == descriptor.descriptor_state.OLC:
     olc.olc_writing_follow_up(d)
   # other possibilities:
   #   reporting_bug, mailing letter, scribing scroll, etc.
 
-def handle_next_input(d, server, mud):
+def handle_next_input(d, server, mud, db):
   input = d.next_input()
   if not input:
     return
@@ -120,9 +121,8 @@ def handle_next_input(d, server, mud):
       d.write("Invalid name, please try another.\r\nName: ")
       return
     command = command.lower()
-    d.login_info = d.login_info._replace(name = command.capitalize())
-    id = pbase.id_by_name(command)
-    if id != None:
+    d.login_info = d.login_info._replace(name = command)
+    if db.name_used(command):
       logging.info(f"{command.capitalize()} is logging in.")
       d.state = descriptor.descriptor_state.GET_PASSWORD
       d.send(bytes(telnet.will_echo))
@@ -152,15 +152,14 @@ def handle_next_input(d, server, mud):
       d.write("\r\nPlease retype password: ")
   elif d.state == descriptor.descriptor_state.CONFIRM_PASS:
     if msg == d.login_info.password:
-      pbase.add_player_to_index(d.login_info.name)
-      pbase.update_index_file()
       new_char = pc.pc()
       new_char.name = d.login_info.name
       new_char.pwd = d.login_info.password
       new_char.d = d
       new_char.room = structs.unique_identifier.from_string(config.STARTING_ROOM)
-      new_char.id = pbase.id_by_name(new_char.name)
-      new_char.save_char()
+      new_char.id = db.next_unused_pid()
+      db.save_player(new_char)
+
       d.char = new_char
       d.state = descriptor.descriptor_state.CHATTING
       mud.add_char(d.char)
@@ -173,47 +172,54 @@ def handle_next_input(d, server, mud):
       d.write("\r\nPasswords don't match... start over.\r\nPassword: ")
   elif d.state == descriptor.descriptor_state.GET_PASSWORD:
     # and here too for the same reason as above
-    if not pbase.verify_password(d.login_info.name, msg):
+    if not db.check_pwd(d.login_info.name, msg):
       d.write("\r\nWrong password.\r\nPassword: ")
     else:
       # turn localecho back on
       d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
       # check if they are logged in already
-      ch = mud.pc_by_id(pbase.id_by_name(d.login_info.name))
+      ch = mud.pc_by_id(db.id_by_name(d.login_info.name))
+
       # nothing found, log in normally
-      if not ch:
-        try:
-          d.char = pbase.load_char_by_name(d.login_info.name)
-        except file_handling.TagError as e:
-          logging.error(e.message)
-          d.write(f"\r\nYour character could not be loaded.  Please let an administrator know.\r\n\r\n")
+      if ch == None:
+        new_player = pc.pc()
+        new_player.name = d.login_info.name
+        new_player.room = structs.unique_identifier.from_string(config.STARTING_ROOM)
+        new_player.title = config.DEFAULT_TITLE
+
+        if db.id_by_name(d.login_info.name) == None:
+          # TODO: replace with index error exception
+          logging.error(f"Error: Trying to load player {d.login_info.name} which is not contained in the database.")
           d.disconnected = True
+          return
         else:
-          d.char.d = d
-          d.write("Welcome!  Have a great time!\r\n")
-          d.state = descriptor.descriptor_state.CHATTING
-          logging.info(f"{d.login_info.name} has entered the game.")
+          new_player.id = db.id_by_name(d.login_info.name)
 
-          # if their room has been deleted, put them in the void
-          if mud.room_by_code(d.char.room) == None:
-            d.char.room = structs.unique_identifier.from_string(config.VOID_ROOM)
+        d.char = new_player
+        d.char.d = d
+        d.write("Welcome!  Have a great time!\r\n")
+        d.state = descriptor.descriptor_state.CHATTING
+        logging.info(f"{d.login_info.name} has entered the game.")
 
-          mud.add_char(d.char)
-          mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
+        # if their room has been deleted, put them in the void
+        if mud.room_by_code(d.char.room) == None:
+          d.char.room = structs.unique_identifier.from_string(config.VOID_ROOM)
+
+        mud.add_char(d.char)
+        mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
+      elif ch.d:
+        d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
+        d.state = descriptor.descriptor_state.GET_CONFIRM_REPLACE
       else:
-        if ch.d:
-          d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
-          d.state = descriptor.descriptor_state.GET_CONFIRM_REPLACE
-        else:
-          mud.reconnect(d, ch)
-          logging.info(f"{ch} recovering lost connection.")
-          mud.echo_around(ch, None, f"{ch} has reconnected.\r\n")
-          ch.write("You have reconnected.\r\n")
-          d.state = descriptor.descriptor_state.CHATTING
-        return
+        mud.reconnect(d, ch)
+        logging.info(f"{ch} recovering lost connection.")
+        mud.echo_around(ch, None, f"{ch} has reconnected.\r\n")
+        ch.write("You have reconnected.\r\n")
+      d.state = descriptor.descriptor_state.CHATTING
+
   elif d.state == descriptor.descriptor_state.GET_CONFIRM_REPLACE:
     if command != "" and command[0] in ['Y', 'y']:
-      ch = mud.pc_by_id(pbase.id_by_name(d.login_info.name))
+      ch = mud.pc_by_id(db.id_by_name(d.login_info.name))
       if not ch:
         d.write("The situation has changed.  Please log in again from scratch.\r\n")
         d.disconnected = True

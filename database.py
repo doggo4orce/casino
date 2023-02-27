@@ -23,11 +23,10 @@ class database:
       self.create_tables()
       self.load_stock()
 
-
-
   """create_tables()       <-- creates all database tables
-     execute(line)         <-- execute a line of SQL code
-     fetchall()            <-- returns _cursor.fetchall()
+     execute(line)         <-- returns execution of (SQL line)
+     fetchall()            <-- returns cursor.fetchall()
+     fetchone()            <-- returns cursor.fetchone()
 
      contains_exit(rm, dir, ex) <-- check if the exit will collide with an existing exit
      add_exit(rm, ex)      <-- add ex from rm to the database
@@ -65,23 +64,29 @@ class database:
      load_objs(mud)        <-- load all obj_proto's
      load_game(mud)        <-- load entire database
 
-     ex_table()            <-- loads exit table
-     ex_table_str()        <-- print exit table
-     npc_table()           <-- loads npc table
-     npc_table_str()       <-- print npc table
-     obj_table()           <-- loads obj table
-     obj_table_str()       <-- print obj table
-     p_table_str()         <-- loads player table
-     p_table_str()         <-- print player table
-     rm_table()            <-- loads room table
-     rm_table_str()        <-- print room table
-     z_table()             <-- loads zone table
-     z_table_str()         <-- print zone table
+     ex_table()              <-- loads exit table
+     ex_table_str()          <-- print exit table
+     npc_table()             <-- loads npc table
+     npc_table_str()         <-- print npc table
+     obj_table()             <-- loads obj table
+     obj_table_str()         <-- print obj table
+     p_table_str()           <-- loads player table
+     p_table_str()           <-- print player table
+     rm_table()              <-- loads room table
+     rm_table_str()          <-- print room table
+     z_table()               <-- loads zone table
+     z_table_str()           <-- print zone table
 
-     populate()            <-- hard-codes a stock world into the DB
-     load_world(mud)       <-- loads zones, rooms, obj/npc_protos into mud
+     populate()              <-- hard-codes a stock world into the DB
+     load_world(mud)         <-- loads zones, rooms, obj/npc_protos into mud
 
-     close_database()      <-- closes conn"""
+     next_unused_pid()       <-- figure out the lowest player ID not in use
+     name_used(name)         <-- check if a player with name exists
+     check_pwd(name, pwd)    <-- check if the password is correct for the player
+     player_name_by_id(id)   <-- player name that corresponds to id
+     player_id_by_name(name) <-- player id that corresponds to id
+
+     close()                 <-- closes conn"""
 
   def create_tables(self):
 
@@ -94,7 +99,8 @@ class database:
 
     self.execute("""CREATE TABLE p_table (
         id          integer,
-        name        text)""")
+        name        text,
+        password    text)""")
 
     self.execute("""CREATE TABLE npc_table (
         zone_id     text,
@@ -122,11 +128,15 @@ class database:
         author      text)""")
 
   def execute(self, line, parameters=()):
-    self._cursor.execute(line, parameters)
+    ret_val = self._cursor.execute(line, parameters)
     self._conn.commit()
+    return ret_val
 
   def fetchall(self):
     return self._cursor.fetchall()
+
+  def fetchone(self):
+    return self._cursor.fetchone()
 
   def contains_exit(self, rm, ex):
     room_id = rm.id
@@ -190,9 +200,10 @@ class database:
     return len(self.fetchall()) != 0
 
   def _add_player(self, p):
-    self.execute("INSERT INTO p_table VALUES (:id, :name)", {
+    self.execute("INSERT INTO p_table VALUES (:id, :name, :pwd)", {
       'id':   p.id,
-      'name': p.name})
+      'name': p.name,
+      'pwd':  p.pwd})
 
   def _delete_player(self, p):
     self.execute("DELETE FROM p_table WHERE id=:id", {'id':p.id})
@@ -202,6 +213,61 @@ class database:
       self._delete_player(p)
     self._add_player(p)
 
+  def name_used(self, name):
+    return self.id_by_name(name) != None
+
+  def check_pwd(self, name, pwd):
+    self.execute("SELECT * FROM p_table WHERE name=:name AND password=:pwd", {
+      'name': name,
+      'pwd':  pwd})
+    return len(self.fetchall()) != 0
+
+  def name_by_id(self, id):
+    self.execute("SELECT * FROM p_table WHERE id=:id", {'id': id})
+
+    rows = self.fetchall()
+    if(len(rows)) == 0:
+      return None
+
+    return rows[0][1]
+
+  def id_by_name(self, name):
+    self.execute("SELECT * FROM p_table WHERE name=:name", {'name': name})
+
+    rows = self.fetchall()
+    if(len(rows)) == 0:
+      return None
+
+    return rows[0][0]
+
+  def next_unused_pid(self):
+    j = 1;
+
+    while self.name_by_id(j) != None:
+      j += 1
+
+    return j
+
+  def num_players(self):
+    self.execute("SELECT * FROM p_table")
+    return len(self.fetchall())
+
+  def load_player(self, name):
+    ret_val = pc.pc()
+
+    self.execute("SELECT * FROM p_table WHERE name=:name", {'name': name})
+
+    row = self.fetchone()
+
+    if row == None:
+      return None
+
+    ret_val.id   = row[0]
+    ret_val.name = row[1]
+    ret_val.pwd  = row[2]
+
+    return ret_val
+    
   def contains_npc(self, np):
     self.execute("SELECT * from npc_table WHERE zone_id=:zone_id AND id=:id", {
       'zone_id' : np.unique_id.zone_id,
@@ -392,7 +458,7 @@ class database:
 
     return ret_val
 
-  def close_database(self):
+  def close(self):
     self._conn.close()
 
   def load_stock(self):
@@ -609,4 +675,4 @@ if __name__ == '__main__':
   print("NPC Table")
   print(db.npc_table_str() + "\r\n")
 
-  db.close_database()
+  db.close()

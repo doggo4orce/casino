@@ -18,7 +18,7 @@ import structs
 import zedit
 import zone
 
-def do_colors(ch, scmd, argument, server, mud):
+def do_colors(ch, scmd, argument, server, mud, db):
   out_str = ""
   
   out_str += "For Reference, this is normal text.\r\n\r\n"
@@ -51,7 +51,7 @@ def do_colors(ch, scmd, argument, server, mud):
 
   ch.write(out_str)
 
-def do_give(ch, scmd, argument, server, mud):
+def do_give(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
@@ -100,7 +100,7 @@ def do_give(ch, scmd, argument, server, mud):
     mud.add_event(event.event(tch, drop_it, None, 30))
 
 
-def do_get(ch, scmd, argument, server, mud):
+def do_get(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
@@ -125,7 +125,7 @@ def do_get(ch, scmd, argument, server, mud):
   ch.write(f"You get {obj}.\r\n")
   mud.echo_around(ch, None, f"{ch} gets {obj}.\r\n")
 
-def do_goto(ch, scmd, argument, server, mud):
+def do_goto(ch, scmd, argument, server, mud, db):
   here_id = ch.room.id
   here_zone_id = ch.room.zone_id
   here = mud.room_by_code(ch.room)
@@ -149,7 +149,7 @@ def do_goto(ch, scmd, argument, server, mud):
   show_room_to_char(ch, there)
 
 
-def do_drop(ch, scmd, argument, server, mud):
+def do_drop(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
   rm = mud.room_by_code(ch.room)
@@ -174,7 +174,7 @@ def do_drop(ch, scmd, argument, server, mud):
   ch.write(f"You drop {obj}.\r\n")
   mud.echo_around(ch, None, f"{ch} drops {obj}.\r\n")
 
-def do_inventory(ch, scmd, argument, server, mud):
+def do_inventory(ch, scmd, argument, server, mud, db):
   if len(ch.inventory) == 0:
     ch.write("You aren't carrying anything.\r\n")
     return
@@ -185,7 +185,7 @@ def do_inventory(ch, scmd, argument, server, mud):
 
   ch.write(out_str)
 
-def do_help(ch, scmd, argument, server, mud):
+def do_help(ch, scmd, argument, server, mud, db):
   cmds = list(nanny.cmd_dict.keys())
   num_cmds = len(cmds)
 
@@ -238,7 +238,7 @@ def do_help(ch, scmd, argument, server, mud):
 
   ch.write(out_str)
 
-def do_client(ch, scmd, argument, server, mud):
+def do_client(ch, scmd, argument, server, mud, db):
   have_info = False
 
   ci = ch.d.client_info
@@ -256,7 +256,39 @@ def do_client(ch, scmd, argument, server, mud):
 
   ch.write(out_str)
 
-def do_prefs(ch, scmd, argument, server, mud):
+def do_db(ch, scmd, argument, server, mud, db):
+  db_help = "Use the following syntax:\r\n"
+  db_help += f"  db show tables          - list table in database\r\n"
+  db_help += f"  db columns <table name> - show columns of a table\r\n"
+
+  args = argument.split()
+  num_args = len(args)
+
+  if num_args == 0:
+    ch.write(db_help)
+    return
+  if num_args == 2:
+    if args[0] == "show":
+      if args[1] == "tables":
+        table_buf = "The following tables exist in the database:\r\n"
+        for table_name in db.table_list():
+          table_buf += f"  {table_name:<{20}} {db.row_count(table_name)} rows loaded\r\n"
+        ch.write(table_buf)
+        return
+    if args[0] == "columns":
+      table_name = args[1]
+
+      if table_name not in db.table_list():
+        ch.write("That table does not exist.\r\n")
+        return
+      else:
+        table_buf = f"The following columns exist for {args[1]}:\r\n"
+        for column in db.column_list(args[1]):
+          table_buf += f"  {column}\r\n"
+        ch.write(table_buf)
+        return
+
+def do_prefs(ch, scmd, argument, server, mud, db):
   prefs_help = "Customizable Preferences:\r\n"
   prefs_help += f"  screen_width   [{ORANGE}{ch.prefs.screen_width}{NORMAL}]\r\n"
   prefs_help += f"  screen_length  [{ORANGE}{ch.prefs.screen_length}{NORMAL}]\r\n"
@@ -312,26 +344,26 @@ def do_prefs(ch, scmd, argument, server, mud):
     ch.write(prefs_help)
     return
 
-def do_pindex(ch, scmd, argument, server, mud):
+def do_pindex(ch, scmd, argument, server, mud, db):
   out_str = ''.join(f"{p['id']} {p['name']}\r\n" for p in pbase.ptable)
   ch.write(out_str)
 
-def do_gossip(ch, scmd, argument, server, mud): 
+def do_gossip(ch, scmd, argument, server, mud, db): 
   # TODO: change this function to write to all characters in the game so that we can work towards
   # not interacting with descriptors directly
   server.write_all(f"{YELLOW}{ch} gossips, '{argument}'{NORMAL}\r\n", exceptions=[ch.d])
   ch.write(f"{YELLOW}You gossip, '{argument}'{NORMAL}\r\n")
 
-def do_say(ch, scmd, argument, server, mud):
+def do_say(ch, scmd, argument, server, mud, db):
   rm = mud.room_by_code(ch.room)
   rm.echo(f"{ch} says, '{argument}'\r\n", exceptions=[ch])
   ch.write(f"You say, '{argument}'\r\n")
 
-def do_save(ch, scmd, argument, server, mud):
+def do_save(ch, scmd, argument, server, mud, db):
   ch.write(f"Saving {ch}.\r\n")
   ch.save_char()
 
-def do_title(ch, scmd, argument, server, mud):
+def do_title(ch, scmd, argument, server, mud, db):
   ch.title = argument
 
   if argument:
@@ -339,7 +371,7 @@ def do_title(ch, scmd, argument, server, mud):
   else:
     ch.write("You now have no title.\r\n")
 
-def do_score(ch, scmd, argument, server, mud):
+def do_score(ch, scmd, argument, server, mud, db):
   out_str  = f"{GREEN}Name{NORMAL})      {ch.Name}\r\n"
   out_str += f"{GREEN}Client{NORMAL})    {ch.d.client_info.term_type}\r\n"
   out_str += f"{GREEN}Screen{NORMAL})    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
@@ -349,7 +381,7 @@ def do_score(ch, scmd, argument, server, mud):
 
   ch.write(out_str)
 
-def do_who(ch, scmd, argument, server, mud):
+def do_who(ch, scmd, argument, server, mud, db):
   d_dict = server.descriptors
   num_online = 0
   out_str =  "Players\r\n"
@@ -367,7 +399,7 @@ def do_who(ch, scmd, argument, server, mud):
 
   ch.write(out_str)
 
-def do_shutdown(ch, scmd, argument, server, mud):
+def do_shutdown(ch, scmd, argument, server, mud, db):
   USAGE = "Usage: 'shutdown die' or 'shutdown reboot'\r\n"
 
   first_arg, remaining_args = (argument.split(" ", 1) + ["", ""])[:2]
@@ -387,7 +419,7 @@ def do_shutdown(ch, scmd, argument, server, mud):
   logging.info(f"Shutdown {first_arg} by {ch}.")
   server.shutdown_cmd = True
 
-def do_copyover(ch, scmd, argument, server, mud):
+def do_copyover(ch, scmd, argument, server, mud, db):
   out_msg_others = f"\r\n{RED}Time stops for a moment as {ch} folds space and time.{NORMAL}\r\n"
   out_msg_self = f"\r\n{RED}Time stops for a moment as you fold space and time.{NORMAL}\r\n"
 
@@ -414,7 +446,7 @@ def do_copyover(ch, scmd, argument, server, mud):
 
   server.copyover_cmd = True
 
-def do_look(ch, scmd, argument, server, mud):
+def do_look(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
@@ -488,7 +520,7 @@ def show_char_to_char(ch, tch):
 
   ch.write(out_buf)
 
-def do_move(ch, scmd, argument, server, mud):
+def do_move(ch, scmd, argument, server, mud, db):
   starting_room = mud.room_by_code(ch.room)
   dest_ref = starting_room.get_destination(scmd)
 
@@ -538,7 +570,7 @@ def do_move(ch, scmd, argument, server, mud):
   # show them the new room
   show_room_to_char(ch, ending_room)
 
-def do_colors(ch, scmd, argument, server, mud):
+def do_colors(ch, scmd, argument, server, mud, db):
   import editor
 
   buf = editor.buffer()
@@ -549,7 +581,7 @@ def do_colors(ch, scmd, argument, server, mud):
       line += f"{ansi_color_sequence(10*j + i)}*"
     ch.d.write(line + "\r\n" + NORMAL)
 
-def do_quit(ch, scmd, argument, server, mud):
+def do_quit(ch, scmd, argument, server, mud, db):
   d = ch.d
   room = mud.room_by_code(ch.room)
   ch.save_char()

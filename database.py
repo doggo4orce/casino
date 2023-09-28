@@ -38,12 +38,17 @@ class database:
      delete_player(p)      <-- delete p from the database
      save_player(p)        <-- creates or updates p in the database
 
-     contains_npc(np)      <-- checks whether np (npc_proto) will collide with existing entry
+     contains_cpref(cpref) <-- check whether cpref will collide with an existing preference
+     add_pref(cpref)       <-- add cpref to database
+     delete_cpref(cpref)   <-- delete cpref from the database
+     save_cpref(cpref)     <-- creates or updates cpref in the database
+
+     contains_npc(np)      <-- check whether np (npc_proto) will collide with existing entry
      add_npc(np)           <-- add np to the database
      delete_npc(np)        <-- deletes np from the database
      save_npc(np)          <-- creates or updates np in the database
 
-     contains_obj(obj)     <-- checks whether obj (obj_proto) will collide with existing entry
+     contains_obj(obj)     <-- check whether obj (obj_proto) will collide with existing entry
      add_obj(obj)          <-- add obj to the database
      delete_obj(obj)       <-- deletes obj from the database
      save_obj(obj)         <-- creates or updates obj in the database
@@ -77,7 +82,7 @@ class database:
      z_table()               <-- loads zone table
      z_table_str()           <-- print zone table
 
-     populate()              <-- hard-codes a stock world into the DB
+     load_stock()            <-- hard-codes a stock world into the DB
      load_world(mud)         <-- loads zones, rooms, obj/npc_protos into mud
 
      next_unused_pid()       <-- figure out the lowest player ID not in use
@@ -86,8 +91,11 @@ class database:
      player_name_by_id(id)   <-- player name that corresponds to id
      player_id_by_name(name) <-- player id that corresponds to id
 
+     Used for debugging info (called in commands.do_db)
+     table_list()            <-- returns a list of table names
+     row_count(table_name)   <-- counts number of rows loaded to table_name
      close()                 <-- closes conn"""
-
+      
   def create_tables(self):
 
     self.execute("""CREATE TABLE ex_table (
@@ -101,6 +109,11 @@ class database:
         id          integer,
         name        text,
         password    text)""")
+
+    self.execute("""CREATE TABLE cpref_table (
+        id          integer,
+        tag         text,
+        value       integer)""")
 
     self.execute("""CREATE TABLE npc_table (
         zone_id     text,
@@ -461,6 +474,35 @@ class database:
   def close(self):
     self._conn.close()
 
+  def table_list(self):
+    ret_val = list()
+
+    self.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
+
+    for item in self.fetchall():
+      ret_val.append(item[0])
+
+    return ret_val
+
+  def row_count(self, table_name):
+    if table_name not in self.table_list():
+      return 0
+
+    self.execute(f"SELECT * FROM {table_name}")
+    return len(self.fetchall())
+
+  def column_list(self, table_name):
+    ret_val = list()
+
+    if table_name not in self.table_list():
+      return ret_val
+
+    data = self.execute(f"SELECT * FROM {table_name}")
+    for item in data.description:
+      ret_val.append(item[0])
+
+    return ret_val
+
   def load_stock(self):
     stockville = zone.zone()
     stockville.name = "the city of stockville"
@@ -675,4 +717,5 @@ if __name__ == '__main__':
   print("NPC Table")
   print(db.npc_table_str() + "\r\n")
 
+  print(db.tables())
   db.close()

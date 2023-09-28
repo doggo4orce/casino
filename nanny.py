@@ -27,6 +27,7 @@ def init_commands():
   cmd_dict["colors"]    = ( commands.do_colors,      0 )
   cmd_dict["copyover"]  = ( commands.do_copyover,    0 )
   cmd_dict["client"]    = ( commands.do_client,      0 )
+  cmd_dict["db"]        = ( commands.do_db,          0 )
   cmd_dict["drop"]      = ( commands.do_drop,        0 )
   cmd_dict["goto"]      = ( commands.do_goto,        0 )
   cmd_dict["help"]      = ( commands.do_help,        0 )
@@ -53,7 +54,7 @@ def init_commands():
   cmd_dict["zedit"]     = ( olc.do_zedit,            0 )
   cmd_dict["zlist"]     = ( olc.do_zlist,            0 )
 
-def interpret_msg(d, command, argument, server, mud):
+def interpret_msg(d, command, argument, server, mud, db):
   valid_command = False
   initial_room = d.char.room
 
@@ -76,7 +77,7 @@ def interpret_msg(d, command, argument, server, mud):
   # find and process the command    
   for c in cmd_dict:
     if c.startswith(command):
-      cmd_dict[c][0](d.char, cmd_dict[c][1], argument, server, mud)
+      cmd_dict[c][0](d.char, cmd_dict[c][1], argument, server, mud, db)
       d.has_prompt = False
       valid_command = True
       break
@@ -110,7 +111,7 @@ def handle_next_input(d, server, mud, db):
     if done_writing:
       writing_follow_up(d)
   elif d.state == descriptor.descriptor_state.CHATTING:
-    interpret_msg(d, command, argument, server, mud)
+    interpret_msg(d, command, argument, server, mud, db)
   elif d.state == descriptor.descriptor_state.OLC:
     olc.handle_input(d, stripped_msg, server, mud)
   elif d.state == descriptor.descriptor_state.GET_NAME:

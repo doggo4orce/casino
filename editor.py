@@ -103,7 +103,10 @@ class buffer:
       if numbers:
         line = f"L{idx + 1}: " + line
       
-      ret_val += line + "\r\n"
+      ret_val += line
+
+      if idx != len(buf._contents) - 1:
+        ret_val += "\r\n"
 
     return ret_val
 

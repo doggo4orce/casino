@@ -110,7 +110,17 @@ class database:
         name        text,
         password    text)""")
 
-    self.execute("""CREATE TABLE pref_table (
+    self.execute("""CREATE TABLE pref_table_numeric (
+        id          integer,
+        tag         text,
+        value       integer)""")
+
+    self.execute("""CREATE TABLE pref_table_text (
+        id          integer,
+        tag         text,
+        value       text)""")
+
+    self.execute("""CREATE TABLE pref_table_flag (
         id          integer,
         tag         text,
         value       integer)""")
@@ -190,7 +200,7 @@ class database:
     self._add_exit(rm, ex)
 
   def contains_obj(self, op):
-    self.execute("SELECT * FROM p_table WHERE zid=:zid AND id=:id", {
+    self.execute("SELECT * FROM obj_table WHERE zone_id=:zid AND id=:id", {
       'zid':     op.zone_id, 
       'id':      op.id})
     return len(self.fetchall()) != 0

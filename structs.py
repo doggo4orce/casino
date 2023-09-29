@@ -105,17 +105,40 @@ class olc_data:
   save_data: ...=None
 
 @dataclasses.dataclass
-class preferences:
-  """Caution: any new fields added below will be automatically saved.  But unless an
-     exception is added to load_char_by_name, as is done for screen_width and
-     screen_length, they will be loaded as strings.  Depending on how many numerical
-     values end up being added here, it may make sense to split this into two classes."""
+class pref_data_numeric:
   screen_width:  int=config.DEFAULT_SCREEN_WIDTH
   screen_length: int=config.DEFAULT_SCREEN_LENGTH
+
+  def set(self, field, num):
+    setattr(self, field, num)
+
+@dataclasses.dataclass
+class pref_data_text:
   color_mode:    str=config.DEFAULT_COLOR_MODE
-  active_idle:   str=config.DEFAULT_ACTIVE_IDLE
-  brief_mode:    str=config.DEFAULT_BRIEF_MODE
-  debug_mode:    str=config.DEFAULT_DEBUG_MODE
+
+  def set(self, field, str):
+    setattr(self, field, str)
+
+@dataclasses.dataclass
+class pref_data_flags:
+  active_idle:   int=config.DEFAULT_ACTIVE_IDLE
+  brief_mode:    int=config.DEFAULT_BRIEF_MODE
+  debug_mode:    int=config.DEFAULT_DEBUG_MODE
+
+  def flip(self, field):
+    if getattr(self, field) == 1:
+      setattr(self, field, 0)
+    elif getattr(self, field) == 0:
+      setattr(self, field, 1)
+    else:
+      logging.warning(f"switch function called on {field}, which was neither on nor off, turning off.")
+      setattr(self, field, 0)
+
+@dataclasses.dataclass
+class preferences:
+  numeric: pref_data_numeric=dataclasses.field(default_factory=lambda:pref_data_numeric())
+  text:    pref_data_text=dataclasses.field(default_factory=lambda:pref_data_text())
+  flags:   pref_data_flags=dataclases.field(default_factory=lambda:pref_data_flags())
 
   def set(self, field, value):
     setattr(self, field, value)

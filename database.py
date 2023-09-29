@@ -23,51 +23,51 @@ class database:
       self.create_tables()
       self.load_stock()
 
-  """create_tables()       <-- creates all database tables
-     execute(line)         <-- returns execution of (SQL line)
-     fetchall()            <-- returns cursor.fetchall()
-     fetchone()            <-- returns cursor.fetchone()
+  """create_tables()         <-- creates all database tables
+     execute(line)           <-- returns execution of (SQL line)
+     fetchall()              <-- returns cursor.fetchall()
+     fetchone()              <-- returns cursor.fetchone()
 
      contains_exit(rm, dir, ex) <-- check if the exit will collide with an existing exit
-     add_exit(rm, ex)      <-- add ex from rm to the database
-     delete_exit(rm, ex)   <-- delete ex from rm from the database
-     save_exit(rm, ex)     <-- creates or updates ex from rm in the database
+     add_exit(rm, ex)        <-- add ex from rm to the database
+     delete_exit(rm, ex)     <-- delete ex from rm from the database
+     save_exit(rm, ex)       <-- creates or updates ex from rm in the database
 
-     contains_player(p)    <-- check whether p will collide with an existing player
-     add_player(p)         <-- add p to the database
-     delete_player(p)      <-- delete p from the database
-     save_player(p)        <-- creates or updates p in the database
+     contains_obj(obj)       <-- check whether obj (obj_proto) will collide with existing entry
+     add_obj(obj)            <-- add obj to the database
+     delete_obj(obj)         <-- deletes obj from the database
+     save_obj(obj)           <-- creates or updates obj in the database
 
-     contains_cpref(cpref) <-- check whether cpref will collide with an existing preference
-     add_pref(cpref)       <-- add cpref to database
-     delete_cpref(cpref)   <-- delete cpref from the database
-     save_cpref(cpref)     <-- creates or updates cpref in the database
+     contains_player(p)      <-- check whether p will collide with an existing player
+     add_player(p)           <-- add p to the database
+     delete_player(p)        <-- delete p from the database
+     save_player(p)          <-- creates or updates p in the database
 
-     contains_npc(np)      <-- check whether np (npc_proto) will collide with existing entry
-     add_npc(np)           <-- add np to the database
-     delete_npc(np)        <-- deletes np from the database
-     save_npc(np)          <-- creates or updates np in the database
+     contains_pref(p, tag)   <-- check whether cpref will collide with an existing preference
+     add_pref(p, tag, val)   <-- add p's pref with tag as val
+     delete_pref(p, tag)     <-- delete p's pref with tag
+     save_pref(p, tag, val)  <-- creates or updates p's pref with tag in the database as val
 
-     contains_obj(obj)     <-- check whether obj (obj_proto) will collide with existing entry
-     add_obj(obj)          <-- add obj to the database
-     delete_obj(obj)       <-- deletes obj from the database
-     save_obj(obj)         <-- creates or updates obj in the database
+     contains_npc(np)        <-- check whether np (npc_proto) will collide with existing entry
+     add_npc(np)             <-- add np to the database
+     delete_npc(np)          <-- deletes np from the database
+     save_npc(np)            <-- creates or updates np in the database
 
-     contains_room(rm)     <-- check whether rm will collide with an existing room
-     add_room(rm)          <-- adds rm to the database
-     delete_room(rm)       <-- deletes rm from the database
-     save_room(rm)         <-- creates or updates rm in the database
+     contains_room(rm)       <-- check whether rm will collide with an existing room
+     add_room(rm)            <-- adds rm to the database
+     delete_room(rm)         <-- deletes rm from the database
+     save_room(rm)           <-- creates or updates rm in the database
 
-     contains_zone(zn)     <-- check whether zn will collide with an existing zone
-     add_zone(zn)          <-- add zn to the database
-     delete_zone(zn)       <-- deletes zn from the database
-     save_zone(zn)         <-- creates or updates zn in the database
+     contains_zone(zn)       <-- check whether zn will collide with an existing zone
+     add_zone(zn)            <-- add zn to the database
+     delete_zone(zn)         <-- deletes zn from the database
+     save_zone(zn)           <-- creates or updates zn in the database
 
-     load_ptable(mud)      <-- load all player id's and names
-     load_zones(mud)       <-- load all zones
-     load_npcs(mud)        <-- load all npc_proto's
-     load_objs(mud)        <-- load all obj_proto's
-     load_game(mud)        <-- load entire database
+     load_ptable(mud)        <-- load all player id's and names
+     load_zones(mud)         <-- load all zones
+     load_npcs(mud)          <-- load all npc_proto's
+     load_objs(mud)          <-- load all obj_proto's
+     load_game(mud)          <-- load entire database
 
      ex_table()              <-- loads exit table
      ex_table_str()          <-- print exit table
@@ -196,17 +196,22 @@ class database:
     return len(self.fetchall()) != 0
 
   def _add_obj(self, op):
-    self.execute("INSERT INTO obj_table VALUES (:zid, :id, :name, :ldesc, :desc)", {
-      'zid':     op.zid,
+    self.execute("INSERT INTO obj_table VALUES (:zone_id, :id, :name, :ldesc, :dscn)", {
+      'zone_id': op.zone_id,
       'id':      op.id,
-      'name':    op.name,
+      'name':    op.entity.name,
       'ldesc':   op.ldesc,
-      'desc':    op.desc.str()})
+      'dscn':    op.entity.desc.str()})
 
   def _delete_obj(self, op):
-    self.execute("DELETE FROM obj_table WHERE zid=:zid AND id=:id", {
-      'zid': op.zid,
+    self.execute("DELETE FROM obj_table WHERE zone_id=:zid AND id=:id", {
+      'zid': op.zone_id,
       'id':  op.id})
+
+  def save_obj(self, op):
+    if self.contains_obj(op):
+      self.delete_obj(op)
+    self._add_obj(op)
 
   def contains_pref(self, p, attr):
     self.execute("SELECT * FROM pref_table WHERE id=:id AND tag=:tag", {
@@ -327,30 +332,6 @@ class database:
     if self.contains_npc(np):
       self._delete_npc(np)
     self._add_npc(np)
-
-  def contains_obj(self, op):
-    self.execute("SELECT * FROM obj_table WHERE zone_id=:zone_id AND id=:id", {
-      'zone_id': op.unique_id.zone_id,
-      'id':      op.unique_id.id})
-    return len(self.fetchall()) != 0
-
-  def _add_obj(self, op):
-    self.execute("INSERT INTO obj_table VALUES (:zone_id, :id, :name, :ldesc, :dscn)", {
-      'zone_id': op.unique_id.zone_id,
-      'id':      op.unique_id.id,
-      'name':    op.entity.name,
-      'ldesc':   op.ldesc,
-      'dscn':    op.entity.desc.str()})
-
-  def _delete_obj(self, op):
-    self.execute("DELETE * FROM obj_table WHERE zone_id=:zone_id and id=:id", {
-      'zone_id': op.unique_id.zone_id,
-      'id':      op.unique_id.id})
-
-  def save_obj(self, op):
-    if self.contains_obj(op):
-      self.delete_obj(op)
-    self._add_obj(op)
 
   def contains_room(self, rm):
     self.execute("SELECT * FROM wld_table WHERE zone_id=:zone_id AND id=:id", {

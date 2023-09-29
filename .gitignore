@@ -9,3 +9,4 @@ test.py
 .killscript
 */*/.DS_Store
 data.db
+test.db

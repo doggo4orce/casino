@@ -110,7 +110,7 @@ class database:
         name        text,
         password    text)""")
 
-    self.execute("""CREATE TABLE cpref_table (
+    self.execute("""CREATE TABLE pref_table (
         id          integer,
         tag         text,
         value       integer)""")
@@ -207,6 +207,29 @@ class database:
     self.execute("DELETE FROM obj_table WHERE zid=:zid AND id=:id", {
       'zid': op.zid,
       'id':  op.id})
+
+  def contains_pref(self, p, attr):
+    self.execute("SELECT * FROM pref_table WHERE id=:id AND tag=:tag", {
+      'id': p.id,
+      'tag': attr})
+    return len(self.fetchall()) != 0
+
+  def _add_pref(self, p, attr, value):
+    self.execute("INSERT INTO pref_table VALUES(:id, :tag, :value)", {
+      'id': p.id,
+      'tag': attr,
+      'value': value})
+
+  def _delete_pref(self, p, attr):
+    self.execute("DELETE FROM pref_table WHERE id=:pid AND tag=:attr", {
+     'pid', p.id,
+     'attr', attr})
+
+  def save_prefs(self, p):
+    for field in p.prefs.__dataclass_fields__:
+      if self.contains_pref(p, field):
+        _delete_pref(self, p, attr)
+      self._add_pref(p, field, getattr(p.prefs, field))
 
   def contains_player(self, p):
     self.execute("SELECT * FROM p_table WHERE id=:id", {'id':p.id})
@@ -421,6 +444,10 @@ class database:
       ret_val += f"{item[0]:<14}{item[1]:<17}{item[2]:<30}{desc_buffer.preview(30)}\r\n"
 
     return ret_val
+
+  def pref_table(self):
+    self.execute("SELECT * FROM pref_table")
+    return self.fetchall()
 
   def p_table(self):
     self.execute("SELECT * FROM p_table")
@@ -699,23 +726,24 @@ capitalize a word.</p>""")
       mud.zone_by_id(new_op.unique_id.zone_id).add_obj(new_op)
 
 if __name__ == '__main__':
-  os.system(f"rm {config.DATABASE_FILE}")
-  db = database(config.DATABASE_FILE)
+  os.system(f"rm test.db")
+  db = database("test.db")
 
-  print("Zone Table")
-  print(db.z_table_str() + "\r\n")
-  print("Room Table")
-  print(db.wld_table_str() + "\r\n")
-  print("Player Table")
-  print(db.p_table_str() + "\r\n")
-  print("Exit Table")
-  print(db.ex_table_str() + "\r\n")
-  print("Zone Table")
-  print(db.z_table_str() + "\r\n")
-  print("Object Table")
-  print(db.obj_table_str() + "\r\n")
-  print("NPC Table")
-  print(db.npc_table_str() + "\r\n")
+  # print("Zone Table")
+  # print(db.z_table_str() + "\r\n")
+  # print("Room Table")
+  # print(db.wld_table_str() + "\r\n")
+  # print("Player Table")
+  # print(db.p_table_str() + "\r\n")
+  # print("Exit Table")
+  # print(db.ex_table_str() + "\r\n")
+  # print("Zone Table")
+  # print(db.z_table_str() + "\r\n")
+  # print("Object Table")
+  # print(db.obj_table_str() + "\r\n")
+  # print("NPC Table")
+  # print(db.npc_table_str() + "\r\n")
 
-  print(db.tables())
+  
+  print(db.table_list())
   db.close()

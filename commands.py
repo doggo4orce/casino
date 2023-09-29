@@ -287,6 +287,20 @@ def do_db(ch, scmd, argument, server, mud, db):
           table_buf += f"  {column}\r\n"
         ch.write(table_buf)
         return
+    elif args[0] == "rows":
+      table_name = args[1]
+
+      if table_name not in db.table_list():
+        ch.write("That table does not exist.\r\n")
+        return
+      else:
+        table_buf = f"The following rows exist for {args[1]}:\r\n"
+        db.execute(f"SELECT * FROM {args[1]}")
+        for line in db.fetchall():
+          table_buf += f"{line[0]:<{10}} {line[1]:<{20}} {line[2]:<{10}}\r\n"
+        ch.write(table_buf)
+        return
+        
 
 def do_prefs(ch, scmd, argument, server, mud, db):
   prefs_help = "Customizable Preferences:\r\n"
@@ -361,7 +375,8 @@ def do_say(ch, scmd, argument, server, mud, db):
 
 def do_save(ch, scmd, argument, server, mud, db):
   ch.write(f"Saving {ch}.\r\n")
-  ch.save_char()
+  db.save_player(ch)
+  db.save_prefs(ch)
 
 def do_title(ch, scmd, argument, server, mud, db):
   ch.title = argument

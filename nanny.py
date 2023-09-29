@@ -69,7 +69,7 @@ def interpret_msg(d, command, argument, server, mud, db):
   # fire all prefix procs
   for mob in mud.room_by_code(d.char.room).people:
     if isinstance(mob, pc.npc):
-      block_interpreter = mob.call_prefix_command_triggers(mud, d.char, command, argument)
+      block_interpreter = mob.call_prefix_command_triggers(mud, d.char, command, argument, db)
 
   if block_interpreter:
     return
@@ -85,7 +85,7 @@ def interpret_msg(d, command, argument, server, mud, db):
   # fire all suffix procs
   for mob in mud.room_by_code(initial_room).people:
     if isinstance(mob, pc.npc):
-      mob.call_suffix_command_triggers(mud, d.char, command, argument)
+      mob.call_suffix_command_triggers(mud, d.char, command, argument, db)
 
   if not valid_command:
     d.write("Huh!?!\r\n")

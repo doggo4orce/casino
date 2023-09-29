@@ -53,8 +53,8 @@ try:
   while not network.shutdown_cmd and not network.copyover_cmd:
     network.loop(mud, db)
     time.sleep(time_per_loop)
-    mud.heart_beat()
-    mud.call_heart_beat_procs()
+    mud.heart_beat(db)
+    mud.call_heart_beat_procs(db)
     # TODO: find out how long this function took to call and adjust sleep time accordingly
 
 except KeyboardInterrupt:

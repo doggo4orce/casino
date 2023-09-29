@@ -56,8 +56,8 @@ class command_trigger(spec_proc):
   def __init__(self, name, func):
     super().__init__(name, func)
 
-  def call(self, mud, me, ch, command, argument):
-    return self.func(mud, me, ch, command, argument)
+  def call(self, mud, me, ch, command, argument, db):
+    return self.func(mud, me, ch, command, argument, db)
 
 # fired on mobs in the room before command is processed
 class prefix_command_trigger(command_trigger):
@@ -86,5 +86,5 @@ class heart_beat_proc(spec_proc):
   def __init__(self, name, func):
     super().__init__(name, func)
 
-  def call(self, mud, me):
-    return self.func(mud, me)
+  def call(self, mud, me, db):
+    return self.func(mud, me, db)

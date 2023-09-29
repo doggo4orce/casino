@@ -325,7 +325,7 @@ class baccarat_dealer(cards.card_dealer):
    baccarat_table_render()   <- renders a snapshot of the current hand in ascii
    baccarat_dealing()        <- handles the baccarat game"""
 
-def baccarat_dealer_history(mud, me, ch, command, argument):
+def baccarat_dealer_history(mud, me, ch, command, argument, db):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
@@ -363,15 +363,15 @@ def baccarat_dealer_history(mud, me, ch, command, argument):
 
   return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
-def baccarat_dealer_intro(mud, me, ch, command, argument):
+def baccarat_dealer_intro(mud, me, ch, command, argument, db):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
   if command == "say" and argument.lower() == "hi":
-    commands.do_say(me, None, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, mud)
+    commands.do_say(me, None, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, mud, db)
     return
 
-def baccarat_syntax_parser(mud, me, ch, command, argument):
+def baccarat_syntax_parser(mud, me, ch, command, argument, db):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
@@ -396,7 +396,7 @@ def baccarat_syntax_parser(mud, me, ch, command, argument):
       ch.write(help_str)
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
-def baccarat_table_render(mud, me, ch, command, argument):
+def baccarat_table_render(mud, me, ch, command, argument, db):
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
@@ -429,7 +429,7 @@ class baccarat_dealer_state(enum.IntEnum):
   REPORT_WINNER       = 18
   CLEAR_CARDS         = 19
 
-def baccarat_dealing(mud, me):
+def baccarat_dealing(mud, me, db):
   NUM_DECKS = 6
 
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(CYAN, DARK_GRAY, CYAN, DARK_GRAY, CYAN, DARK_GRAY, NORMAL)
@@ -469,7 +469,7 @@ def baccarat_dealing(mud, me):
     pause = 30
   elif me.bac_state == baccarat_dealer_state.PLAYER_FIRST:
     if me.shoe.size < 6:
-      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud)
+      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud, db)
       mud.echo_around(me, None, "Player wins: {}{}{} (including pandas)\r\nBanker wins: {}{}{}\r\nTies: {}{}{}\r\nPandas: {}{}{}\r\nDragons: {}{}{}\r\n".format(
         BLUE, me.shoe.count_reports(history_entry.PLAYER_WIN) + me.shoe.count_reports(history_entry.PANDA), NORMAL,
         RED, me.shoe.count_reports(history_entry.BANKER_WIN), NORMAL,
@@ -504,16 +504,16 @@ def baccarat_dealing(mud, me):
     pause = 10
   elif me.bac_state == baccarat_dealer_state.SHOW_INITIAL:
     mud.echo_around(me, None, me.hand.display() + "\n\n")
-    commands.do_say(me, None, f"Player shows {me.hand.player_score()}. Banker shows {me.hand.banker_score()}.", None, mud)
+    commands.do_say(me, None, f"Player shows {me.hand.player_score()}. Banker shows {me.hand.banker_score()}.", None, mud, db)
     me.bac_state = baccarat_dealer_state.CHECK_NATURAL
     pause = 60
   elif me.bac_state == baccarat_dealer_state.CHECK_NATURAL:
     if me.hand.player_natural():
-      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more draws.", None, mud)
+      commands.do_say(me, None, f"Player shows natural {me.hand.player_score()}.  No more draws.", None, mud, db)
       me.bac_state = baccarat_dealer_state.REPORT_WINNER
       pause = 30
     elif me.hand.banker_natural():
-      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more draws.", None, mud)
+      commands.do_say(me, None, f"Banker shows natural {me.hand.banker_score()}.  No more draws.", None, mud, db)
       me.bac_state = baccarat_dealer_state.REPORT_WINNER
       pause = 30
     else:
@@ -521,10 +521,10 @@ def baccarat_dealing(mud, me):
       pause = 30
   elif me.bac_state == baccarat_dealer_state.CHECK_PLAYER:
     if me.check_player_third():
-      commands.do_say(me, None, "Card for player.", None, mud)
+      commands.do_say(me, None, "Card for player.", None, mud, db)
       me.bac_state = baccarat_dealer_state.DEAL_PLAYER_THIRD
     else:
-      commands.do_say(me, None, "Player stands.", None, mud)
+      commands.do_say(me, None, "Player stands.", None, mud, db)
       me.bac_state = baccarat_dealer_state.CHECK_BANKER
     pause = 10
   elif me.bac_state == baccarat_dealer_state.DEAL_PLAYER_THIRD:
@@ -539,11 +539,11 @@ def baccarat_dealing(mud, me):
     pause = 60
   elif me.bac_state == baccarat_dealer_state.CHECK_BANKER:
     if me.check_banker_third():
-      commands.do_say(me, None, "Card for banker.", None, mud)
+      commands.do_say(me, None, "Card for banker.", None, mud, db)
       me.bac_state = baccarat_dealer_state.DEAL_BANKER_THIRD
       pause = 10
     else:
-      commands.do_say(me, None, "Banker stands.", None, mud)
+      commands.do_say(me, None, "Banker stands.", None, mud, db)
       me.bac_state = baccarat_dealer_state.REPORT_WINNER
       pause = 30
   elif me.bac_state == baccarat_dealer_state.DEAL_BANKER_THIRD:
@@ -558,19 +558,19 @@ def baccarat_dealing(mud, me):
     pause = 60
   elif me.bac_state == baccarat_dealer_state.REPORT_WINNER:
     if me.hand.panda():
-      commands.do_say(me, None, panda_string, None, mud)
+      commands.do_say(me, None, panda_string, None, mud, db)
       me.shoe.report_history(history_entry.PANDA)
     elif me.hand.dragon():
-      commands.do_say(me, None, dragon_string, None, mud)
+      commands.do_say(me, None, dragon_string, None, mud, db)
       me.shoe.report_history(history_entry.DRAGON)
     elif me.hand.player_score() > me.hand.banker_score():
-      commands.do_say(me, None, f"Player wins {me.hand.player_score()} over {me.hand.banker_score()}.", None, mud)
+      commands.do_say(me, None, f"Player wins {me.hand.player_score()} over {me.hand.banker_score()}.", None, mud, db)
       me.shoe.report_history(history_entry.PLAYER_WIN)
     elif me.hand.player_score() < me.hand.banker_score():
-      commands.do_say(me, None, f"Banker wins {me.hand.banker_score()} over {me.hand.player_score()}.", None, mud)
+      commands.do_say(me, None, f"Banker wins {me.hand.banker_score()} over {me.hand.player_score()}.", None, mud, db)
       me.shoe.report_history(history_entry.BANKER_WIN)
     else:
-      commands.do_say(me, None, f"Player and banker tie!", None, mud)
+      commands.do_say(me, None, f"Player and banker tie!", None, mud, db)
       me.shoe.report_history(history_entry.TIE)
     # Check Michael's Side Bets
     if me.hand.three_card_9_8():

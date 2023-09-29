@@ -53,13 +53,13 @@ class game:
   def add_event(self, e):
     self._events.add_event(e)
 
-  def heart_beat(self):
-    self._events.heart_beat(self)
+  def heart_beat(self, db):
+    self._events.heart_beat(self, db)
 
-  def call_heart_beat_procs(self):
+  def call_heart_beat_procs(self, db):
     for mob in self._chars:
       if isinstance(mob, pc.npc):
-        mob.call_heart_beat_procs(self)
+        mob.call_heart_beat_procs(self, db)
 
   def add_zone(self, zn):
     if self.zone_by_id(zn.id) == None:

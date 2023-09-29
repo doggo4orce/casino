@@ -14,8 +14,8 @@ class event_table:
     for j in range(0, len(self._buckets)):
       self._buckets[j] = event_bucket()
 
-  def heart_beat(self, mud):
-    self._buckets[self._current_bucket].heart_beat(mud)
+  def heart_beat(self, mud, db):
+    self._buckets[self._current_bucket].heart_beat(mud, db)
     self._current_bucket += 1
     self._current_bucket = self._current_bucket % event_table.NUM_BUCKETS
 
@@ -42,10 +42,10 @@ class event_bucket:
      delete_event(event) <- deletes scheduled event (which may have already executed)
      num_events()        <- counts the number of scheduled events"""
 
-  def heart_beat(self, mud):
+  def heart_beat(self, mud, db):
     for event in self._events:
       if event.pending():
-        event.execute(mud)
+        event.execute(mud, db)
         self.delete_event(event)
       else:
         event.heart_beat()
@@ -139,9 +139,9 @@ class event:
   """execute(mud) <- calls the func, mud passed so events can access owner surroundings
      heart_beat() <- decrements the countdown
      pending()    <- checks whether the countdown has reached zero"""
-  def execute(self, mud):
+  def execute(self, mud, db):
     # put an try/catch in here?
-    self._func(self._owner, mud)
+    self._func(self._owner, mud, db)
 
   def heart_beat(self):
     self._count_down -= 1
@@ -152,8 +152,8 @@ class event:
 class speech_event(event):
   """if target == None, then owner will use 'say', otherwise they will 'tell' the target?"""
   def __init__(self, owner, speech, target, count_down):
-    def speech_function(ch, mud):
-      commands.do_say(ch, None, speech, None, mud)
+    def speech_function(ch, mud, db):
+      commands.do_say(ch, None, speech, None, mud, db)
 
     super().__init__(owner, speech_function, target, count_down)
 

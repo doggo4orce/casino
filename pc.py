@@ -263,12 +263,12 @@ class npc(character):
   def heart_beat_procs(self, new_procs):
     self._heart_beat_procs = new_procs
 
-  """from_char(ch)                                   <- upgrades character ch to npc
-     write(msg)                                      <- does nothing (see below)
-     assign_spec_proc(new_proc)                      <- adds new_proc to self.specs
-     call_prefix_command_triggers(mud, ch, cmd, arg) <- calls all prefix command trigger procs
-     call_suffix_command_triggers(mud, ch, cmd, arg) <- calls all suffix command trigger procs
-     call_heart_beat_procs(mud)                      <- calls all heart beat procs"""
+  """from_char(ch)                                       <- upgrades character ch to npc
+     write(msg)                                          <- does nothing (see below)
+     assign_spec_proc(new_proc)                          <- adds new_proc to self.specs
+     call_prefix_command_triggers(mud, ch, cmd, arg, db) <- calls all prefix command trigger procs
+     call_suffix_command_triggers(mud, ch, cmd, arg, db) <- calls all suffix command trigger procs
+     call_heart_beat_procs(mud, db)                      <- calls all heart beat procs"""
      
   @classmethod
   def from_char(cls, ch):
@@ -287,18 +287,18 @@ class npc(character):
   def write(self, message):
     pass
 
-  def call_prefix_command_triggers(self, mud, ch, command, argument):
+  def call_prefix_command_triggers(self, mud, ch, command, argument, db):
     block_interpreter = False
     for procedure in self.prefix_command_triggers:
-      if procedure.call(mud, self, ch, command, argument) == spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER:
+      if procedure.call(mud, self, ch, command, argument, db) == spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER:
         block_interpreter = True
     return block_interpreter
 
-  def call_suffix_command_triggers(self, mud, ch, command, argument):
+  def call_suffix_command_triggers(self, mud, ch, command, argument, db):
     for procedure in self.suffix_command_triggers:
-      procedure.call(mud, self, ch, command, argument)
+      procedure.call(mud, self, ch, command, argument, db)
 
-  def call_heart_beat_procs(self, mud):
+  def call_heart_beat_procs(self, mud, db):
     for procedure in self.heart_beat_procs:
-      procedure.call(mud, self)
+      procedure.call(mud, self, db)
 

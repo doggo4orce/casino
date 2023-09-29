@@ -88,12 +88,12 @@ def do_give(ch, scmd, argument, server, mud, db):
   mud.echo_around(ch, [tch], f"{ch} gives {obj} to {tch}.\r\n")
 
   if type(tch) == pc.npc:
-    def check_it_out(c, mu):
+    def check_it_out(c, mu, db):
       mu.echo_around(c, None, f"{c} takes a closer look at {obj}.\r\n")
-    def decide_no(c, mu):
-      do_say(c, None, "I don't want this junk!", None, mu)
-    def drop_it(c, mu):
-      do_drop(c, None, args[0], None, mu)
+    def decide_no(c, mu, db):
+      do_say(c, None, "I don't want this junk!", None, mu, db)
+    def drop_it(c, mu, db):
+      do_drop(c, None, args[0], None, mu, db)
 
     mud.add_event(event.event(tch, check_it_out, None, 10))
     mud.add_event(event.event(tch, decide_no, None, 20))

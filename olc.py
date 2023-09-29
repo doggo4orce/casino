@@ -27,7 +27,7 @@ def olc_writing_follow_up(d):
     d.write("You shouldn't see this!\r\n")
     
 
-def do_mlist(ch, scmd, argument, server, mud):
+def do_mlist(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
@@ -52,7 +52,7 @@ def do_mlist(ch, scmd, argument, server, mud):
   for id, npc in zone._npc_proto.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_NPC_ID_LENGTH}}{NORMAL}] {CYAN}{npc.entity.name:<30}{NORMAL}\r\n")
 
-def do_olist(ch, scmd, argument, server, mud):
+def do_olist(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
@@ -77,7 +77,7 @@ def do_olist(ch, scmd, argument, server, mud):
   for id, obj in zone._obj_proto.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.entity.name:<30}{NORMAL}\r\n")
 
-def do_rlist(ch, scmd, argument, server, mud):
+def do_rlist(ch, scmd, argument, server, mud, db):
   Usage = "Usage: rlist [zone_id]\r\n"
   args = argument.split()
   num_args = len(args)
@@ -107,7 +107,7 @@ def do_rlist(ch, scmd, argument, server, mud):
   for id, room in zone._world.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
 
-def do_redit(ch, scmd, argument, server, mud):
+def do_redit(ch, scmd, argument, server, mud, db):
   Usage = "Usage: redit [[zone_id ]room_id]"
 
   zone_id = ch.room.zone_id
@@ -167,7 +167,7 @@ def do_redit(ch, scmd, argument, server, mud):
   ch.d.state = descriptor.descriptor_state.OLC
   redit.redit_display_main_menu(ch.d)
 
-def do_zedit(ch, scmd, argument, server, mud):
+def do_zedit(ch, scmd, argument, server, mud, db):
   Usage = "Usage: zedit [zone_id]\r\n"
   args = argument.split()
   num_args = len(args)
@@ -222,7 +222,7 @@ def do_zedit(ch, scmd, argument, server, mud):
   ch.d.state = descriptor.descriptor_state.OLC
   zedit.zedit_display_main_menu(ch.d)
 
-def do_zlist(ch, scmd, argument, server, mud):
+def do_zlist(ch, scmd, argument, server, mud, db):
 
   ch.write(f"ID{(1 + config.MAX_ZONE_ID_LENGTH)*' '}Zone Name{(config.MAX_ZONE_NAME_LENGTH - 8)*' '}Author\r\n")
 

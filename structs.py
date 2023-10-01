@@ -137,7 +137,7 @@ class pref_data_flags(pref_data):
     if val not in [0,1]:
       logging.warning(f"set function called on {field} flag with value {val} which is neither 0 nor 1.")
     else:
-      super().set(self, field, str)
+      super().set(field, val)
 
   def flip(self, field):
     if getattr(self, field) == True:
@@ -287,6 +287,5 @@ class room_attribute_data:
   desc: editor.buffer=editor.buffer("undescribed room")
 
 if __name__ == '__main__':
-  pref = preferences()
 
-  print(pref.numeric.__dataclass_fields__)
+  flag_prefs = pref_data_flags()

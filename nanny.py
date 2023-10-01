@@ -208,6 +208,9 @@ def handle_next_input(d, server, mud, db):
 
         mud.add_char(d.char)
         mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
+
+        db.load_flag_prefs(d.char)
+
       elif ch.d:
         d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
         d.state = descriptor.descriptor_state.GET_CONFIRM_REPLACE

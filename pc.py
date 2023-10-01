@@ -225,18 +225,7 @@ class pc(character):
 
   def save_char(self, db):
     db.save_player(self)
-    self.save_prefs(db)
-
-  def save_prefs(self, db):
-    for field in self.flag_prefs.__dataclass_fields__:
-      val = getattr(self.flag_prefs, field)
-      db.save_flag_pref(self, field, val)
-    for field in self.numeric_prefs.__dataclass_fields__:
-      val = getattr(self.numeric_prefs, field)
-      db.save_numeric_pref(self, field, val)
-    for field in self.text_prefs.__dataclass_fields__:
-      val = getattr(self.text_prefs, field)
-      db.save_text_pref(self, field, val)
+    db.save_prefs(self)
 
   def write(self, message):
     if self._d != None:

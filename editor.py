@@ -183,6 +183,9 @@ class buffer:
       if numbers:
         ret_val += f"L{idx+1}: "
       ret_val += line + "\r\n"
+    # as long as we had at least one line, we have one too many \r\n
+    if len(self._contents) > 0:
+      ret_val = ret_val[:-2]
     return ret_val
 
   def preview(self, max_len):

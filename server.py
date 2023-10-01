@@ -56,6 +56,8 @@ class server:
         d.char = db.load_player(name)
         d.char.d = d
 
+        db.load_flag_prefs(d.char)
+
         mud.add_char(d.char)
         self.add_descriptor(d)
 

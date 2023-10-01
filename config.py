@@ -32,10 +32,10 @@ PLAYER_PROMPT         = '> '
 # player preferences
 DEFAULT_SCREEN_LENGTH = 50
 DEFAULT_SCREEN_WIDTH  = 80
-DEFAULT_COLOR_MODE    = '256'
-DEFAULT_BRIEF_MODE    = False
-DEFAULT_ACTIVE_IDLE   = False
-DEFAULT_DEBUG_MODE    = False
+DEFAULT_COLOR_MODE    = '256color'
+DEFAULT_BRIEF_MODE    = 0
+DEFAULT_ACTIVE_IDLE   = 0
+DEFAULT_DEBUG_MODE    = 0
 
 # string maximums
 MAX_PLAYER_NAME_LENGTH       = 16  # length of 'responsibilities'

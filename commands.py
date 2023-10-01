@@ -200,7 +200,7 @@ def do_help(ch, scmd, argument, server, mud, db):
   cmds = [cmd.ljust(fmt_len) for cmd in cmds]
 
   # number of columns (subtract leading spaces but add the extra trailing space that isn't needed)
-  n = (ch.prefs.screen_width - leading_spaces + min_space)//fmt_len
+  n = (ch.screen_width - leading_spaces + min_space)//fmt_len
 
 
   # r is number of complete columns (unless it is zero then n is)
@@ -297,12 +297,17 @@ def do_db(ch, scmd, argument, server, mud, db):
         table_buf = f"The following rows exist for {args[1]}:\r\n"
         db.execute(f"SELECT * FROM {args[1]}")
         for line in db.fetchall():
-          table_buf += f"{line[0]:<{10}} {line[1]:<{20}} {line[2]:<{10}}\r\n"
+          line_buf = ""
+          for col in line:
+            line_buf += f"{col:.16} ".ljust(16)
+          line_buf = line_buf[:-1]
+          table_buf += line_buf + "\r\n"
         ch.write(table_buf)
         return
         
 
 def do_prefs(ch, scmd, argument, server, mud, db):
+  onoff = ['off', 'on']
   prefs_help = "Customizable Preferences:\r\n"
   prefs_help += f"  screen_width   [{ORANGE}{ch.screen_width}{NORMAL}]\r\n"
   prefs_help += f"  screen_length  [{ORANGE}{ch.screen_length}{NORMAL}]\r\n"
@@ -311,9 +316,9 @@ def do_prefs(ch, scmd, argument, server, mud, db):
   prefs_help += f"To change one of these options, use: prefs set <option> <value>\r\n"
   prefs_help += "\r\n"
   prefs_help += "Toggleable preferences:\r\n"
-  prefs_help += f"  active_idle    [{ORANGE}{ch.active_idle}{NORMAL}]\r\n"
-  prefs_help += f"  brief_mode     [{ORANGE}{ch.brief_mode}{NORMAL}]\r\n"
-  prefs_help += f"  debug_mode     [{ORANGE}{ch.debug_mode}{NORMAL}]\r\n"
+  prefs_help += f"  active_idle    [{ORANGE}{onoff[ch.active_idle]}{NORMAL}]\r\n"
+  prefs_help += f"  brief_mode     [{ORANGE}{onoff[ch.brief_mode]}{NORMAL}]\r\n"
+  prefs_help += f"  debug_mode     [{ORANGE}{onoff[ch.debug_mode]}{NORMAL}]\r\n"
   prefs_help += "\r\n"
   prefs_help += f"To change one of these options, use: prefs toggle <option>\r\n"
 
@@ -351,9 +356,6 @@ def do_prefs(ch, scmd, argument, server, mud, db):
     if hasattr(ch.flag_prefs, option):
       ch.flag_prefs.flip(option)
       ch.write(f"Setting '{option}' to {getattr(ch.flag_prefs, option)}.\r\n")
-    # if option in ['active_idle', 'brief_mode', 'debug_mode']:
-    #   ch.prefs.flip(option, 'on', 'off')
-    #   ch.write(f"Setting {option} to {getattr(ch.prefs, option)}.\r\n")
     else:
       ch.write(f"Option '{option}' cannot be toggled.\r\n")
       return
@@ -378,8 +380,9 @@ def do_say(ch, scmd, argument, server, mud, db):
 
 def do_save(ch, scmd, argument, server, mud, db):
   ch.write(f"Saving {ch}.\r\n")
-  ch.save_char(db)
-  ch.save_prefs(db)
+
+  db.save_player(ch)
+  db.save_prefs(ch)
 
 def do_title(ch, scmd, argument, server, mud, db):
   ch.title = argument
@@ -394,7 +397,7 @@ def do_score(ch, scmd, argument, server, mud, db):
   out_str += f"{GREEN}Client{NORMAL})    {ch.d.client_info.term_type}\r\n"
   out_str += f"{GREEN}Screen{NORMAL})    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
 
-  if ch.prefs.debug_mode == 'on':
+  if ch.debug_mode:
     out_str += f"{GREEN}Room{NORMAL})      {ch.room}\r\n"
 
   ch.write(out_str)
@@ -490,7 +493,7 @@ def show_room_to_char(ch, rm):
   if not ch.brief_mode:
     out_buf += rm.desc.display(ch.screen_width, format=True, indent=True, numbers=False, color=True)
   
-  out_buf += f'{CYAN}{rm.show_exits()}{NORMAL}\r\n'
+  out_buf += f'\r\n{CYAN}{rm.show_exits()}{NORMAL}\r\n'
 
   for tch in rm.people:
     if tch != ch:
@@ -505,7 +508,7 @@ def show_room_to_char(ch, rm):
   ch.write(out_buf)
 
 def show_char_to_char(ch, tch):
-  out_buf = tch.entity.desc.display(ch.prefs.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
+  out_buf = tch.entity.desc.display(ch.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
   out_buf += "\r\n"
   out_buf += "You attempt to peek at his inventory:\r\n"
 
@@ -514,7 +517,7 @@ def show_char_to_char(ch, tch):
   if len(tch.inventory) == 0:
     out_buf += "  Nothing.\r\n"
 
-  if ch.prefs.debug_mode == 'on':
+  if ch.debug_mode:
     out_buf += "\r\nDebug Info:\r\n"
     out_buf += f"Type: {type(tch)}\r\n"
     out_buf += "Prefix Procs:\r\n"

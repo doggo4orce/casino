@@ -140,6 +140,12 @@ class database:
         ldesc       text,
         dscn        text)""")
 
+    self.execute("""CREATE TABLE alias_table (
+        zone_id     text,
+        id          text,
+        typ         text,
+        alias       text)""")
+
     self.execute("""CREATE TABLE wld_table (
         zone_id     text,
         id          text,
@@ -238,7 +244,7 @@ class database:
     self.execute("INSERT INTO pref_table_flag VALUES(:id, :tag, :value)", {
       'id': p.id,
       'tag': attr,
-      'value': int(value)}) # save flag as 1 or 0
+      'value': value}) # save flag as 1 or 0
 
   def _delete_flag_pref(self, p, attr):
     self.execute("DELETE FROM pref_table_flag WHERE id=:id AND tag=:tag", {
@@ -249,6 +255,16 @@ class database:
     if self.contains_flag_pref(p, attr):
       self._delete_flag_pref(p, attr)
     self._add_flag_pref(p, attr, value)
+
+  def save_flag_prefs(self, p):
+    for field in p.flag_prefs.__dataclass_fields__:
+      val = getattr(p.flag_prefs, field)
+      self.save_flag_pref(p, field, val)
+
+  def load_flag_prefs(self, p):
+    self.execute("SELECT * FROM pref_table_flag WHERE id=:id", {'id': p.id})
+    for line in self.fetchall():
+      p.flag_prefs.set(line[1], line[2])
 
   def contains_numeric_pref(self, p, attr):
     self.execute("SELECT * FROM pref_table_numeric WHERE id=:id AND tag=:tag", {
@@ -272,6 +288,11 @@ class database:
       self._delete_numeric_pref(p, attr)
     self._add_numeric_pref(p, attr, value)
 
+  def save_numeric_prefs(self, p):
+    for field in p.numeric_prefs.__dataclass_fields__:
+      val = getattr(p.numeric_prefs, field)
+      self.save_numeric_pref(p, field, val)
+
   def contains_text_pref(self, p, attr):
     self.execute("SELECT * FROM pref_table_text WHERE id=:id AND tag=:tag", {
       'id': p.id,
@@ -294,6 +315,16 @@ class database:
       self._delete_text_pref(p, attr)
     self._add_text_pref(p, attr, value)
 
+  def save_text_prefs(self, p):
+    for field in p.text_prefs.__dataclass_fields__:
+      val = getattr(p.text_prefs, field)
+      self.save_text_pref(p, field, val)
+
+  def save_prefs(self, p):
+    self.save_flag_prefs(p)
+    self.save_numeric_prefs(p)
+    self.save_text_prefs(p)
+ 
   def contains_player(self, p):
     self.execute("SELECT * FROM p_table WHERE id=:id", {'id':p.id})
     return len(self.fetchall()) != 0
@@ -351,6 +382,9 @@ class database:
     self.execute("SELECT * FROM p_table")
     return len(self.fetchall())
 
+  # this is currently not used, since by the time the player's password is
+  # confirmed, we've already loaded all of this information separately
+  # but it would seem sensible to call this function so for now it stays
   def load_player(self, name):
     ret_val = pc.pc()
 
@@ -366,7 +400,7 @@ class database:
     ret_val.pwd  = row[2]
 
     return ret_val
-    
+
   def contains_npc(self, np):
     self.execute("SELECT * from npc_table WHERE zone_id=:zone_id AND id=:id", {
       'zone_id' : np.unique_id.zone_id,
@@ -390,6 +424,7 @@ class database:
     if self.contains_npc(np):
       self._delete_npc(np)
     self._add_npc(np)
+    self.save_npc_aliases(np)
 
   def contains_room(self, rm):
     self.execute("SELECT * FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
@@ -418,6 +453,37 @@ class database:
       ex = rm.exit(dir)
       if ex != None:
         self.save_exit(rm, ex)
+
+  def contains_alias(self, zone_id, id, typ, alias):
+    self.execute("SELECT * FROM alias_table WHERE zone_id=:zid AND id=:id AND typ=:typ AND alias=:alias", {
+      'zid' : zone_id,
+      'id' : id,
+      'typ' : typ,
+      'alias' : alias})
+    return len(self.fetchall()) != 0
+
+  def _add_alias(self, zone_id, id, typ, alias):
+    self.execute("INSERT INTO alias_table VALUES (:zid, :id, :typ, :alias)", {
+      'zid' : zone_id,
+      'id' : id,
+      'typ' : typ,
+      'alias' : alias})
+
+  def _delete_alias(self, zone_id, id, typ, alias):
+    self.execute("DELETE * FROM alias_table WHERE zid=:zid AND id=:id AND typ=:typ AND alias=:alias", {
+      'zid' : zone_id,
+      'id' : id,
+      'typ' : typ,
+      'alias' : alias})
+
+  def save_alias(self, zone_id, id, typ, alias):
+    if self.contains_alias(zone_id, id, typ, alias):
+      self._delete(zone_id, id, typ, alias)
+    self._add_alias(zone_id, id, typ, alias)
+
+  def save_npc_aliases(self, np):
+    for keyword in np.entity.namelist:
+      self.save_alias(np.unique_id.zone_id, np.unique_id.id, 'npc', keyword)
 
   def contains_zone(self, zn):
     self.execute("SELECT * FROM z_table WHERE id=:id", {'id' : zn.id})
@@ -457,6 +523,10 @@ class database:
       ret_val += f"{exit.direction(item[0]).name:<12} {item[1]:<15} {item[2]:<15} {item[3]:<15} {item[4]:<15}\r\n"
 
     return ret_val
+
+  def alias_table(self):
+    self.execute("SELECT * FROM alias_table")
+    return self.fetchall()
 
   def npc_table(self):
     self.execute("SELECT * FROM npc_table")
@@ -712,6 +782,7 @@ capitalize a word.</p>""")
     self.save_obj(op)
 
   def load_world(self, mud):
+
     for item in self.z_table():
       new_zone = zone.zone()
       new_zone.id = item[0]
@@ -752,7 +823,7 @@ capitalize a word.</p>""")
       new_npcp.unique_id.id = item[1]
       new_npcp.entity.name = item[2]
       new_npcp.ldesc = item[3]
-      new_npcp.desc = editor.buffer(item[4])
+      new_npcp.entity.desc = editor.buffer(item[4])
       mud.zone_by_id(new_npcp.unique_id.zone_id).add_npc(new_npcp)
 
     for item in self.obj_table():
@@ -763,6 +834,10 @@ capitalize a word.</p>""")
       new_op.ldesc = item[3]
       new_op.desc = editor.buffer(item[4])
       mud.zone_by_id(new_op.unique_id.zone_id).add_obj(new_op)
+
+    for item in self.alias_table():
+      if item[2] == "npc":
+        mud.zone_by_id(item[0]).npc_by_id(item[1]).entity.namelist.append(item[3])
 
 if __name__ == '__main__':
   os.system(f"rm test.db")

@@ -107,9 +107,6 @@ class pc(character):
   def id(self):
     return self._id
   @property
-  def prefs(self):
-    return self._prefs
-  @property
   def ldesc(self):
     out_str = f"{self} {self.title}"
     if self.d == None:
@@ -119,7 +116,48 @@ class pc(character):
   @property
   def save_data(self):
     return self._save_data
+
+  # preference property shortcuts
+  @property
+  def numeric_prefs(self):
+    return self._prefs.numeric
+  @property
+  def text_prefs(self):
+    return self._prefs.text
+  @property
+  def flag_prefs(self):
+    return self._prefs.flags
+
+  # preference setter shortcuts
+  @flag_prefs.setter
+  def flag_prefs(self, new_flag_prefs):
+    self._prefs.flags = new_flag_prefs
+
+  # flag prefs properties
+  @property
+  def active_idle(self):
+    return self.flag_prefs.active_idle
+  @property
+  def brief_mode(self):
+    return self.flag_prefs.brief_mode
+  @property
+  def debug_mode(self):
+    return self.flag_prefs.debug_mode
+
+  # numeric prefs properties
+  @property
+  def screen_width(self):
+    return self.numeric_prefs.screen_width
+  @property
+  def screen_length(self):
+    return self.numeric_prefs.screen_length
+
+  # text prefs properties
+  @property
+  def color_mode(self):
+    return self.text_prefs.color_mode
   
+
   # Setters
   @d.setter
   def d(self, new_d):
@@ -139,7 +177,7 @@ class pc(character):
 
   """parse_tag(tag, value, rf) <- processes a line from a pfile through rf
      update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
-     save_char()           <- saves character data to player file
+     save_char(db)         <- saves character to database
      write(msg)            <- sends msg to descriptor controlling self"""
 
   def parse_tag(self, tag, value, rf):
@@ -185,31 +223,20 @@ class pc(character):
     else:
       logging.warning(f"{self.name} attempting to set non-existent attribute {attr_str} to {new_val}.")
 
-  def save_char(self):
-    file_name = config.PFILES_PATH + self.name.lower() + ".plr"
-    with open(file_name, "w") as wf:
-      wf.write("# Administrative Data\n")
+  def save_char(self, db):
+    db.save_player(self)
+    self.save_prefs(db)
 
-      wf.write(f"name: {self.name}\n".format(self.name))
-      wf.write(f"id: {self.id}\n")
-      wf.write(f"password: {self.pwd}\n")
-
-      wf.write("\n# Game Data\n")
-
-      for field in self.save_data.non_numerical.__dataclass_fields__:
-        wf.write(f"{field}: {getattr(self._save_data.non_numerical, field)}\n")
-
-      for field in self.save_data.numerical.__dataclass_fields__:
-        wf.write(f"{field}: {getattr(self._save_data.numerical, field)}\n")
-
-      wf.write(f"room: {str(self.room)}\n")
-
-      wf.write("\n# Preferences\n")
-      self.save_prefs(wf)
-
-  def save_prefs(self, file_stream):
-    for field in self.prefs.__dataclass_fields__:
-      file_stream.write(f"{field}: {getattr(self.prefs, field)}\n")
+  def save_prefs(self, db):
+    for field in self.flag_prefs.__dataclass_fields__:
+      val = getattr(self.flag_prefs, field)
+      db.save_flag_pref(self, field, val)
+    for field in self.numeric_prefs.__dataclass_fields__:
+      val = getattr(self.numeric_prefs, field)
+      db.save_numeric_pref(self, field, val)
+    for field in self.text_prefs.__dataclass_fields__:
+      val = getattr(self.text_prefs, field)
+      db.save_text_pref(self, field, val)
 
   def write(self, message):
     if self._d != None:

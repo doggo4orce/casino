@@ -304,16 +304,16 @@ def do_db(ch, scmd, argument, server, mud, db):
 
 def do_prefs(ch, scmd, argument, server, mud, db):
   prefs_help = "Customizable Preferences:\r\n"
-  prefs_help += f"  screen_width   [{ORANGE}{ch.prefs.screen_width}{NORMAL}]\r\n"
-  prefs_help += f"  screen_length  [{ORANGE}{ch.prefs.screen_length}{NORMAL}]\r\n"
-  prefs_help += f"  color_mode     [{ORANGE}{ch.prefs.color_mode}{NORMAL}]\r\n"
+  prefs_help += f"  screen_width   [{ORANGE}{ch.screen_width}{NORMAL}]\r\n"
+  prefs_help += f"  screen_length  [{ORANGE}{ch.screen_length}{NORMAL}]\r\n"
+  prefs_help += f"  color_mode     [{ORANGE}{ch.color_mode}{NORMAL}]\r\n"
   prefs_help += "\r\n"
   prefs_help += f"To change one of these options, use: prefs set <option> <value>\r\n"
   prefs_help += "\r\n"
   prefs_help += "Toggleable preferences:\r\n"
-  prefs_help += f"  active_idle    [{ORANGE}{ch.prefs.active_idle}{NORMAL}]\r\n"
-  prefs_help += f"  brief_mode     [{ORANGE}{ch.prefs.brief_mode}{NORMAL}]\r\n"
-  prefs_help += f"  debug_mode     [{ORANGE}{ch.prefs.debug_mode}{NORMAL}]\r\n"
+  prefs_help += f"  active_idle    [{ORANGE}{ch.active_idle}{NORMAL}]\r\n"
+  prefs_help += f"  brief_mode     [{ORANGE}{ch.brief_mode}{NORMAL}]\r\n"
+  prefs_help += f"  debug_mode     [{ORANGE}{ch.debug_mode}{NORMAL}]\r\n"
   prefs_help += "\r\n"
   prefs_help += f"To change one of these options, use: prefs toggle <option>\r\n"
 
@@ -348,9 +348,12 @@ def do_prefs(ch, scmd, argument, server, mud, db):
       ch.write("Usage: prefs toggle <option>\r\n")
       return
     option = args[1]
-    if option in ['active_idle', 'brief_mode', 'debug_mode']:
-      ch.prefs.flip(option, 'on', 'off')
-      ch.write(f"Setting {option} to {getattr(ch.prefs, option)}.\r\n")
+    if hasattr(ch.flag_prefs, option):
+      ch.flag_prefs.flip(option)
+      ch.write(f"Setting '{option}' to {getattr(ch.flag_prefs, option)}.\r\n")
+    # if option in ['active_idle', 'brief_mode', 'debug_mode']:
+    #   ch.prefs.flip(option, 'on', 'off')
+    #   ch.write(f"Setting {option} to {getattr(ch.prefs, option)}.\r\n")
     else:
       ch.write(f"Option '{option}' cannot be toggled.\r\n")
       return
@@ -375,8 +378,8 @@ def do_say(ch, scmd, argument, server, mud, db):
 
 def do_save(ch, scmd, argument, server, mud, db):
   ch.write(f"Saving {ch}.\r\n")
-  db.save_player(ch)
-  db.save_prefs(ch)
+  ch.save_char(db)
+  ch.save_prefs(db)
 
 def do_title(ch, scmd, argument, server, mud, db):
   ch.title = argument
@@ -447,7 +450,7 @@ def do_copyover(ch, scmd, argument, server, mud, db):
         td.write("Rebooting, come back in a few seconds.\r\n")
         continue
 
-      td.char.save_char()
+      td.char.save_char(db)
 
       fd = td.socket.fileno()
       name = td.char.name.lower()
@@ -482,22 +485,22 @@ def do_look(ch, scmd, argument, server, mud, db):
       ch.write(f"You see no {args[0]} here.\r\n")
 
 def show_room_to_char(ch, rm):
-  out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.prefs.screen_width, False)}{NORMAL}\r\n'
+  out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.numeric_prefs.screen_width, False)}{NORMAL}\r\n'
 
-  if ch.prefs.brief_mode == 'off':
-    out_buf += rm.desc.display(ch.prefs.screen_width, format=True, indent=True, numbers=False, color=True)
+  if not ch.brief_mode:
+    out_buf += rm.desc.display(ch.screen_width, format=True, indent=True, numbers=False, color=True)
   
   out_buf += f'{CYAN}{rm.show_exits()}{NORMAL}\r\n'
 
   for tch in rm.people:
     if tch != ch:
-      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.prefs.screen_width, False)}{NORMAL}"
+      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.screen_width, False)}{NORMAL}"
       if type(tch) == pc.pc and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
         out_buf += " (olc)"
       out_buf += "\r\n"
 
   for obj in rm.inventory:
-    out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.prefs.screen_width, False)}{NORMAL}\r\n"
+    out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.screen_width, False)}{NORMAL}\r\n"
 
   ch.write(out_buf)
 
@@ -599,7 +602,7 @@ def do_colors(ch, scmd, argument, server, mud, db):
 def do_quit(ch, scmd, argument, server, mud, db):
   d = ch.d
   room = mud.room_by_code(ch.room)
-  ch.save_char()
+  ch.save_char(db)
   mud.extract_char(ch)
 
   for tch in room.people:

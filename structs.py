@@ -105,52 +105,68 @@ class olc_data:
   save_data: ...=None
 
 @dataclasses.dataclass
-class pref_data_numeric:
+class pref_data:
+  def get(self, field):
+    if hasattr(self, field):
+      return getattr(self, field)
+    else:
+      logging.warning(f"Trying to access preference field {field} which is not defined.")
+
+  def set(self, field, value):
+    if hasattr(self, field):
+      setattr(self, field, value)
+    else:
+      logging.warning(f"Trying to set {field} to {value}, but {field} is not defined.")
+
+@dataclasses.dataclass
+class pref_data_numeric(pref_data):
   screen_width:  int=config.DEFAULT_SCREEN_WIDTH
   screen_length: int=config.DEFAULT_SCREEN_LENGTH
 
-  def set(self, field, num):
-    setattr(self, field, num)
-
 @dataclasses.dataclass
-class pref_data_text:
+class pref_data_text(pref_data):
   color_mode:    str=config.DEFAULT_COLOR_MODE
 
-  def set(self, field, str):
-    setattr(self, field, str)
-
 @dataclasses.dataclass
-class pref_data_flags:
+class pref_data_flags(pref_data):
   active_idle:   int=config.DEFAULT_ACTIVE_IDLE
   brief_mode:    int=config.DEFAULT_BRIEF_MODE
   debug_mode:    int=config.DEFAULT_DEBUG_MODE
 
+  def set(self, field, val):
+    if val not in [0,1]:
+      logging.warning(f"set function called on {field} flag with value {val} which is neither 0 nor 1.")
+    else:
+      super().set(self, field, str)
+
   def flip(self, field):
-    if getattr(self, field) == 1:
-      setattr(self, field, 0)
-    elif getattr(self, field) == 0:
-      setattr(self, field, 1)
+    if getattr(self, field) == True:
+      setattr(self, field, False)
+    elif getattr(self, field) == False:
+      setattr(self, field, True)
     else:
       logging.warning(f"switch function called on {field}, which was neither on nor off, turning off.")
-      setattr(self, field, 0)
+      setattr(self, field, False)
 
 @dataclasses.dataclass
 class preferences:
   numeric: pref_data_numeric=dataclasses.field(default_factory=lambda:pref_data_numeric())
   text:    pref_data_text=dataclasses.field(default_factory=lambda:pref_data_text())
-  flags:   pref_data_flags=dataclases.field(default_factory=lambda:pref_data_flags())
+  flags:   pref_data_flags=dataclasses.field(default_factory=lambda:pref_data_flags())
 
   def set(self, field, value):
-    setattr(self, field, value)
-
-  def flip(self, field, on, off):
-    if getattr(self, field) == on:
-      setattr(self, field, off)
-    elif getattr(self, field) == off:
-      setattr(self, field, on)
+    if hasattr(field, self.numeric):
+      self.numeric.set(field, value)
+    elif hasattr(field, self.text):
+      self.text.set(field, value)
+    elif hasattr(field, self.flags):
+      self.flags.set(field, value)
     else:
-      logging.warning(f"switch function called on {field}, which was neither {on} nor {off} - turning {off}.")
-      setattr(self, field, off)
+      logging.warning(f"trying to set {field} to {value} but {field} is not defined.")
+
+  def flip(self, field):
+    if hasattr(field, self.flags):
+      self.flags.flip(field)
 
 """Note: any new fields added to
      pc_save_data_numerical or pc_save_data_non_numerical will be automatically saved."""
@@ -271,14 +287,6 @@ class room_attribute_data:
   desc: editor.buffer=editor.buffer("undescribed room")
 
 if __name__ == '__main__':
-  new_proto = obj_proto_data()
+  pref = preferences()
 
-  new_obj = object.object()
-
-  new_obj._entity = dataclasses.replace(new_proto.entity)
-
-  print(new_obj.name)
-
-  new_proto.entity.name = "finished entity"
-
-  print(new_obj.name)
+  print(pref.numeric.__dataclass_fields__)

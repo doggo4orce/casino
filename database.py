@@ -1,6 +1,7 @@
 import config
 import editor
 import exit
+import logging
 import object
 import os
 import pc
@@ -151,9 +152,13 @@ class database:
         author      text)""")
 
   def execute(self, line, parameters=()):
-    ret_val = self._cursor.execute(line, parameters)
-    self._conn.commit()
-    return ret_val
+    try:
+      ret_val = self._cursor.execute(line, parameters)
+    except sqlite3.ProgrammingError:
+      logging.error(f"SQL Programming Error with line {line} and parameters {parameters}.")
+    else:
+      self._conn.commit()
+      return ret_val
 
   def fetchall(self):
     return self._cursor.fetchall()
@@ -223,28 +228,71 @@ class database:
       self.delete_obj(op)
     self._add_obj(op)
 
-  def contains_pref(self, p, attr):
-    self.execute("SELECT * FROM pref_table WHERE id=:id AND tag=:tag", {
+  def contains_flag_pref(self, p, attr):
+    self.execute("SELECT * FROM pref_table_flag WHERE id=:id AND tag=:tag", {
       'id': p.id,
       'tag': attr})
     return len(self.fetchall()) != 0
 
-  def _add_pref(self, p, attr, value):
-    self.execute("INSERT INTO pref_table VALUES(:id, :tag, :value)", {
+  def _add_flag_pref(self, p, attr, value):
+    self.execute("INSERT INTO pref_table_flag VALUES(:id, :tag, :value)", {
+      'id': p.id,
+      'tag': attr,
+      'value': int(value)}) # save flag as 1 or 0
+
+  def _delete_flag_pref(self, p, attr):
+    self.execute("DELETE FROM pref_table_flag WHERE id=:id AND tag=:tag", {
+     'id': p.id,
+     'tag': attr})
+
+  def save_flag_pref(self, p, attr, value):
+    if self.contains_flag_pref(p, attr):
+      self._delete_flag_pref(p, attr)
+    self._add_flag_pref(p, attr, value)
+
+  def contains_numeric_pref(self, p, attr):
+    self.execute("SELECT * FROM pref_table_numeric WHERE id=:id AND tag=:tag", {
+      'id': p.id,
+      'tag': attr})
+    return len(self.fetchall()) != 0
+
+  def _add_numeric_pref(self, p, attr, value):
+    self.execute("INSERT INTO pref_table_numeric VALUES(:id, :tag, :value)", {
       'id': p.id,
       'tag': attr,
       'value': value})
 
-  def _delete_pref(self, p, attr):
-    self.execute("DELETE FROM pref_table WHERE id=:pid AND tag=:attr", {
-     'pid', p.id,
-     'attr', attr})
+  def _delete_numeric_pref(self, p, attr):
+    self.execute("DELETE FROM pref_table_numeric WHERE id=:id AND tag=:tag", {
+     'id': p.id,
+     'tag': attr})
 
-  def save_prefs(self, p):
-    for field in p.prefs.__dataclass_fields__:
-      if self.contains_pref(p, field):
-        _delete_pref(self, p, attr)
-      self._add_pref(p, field, getattr(p.prefs, field))
+  def save_numeric_pref(self, p, attr, value):
+    if self.contains_numeric_pref(p, attr):
+      self._delete_numeric_pref(p, attr)
+    self._add_numeric_pref(p, attr, value)
+
+  def contains_text_pref(self, p, attr):
+    self.execute("SELECT * FROM pref_table_text WHERE id=:id AND tag=:tag", {
+      'id': p.id,
+      'tag': attr})
+    return len(self.fetchall()) != 0
+
+  def _add_text_pref(self, p, attr, value):
+    self.execute("INSERT INTO pref_table_text VALUES(:id, :tag, :value)", {
+      'id': p.id,
+      'tag': attr,
+      'value': value})
+
+  def _delete_text_pref(self, p, attr):
+    self.execute("DELETE FROM pref_table_text WHERE id=:id AND tag=:tag", {
+     'id': p.id,
+     'tag': attr})
+
+  def save_text_pref(self, p, attr, value):
+    if self.contains_text_pref(p, attr):
+      self._delete_text_pref(p, attr)
+    self._add_text_pref(p, attr, value)
 
   def contains_player(self, p):
     self.execute("SELECT * FROM p_table WHERE id=:id", {'id':p.id})

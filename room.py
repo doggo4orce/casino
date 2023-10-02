@@ -75,7 +75,8 @@ class room:
      remove_char(ch)           <- removes character ch from the room   (does not modify ch.room)
      char_by_alias(name)       <- scans through people (pc's first) looking for name
      pc_by_name(name)          <- scans through pcs in room with argument as name
-     npc_by_alias(alias)       <- scans through npcs in room with argument as alias
+     npc_by_alias(alias)       <- looks for npc in room with alias
+     obj_by_alias(alias)       <- looks for obj in room with alias
      connect(dir, dest)        <- creates exit to room with vref string dest through direction dir
      disconnect(dir)           <- removes exit with direction dir
      list_exits()              <- shows exit letters, e.g. n s w 
@@ -111,11 +112,19 @@ class room:
     for ch in self._people:
       if isinstance(ch, pc.pc) and ch.has_alias(name):
         return ch
+    return None
 
   def npc_by_alias(self, alias):
-    for ch in self._people:
+    for ch in self.people:
       if isinstance(ch, pc.npc) and ch.has_alias(alias):
         return ch
+    return None
+
+  def obj_by_alias(self, alias):
+    for obj in self.inventory:
+      if obj.has_alias(alias):
+        return obj
+    return None
 
   def connect(self, direction, destination_code):
     # check if we're already connected

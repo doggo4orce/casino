@@ -157,6 +157,18 @@ class database:
         name        text,
         author      text)""")
 
+  def drop_tables(self):
+    self.execute("DROP TABLE IF EXISTS ex_table")
+    self.execute("DROP TABLE IF EXISTS p_table")
+    self.execute("DROP TABLE IF EXISTS pref_table_numeric")
+    self.execute("DROP TABLE IF EXISTS pref_table_text")
+    self.execute("DROP TABLE IF EXISTS pref_table_flag")
+    self.execute("DROP TABLE IF EXISTS npc_table")
+    self.execute("DROP TABLE IF EXISTS obj_table")
+    self.execute("DROP TABLE IF EXISTS alias_table")
+    self.execute("DROP TABLE IF EXISTS wld_table")
+    self.execute("DROP TABLE IF EXISTS z_table")
+
   def execute(self, line, parameters=()):
     try:
       ret_val = self._cursor.execute(line, parameters)
@@ -233,6 +245,7 @@ class database:
     if self.contains_obj(op):
       self.delete_obj(op)
     self._add_obj(op)
+    self.save_obj_aliases(op)
 
   def contains_flag_pref(self, p, attr):
     self.execute("SELECT * FROM pref_table_flag WHERE id=:id AND tag=:tag", {
@@ -485,6 +498,10 @@ class database:
     for keyword in np.entity.namelist:
       self.save_alias(np.unique_id.zone_id, np.unique_id.id, 'npc', keyword)
 
+  def save_obj_aliases(self, op):
+    for keyword in op.entity.namelist:
+      self.save_alias(op.unique_id.zone_id, op.unique_id.id, 'obj', keyword)
+
   def contains_zone(self, zn):
     self.execute("SELECT * FROM z_table WHERE id=:id", {'id' : zn.id})
     return len(self.fetchall()) != 0
@@ -645,7 +662,6 @@ class database:
     stockville.folder = "stockville city"
     stockville.id = "stockville"
     stockville.author = "kyle"
-    self.save_zone(stockville)
 
     rm = room.room()
     rm.name = "The Void"
@@ -655,7 +671,6 @@ class database:
   
     rm.connect(exit.direction.DOWN, 'recall')
     stockville._world[rm.id] = rm
-    self.save_room(rm)
 
     rm = room.room()
     rm.name = "Stockville Casino"
@@ -664,7 +679,6 @@ class database:
     rm.desc = editor.buffer("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
     rm.connect(exit.direction.WEST, 'recall')
     stockville._world[rm.id] = rm
-    self.save_room(rm)
 
     rm = room.room()
     rm.name = "Stockville Recall"
@@ -674,7 +688,6 @@ class database:
     rm.connect(exit.direction.EAST, 'casino')
     rm.connect(exit.direction.WEST, 'reading')
     stockville._world[rm.id] = rm
-    self.save_room(rm)
 
     rm = room.room()
     rm.name = "Reading Room"
@@ -691,11 +704,10 @@ class database:
        room and this mini pargraph will not
        be harmed!  <(^_^)7   6(*-*)^
 
-  <p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>""")
+<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>""")
     rm.connect(exit.direction.EAST, 'recall')
     rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
     stockville._world[rm.id] = rm
-    self.save_room(rm)
 
     npcp = structs.npc_proto_data()
     npcp.entity.namelist = ['baccarat', 'dealer']
@@ -705,7 +717,6 @@ class database:
     npcp.unique_id.zone_id = 'stockville'
     npcp.unique_id.id = 'baccarat_dealer'
     stockville._npc_proto[npcp.unique_id.id] = npcp
-    self.save_npc(npcp)
 
     npcp = structs.npc_proto_data()
     npcp.entity.namelist = ['baker', 'fat']
@@ -715,7 +726,6 @@ class database:
     npcp.unique_id.zone_id = 'stockville'
     npcp.unique_id.id = 'baker'
     stockville._npc_proto[npcp.unique_id.id] = npcp
-    self.save_npc(npcp)
 
     op = structs.obj_proto_data()
     op.entity.namelist = ['bottle']
@@ -724,8 +734,8 @@ class database:
     op.ldesc = 'An empty bottle has been dropped here.'
     op.unique_id.zone_id = 'stockville'
     op.unique_id.id = 'bottle'
-    stockville._obj_proto[op.unique_id.id] = op
-    self.save_obj(op)
+    stockville.add_obj(op)
+    self.save_zone(stockville)
 
     # now do the same for the newbie zone
     newbie_zone = zone.zone()
@@ -734,7 +744,6 @@ class database:
     newbie_zone.folder = "the newbie zone"
     newbie_zone.id = "newbie_zone"
     newbie_zone.author = "kyle"
-    self.save_zone(newbie_zone)
 
     rm = room.room()
     rm.name = "The Beginning of a Damp Hallway"
@@ -744,7 +753,6 @@ class database:
     rm.connect(exit.direction.NORTH, 'hallway2')
     rm.connect(exit.direction.SOUTH, 'stockville[reading]')
     newbie_zone._world[rm.id] = rm
-    self.save_room(rm)
 
     rm = room.room()
     rm.name = "A Dark Corner in the Hallway"
@@ -759,7 +767,6 @@ editor, they may come through one at a time. And you may put a period after some
 capitalize a word.</p>""")
     rm.connect(exit.direction.SOUTH, 'hallway1')
     newbie_zone._world[rm.id] = rm
-    self.save_room(rm)
 
     npcp = structs.npc_proto_data()
     npcp.entity.namelist = ['newbie', 'monster']
@@ -769,7 +776,6 @@ capitalize a word.</p>""")
     npcp.unique_id.zone_id = 'newbie_zone'
     npcp.unique_id.id = 'newbie_monster'
     newbie_zone._npc_proto[npcp.unique_id.id] = npcp
-    self.save_npc(npcp)
 
     op = structs.obj_proto_data()
     op.entity.namelist = ['newbie', 'dagger']
@@ -779,7 +785,8 @@ capitalize a word.</p>""")
     op.unique_id.zone_id = 'newbie_zone'
     op.unique_id.id = 'newbie_dagger'
     newbie_zone._obj_proto[op.unique_id.id] = op
-    self.save_obj(op)
+
+    self.save_zone(newbie_zone)
 
   def load_world(self, mud):
 
@@ -832,12 +839,14 @@ capitalize a word.</p>""")
       new_op.unique_id.id = item[1]
       new_op.entity.name = item[2]
       new_op.ldesc = item[3]
-      new_op.desc = editor.buffer(item[4])
+      new_op.entity.desc = editor.buffer(item[4])
       mud.zone_by_id(new_op.unique_id.zone_id).add_obj(new_op)
 
     for item in self.alias_table():
       if item[2] == "npc":
         mud.zone_by_id(item[0]).npc_by_id(item[1]).entity.namelist.append(item[3])
+      elif item[2] == "obj":
+        mud.zone_by_id(item[0]).obj_by_id(item[1]).entity.namelist.append(item[3])
 
 if __name__ == '__main__':
   os.system(f"rm test.db")

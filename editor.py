@@ -244,7 +244,7 @@ EDITOR_HELP_STR = """Editor Commands
 # returns True if the player is done writing
 def editor_handle_input(d, input):
   if d.char:
-    width = d.char.prefs.screen_width
+    width = d.char.screen_width
   else:
     width = config.DEFAULT_SCREEN_WIDTH
 

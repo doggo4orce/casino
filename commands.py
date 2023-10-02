@@ -259,6 +259,8 @@ def do_client(ch, scmd, argument, server, mud, db):
 def do_db(ch, scmd, argument, server, mud, db):
   db_help = "Use the following syntax:\r\n"
   db_help += f"  db show tables          - list table in database\r\n"
+  db_help += f"  db rows <table name>    - show rows of a table"
+  db_help += f"  db reset confirm        - reset database to stock\r\n"
   db_help += f"  db columns <table name> - show columns of a table\r\n"
 
   args = argument.split()
@@ -268,6 +270,12 @@ def do_db(ch, scmd, argument, server, mud, db):
     ch.write(db_help)
     return
   if num_args == 2:
+    if args[0] == "reset" and args[1] == "confirm":
+      ch.write("Resetting 'data.db' to stock condition.")
+      db.drop_tables()
+      db.create_tables()
+      db.load_stock()
+      return
     if args[0] == "show":
       if args[1] == "tables":
         table_buf = "The following tables exist in the database:\r\n"
@@ -480,10 +488,24 @@ def do_look(ch, scmd, argument, server, mud, db):
       return
     show_room_to_char(ch, rm)
   elif num_args == 1:
-    tch = rm.char_by_alias(args[0])
+    # first check for objects in inventory
+    target = ch.inventory.obj_by_alias(args[0])
+    if target != None:
+      show_obj_to_char(ch, target)
+      return
 
-    if tch != None:
-      show_char_to_char(ch, tch)
+    # next check for npcs in same room
+    target = rm.char_by_alias(args[0])
+
+    if target != None:
+      show_char_to_char(ch, target)
+      return
+
+    # then check for objects in the same room
+    target = rm.obj_by_alias(args[0])
+
+    if target != None:
+      show_obj_to_char(ch, target)
     else:
       ch.write(f"You see no {args[0]} here.\r\n")
 
@@ -530,7 +552,7 @@ def show_char_to_char(ch, tch):
     for spec in tch.suffix_command_triggers:
       out_buf += f"  {spec.name}\r\n"
 
-    out_buf += "Hearbeat Procs:\r\n"
+    out_buf += "Heartbeat Procs:\r\n"
 
     for spec in tch.heart_beat_procs:
       out_buf += f"  {spec.name}\r\n"
@@ -538,6 +560,11 @@ def show_char_to_char(ch, tch):
     if type(tch) == baccarat.baccarat_dealer:
       out_buf += f"State: {baccarat.baccarat_dealer_state(tch.bac_state).name}\r\n"
       out_buf += f"Paused: {string_handling.yesno(tch.paused)}"
+
+  ch.write(out_buf)
+
+def show_obj_to_char(ch, obj):
+  out_buf = obj.desc.display(ch.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
 
   ch.write(out_buf)
 

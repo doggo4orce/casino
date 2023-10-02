@@ -39,7 +39,7 @@ class client:
   host_name:   str=None
 
 @dataclasses.dataclass
-class entity_data:
+class entity_data: # TODO: Put comment here explaining why entity doesn't have ldesc?
   """name     = what to be referred to as
      namelist = list of keywords to be targetted with
      desc     = shown when closely examined
@@ -239,7 +239,7 @@ class npc_proto_data:
     ret_val += f"{NORMAL}\r\n"
     ret_val += self.entity.desc.display(width=65, indent=True)
     ret_val += f"Desc:\r\n{self.entity.desc.str()}\r\n"
-    ret_val += f"L-Desc: {self.entity.ldesc}\r\n"
+    ret_val += f"L-Desc: {self.ldesc}\r\n"
     return ret_val
 
 @dataclasses.dataclass
@@ -247,30 +247,6 @@ class obj_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
   ldesc: str="An unfinished obj proto_type has been left here."
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
-
-  def parse_tag(self, tag, value, rf):
-    if tag == "id":
-      self.unique_id.id = value
-    elif tag == "ldesc":
-      self.ldesc = value
-    elif tag == "namelist":
-      self.entity.namelist = value.split(' ')
-    # TODO: write buffer.parse() function to take over here
-    elif tag == "desc":
-      line = ""
-      self.entity.desc = editor.buffer()
-      while line != "~":
-        line = rf.readline()
-        line = line.rstrip()
-        if line != "~":
-          self.entity.desc.add_line(line)
-        else:
-          break;
-
-    elif hasattr(self.entity, tag):
-      setattr(self.entity, tag, value)
-    else:
-      logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
 
   @property
   def id(self):

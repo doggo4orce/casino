@@ -15,6 +15,9 @@ class object:
       self._entity = dataclasses.replace(proto.entity)
 
   @property
+  def entity(self):
+    return self._entity
+  @property
   def ldesc(self):
     return self._ldesc
   @property
@@ -23,6 +26,9 @@ class object:
   @property
   def name(self):
     return self._entity.name
+  @property
+  def desc(self):
+    return self._entity.desc
 
   @ldesc.setter
   def ldesc(self, new_ldesc):

@@ -140,14 +140,7 @@ class baccarat_hand:
     else:
       SPACE_BETWEEN_PLAYER_BANKER = 5
 
-    if n_p == 2 and n_b == 2:
-      ret_val = "        Player                      Banker\r\n\r\n"
-    elif n_p == 2 and n_b == 3:
-      ret_val = "        Player                      Banker\r\n\r\n"
-    elif n_p == 3 and n_b == 2:
-      ret_val = "        Player                      Banker\r\n\r\n"
-    else:
-      ret_val = "        Player                      Banker\r\n\r\n"
+    ret_val = "        Player                      Banker\r\n\r\n"
 
     for i in range(0, 5):
       ret_val += ' ' * SPACE_BEFORE_CARDS

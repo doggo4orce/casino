@@ -51,7 +51,7 @@ class spec_proc:
 class command_trigger(spec_proc):
 
   # this must be the prototype for all command trigger functions
-  func_args = ['mud', 'me', 'ch', 'command', 'argument']
+  func_args = ['mud', 'me', 'ch', 'command', 'argument', 'db']
 
   def __init__(self, name, func):
     super().__init__(name, func)
@@ -78,10 +78,11 @@ class room_entry_trigger(command_trigger):
    TODO: consider using exceptions instead?"""
 class prefix_command_trigger_messages(enum.IntEnum):
   BLOCK_INTERPRETER = 1 # blocks command and all suffix_command_triggers
+  RUN_INTERPRETER   = 2 # run command parser and any suffix_command_triggers
 
 class heart_beat_proc(spec_proc):
   # this must be the prototype for all command trigger functions
-  func_args = ['mud', 'me']
+  func_args = ['mud', 'me', 'db']
 
   def __init__(self, name, func):
     super().__init__(name, func)

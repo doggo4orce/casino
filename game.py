@@ -170,6 +170,7 @@ class game:
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
     b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
     b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
+    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat table syntax parser", baccarat.table_syntax_parser))
     b_dealer.assign_spec_proc(spec_procs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
 
   def load_world(self, db):

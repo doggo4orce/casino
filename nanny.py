@@ -54,6 +54,12 @@ def init_commands():
   cmd_dict["zedit"]     = ( olc.do_zedit,            0 )
   cmd_dict["zlist"]     = ( olc.do_zlist,            0 )
 
+def look_up_command(command):
+  for cmd_key in cmd_dict:
+    if cmd_key.startswith(command):
+      return cmd_key
+  return None
+
 def interpret_msg(d, command, argument, server, mud, db):
   valid_command = False
   initial_room = d.char.room
@@ -74,13 +80,12 @@ def interpret_msg(d, command, argument, server, mud, db):
   if block_interpreter:
     return
 
-  # find and process the command    
-  for c in cmd_dict:
-    if c.startswith(command):
-      cmd_dict[c][0](d.char, cmd_dict[c][1], argument, server, mud, db)
-      d.has_prompt = False
-      valid_command = True
-      break
+  cmd_key = look_up_command(command)
+  if cmd_key != None:
+    cmd_value = cmd_dict[cmd_key]
+    cmd_value[0](d.char, cmd_value[1], argument, server, mud, db)
+    d.has_prompt = False
+    valid_command = True
 
   # fire all suffix procs
   for mob in mud.room_by_code(initial_room).people:

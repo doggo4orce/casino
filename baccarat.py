@@ -4,6 +4,7 @@ import commands
 import enum
 import event
 import logging
+import nanny
 import pc
 import string_handling
 import spec_procs
@@ -118,7 +119,7 @@ class baccarat_hand:
     # ensure player and banker have the correct number of cards
     for n in [n_p,n_b]:
       if n < 1 or n > 3:
-        return None
+        return ret_val
 
     if n_p == 2:
       SPACE_BEFORE_CARDS = 3
@@ -138,7 +139,16 @@ class baccarat_hand:
       SPACE_BETWEEN_PLAYER_BANKER = 8
     else:
       SPACE_BETWEEN_PLAYER_BANKER = 5
-  
+
+    if n_p == 2 and n_b == 2:
+      ret_val = "        Player                      Banker\r\n\r\n"
+    elif n_p == 2 and n_b == 3:
+      ret_val = "        Player                      Banker\r\n\r\n"
+    elif n_p == 3 and n_b == 2:
+      ret_val = "        Player                      Banker\r\n\r\n"
+    else:
+      ret_val = "        Player                      Banker\r\n\r\n"
+
     for i in range(0, 5):
       ret_val += ' ' * SPACE_BEFORE_CARDS
 
@@ -415,11 +425,11 @@ def baccarat_syntax_parser(mud, me, ch, command, argument, db):
     return
 
   help_str  = "Baccarat Commands:\r\n"
-  help_str += "  baccarat stop     - stop the game\r\n"
-  help_str += "  baccarat start    - start the game\r\n"
-  help_str += "  baccarat simulate - simulate a baccarat shoe (fast)\r\n"
   help_str += "  baccarat chips    - ask dealer for a set of chips\r\n"
   help_str += "  baccarat playing  - see who is playing the game\r\n"
+  help_str += "  baccarat start    - start the game\r\n"
+  help_str += "  baccarat simulate - simulate a baccarat shoe (fast)\r\n"
+  help_str += "  baccarat stop     - stop the game\r\n"
   help_str += "\r\n"
   help_str += "Gameplay Commands:\r\n"
   help_str += "  bet <player or banker> - bet a red chip\r\n"
@@ -472,7 +482,9 @@ def baccarat_syntax_parser(mud, me, ch, command, argument, db):
         return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
       else:
         ch.write("You sit down at the table, and join the game.")
+        me.bac_paused += 30
         me.add_player(ch.name)
+        return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
     elif argument.lower() == "leave":
       if ch.name not in me.players:
         ch.write("You can't leave the table when you aren't even playing!")
@@ -513,16 +525,26 @@ def baccarat_syntax_parser(mud, me, ch, command, argument, db):
       pass
     pass
 
-def baccarat_table_render(mud, me, ch, command, argument, db):
+def table_syntax_parser(mud, me, ch, command, argument, db):
+  full_command = nanny.look_up_command(command)
+  
   if not isinstance(me, baccarat_dealer):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
 
-  if command == "table":
+  if ch.name not in me.players:
+    return spec_procs.prefix_command_trigger_messages.RUN_INTERPRETER
+
+  if full_command == "look":
     if me.hand == None:
       ch.write("The table is empty.\r\n")
     else:
       ch.write(me.hand.display() + "\r\n")
+    return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+
+  elif full_command in ["north", "south", "east", "west", "up", "down"]:
+    ch.write("You must leave the table before going anywhere.\r\n")
+    ch.write("Type baccarat leave to do so.\r\n")
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
 def baccarat_dealing(mud, me, db):

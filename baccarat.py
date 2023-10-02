@@ -40,6 +40,7 @@ class baccarat_hand:
     self._state = new_state
 
   """add_card(card, target) <-- adds the card to either the player or banker's hand
+     add_player(name)       <-- add a player to the game
      card_value(card)       <-- returns 7 if card is a SEVEN, 10 for a KING, etc.
      hand_value(cards)      <-- determines the score based on list of cards
      player_score()         <-- return's player's current score
@@ -218,13 +219,15 @@ class baccarat_dealer(cards.card_dealer):
       state            = keep track of what dealer will do next, FIRST_DRAW etc.
       bac_paused       = RESERVED for heart beat proc baccarat_dealing
       initial_card_val = keep track of how many cards to burn
-      simulation_mode  = if True, game runs way too fast to play"""
+      simulation_mode  = if True, game runs way too fast to play
+      players          = list of player names at the table"""
     super().__init__()
     self._hand = None
     self._bac_state = baccarat_dealer_state.IDLE
     self._bac_paused = 0
     self._initial_card_val = None
     self._simulation_mode = False
+    self._players = list()
 
   # getters
   @property
@@ -242,6 +245,9 @@ class baccarat_dealer(cards.card_dealer):
   @property
   def simulation_mode(self):
     return self._simulation_mode
+  @property
+  def players(self):
+    return self._players
 
   # setters
   @hand.setter
@@ -259,6 +265,15 @@ class baccarat_dealer(cards.card_dealer):
   @simulation_mode.setter
   def simulation_mode(self, new_mode):
     self._simulation_mode = new_mode
+  @players.setter
+  def players(self, new_players):
+    self._players = new_players
+
+  def add_player(self, name):
+    self._players.append(name)
+
+  def remove_player(self, name):
+    self._players.remove(name)
 
   @classmethod
   def from_card_dealer(cls, dealer):
@@ -316,6 +331,29 @@ class baccarat_dealer(cards.card_dealer):
     if banker_score == 6:
       return player_third in {6,7}
     return False
+
+class baccarat_dealer_state(enum.IntEnum):
+  IDLE                = 1
+  BEGIN_SHOE          = 2
+  SHUFFLE_SHOE        = 3
+  FIRST_DRAW          = 4
+  BURN_CARDS          = 5
+  LAST_CALL_BETS      = 6
+  NO_MORE_BETS        = 7
+  PLAYER_FIRST        = 8
+  BANKER_FIRST        = 9
+  PLAYER_SECOND       = 10
+  BANKER_SECOND       = 11
+  SHOW_INITIAL        = 12
+  CHECK_NATURAL       = 13
+  CHECK_PLAYER        = 14
+  DEAL_PLAYER_THIRD   = 15
+  UPDATE_PLAYER_THIRD = 16
+  CHECK_BANKER        = 17
+  DEAL_BANKER_THIRD   = 18
+  UPDATE_BANKER_THIRD = 19
+  REPORT_WINNER       = 20
+  CLEAR_CARDS         = 21
 
 """Special Procedures for the Baccarat dealer:
 
@@ -377,11 +415,74 @@ def baccarat_syntax_parser(mud, me, ch, command, argument, db):
     return
 
   help_str  = "Baccarat Commands:\r\n"
-  help_str += "  baccarat start - play a baccarat shoe\r\n"
+  help_str += "  baccarat stop     - stop the game\r\n"
+  help_str += "  baccarat start    - start the game\r\n"
   help_str += "  baccarat simulate - simulate a baccarat shoe (fast)\r\n"
+  help_str += "  baccarat chips    - ask dealer for a set of chips\r\n"
+  help_str += "  baccarat playing  - see who is playing the game\r\n"
+  help_str += "\r\n"
+  help_str += "Gameplay Commands:\r\n"
+  help_str += "  bet <player or banker> - bet a red chip\r\n"
 
-  if command == "baccarat":
-    if argument.lower() in ["start", "simulate"]:
+  # IDLE                = 1
+  # BEGIN_SHOE          = 2
+  # SHUFFLE_SHOE        = 3
+  # FIRST_DRAW          = 4
+  # BURN_CARDS          = 5
+  # LAST_CALL_BETS      = 6
+  # NO_MORE_BETS        = 7
+  # PLAYER_FIRST        = 8
+  # BANKER_FIRST        = 9
+  # PLAYER_SECOND       = 10
+  # BANKER_SECOND       = 11
+  # SHOW_INITIAL        = 12
+  # CHECK_NATURAL       = 13
+  # CHECK_PLAYER        = 14
+  # DEAL_PLAYER_THIRD   = 15
+  # UPDATE_PLAYER_THIRD = 16
+  # CHECK_BANKER        = 17
+  # DEAL_BANKER_THIRD   = 18
+  # UPDATE_BANKER_THIRD = 19
+  # REPORT_WINNER       = 20
+  # CLEAR_CARDS         = 21
+
+  if command == "bet":
+    if me.bac_state not in [
+      baccarat_dealer_state.BEGIN_SHOE,
+      baccarat_dealer_state.SHUFFLE_SHOE,
+      baccarat_dealer_state.FIRST_DRAW,
+      baccarat_dealer_state.BURN_CARDS,
+      baccarat_dealer_state.LAST_CALL_BETS,
+      baccarat_dealer_state.NO_MORE_BETS]:  # <-- hasn't quite said no more bets
+      ch.write("The dealer slaps you.\r\n")
+      return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+    else:
+      ch.write("You put a red chip down on the table.\r\n")
+      return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+  elif command == "baccarat":
+    if argument.lower() == "playing":
+      if len(me.players) == 0:
+        commands.do_say(me, None, f"Right now, we have nobody playing!", None, mud, db)
+      else:
+        names = [name.capitalize() for name in me.players]
+        commands.do_say(me, None, f"Right now, we have {string_handling.oxford_comma(names)} playing.", None, mud, db)
+    elif argument.lower() == "join":
+      if ch.name in me.players:
+        ch.write("You are already playing!\r\n")
+        return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+      else:
+        ch.write("You sit down at the table, and join the game.")
+        me.add_player(ch.name)
+    elif argument.lower() == "leave":
+      if ch.name not in me.players:
+        ch.write("You can't leave the table when you aren't even playing!")
+        return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+      else:
+        ch.write("You politely excuse yourself from the table, and stand up.")
+        me.remove_player(ch.name)
+    elif argument.lower() == "stop":
+      me.bac_state = baccarat_dealer_state.IDLE
+    elif argument.lower() in ["start", "simulate"]:
       if me.bac_state != baccarat_dealer_state.IDLE:
         ch.write("There is already a game in progress!\r\n")
         return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
@@ -392,9 +493,25 @@ def baccarat_syntax_parser(mud, me, ch, command, argument, db):
   
       if argument.lower() == "simulate":
         me.simulation_mode = True
+    elif argument.lower() == "chips":
+      ch.write("You ask the dealer for some chips to play with.\r\n")
+      ch.write(f"{me} nods in your direction without comment.\r\n")
+      mud.echo_around(ch, None, f"{me} nods in {ch}'s direction without comment.\r\n")
+
+      for n in range(0, 5):
+        red_chip = mud.load_obj('stockville[red_chip]')
+        ch.inventory.insert(red_chip)
+
+      ch.write(f"{me} gives you five red chips.")
+      mud.echo_around(ch, None, f"{me} gives {ch} five red chips.")
+
     else:
       ch.write(help_str)
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+  elif command == "bet":
+    if argument.lower() in ["player", "banker"]:
+      pass
+    pass
 
 def baccarat_table_render(mud, me, ch, command, argument, db):
   if not isinstance(me, baccarat_dealer):
@@ -407,27 +524,6 @@ def baccarat_table_render(mud, me, ch, command, argument, db):
     else:
       ch.write(me.hand.display() + "\r\n")
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
-
-class baccarat_dealer_state(enum.IntEnum):
-  IDLE                = 1
-  BEGIN_SHOE          = 2
-  SHUFFLE_SHOE        = 3
-  FIRST_DRAW          = 4
-  BURN_CARDS          = 5
-  PLAYER_FIRST        = 6
-  BANKER_FIRST        = 7
-  PLAYER_SECOND       = 8
-  BANKER_SECOND       = 9 
-  SHOW_INITIAL        = 10
-  CHECK_NATURAL       = 11
-  CHECK_PLAYER        = 12
-  DEAL_PLAYER_THIRD   = 13
-  UPDATE_PLAYER_THIRD = 14
-  CHECK_BANKER        = 15
-  DEAL_BANKER_THIRD   = 16
-  UPDATE_BANKER_THIRD = 17
-  REPORT_WINNER       = 18
-  CLEAR_CARDS         = 19
 
 def baccarat_dealing(mud, me, db):
   NUM_DECKS = 6
@@ -457,7 +553,7 @@ def baccarat_dealing(mud, me, db):
   elif me.bac_state == baccarat_dealer_state.FIRST_DRAW:
     first_card = me.draw()
     me.initial_card_val = baccarat_hand.card_value(first_card)
-    mud.echo_around(me, None, "{} draws and reveals the first card, which is {} {}.\r\n".format(
+    mud.echo_around(me, None, "{} draws the first card, which is {} {}.\r\n".format(
       me, string_handling.ana(cards.card_rank(first_card.rank).name), first_card))
     me.bac_state = baccarat_dealer_state.BURN_CARDS
     pause = 30
@@ -465,6 +561,14 @@ def baccarat_dealing(mud, me, db):
     for j in range(0, me.initial_card_val):
       me.draw()
     mud.echo_around(me, None, f"{me} burns {me.initial_card_val} card{'s' if me.initial_card_val > 1 else ''}.\n")
+    me.bac_state = baccarat_dealer_state.LAST_CALL_BETS
+    pause = 30
+  elif me.bac_state == baccarat_dealer_state.LAST_CALL_BETS:
+    commands.do_say(me, None, f"Last call, any more bets?", None, mud, db)
+    me.bac_state = baccarat_dealer_state.NO_MORE_BETS
+    pause = 120
+  elif me.bac_state == baccarat_dealer_state.NO_MORE_BETS:
+    mud.echo_around(me, None, f"{me} gestures and says, 'No more bets.'\r\n")
     me.bac_state = baccarat_dealer_state.PLAYER_FIRST
     pause = 30
   elif me.bac_state == baccarat_dealer_state.PLAYER_FIRST:
@@ -584,7 +688,7 @@ def baccarat_dealing(mud, me, db):
     pause = 60
   elif me.bac_state == baccarat_dealer_state.CLEAR_CARDS:
     mud.echo_around(me, None, f"{me} clears the cards from the table.\n")
-    me.bac_state = baccarat_dealer_state.PLAYER_FIRST
+    me.bac_state = baccarat_dealer_state.LAST_CALL_BETS
     pause = 120
 
   if pause != 0 and not me.simulation_mode:

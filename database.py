@@ -728,9 +728,45 @@ class database:
     stockville._npc_proto[npcp.unique_id.id] = npcp
 
     op = structs.obj_proto_data()
+    op.entity.namelist = ['red', 'chip']
+    op.entity.name = 'a red chip'
+    op.entity.desc = editor.buffer("<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.ldesc = "A red casino chip has been left on the ground."
+    op.unique_id.zone_id = 'stockville'
+    op.unique_id.id = 'red_chip'
+    stockville.add_obj(op)
+
+    op = structs.obj_proto_data()
+    op.entity.namelist = ['green', 'chip']
+    op.entity.name = 'a green chip'
+    op.entity.desc = editor.buffer("<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.ldesc = "A green casino chip has been left on the ground."
+    op.unique_id.zone_id = 'stockville'
+    op.unique_id.id = 'green_chip'
+    stockville.add_obj(op)
+
+    op = structs.obj_proto_data()
+    op.entity.namelist = ['black', 'chip']
+    op.entity.name = 'a black chip'
+    op.entity.desc = editor.buffer("<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.ldesc = "A black casino chip has been left on the ground."
+    op.unique_id.zone_id = 'stockville'
+    op.unique_id.id = 'black_chip'
+    stockville.add_obj(op)
+
+    op = structs.obj_proto_data()
+    op.entity.namelist = ['purple', 'chip']
+    op.entity.name = 'a purple chip'
+    op.entity.desc = editor.buffer("<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.ldesc = "A purple casino chip has been left on the ground."
+    op.unique_id.zone_id = 'stockville'
+    op.unique_id.id = 'purple_chip'
+    stockville.add_obj(op)
+
+    op = structs.obj_proto_data()
     op.entity.namelist = ['bottle']
     op.entity.name = 'a bottle'
-    op.entity.desc = editor.buffer("<p>It's brown and smells sticky inside.</p>")
+    op.entity.desc = editor.buffer("<p>It's brown, sticky, and smells like stale beer inside.</p>")
     op.ldesc = 'An empty bottle has been dropped here.'
     op.unique_id.zone_id = 'stockville'
     op.unique_id.id = 'bottle'

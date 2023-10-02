@@ -183,6 +183,7 @@ class game:
     mob = cards.card_dealer.from_npc(mob)
     mob = baccarat.baccarat_dealer.from_card_dealer(mob)
     mob.room = structs.unique_identifier.from_string('stockville[casino]')
+    mob.bac_state = baccarat.baccarat_dealer_state.BEGIN_SHOE
     self.add_char(mob)
 
     mob = self.load_npc('stockville[baker]')

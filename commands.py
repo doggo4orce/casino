@@ -271,7 +271,7 @@ def do_db(ch, scmd, argument, server, mud, db):
     return
   if num_args == 2:
     if args[0] == "reset" and args[1] == "confirm":
-      ch.write("Resetting 'data.db' to stock condition.")
+      ch.write("Resetting 'data.db' to stock condition.  Perform a copyover to reset the world.")
       db.drop_tables()
       db.create_tables()
       db.load_stock()
@@ -565,7 +565,6 @@ def show_char_to_char(ch, tch):
 
 def show_obj_to_char(ch, obj):
   out_buf = obj.desc.display(ch.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
-
   ch.write(out_buf)
 
 def do_move(ch, scmd, argument, server, mud, db):

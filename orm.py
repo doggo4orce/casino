@@ -1,6 +1,35 @@
 import dataclasses
+import logging
 import string_handling
 import sqlite3
+import string
+
+def only_char_and_under_score(str):
+  for c in str:
+    if not c.isalpha() and c != '_':
+      return False
+  return True
+
+def valid_field_name(field_name):
+  return only_char_and_under_score(field_name)
+
+# def valid_field_value(value):
+#   if type(value) == int:
+#     return True
+#   # allow alpha/numeric/punctuation/
+#   elif type(value) == str:
+#     for c in value:
+#       if not c.isalpha() and not c.isdigit() and not c.isspace() and not.
+#         return False
+#     return True
+
+# allow characters and underscores only
+def valid_table_name(table_name):
+  return only_char_and_under_score(table_name)
+
+# allow characters and underscores only
+def valid_column_name(column_name):
+  return only_char_and_under_score(column_name)
 
 class column:
   """name = name of the column, e.g. 'first_name' or 'age'
@@ -34,23 +63,84 @@ class column:
     return f"('{self.name}', '{self.sqlite3_type}')"
 
 class result:
-  """value = stores the record in dictionary: e.g. values["name"] = "bob", values["age"] = 25"""
-  def __init__(self, **fields):
-    # no caution needed until its plugged into a result_set
-    self._values = dict(fields)
+  """values = stores the field and the entry for that field as key-value pairs"""
+  def __init__(self, **field_values):
+    self._values = dict()
 
-    for key in fields:
-      self._values[key] = fields[key]
+    for field in field_values:
+      self.add_field(field, field_values[field])
 
-    def __getitem__(self, key):
+  """has_field(field)       <-- check if the result has an entry for given field
+     num_fields()           <-- check how many fields the result has entries for
+     fields()               <-- return list of fields for which result has entries
+     is_blank()             <-- check if result has zero fields
+     add_field(field,value) <-- adds field to result as key-value pair
+     delete_field(field)    <-- removes the field from the result"""
+
+  def has_field(self, field):
+    return field in self.fields()
+
+  def num_fields(self):
+    return len(self.fields())
+
+  def fields(self):
+    return list(self._values.keys())
+
+  def is_blank(self):
+    if self._values:
+      return False
+    return True
+
+  def add_field(self, field, value):
+    if not valid_field_name(field):
+      logging.error(f"Trying to add invalid field {field}.")
+    else:
+      self._values[field] = value
+
+  def delete_field(self, field):
+    if field not in self.fields():
+      logging.error(f"Trying to delete field {field} that doesn't exist.")
+    else:
+      del self._values[field]
+
+  def __getitem__(self, key):
+    if key in self._values.keys():
       return self._values[key]
+    else:
+      return None
 
-    def __setitem__(self, key, value):
-      self._values[key] = value
+  def __getitem__(self, key):
+    return self._values[key]
+
+  def __setitem__(self, key, value):
+    self._values[key] = value
+
+  def __str__(self):
+    return str(self._values)
 
 class result_set:
   def __init__(self, *column_names):
-    self._column_names = column_names
+    for name in column_names:
+      self.add_column_name(column_name)
+
+  def add_column_name(self, new_name):
+    if valid_column_name(new_name):
+      self._column_names.append(new_name)
+
+  def __iter__(self):
+    return result_set_iterator(result_set)
+
+class result_set_iterator:
+  def __init__(self, new_result_set):
+    self._result_set = new_result_set
+    self._index = 0
+
+  def __next__(self):
+    if self._index < len(self._result_set):
+      self._index += 1
+      return self._result_set[self._index]
+    else:
+      raise StopIteration
 
 class orm:
   """connection = connection used to connect to a database and commit changes
@@ -116,7 +206,7 @@ class orm:
     # make sure table actually exists
 
     if not self.table_exists(table_name):
-      print(f"Trying to list columns of table {table_name}, which does not exist.")
+      logging.error(f"Trying to list columns of table {table_name}, which does not exist.")
       return None
 
     sql = f"PRAGMA table_info({table_name})"
@@ -149,24 +239,24 @@ class orm:
   def create_table(self, table_name, *columns):
     # if table_name is invalid, abort
     if not self.valid_table_name(table_name):
-      print(f"Trying to create table with invalid name '{table_name}'.")
+      logging.error(f"Trying to create table with invalid name '{table_name}'.")
       return
 
     # require non-zero number of columns
     if len(columns) == 0:
-      print(f"Trying to create table '{table_name}' without any columns.")
+      logging.error(f"Trying to create table '{table_name}' without any columns.")
       return
 
     # all column names must be valid
     for pair in columns:
       col = column(pair[0], pair[1])
       if not self.valid_column_name(col.name):
-        print(f"Trying to create table '{table_name}' with invalid column name '{col.name}'.")
+        logging.error(f"Trying to create table '{table_name}' with invalid column name '{col.name}'.")
         return
 
     # if table_name has already been used, abort
     if self.table_exists(table_name):
-      print(f"Trying to create table '{table_name}' which already exists.")
+      logging.error(f"Trying to create table '{table_name}' which already exists.")
       return
 		
     column_string = ""
@@ -195,16 +285,16 @@ class orm:
     value_string = ""
 
     if not self.table_exists(table_name):
-      print(f"Trying to insert row to table {table_name}, which does not exist.")
+      logging.error(f"Trying to insert row to table {table_name}, which does not exist.")
       return
 
     for key in values:
       if not self.column_in_table(key, table_name):
-        print(f"Trying to insert row to table {table_name} with invalid column {key}.")
+        logging.error(f"Trying to insert row to table {table_name} with invalid column {key}.")
         return
 
       if not self.valid_field(table_name, key, values[key]):
-        print(f"Trying to insert row to table {table_name} with invalid field {values[key]} for column {key}.")
+        logging.error(f"Trying to insert row to table {table_name} with invalid field {values[key]} for column {key}.")
         return
 
       column_string += f"{key},"
@@ -228,12 +318,8 @@ class orm:
   def select(self, *args):
     pass
     
-# db = orm(":memory:")
+if __name__ == "__main__":
+  record1 = result(age=39)
 
-# #db.create_table2("employees", ("first_name", str), ("last_name", str), ("age", int))
-# # db.insert("employees", first_name="bob", last_name="ross", age=39)
-# # db.insert("employees", first_name="dylan", last_name="wannabang", age=12)
-# db.create_table("employee", ("first_name", str), ("age", int))
-# db.insert("employee", first_name="kyle", age=39)
-# db.execute("""SELECT * FROM employee""")
-# print(db.fetchall())
+  for field in record1.fields():
+    print(f"{field}={record1[field]}")

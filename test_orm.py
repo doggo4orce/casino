@@ -5,42 +5,58 @@ class TestORM(unittest.TestCase):
 
   def test_result_class(self):
     r = orm.result()
-    self.assertTrue(r.is_blank())
+    self.assertTrue(r.is_blank)
 
+    # constructor stores 2 fields correctly
     r = orm.result(name="kyle", age=39)
     self.assertIn("name", r)
-    self.assertIn("name", r.fields())
     self.assertIn("age", r)
-    self.assertIn("age", r.fields())
+    self.assertIn("name", r.fields)
+    self.assertIn("age", r.fields)
     self.assertEqual(r["name"], "kyle")
     self.assertEqual(r["age"], 39)
-    self.assertEqual(r.num_fields(), 2)
+    self.assertEqual(r.num_fields, 2)
 
+    # 2 manually added/changed fields work
+    r["music"] = "rap"
     r.add_field("drink", "soda")
     self.assertIn("drink", r)
-    self.assertIn("drink", r.fields())
+    self.assertIn("music", r)
+    self.assertIn("drink", r.fields)
+    self.assertIn("music", r.fields)
     self.assertEqual(r["drink"], "soda")
-    self.assertEqual(r.num_fields(), 3)
+    self.assertEqual(r["music"], "rap")
+    self.assertEqual(r.num_fields, 4)
 
+    # 2 updated fields work
+    r["drink"] = "monster"
+    r.update_field("name", "dylan")
+    self.assertEqual(r["name"], "dylan")
+    self.assertEqual(r["age"], 39)
+    self.assertEqual(r["drink"], "monster")
+    self.assertEqual(r.num_fields, 4)
+
+    # deleted fields are completely removed
     r.delete_field("age")
     self.assertNotIn("age", r)
-    self.assertNotIn("age", r.fields())
-    self.assertEqual(r.num_fields(), 2)
-
-    # equivalent to self.assertRaises(KeyError, r.__getitem__, "age")
+    self.assertNotIn("age", r.fields)
+    self.assertEqual(r.num_fields, 3)
     with self.assertRaises(KeyError):
       r["age"]
 
-    idx = 0
+    # delete a field that doesn't exist
+    with self.assertRaises(KeyError):
+      r.delete_field("aeg")
 
+    # iteration over r is equivalent to iterating over r.fields
+    idx = 0
     with self.assertRaises(StopIteration):
       i = iter(r)
       while(True):
         field = next(i)
-        self.assertEqual(field, r.fields()[idx])
+        self.assertEqual(field, r.fields[idx])
         idx += 1
-
-    self.assertEqual(idx, r.num_fields())
+    self.assertEqual(idx, r.num_fields)
     
 
 

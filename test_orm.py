@@ -8,22 +8,41 @@ class TestORM(unittest.TestCase):
     self.assertTrue(r.is_blank())
 
     r = orm.result(name="kyle", age=39)
-    self.assertFalse(r.is_blank())
-    self.assertTrue("name" in r.fields())
-    self.assertTrue("age" in r.fields())
+    self.assertIn("name", r)
+    self.assertIn("name", r.fields())
+    self.assertIn("age", r)
+    self.assertIn("age", r.fields())
     self.assertEqual(r["name"], "kyle")
     self.assertEqual(r["age"], 39)
     self.assertEqual(r.num_fields(), 2)
 
     r.add_field("drink", "soda")
-    self.assertTrue("drink" in r.fields())
+    self.assertIn("drink", r)
+    self.assertIn("drink", r.fields())
     self.assertEqual(r["drink"], "soda")
     self.assertEqual(r.num_fields(), 3)
 
     r.delete_field("age")
-    self.assertFalse("age" in r.fields())
+    self.assertNotIn("age", r)
+    self.assertNotIn("age", r.fields())
     self.assertEqual(r.num_fields(), 2)
-    self.assertRaises(KeyError, r.__getitem__, "age",)
+
+    # equivalent to self.assertRaises(KeyError, r.__getitem__, "age")
+    with self.assertRaises(KeyError):
+      r["age"]
+
+    idx = 0
+
+    with self.assertRaises(StopIteration):
+      i = iter(r)
+      while(True):
+        field = next(i)
+        self.assertEqual(field, r.fields()[idx])
+        idx += 1
+
+    self.assertEqual(idx, r.num_fields())
+    
+
 
   def test_column_class(self):
     c = orm.column("drink", str)

@@ -91,7 +91,7 @@ class result:
     return len(self.fields())
 
   def fields(self):
-    return list(self._values.keys())
+    return list(self._values.keys()).copy()
 
   def is_blank(self):
     if self._values:
@@ -110,9 +110,15 @@ class result:
     else:
       del self._values[field]
 
+  def __iter__(self):
+    return result_iterator(self)
+
+  def __contains__(self, key):
+    return key in self.fields()
+
   def __getitem__(self, key):
-    if key in self._values.keys():
-      return self._values[key]
+    if key in self:
+      return self.fields
     else:
       return None
 
@@ -124,6 +130,19 @@ class result:
 
   def __str__(self):
     return str(self._values)
+
+class result_iterator:
+  def __init__(self, result):
+    self._result = result
+    self._idx = 0
+
+  def __next__(self):
+    if self._idx < self._result.num_fields():
+      ret_val = self._result.fields()[self._idx]
+      self._idx += 1
+      return ret_val
+    else:
+      raise StopIteration
 
 class result_set:
   def __init__(self, *column_names):
@@ -142,6 +161,10 @@ class result_set:
       self._column_names.remove(column_name)
 
   def add_result(self, new_result):
+    for field in new_result:
+      pass
+      
+    self._results.append(new_result)
     pass
 
   def delete_result(self, old_result):

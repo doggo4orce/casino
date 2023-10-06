@@ -34,22 +34,29 @@ def valid_column_name(column_name):
 class column:
   """name = name of the column, e.g. 'first_name' or 'age'
      type = datatype for column, e.g. str or int, also accepts "str", "text", or "int"
-  Properties:
      sqlite3_type = returns "text" or "int", etc. """
 
   def __init__(self, name, typ):
-    self.name = name
+    self._name = name
+    self._type = None
+
     # we flexibly allow caller to pass strings into typ if they intelligently describe a data-type
     if type(typ) == str:
       if typ.lower() in ["str", "text"]:
-        self.type = str
+        self._type = str
       elif typ.lower() == "int":
-        self.type = int
+        self._type = int
     elif typ in [int, str]:
-      self.type = typ
-    else:
-      self.type = str # throw exception?
+      self._type = typ
 
+  @property
+  def name(self):
+    return self._name
+
+  @property
+  def type(self):
+    return self._type
+  
   @property
   def sqlite3_type(self):
     if self.type == int:
@@ -120,12 +127,34 @@ class result:
 
 class result_set:
   def __init__(self, *column_names):
-    for name in column_names:
-      self.add_column_name(column_name)
+    self._column_names = list()
+    self._results = list()
 
-  def add_column_name(self, new_name):
+    for name in column_names:
+      self.add_column(column_name)
+
+  def add_column(self, new_name):
     if valid_column_name(new_name):
       self._column_names.append(new_name)
+
+  def remove_column(self, column_name):
+    if column_name in self.columns:
+      self._column_names.remove(column_name)
+
+  def add_result(self, new_result):
+    pass
+
+  def delete_result(self, old_result):
+    pass
+
+  @property
+  def columns(self):
+    return self._column_names.copy()
+
+  @property
+  def results(self):
+    return self._results.copy()
+    
 
   def __iter__(self):
     return result_set_iterator(result_set)

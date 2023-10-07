@@ -192,6 +192,7 @@ class npc_proto_data:
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
+  # TODO: make this function accept list of spec_procs
   def assign_spec_proc(self, spec_proc):
     # will return an empty list() if the function args are correct
     problems = spec_proc.first_fn_arg_error_full()

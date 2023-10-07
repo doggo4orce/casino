@@ -713,7 +713,7 @@ class database:
     npcp.entity.namelist = ['baccarat', 'dealer']
     npcp.entity.name = 'the baccarat card dealer'
     npcp.entity.desc = editor.buffer("<p>He looks like he's straight out of a bluegrass music video.</p>")
-    npcp.ldesc = 'A dealer stands here ready to hand out cards.  Maybe you should say hi?'
+    npcp.ldesc = 'A dealer stands here ready to hand out cards.'
     npcp.unique_id.zone_id = 'stockville'
     npcp.unique_id.id = 'baccarat_dealer'
     stockville._npc_proto[npcp.unique_id.id] = npcp
@@ -726,6 +726,15 @@ class database:
     npcp.unique_id.zone_id = 'stockville'
     npcp.unique_id.id = 'baker'
     stockville._npc_proto[npcp.unique_id.id] = npcp
+
+    op = structs.obj_proto_data()
+    op.entity.namelist = ['baccarat', 'gaming', 'table']
+    op.entity.name = 'a baccarat table'
+    op.entity.desc = editor.buffer("<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>")
+    op.ldesc = "A gaming table has been set up here."
+    op.unique_id.zone_id = 'stockville'
+    op.unique_id.id = 'baccarat_table'
+    stockville.add_obj(op)
 
     op = structs.obj_proto_data()
     op.entity.namelist = ['red', 'chip']

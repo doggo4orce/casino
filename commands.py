@@ -1,4 +1,5 @@
-import baccarat
+import baccarat_dealer
+import baccarat_table
 import descriptor
 import exit
 import logging
@@ -259,7 +260,7 @@ def do_client(ch, scmd, argument, server, mud, db):
 def do_db(ch, scmd, argument, server, mud, db):
   db_help = "Use the following syntax:\r\n"
   db_help += f"  db show tables          - list table in database\r\n"
-  db_help += f"  db rows <table name>    - show rows of a table"
+  db_help += f"  db rows <table name>    - show rows of a table\r\n"
   db_help += f"  db reset confirm        - reset database to stock\r\n"
   db_help += f"  db columns <table name> - show columns of a table\r\n"
 
@@ -557,14 +558,37 @@ def show_char_to_char(ch, tch):
     for spec in tch.heart_beat_procs:
       out_buf += f"  {spec.name}\r\n"
 
-    if type(tch) == baccarat.baccarat_dealer:
-      out_buf += f"State: {baccarat.baccarat_dealer_state(tch.bac_state).name}\r\n"
+    if type(tch) == baccarat_dealer.baccarat_dealer:
+      out_buf += f"State: {baccarat_dealer.baccarat_dealer_state(tch.bac_state).name}\r\n"
       out_buf += f"Paused: {string_handling.yesno(tch.paused)}"
 
   ch.write(out_buf)
 
 def show_obj_to_char(ch, obj):
   out_buf = obj.desc.display(ch.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
+
+  # TODO:  put this in a debug() method for obj/table/baccarat_table and do the same for the nps/dealer/etc
+  if ch.debug_mode:
+    out_buf += "\r\nDebug Info:\r\n"
+    out_buf += f"Type: {type(obj)}\r\n"
+    out_buf += "Prefix Procs:\r\n"
+
+    for spec in obj.prefix_command_triggers:
+      out_buf += f"  {spec.name}\r\n"
+    
+    out_buf += "Suffix Procs:\r\n"
+
+    for spec in obj.suffix_command_triggers:
+      out_buf += f"  {spec.name}\r\n"
+
+    out_buf += "Heartbeat Procs:\r\n"
+
+    for spec in obj.heart_beat_procs:
+      out_buf += f"  {spec.name}\r\n"
+
+    if type(obj) == baccarat_table.baccarat_table:
+      out_buf += f"Dealer: {obj.dealer}"
+
   ch.write(out_buf)
 
 def do_move(ch, scmd, argument, server, mud, db):

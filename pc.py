@@ -209,6 +209,7 @@ class npc(character):
     if proto != None:
       self._entity = dataclasses.replace(proto.entity)
       self._ldesc = proto.ldesc
+      #TODO: write npc.assign_spec_proc function and use it to copy list manually here
       self._prefix_command_triggers = proto.prefix_command_triggers.copy()
       self._suffix_command_triggers = proto.suffix_command_triggers.copy()
       self._heart_beat_procs = proto.heart_beat_procs.copy()
@@ -271,6 +272,7 @@ class npc(character):
   def write(self, message):
     pass
 
+  #TODO: factor this code out of entity, so it doesn't get repeated in the object class
   def call_prefix_command_triggers(self, mud, ch, command, argument, db):
     block_interpreter = False
     for procedure in self.prefix_command_triggers:

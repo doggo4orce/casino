@@ -1,4 +1,5 @@
-import baccarat
+import baccarat_dealer
+import baccarat_table
 import cards
 import config
 import dataclasses
@@ -11,6 +12,7 @@ import os
 import pc
 import room
 import spec_procs
+import table
 import string_handling
 import structs
 import zone
@@ -167,11 +169,29 @@ class game:
 
     # todo, give out warning and avoid crash if these references don't exist
     b_dealer = self.npc_by_code('stockville[baccarat_dealer]')
-    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat syntax handling", baccarat.baccarat_syntax_parser))
-    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat shoe history", baccarat.baccarat_dealer_history))
-    b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger("baccarat dealer greeting", baccarat.baccarat_dealer_intro))
-    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger("baccarat table syntax parser", baccarat.table_syntax_parser))
-    b_dealer.assign_spec_proc(spec_procs.heart_beat_proc("baccarat deals a shoe", baccarat.baccarat_dealing))
+
+    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger(
+      "baccarat syntax handling", 
+      baccarat_dealer.baccarat_dealer_syntax_parser
+    ))
+    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger(
+      "baccarat shoe history",
+      baccarat_dealer.baccarat_dealer_history
+    ))
+    b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger(
+      "baccarat dealer greeting",
+      baccarat_dealer.baccarat_dealer_intro
+    ))
+    b_dealer.assign_spec_proc(spec_procs.heart_beat_proc(
+      "baccarat deals a shoe",
+      baccarat_dealer.baccarat_dealing
+    ))
+
+    b_table = self.obj_by_code('stockville[baccarat_table]')
+    b_table.assign_spec_proc(spec_procs.prefix_command_trigger(
+      "baccarat table syntax parser",
+      baccarat_table.baccarat_table_syntax_parser
+    ))
 
   def load_world(self, db):
     db.load_world(self)
@@ -180,20 +200,27 @@ class game:
     self.assign_spec_procs()
 
     # populating world manually at startup
-    mob = self.load_npc('stockville[baccarat_dealer]')
-    mob = cards.card_dealer.from_npc(mob)
-    mob = baccarat.baccarat_dealer.from_card_dealer(mob)
-    mob.room = structs.unique_identifier.from_string('stockville[casino]')
-    mob.bac_state = baccarat.baccarat_dealer_state.BEGIN_SHOE
-    self.add_char(mob)
+    b_dealer = self.load_npc('stockville[baccarat_dealer]')
+    b_dealer = cards.card_dealer.from_npc(b_dealer)
+    b_dealer = baccarat_dealer.baccarat_dealer.from_card_dealer(b_dealer)
+    b_dealer.room = structs.unique_identifier.from_string('stockville[casino]')
+    b_dealer.bac_state = baccarat_dealer.baccarat_dealer_state.BEGIN_SHOE
+    self.add_char(b_dealer)
 
-    mob = self.load_npc('stockville[baker]')
-    mob.room = structs.unique_identifier.from_string('stockville[recall]')
-    self.add_char(mob)
+    baker = self.load_npc('stockville[baker]')
+    baker.room = structs.unique_identifier.from_string('stockville[recall]')
+    self.add_char(baker)
 
     bottle = self.load_obj('stockville[bottle]')
     bottle.room = structs.unique_identifier.from_string('stockville[recall]')
     self.add_obj(bottle)
+
+    b_table = self.load_obj('stockville[baccarat_table]')
+    b_table = table.table.from_obj(b_table)
+    b_table = baccarat_table.baccarat_table.from_table(b_table)
+    b_table.dealer = b_dealer
+    b_table.room = structs.unique_identifier.from_string('stockville[casino]')
+    self.add_obj(b_table)
 
   def load_npc(self, code):
     proto_type = self.npc_by_code(code)

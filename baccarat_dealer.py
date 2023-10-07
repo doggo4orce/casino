@@ -260,15 +260,13 @@ class baccarat_dealer(cards.card_dealer):
       state            = keep track of what dealer will do next, FIRST_DRAW etc.
       bac_paused       = RESERVED for heart beat proc baccarat_dealing
       initial_card_val = keep track of how many cards to burn
-      simulation_mode  = if True, game runs way too fast to play
-      players          = list of player names at the table"""
+      simulation_mode  = if True, game runs way too fast to play"""
     super().__init__()
     self._hand = None
     self._bac_state = baccarat_dealer_state.IDLE
     self._bac_paused = 0
     self._initial_card_val = None
     self._simulation_mode = False
-    self._players = list()
 
   # getters
   @property
@@ -286,9 +284,6 @@ class baccarat_dealer(cards.card_dealer):
   @property
   def simulation_mode(self):
     return self._simulation_mode
-  @property
-  def players(self):
-    return self._players
 
   # setters
   @hand.setter
@@ -306,15 +301,6 @@ class baccarat_dealer(cards.card_dealer):
   @simulation_mode.setter
   def simulation_mode(self, new_mode):
     self._simulation_mode = new_mode
-  @players.setter
-  def players(self, new_players):
-    self._players = new_players
-
-  def add_player(self, name):
-    self._players.append(name)
-
-  def remove_player(self, name):
-    self._players.remove(name)
 
   @classmethod
   def from_card_dealer(cls, dealer):
@@ -372,31 +358,6 @@ class baccarat_dealer(cards.card_dealer):
     if banker_score == 6:
       return player_third in {6,7}
     return False
-
-  def render_table(self):
-    ret_val = f"{' '*17}Player:{' '*32}Banker:\r\n"
-
-    if self.hand == None:
-      ret_val += "\r\n" * 6
-    else:
-      ret_val += f"{self.hand.display2()}\r\n"
-
-    ret_val += """     +------+-----+-------+  +------+-----+-------+  +------+-----+-------+
-     |Panda8| Tie |Dragon7|  |Panda8| Tie |Dragon7|  |Panda8| Tie |Dragon7|
-     +------+-----+-------+  +------+-----+-------+  +------+-----+-------+
-     |      Banker        |  |      Banker        |  |      Banker        |
-     +--------------------+  +--------------------+  +--------------------+
-     |      Player        |  |      Player        |  |      Player        |
-     +--------------------+  +--------------------+  +--------------------+
-     |                    |  |                    |  |                    |
-     |                    |  |                    |  |                    |
-     |                    |  |                    |  |                    |
-     |                    |  |                    |  |                    |
-     |                    |  |                    |  |                    |
-     |                    |  |                    |  |                    |
-     +--------------------+  +--------------------+  +--------------------+"""
-
-    return ret_val
 
 class baccarat_dealer_state(enum.IntEnum):
   IDLE                = 1
@@ -475,20 +436,22 @@ def baccarat_dealer_intro(mud, me, ch, command, argument, db):
     commands.do_say(me, None, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, mud, db)
     return
 
-def baccarat_syntax_parser(mud, me, ch, command, argument, db):
+def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
   if not isinstance(me, baccarat_dealer):
-    logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
+    logging.warning(f"Attempting to call inappropriate spec_proc 'baccarat_dealer_syntax_parser' on npc {me}.")
     return
 
   help_str  = "Baccarat Commands:\r\n"
-  help_str += "  baccarat chips    - ask dealer for a set of chips\r\n"
-  help_str += "  baccarat playing  - see who is playing the game\r\n"
-  help_str += "  baccarat start    - start the game\r\n"
-  help_str += "  baccarat simulate - simulate a baccarat shoe (fast)\r\n"
-  help_str += "  baccarat stop     - stop the game\r\n"
+  help_str += "  baccarat chips         - ask dealer for a set of chips\r\n"
+  help_str += "  baccarat playing       - see who is playing the game\r\n"
+  help_str += "  baccarat start         - start the game\r\n"
+  help_str += "  baccarat simulate      - simulate a baccarat shoe (fast)\r\n"
+  help_str += "  baccarat stop          - stop the game\r\n"
   help_str += "\r\n"
   help_str += "Gameplay Commands:\r\n"
-  help_str += "  bet <player or banker> - bet a red chip\r\n"
+  help_str += "  sit                    - sit down at the table (if there is room)\r\n"
+  help_str += "  leave                  - stand up and leave the table\r\n"
+  help_str += "  bet <player or banker> - bet a red chip on player or banker\r\n"
 
   # IDLE                = 1
   # BEGIN_SHOE          = 2
@@ -532,22 +495,6 @@ def baccarat_syntax_parser(mud, me, ch, command, argument, db):
       else:
         names = [name.capitalize() for name in me.players]
         commands.do_say(me, None, f"Right now, we have {string_handling.oxford_comma(names)} playing.", None, mud, db)
-    elif argument.lower() == "join":
-      if ch.name in me.players:
-        ch.write("You are already playing!\r\n")
-        return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
-      else:
-        ch.write("You sit down at the table, and join the game.")
-        me.bac_paused += 30
-        me.add_player(ch.name)
-        return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
-    elif argument.lower() == "leave":
-      if ch.name not in me.players:
-        ch.write("You can't leave the table when you aren't even playing!")
-        return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
-      else:
-        ch.write("You politely excuse yourself from the table, and stand up.")
-        me.remove_player(ch.name)
     elif argument.lower() == "stop":
       me.bac_state = baccarat_dealer_state.IDLE
     elif argument.lower() in ["start", "simulate"]:
@@ -580,25 +527,6 @@ def baccarat_syntax_parser(mud, me, ch, command, argument, db):
     if argument.lower() in ["player", "banker"]:
       pass
     pass
-
-def table_syntax_parser(mud, me, ch, command, argument, db):
-  full_command = nanny.look_up_command(command)
-  
-  if not isinstance(me, baccarat_dealer):
-    logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
-    return
-
-  if ch.name not in me.players:
-    return spec_procs.prefix_command_trigger_messages.RUN_INTERPRETER
-
-  if full_command == "look":
-    ch.write(me.render_table())
-    return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
-
-  elif full_command in ["north", "south", "east", "west", "up", "down"]:
-    ch.write("You must leave the table before going anywhere.\r\n")
-    ch.write("Type baccarat leave to do so.\r\n")
-    return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
 def baccarat_dealing(mud, me, db):
   NUM_DECKS = 6
@@ -770,3 +698,4 @@ def baccarat_dealing(mud, me, db):
     me.bac_paused = pause
  
   return
+  

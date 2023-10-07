@@ -40,6 +40,22 @@ class baccarat_hand:
   def state(self, new_state):
     self._state = new_state
 
+  def ascii_rep(self, cards, idx, row):
+    if row not in range(0,5):
+      print(f"function {ascii_rep_banker} called with bad row {row}")
+      return None
+    try:
+      return cards[idx].ascii_rep()[row]
+    except IndexError:
+      # maybe we're tryign to read 2nd or 3rd card but banker doesn't have that many
+      return ' ' * 7
+
+  def ascii_rep_player(self, idx, row):
+    return self.ascii_rep(self.player, idx, row)
+
+  def ascii_rep_banker(self, idx, row):
+    return self.ascii_rep(self.banker, idx, row)
+
   """add_card(card, target) <-- adds the card to either the player or banker's hand
      add_player(name)       <-- add a player to the game
      card_value(card)       <-- returns 7 if card is a SEVEN, 10 for a KING, etc.
@@ -104,6 +120,28 @@ class baccarat_hand:
 
   def any_8_7(self):
     return {self.player_score(), self.banker_score()} == {7, 8}
+
+  def display2(self):
+    SPACE_BEFORE_CARDS = 9
+    SPACE_BETWEEN_PLAYER_BANKER = 16
+    SPACE_BETWEEN_PLAYER_CARDS = 1
+    SPACE_BETWEEN_BANKER_CARDS = 1
+
+    ret_val = ""
+
+    for idx in range(0,5):
+      ret_val += f"{' '*SPACE_BEFORE_CARDS}"
+      for j in range(0,3):
+        ret_val += f"{self.ascii_rep_player(j, idx)}{' '*SPACE_BETWEEN_PLAYER_CARDS}"
+
+      ret_val += ' '*(SPACE_BETWEEN_PLAYER_BANKER - 1)
+
+      for j in range(0,3):
+        ret_val += f"{self.ascii_rep_banker(j, idx)}{' '*SPACE_BETWEEN_BANKER_CARDS}"
+
+      ret_val += "\r\n"
+
+    return ret_val
 
   def display(self):
     SPACE_BEFORE_CARDS = 0
@@ -335,6 +373,31 @@ class baccarat_dealer(cards.card_dealer):
       return player_third in {6,7}
     return False
 
+  def render_table(self):
+    ret_val = f"{' '*17}Player:{' '*32}Banker:\r\n"
+
+    if self.hand == None:
+      ret_val += "\r\n" * 6
+    else:
+      ret_val += f"{self.hand.display2()}\r\n"
+
+    ret_val += """     +------+-----+-------+  +------+-----+-------+  +------+-----+-------+
+     |Panda8| Tie |Dragon7|  |Panda8| Tie |Dragon7|  |Panda8| Tie |Dragon7|
+     +------+-----+-------+  +------+-----+-------+  +------+-----+-------+
+     |      Banker        |  |      Banker        |  |      Banker        |
+     +--------------------+  +--------------------+  +--------------------+
+     |      Player        |  |      Player        |  |      Player        |
+     +--------------------+  +--------------------+  +--------------------+
+     |                    |  |                    |  |                    |
+     |                    |  |                    |  |                    |
+     |                    |  |                    |  |                    |
+     |                    |  |                    |  |                    |
+     |                    |  |                    |  |                    |
+     |                    |  |                    |  |                    |
+     +--------------------+  +--------------------+  +--------------------+"""
+
+    return ret_val
+
 class baccarat_dealer_state(enum.IntEnum):
   IDLE                = 1
   BEGIN_SHOE          = 2
@@ -529,10 +592,7 @@ def table_syntax_parser(mud, me, ch, command, argument, db):
     return spec_procs.prefix_command_trigger_messages.RUN_INTERPRETER
 
   if full_command == "look":
-    if me.hand == None:
-      ch.write("The table is empty.\r\n")
-    else:
-      ch.write(me.hand.display() + "\r\n")
+    ch.write(me.render_table())
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
   elif full_command in ["north", "south", "east", "west", "up", "down"]:
@@ -622,7 +682,7 @@ def baccarat_dealing(mud, me, db):
     me.bac_state = baccarat_dealer_state.SHOW_INITIAL
     pause = 10
   elif me.bac_state == baccarat_dealer_state.SHOW_INITIAL:
-    mud.echo_around(me, None, me.hand.display() + "\n\n")
+    #mud.echo_around(me, None, me.hand.display() + "\n\n")
     commands.do_say(me, None, f"Player shows {me.hand.player_score()}. Banker shows {me.hand.banker_score()}.", None, mud, db)
     me.bac_state = baccarat_dealer_state.CHECK_NATURAL
     pause = 60
@@ -653,7 +713,7 @@ def baccarat_dealing(mud, me, db):
     me.bac_state = baccarat_dealer_state.UPDATE_PLAYER_THIRD
     pause = 10
   elif me.bac_state == baccarat_dealer_state.UPDATE_PLAYER_THIRD:
-    mud.echo_around(me, None, "\n" + me.hand.display() + "\r\n")
+    #mud.echo_around(me, None, "\n" + me.hand.display() + "\r\n")
     me.bac_state = baccarat_dealer_state.CHECK_BANKER
     pause = 60
   elif me.bac_state == baccarat_dealer_state.CHECK_BANKER:
@@ -672,7 +732,7 @@ def baccarat_dealing(mud, me, db):
     me.bac_state = baccarat_dealer_state.UPDATE_BANKER_THIRD
     pause = 10
   elif me.bac_state == baccarat_dealer_state.UPDATE_BANKER_THIRD:
-    mud.echo_around(me, None, "\n" + me.hand.display() + "\r\n")
+    #mud.echo_around(me, None, "\n" + me.hand.display() + "\r\n")
     me.bac_state = baccarat_dealer_state.REPORT_WINNER
     pause = 60
   elif me.bac_state == baccarat_dealer_state.REPORT_WINNER:

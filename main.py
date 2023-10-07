@@ -25,7 +25,7 @@ parser.add_argument('-c', type=str, metavar='copyover_file', help='run the MUD u
 parser.add_argument('-a', help='the MUD is being run from the autorun script')
 cl_dict = vars(parser.parse_args())
 
-logging.info("OurouborosMUD {}".format(config.OMUD_VERSION))
+logging.info(f"OurouborosMUD {config.OMUD_VERSION}")
 
 mud = game.game()
 network = server.server()

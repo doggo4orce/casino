@@ -12,6 +12,7 @@ import olc
 import pc
 import redit
 import room
+import spec_procs
 import structs
 
 cmd_dict = dict()
@@ -69,16 +70,17 @@ def interpret_msg(d, command, argument, server, mud, db):
     d.has_prompt = False
     return
 
-  # until a prefix_proc gives us a reason not to, we will not block the interpreter
-  block_interpreter = False
 
   # fire all prefix procs
   for mob in mud.room_by_code(d.char.room).people:
     if isinstance(mob, pc.npc):
-      block_interpreter = mob.call_prefix_command_triggers(mud, d.char, command, argument, db)
+      if spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER == mob.call_prefix_command_triggers(mud, d.char, command, argument, db):
+        return
 
-  if block_interpreter:
-    return
+  for obj in mud.room_by_code(d.char.room).inventory:
+    if isinstance(mob, pc.npc):
+      if spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER == mob.call_prefix_command_triggers(mud, d.char, command, argument, db):
+        return
 
   cmd_key = look_up_command(command)
   if cmd_key != None:

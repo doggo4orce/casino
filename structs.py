@@ -192,36 +192,11 @@ class npc_proto_data:
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
-  # factor an entity.parse_tag function out of all these similar parse_tag functions
-  def parse_tag(self, tag, value, rf):
-    # name, namelist, desc, ldesc
-    if tag == "id":
-      self.unique_id.id = value
-    elif tag == "ldesc":
-      self.ldesc = value
-    elif tag == "namelist":
-      self.entity.namelist = value.split(' ')
-    # TODO: write buffer.parse() function to take over here
-    elif tag == "desc":
-      self.entity.desc = editor.buffer()
-      line = ""
-      while line != "~":
-        line = rf.readline()
-        line = line.rstrip()
-        if line != "~":
-          self.entity.desc.add_line(line)
-        else:
-          break;
-    elif hasattr(self.entity, tag):
-      setattr(self.entity, tag, value)
-    else:
-      logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
-
   def assign_spec_proc(self, spec_proc):
     # will return an empty list() if the function args are correct
     problems = spec_proc.first_fn_arg_error_full()
     for problem in problems:
-      logging.warning(problem)
+      logging.error(problem)
     if len(problems) > 0:
       return
     if type(spec_proc) == spec_procs.prefix_command_trigger:
@@ -246,7 +221,24 @@ class npc_proto_data:
 class obj_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
   ldesc: str="An unfinished obj proto_type has been left here."
+  prefix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
+  suffix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
+  heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
+
+  def assign_spec_proc(self, spec_proc):
+    # will return an empty list() if the function args are correct
+    problems = spec_proc.first_fn_arg_error_full()
+    for problem in problems:
+      logging.error(problem)
+    if len(problems) > 0:
+      return
+    if type(spec_proc) == spec_procs.prefix_command_trigger:
+      self.prefix_command_triggers.append(spec_proc)
+    elif type(spec_proc) == spec_procs.suffix_command_trigger:
+      self.suffix_command_triggers.append(spec_proc)
+    elif type(spec_proc) == spec_procs.heart_beat_proc:
+      self.heart_beat_procs.append(spec_proc)
 
   @property
   def id(self):

@@ -9,10 +9,16 @@ class object:
   def __init__(self, proto=None):
     self._entity = structs.entity_data()
     self._ldesc = "An unfinished object has been left here."
+    self._prefix_command_triggers = list()
+    self._suffix_command_triggers = list()
+    self._heart_beat_procs = list()
 
     if proto != None:
-      self.ldesc = proto.ldesc
       self._entity = dataclasses.replace(proto.entity)
+      self.ldesc = proto.ldesc
+      self._prefix_command_triggers = proto.prefix_command_triggers.copy()
+      self._suffix_command_triggers = proto.suffix_command_triggers.copy()
+      self._heart_beat_procs = proto.heart_beat_procs.copy()
 
   @property
   def entity(self):
@@ -30,6 +36,9 @@ class object:
   def desc(self):
     return self._entity.desc
 
+  # Setters
+  def entity(self, new_entity):
+    self._entity = new_entity
   @ldesc.setter
   def ldesc(self, new_ldesc):
     self._ldesc = new_ldesc

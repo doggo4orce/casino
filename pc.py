@@ -175,47 +175,9 @@ class pc(character):
   def save_data(self, new_data):
     self._save_data = new_data
 
-  """parse_tag(tag, value, rf) <- processes a line from a pfile through rf
-     update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
+  """update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
      save_char(db)         <- saves character to database
      write(msg)            <- sends msg to descriptor controlling self"""
-
-  def parse_tag(self, tag, value, rf):
-    # Load Administrative Data
-    if tag == "name":
-      self.name = value
-      self.entity.namelist = [value]
-    elif tag == "id":
-      self.id = value
-    elif tag == "password":
-      self.pwd = value
-    # Load Entity Data (not all of these will have been saved, but any of them are allowed to be)
-    elif tag == "room":
-      # room counts as entity data, but it needs to be parsed separately
-      self.entity.room = structs.unique_identifier.from_string(value)
-    elif tag == "desc":
-      self.desc = editor.buffer()
-      line = ""
-      while line != "~\n":
-        line = rf.readline()
-        if line != "~\n":
-          self.desc.add_line(line)
-    elif hasattr(self.entity, tag):
-      setattr(self.entity, tag, value)
-    # Load Game Data
-    elif hasattr(self.save_data.numerical, tag):
-      setattr(self.save_data.numerical, tag, int(value))
-    elif hasattr(self.save_data.non_numerical, tag):
-      setattr(self.save_data.non_numerical, tag, value)
-    # Load Preferences
-    elif hasattr(self.prefs, tag):
-      if tag in ['screen_width', 'screen_length']:
-        setattr(self.prefs, tag, int(value))
-      else:
-        setattr(self.prefs, tag, value)
-    else:
-      # TODO: replace this with exception?
-      logging.warning(f"Line ({line_number}) -- Trying to assign value to unrecognized tag {tag} while loading {rf.name}.")
 
   def update_pref(self, attr_str, new_val):
     if hasattr(self._prefs, attr_str):
@@ -245,13 +207,16 @@ class npc(character):
     self._heart_beat_procs = list()
 
     if proto != None:
-      self.entity = dataclasses.replace(proto.entity)
+      self._entity = dataclasses.replace(proto.entity)
       self._ldesc = proto.ldesc
       self._prefix_command_triggers = proto.prefix_command_triggers.copy()
       self._suffix_command_triggers = proto.suffix_command_triggers.copy()
       self._heart_beat_procs = proto.heart_beat_procs.copy()
 
   # Getters
+  @property
+  def entity(self):
+    return self._entity
   @property
   def ldesc(self):
     return self._ldesc
@@ -266,6 +231,9 @@ class npc(character):
     return self._heart_beat_procs
 
   # Setters
+  @entity.setter
+  def entity(self, new_entity):
+    self._entity = new_entity
   @ldesc.setter
   def ldesc(self, new_ldesc):
     self._ldesc = new_ldesc

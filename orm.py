@@ -4,22 +4,17 @@ import string_handling
 import sqlite3
 import string
 
-def only_char_and_under_score(str):
-  for c in str:
-    if not c.isalpha() and c != '_':
-      return False
-  return True
-
+# allow characters and underscores only
 def valid_field_name(field_name):
-  return only_char_and_under_score(field_name)
+  return string_handling.only_alpha_and_under_score(field_name)
 
 # allow characters and underscores only
 def valid_table_name(table_name):
-  return only_char_and_under_score(table_name)
+  return string_handling.only_alpha_and_under_score(table_name)
 
 # allow characters and underscores only
 def valid_column_name(column_name):
-  return only_char_and_under_score(column_name)
+  return string_handling.only_alpha_and_under_score(column_name)
 
 class column:
   """name = name of the column, e.g. 'first_name' or 'age'

@@ -8,6 +8,12 @@ def ana(noun):
   else:
     return "a"
 
+def only_alpha_and_under_score(str):
+  for c in str:
+    if not c.isalpha() and c != '_':
+      return False
+  return True
+
 def ordinal(n):
   first_digit = n % 10
   if first_digit == 1:

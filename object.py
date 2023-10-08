@@ -1,4 +1,5 @@
 import dataclasses
+import entity_data
 import logging
 import spec_procs
 import structs
@@ -8,7 +9,7 @@ class object:
     entity = aggregates name, namelist, description, and room
     ldesc = one line description shown after room description"""
   def __init__(self, proto=None):
-    self._entity = structs.entity_data()
+    self._entity = entity.entity_data()
     self.ldesc = "An unfinished object has been left here."
     self._prefix_command_triggers = list()
     self._suffix_command_triggers = list()

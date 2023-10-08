@@ -3,29 +3,13 @@ import dataclasses
 import config
 import editor
 import enum
+import entity_data
 import logging
 import object
 import olc
 import spec_procs
 import string_handling
-
-# (should this be moved?) rooms, npcs, and objects are referenced  by a string of the form: zone_id[id],
-@dataclasses.dataclass
-class unique_identifier:
-  zone_id: str=None
-  id:      str=None
-
-  def update(self, zone_id, id):
-    self.zone_id = zone_id
-    self.id = id
-
-  @classmethod
-  def from_string(cls, ref_string):
-    zone_id, id = string_handling.parse_reference(ref_string)
-    return unique_identifier(zone_id, id)
-    
-  def __str__(self):
-    return f"{self.zone_id}[{self.id}]"
+import unique_id_data
 
 @dataclasses.dataclass
 class client:
@@ -37,36 +21,6 @@ class client:
   term_width:  int=None
   term_length: int=None
   host_name:   str=None
-
-@dataclasses.dataclass
-class entity_data:
-  """name     = what to be referred to as
-     namelist = list of keywords to be targetted with
-     desc     = shown when closely examined
-     room     = reference to room if it is in one, and None otherwise"""
-  name:     str="an unfinished entity"
-  ldesc:    str="An unfinished entity is here."
-  # make sure they each get their own copy of the the namelist, not the same namelist
-  namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
-  desc:     editor.buffer=editor.buffer("This entity looks unfinished.")
-  room:     unique_identifier=None
-
-  @property
-  def Name(self):
-    return self.name.capitalize()
-
-  def has_alias(self, alias):
-    return alias in self.namelist
-
-  def debug(self):
-    ret_val = f"Name: {self.name}\r\n"
-    ret_val += f"LDesc: {self.ldesc}\r\n"
-    ret_val += f"Alias:\r\n"
-    for alias in self.namelist:
-      ret_val += f"  {alias}\r\n"
-    ret_val += f"Desc: {str(self.desc)[:20]}\r\n"
-    ret_val += f"Room: {self.room}\r\n"
-    return ret_val
 
 @dataclasses.dataclass
 class zedit_save_data:
@@ -87,7 +41,7 @@ class redit_save_data:
      room_desc  = description of room being edited
      room_exits = dictionary of exit vrefs using directions as keys
      dir_edit   = direction specified on previous command to edit an exit"""
-  uid:         unique_identifier=None
+  uid:         unique_id_data.unique_id_data=None
   room_name:   str="An unfinished room"
   room_desc:   editor.buffer=editor.buffer("You are in an unfinished room.")
   room_exits:  dict=dataclasses.field(default_factory=lambda:dict())
@@ -196,12 +150,12 @@ class pc_save_data:
 
 @dataclasses.dataclass # perhaps this should be moved to pc.py
 class npc_proto_data:
-  entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
+  entity: entity_data.entity_data = dataclasses.field(default_factory=lambda:entity_data.entity_data())
   ldesc: str="An unfinished npc proto_type stands here."
   prefix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
   suffix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
-  unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
+  unique_id: unique_id_data.unique_id_data = dataclasses.field(default_factory=lambda:unique_id_data.unique_id_data())
 
   def __post_init__(self):
     self.entity.ldesc = "An unfinished npc proto_type stands here."
@@ -241,11 +195,11 @@ class npc_proto_data:
 
 @dataclasses.dataclass
 class obj_proto_data:
-  entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
+  entity: entity_data.entity_data = dataclasses.field(default_factory=lambda:entity_data.entity_data())
   prefix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
   suffix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
-  unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
+  unique_id: unique_id_data.unique_id_data = dataclasses.field(default_factory=lambda:unique_id_data.unique_id_data())
 
   def __post_init__(self):
     self.entity.ldesc ="An unfinished obj proto_type has been left here."

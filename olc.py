@@ -13,11 +13,11 @@ class olc_mode(enum.IntEnum):
   OLC_MODE_ZEDIT = 0
   OLC_MODE_REDIT = 1
 
-def handle_input(d, input, server, mud):
+def handle_input(d, input, server, mud, db):
   if d.olc.mode == olc_mode.OLC_MODE_ZEDIT:
   	zedit.zedit_parse(d, input, server, mud)
   elif d.olc.mode == olc_mode.OLC_MODE_REDIT:
-    redit.redit_parse(d, input, server, mud)
+    redit.redit_parse(d, input, server, mud, db)
 
 def olc_writing_follow_up(d):
   if d.olc.mode == olc_mode.OLC_MODE_REDIT:

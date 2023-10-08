@@ -1,9 +1,20 @@
 import commands
+import dataclasses
 import logging
 import nanny
 import object
+import pc
 import spec_procs
 import table
+
+@dataclasses.dataclass
+class baccarat_bet_data:
+  pass
+
+@dataclasses.dataclass
+class guest_data:
+  char:        pc.pc
+  caught_up:   bool
 
 class baccarat_table(table.table):
   NUM_BACCARAT_SEATS = 3
@@ -87,15 +98,17 @@ def baccarat_table_syntax_parser(mud, me, ch, command, argument, db):
   full_command = nanny.look_up_command(command)
   
   if not isinstance(me, baccarat_table):
-    logging.warning(f"Attempting to call inappropriate spec_proc 'baccarat_table_syntax_parser' on obj {me}.")
+    logging.warning(f"Attem[[[[[[pting to call inappropriate spec_proc 'baccarat_table_syntax_parser' on obj {me}.")
     return
 
   # these are the commands we listen to for non-guests
   if command == "sit":
     if ch.name in me.guests:
-      ch.write("You are already playing!")
+      ch.write("You are already playing!\r\n")
+    elif me.full:
+      ch.write("You can't join -- the table is full!\r\n")
     else:
-      ch.write("You sit down at the table, and join the game.")
+      ch.write("You sit down at the table, and join the game.\r\n")
       me.add_guest(ch.name)
       me.delay(30)
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
@@ -107,7 +120,8 @@ def baccarat_table_syntax_parser(mud, me, ch, command, argument, db):
       commands.do_say(me.dealer, None, "You can't take this table!", False, mud, db)
       return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
     else:
-      spec_procs.prefix_command_trigger_messages.RUN_INTERPRETER
+      return spec_procs.prefix_command_trigger_messages.RUN_INTERPRETER
+
   if ch.name not in me.guests:
     return spec_procs.prefix_command_trigger_messages.RUN_INTERPRETER
 
@@ -124,7 +138,6 @@ def baccarat_table_syntax_parser(mud, me, ch, command, argument, db):
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
   elif full_command in ["north", "south", "east", "west", "up", "down"]:
     ch.write("You must leave the table before going anywhere.\r\n")
-    ch.write("Type baccarat leave to do so.\r\n")
     return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
 
   

@@ -37,7 +37,7 @@ def redit_display_main_menu(d):
   d.write(f"{GREEN}Q{NORMAL}) Quit\r\n")
   d.write(f"\r\nEnter your choice : ")
 
-def redit_parse(d, input, server, mud):
+def redit_parse(d, input, server, mud, db):
   if d.olc.state == redit_state.REDIT_MAIN_MENU:
     redit_parse_main_menu(d, input, server, mud) 
   elif d.olc.state == redit_state.REDIT_EDIT_NAME:
@@ -45,7 +45,7 @@ def redit_parse(d, input, server, mud):
   elif d.olc.state == redit_state.REDIT_EDIT_COPY:
     redit_parse_edit_copy(d, input, server, mud)
   elif d.olc.state == redit_state.REDIT_CONFIRM_SAVE:
-    redit_parse_confirm_save(d, input, server, mud)
+    redit_parse_confirm_save(d, input, server, mud, db)
   elif d.olc.state == redit_state.REDIT_CHANGE_EXIT:
     redit_parse_change_exit(d, input, server, mud)
 
@@ -104,7 +104,7 @@ def redit_parse_edit_copy(d, input, server, mud):
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
 
-def redit_parse_confirm_save(d, input, server, mud):
+def redit_parse_confirm_save(d, input, server, mud, db):
   redit_save = d.olc.save_data
   zone_id = redit_save.uid.zone_id
   room_id = redit_save.uid.id
@@ -156,6 +156,8 @@ def redit_parse_confirm_save(d, input, server, mud):
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None
+
+    db.save_room(check_room)
 
   elif input[0] in {'n', 'N'}:
     d.write("Discarding changes.\r\n")

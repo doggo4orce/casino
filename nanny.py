@@ -119,7 +119,7 @@ def handle_next_input(d, server, mud, db):
   elif d.state == descriptor.descriptor_state.CHATTING:
     interpret_msg(d, command, argument, server, mud, db)
   elif d.state == descriptor.descriptor_state.OLC:
-    olc.handle_input(d, stripped_msg, server, mud)
+    olc.handle_input(d, stripped_msg, server, mud, db)
   elif d.state == descriptor.descriptor_state.GET_NAME:
     if command == "":
       d.disconnected = True

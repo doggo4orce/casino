@@ -212,7 +212,7 @@ class database:
     room_id = rm.id
     zone_id = rm.zone_id
 
-    self.execute("DELETE FROM ex_table WHERE zone_id=:zone_id AND room_id=:room_id AND dir=:dir", {
+    self.execute("DELETE FROM ex_table WHERE o_zone_id=:zone_id AND o_id=:room_id AND direction=:dir", {
       'zone_id': zone_id,
       'room_id': room_id,
       'dir':     rm.direction(ex)})

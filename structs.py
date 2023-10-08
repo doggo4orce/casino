@@ -45,6 +45,7 @@ class entity_data: # TODO: Put comment here explaining why entity doesn't have l
      desc     = shown when closely examined
      room     = reference to room if it is in one, and None otherwise"""
   name:     str="an unfinished entity"
+  ldesc:    str="An unfinished entity is here."
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
   desc:     editor.buffer=editor.buffer("It looks unfinished.")
@@ -192,6 +193,9 @@ class npc_proto_data:
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
 
+  def __post_init__(self):
+    self.entity.ldesc = "An unfinished npc proto_type stands here."
+
   # TODO: make this function accept list of spec_procs
   def assign_spec_proc(self, spec_proc):
     # will return an empty list() if the function args are correct
@@ -206,7 +210,14 @@ class npc_proto_data:
       self.suffix_command_triggers.append(spec_proc)
     elif type(spec_proc) == spec_procs.heart_beat_proc:
       self.heart_beat_procs.append(spec_proc)
-  
+
+  @property
+  def id(self):
+    return self.unique_id.id
+  @property
+  def zone_id(self):
+    return self.unique_id.zone_id
+
   def __str__(self):
     ret_val = f"NPC: {CYAN}{self.entity.name}{NORMAL} "
     ret_val += f"Alias: {CYAN}"
@@ -221,11 +232,13 @@ class npc_proto_data:
 @dataclasses.dataclass
 class obj_proto_data:
   entity: entity_data = dataclasses.field(default_factory=lambda:entity_data())
-  ldesc: str="An unfinished obj proto_type has been left here."
   prefix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
   suffix_command_triggers: list = dataclasses.field(default_factory=lambda:list())
   heart_beat_procs: list = dataclasses.field(default_factory=lambda:list())
   unique_id: unique_identifier = dataclasses.field(default_factory=lambda:unique_identifier())
+
+  def __post_init__(self):
+    self.entity.ldesc ="An unfinished obj proto_type has been left here."
 
   def assign_spec_proc(self, spec_proc):
     # will return an empty list() if the function args are correct

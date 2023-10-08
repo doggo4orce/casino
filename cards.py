@@ -212,3 +212,7 @@ class card_dealer(pc.npc):
   def shuffle(self):
     if self.shoe:
       self._shoe.shuffle()
+
+  def debug(self):
+    #TODO: add info about hand, shoe
+    return super().debug()

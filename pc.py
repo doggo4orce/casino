@@ -42,7 +42,7 @@ class character:
     return self._inventory
   @property
   def ldesc(self):
-    return "This character's ldesc should never be seen!"
+    return self._entity.ldesc
   
   # Setters
   @entity.setter
@@ -57,6 +57,9 @@ class character:
   @inventory.setter
   def inventory(self, new_inv):
     self._inventory = new_inv
+  @ldesc.setter
+  def ldesc(self, new_ldesc):
+    self._entity.ldesc = new_ldesc
 
   # This function should never be called.  It should be overridden by any derived classes.
   def write(self, message):
@@ -72,6 +75,9 @@ class character:
 
   def has_alias(self, alias):
     return self._entity.has_alias(alias)
+
+  def debug(self):
+    return f"Type: {type(self)}\r\n"
 
   def __str__(self):
     return self.name
@@ -201,14 +207,14 @@ class npc(character):
      heart_beat_procs = list of pulsing special procedures"""
   def __init__(self, proto=None):
     super().__init__()
-    self._ldesc = "An unfinished npc stands here."
+    self.ldesc = "An unfinished npc stands here."
     self._prefix_command_triggers = list()
     self._suffix_command_triggers = list()
     self._heart_beat_procs = list()
 
     if proto != None:
       self._entity = dataclasses.replace(proto.entity)
-      self._ldesc = proto.ldesc
+      self.ldesc = proto.ldesc
       #TODO: write npc.assign_spec_proc function and use it to copy list manually here
       self._prefix_command_triggers = proto.prefix_command_triggers.copy()
       self._suffix_command_triggers = proto.suffix_command_triggers.copy()
@@ -218,9 +224,6 @@ class npc(character):
   @property
   def entity(self):
     return self._entity
-  @property
-  def ldesc(self):
-    return self._ldesc
   @property
   def prefix_command_triggers(self):
     return self._prefix_command_triggers
@@ -235,9 +238,6 @@ class npc(character):
   @entity.setter
   def entity(self, new_entity):
     self._entity = new_entity
-  @ldesc.setter
-  def ldesc(self, new_ldesc):
-    self._ldesc = new_ldesc
   @prefix_command_triggers.setter
   def prefix_command_triggers(self, new_triggers):
     self._prefix_command_triggers = new_triggers
@@ -271,6 +271,28 @@ class npc(character):
        -route the message to a player who is controlling the npc (eg. with a spell)?"""
   def write(self, message):
     pass
+
+  def debug(self):
+    ret_val = super().debug()
+
+    #TODO: factor this code out into entity (see below)
+    #because it also appears in object.debug()
+    ret_val += "Prefix Procs:\r\n"
+
+    for spec in self.prefix_command_triggers:
+      ret_val += f"  {spec.name}\r\n"
+    
+    ret_val += "Suffix Procs:\r\n"
+
+    for spec in self.suffix_command_triggers:
+      ret_val += f"  {spec.name}\r\n"
+
+    ret_val += "Heartbeat Procs:\r\n"
+    
+    for spec in self.heart_beat_procs:
+      ret_val += f"  {spec.name}\r\n"
+
+    return ret_val
 
   #TODO: factor this code out of entity, so it doesn't get repeated in the object class
   def call_prefix_command_triggers(self, mud, ch, command, argument, db):

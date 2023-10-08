@@ -1,5 +1,6 @@
 import logging
 import object
+import string_handling
 
 class table(object.object):
   """guests          = list of guests' names at the table
@@ -72,3 +73,12 @@ class table(object.object):
 
   def is_seated(self, name):
     return name in self.guests
+
+  def debug(self):
+    ret_val = super().debug()
+    ret_val += f"Total Seats: {self.num_seats}\r\n"
+    for guest in self.guests:
+      ret_val += f"  {guest}\r\n"
+    ret_val += f"Full: {string_handling.yesno(self.full)}\r\n"
+
+    return ret_val

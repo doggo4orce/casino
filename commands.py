@@ -1,5 +1,3 @@
-import baccarat_dealer
-import baccarat_table
 import descriptor
 import exit
 import logging
@@ -541,53 +539,15 @@ def show_char_to_char(ch, tch):
     out_buf += "  Nothing.\r\n"
 
   if ch.debug_mode:
-    out_buf += "\r\nDebug Info:\r\n"
-    out_buf += f"Type: {type(tch)}\r\n"
-    out_buf += "Prefix Procs:\r\n"
-
-    for spec in tch.prefix_command_triggers:
-      out_buf += f"  {spec.name}\r\n"
-    
-    out_buf += "Suffix Procs:\r\n"
-
-    for spec in tch.suffix_command_triggers:
-      out_buf += f"  {spec.name}\r\n"
-
-    out_buf += "Heartbeat Procs:\r\n"
-
-    for spec in tch.heart_beat_procs:
-      out_buf += f"  {spec.name}\r\n"
-
-    if type(tch) == baccarat_dealer.baccarat_dealer:
-      out_buf += f"State: {baccarat_dealer.baccarat_dealer_state(tch.bac_state).name}\r\n"
-      out_buf += f"Paused: {string_handling.yesno(tch.paused)}"
+    out_buf += f"\r\nDebug Info:\r\n{tch.debug()}"
 
   ch.write(out_buf)
 
 def show_obj_to_char(ch, obj):
   out_buf = obj.desc.display(ch.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
 
-  # TODO:  put this in a debug() method for obj/table/baccarat_table and do the same for the nps/dealer/etc
   if ch.debug_mode:
-    out_buf += "\r\nDebug Info:\r\n"
-    out_buf += f"Type: {type(obj)}\r\n"
-    out_buf += "Prefix Procs:\r\n"
-
-    for spec in obj.prefix_command_triggers:
-      out_buf += f"  {spec.name}\r\n"
-    
-    out_buf += "Suffix Procs:\r\n"
-
-    for spec in obj.suffix_command_triggers:
-      out_buf += f"  {spec.name}\r\n"
-
-    out_buf += "Heartbeat Procs:\r\n"
-
-    for spec in obj.heart_beat_procs:
-      out_buf += f"  {spec.name}\r\n"
-
-    if type(obj) == baccarat_table.baccarat_table:
-      out_buf += f"Dealer: {obj.dealer}"
+    out_buf += f"\r\nDebug Info:\r\n{obj.debug()}"
 
   ch.write(out_buf)
 

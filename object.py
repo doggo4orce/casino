@@ -86,5 +86,24 @@ class object:
     for procedure in self.heart_beat_procs:
       procedure.call(mud, self, db)
 
+  def debug(self):
+    #TODO: factor sepc_proc code out into entity
+    #because it also appears in npc
+    ret_val = "Prefix Procs:\r\n"
+
+    for spec in self.prefix_command_triggers:
+      ret_val += f"  {spec.name}\r\n"
+    
+    ret_val += "Suffix Procs:\r\n"
+
+    for spec in self.suffix_command_triggers:
+      ret_val += f"  {spec.name}\r\n"
+
+    ret_val += "Heartbeat Procs:\r\n"
+    
+    for spec in self.heart_beat_procs:
+      ret_val += f"  {spec.name}\r\n"
+
+    return ret_val
   def __str__(self):
     return self.name

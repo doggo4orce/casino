@@ -91,6 +91,11 @@ class baccarat_table(table.table):
 
     return ret_val
 
+  def debug(self):
+    ret_val = super().debug()
+    ret_val += f"Dealer: {self.dealer}\r\n"
+    return ret_val
+
 def baccarat_table_syntax_parser(mud, me, ch, command, argument, db):
   args = argument.split()
   num_args = len(args)

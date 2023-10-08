@@ -359,6 +359,12 @@ class baccarat_dealer(cards.card_dealer):
       return player_third in {6,7}
     return False
 
+  def debug(self):
+    ret_val = super().debug()
+    ret_val += f"State: {baccarat_dealer_state(self.bac_state).name}\r\n"
+    ret_val += f"Paused: {self.bac_paused}"
+    return ret_val
+
 class baccarat_dealer_state(enum.IntEnum):
   IDLE                = 1
   BEGIN_SHOE          = 2

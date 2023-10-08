@@ -22,7 +22,11 @@ class character:
     there is nothing stopping one from instantiating it directly, such use is not intended."""
   def __init__(self):
     self._entity    = structs.entity_data()
-    self._inventory = inventory.inventory()
+    self.name = "an unfinished character"
+    self.desc = editor.buffer("This character looks unfinished.")
+    self.ldesc = "An unfinished character is here."
+    self.entity.namelist = ["unfinished", "character"]
+    self.inventory = inventory.inventory()
 
   # Getters
   @property
@@ -53,13 +57,13 @@ class character:
     self._entity.name = new_name
   @room.setter
   def room(self, new_room):
-    self._entity.room = new_room
+    self.entity.room = new_room
   @inventory.setter
   def inventory(self, new_inv):
     self._inventory = new_inv
   @ldesc.setter
   def ldesc(self, new_ldesc):
-    self._entity.ldesc = new_ldesc
+    self.entity.ldesc = new_ldesc
 
   # This function should never be called.  It should be overridden by any derived classes.
   def write(self, message):
@@ -209,18 +213,21 @@ class npc(character):
      heart_beat_procs = list of pulsing special procedures"""
   def __init__(self, proto=None):
     super().__init__()
-    self.ldesc = "An unfinished npc stands here."
-    self._prefix_command_triggers = list()
-    self._suffix_command_triggers = list()
-    self._heart_beat_procs = list()
+    self.name = "an unfinished npc"
+    self.desc = editor.buffer("This npc looks unfinished.")
+    self.ldesc = "An unfinished npc is here."
+    self.entity.namelist = ["unfinished", "npc"]
+    self.prefix_command_triggers = list()
+    self.suffix_command_triggers = list()
+    self.heart_beat_procs = list()
 
     if proto != None:
-      self._entity = dataclasses.replace(proto.entity)
+      self.entity = dataclasses.replace(proto.entity)
       self.ldesc = proto.ldesc
       #TODO: write npc.assign_spec_proc function and use it to copy list manually here
-      self._prefix_command_triggers = proto.prefix_command_triggers.copy()
-      self._suffix_command_triggers = proto.suffix_command_triggers.copy()
-      self._heart_beat_procs = proto.heart_beat_procs.copy()
+      self.prefix_command_triggers = proto.prefix_command_triggers.copy()
+      self.suffix_command_triggers = proto.suffix_command_triggers.copy()
+      self.heart_beat_procs = proto.heart_beat_procs.copy()
 
   # Getters
   @property

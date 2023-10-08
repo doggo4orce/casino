@@ -48,7 +48,7 @@ class entity_data: # TODO: Put comment here explaining why entity doesn't have l
   ldesc:    str="An unfinished entity is here."
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
-  desc:     editor.buffer=editor.buffer("It looks unfinished.")
+  desc:     editor.buffer=editor.buffer("This entity looks unfinished.")
   room:     unique_identifier=dataclasses.field(default_factory=lambda:unique_identifier.from_string(config.VOID_ROOM))
 
   @property

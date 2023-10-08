@@ -2,6 +2,7 @@ import logging
 import object
 import string_handling
 
+#TODO: change name to table_data?
 class table(object.object):
   """guests          = list of guests' names at the table
      num_guests      = number of guests at the table

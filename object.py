@@ -9,7 +9,7 @@ class object:
     ldesc = one line description shown after room description"""
   def __init__(self, proto=None):
     self._entity = structs.entity_data()
-    self._ldesc = "An unfinished object has been left here."
+    self.ldesc = "An unfinished object has been left here."
     self._prefix_command_triggers = list()
     self._suffix_command_triggers = list()
     self._heart_beat_procs = list()
@@ -26,16 +26,16 @@ class object:
     return self._entity
   @property
   def ldesc(self):
-    return self._ldesc
+    return self.entity.ldesc
   @property
   def room(self):
-    return self._entity.room
+    return self.entity.room
   @property
   def name(self):
-    return self._entity.name
+    return self.entity.name
   @property
   def desc(self):
-    return self._entity.desc
+    return self.entity.desc
   @property
   def prefix_command_triggers(self):
     return self._prefix_command_triggers
@@ -52,13 +52,13 @@ class object:
     self._entity = new_entity
   @ldesc.setter
   def ldesc(self, new_ldesc):
-    self._ldesc = new_ldesc
+    self.entity.ldesc = new_ldesc
   @room.setter
   def room(self, new_room):
-  	self._entity.room = new_room
+  	self.entity.room = new_room
   @name.setter
   def name(self, new_name):
-    self._entity.name = new_name
+    self.entity.name = new_name
   @prefix_command_triggers.setter
   def prefix_command_triggers(self, new_triggers):
     self._prefix_command_triggers = new_triggers
@@ -87,9 +87,10 @@ class object:
       procedure.call(mud, self, db)
 
   def debug(self):
+    ret_val = self.entity.debug()
     #TODO: factor sepc_proc code out into entity
     #because it also appears in npc
-    ret_val = "Prefix Procs:\r\n"
+    ret_val += "Prefix Procs:\r\n"
 
     for spec in self.prefix_command_triggers:
       ret_val += f"  {spec.name}\r\n"

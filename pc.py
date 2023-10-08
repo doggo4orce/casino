@@ -77,7 +77,9 @@ class character:
     return self._entity.has_alias(alias)
 
   def debug(self):
-    return f"Type: {type(self)}\r\n"
+    ret_val = self.entity.debug()
+    ret_val += f"Type: {type(self)}\r\n"
+    return ret_val
 
   def __str__(self):
     return self.name

@@ -58,6 +58,16 @@ class entity_data: # TODO: Put comment here explaining why entity doesn't have l
   def has_alias(self, alias):
     return alias in self.namelist
 
+  def debug(self):
+    ret_val = f"Name: {self.name}\r\n"
+    ret_val += f"LDesc: {self.ldesc}\r\n"
+    ret_val += f"Alias:\r\n"
+    for alias in self.namelist:
+      ret_val += f"  {alias}\r\n"
+    ret_val += f"Desc: {str(self.desc)[:20]}\r\n"
+    ret_val += f"Room: {self.room}\r\n"
+    return ret_val
+
 @dataclasses.dataclass
 class zedit_save_data:
   """There should be a field here for each of the fields in the main menu for redit.  Then the users

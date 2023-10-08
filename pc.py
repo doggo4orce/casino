@@ -124,7 +124,7 @@ class pc(character):
   # linkless business should be handled elsewhere, good night! (oct 7, 23)
   @property
   def ldesc(self):
-    out_str = f"{self} {self.title}"
+    out_str = f"{self.Name} {self.title}"
     if self.d == None:
       out_str += " (linkless)"
     out_str += " is here."
@@ -190,6 +190,12 @@ class pc(character):
   @save_data.setter
   def save_data(self, new_data):
     self._save_data = new_data
+  @ldesc.setter
+  def ldesc(self, new_ldesc):
+    # I think it's stupid that just writing
+    #       super().ldesc = new_ldesc
+    # doesn't work
+    super(pc, self.__class__).ldesc.fset(self, new_ldesc)
 
   """update_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
      save_char(db)         <- saves character to database

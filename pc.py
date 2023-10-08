@@ -15,17 +15,24 @@ class character:
   """Creates a new char(acter) which can act within the world.
 
     entity    = dataclass encapsulating name, appearance and location (see structs.py)
+    name      = characters name (wrapped from entity)
+    Name      = characters name capitalized
+    desc      = characters description as a buffer (wrapped from entity)
+    ldec      = how character is listed in a room to others (wrapped from entity)
+    room      = what room character is in (wrapped from entity)
+    namelist  = list of aliases for character to be accessed by (wrapped from entity)
     inventory = iterable container consisting of all objects held (see object.py)
 
     Note: This class is meant to encapsulate the functionality shared by pcs/npcs,
     so that they need not be distinguished between throughout this codebase.  While
     there is nothing stopping one from instantiating it directly, such use is not intended."""
   def __init__(self):
-    self._entity    = structs.entity_data()
+    self.entity    = structs.entity_data()
     self.name = "an unfinished character"
     self.desc = editor.buffer("This character looks unfinished.")
     self.ldesc = "An unfinished character is here."
-    self.entity.namelist = ["unfinished", "character"]
+    self.room = structs.unique_identifier.from_string(config.VOID_ROOM)
+    self.namelist = ["unfinished", "character"]
     self.inventory = inventory.inventory()
 
   # Getters
@@ -34,20 +41,26 @@ class character:
     return self._entity
   @property
   def name(self):
-    return self._entity.name
+    return self.entity.name
   @property
   def Name(self):
-    return self._entity.Name
+    return self.entity.Name
+  @property
+  def desc(self):
+    return self.entity.desc
+  @property
+  def ldesc(self):
+    return self.entity.ldesc
   @property
   def room(self):
-    return self._entity.room
+    return self.entity.room
+  @property
+  def namelist(self):
+    return self.entity.namelist
   @property
   def inventory(self):
     return self._inventory
-  @property
-  def ldesc(self):
-    return self._entity.ldesc
-  
+
   # Setters
   @entity.setter
   def entity(self, new_ent):
@@ -55,23 +68,31 @@ class character:
   @name.setter
   def name(self, new_name):
     self._entity.name = new_name
-  @room.setter
-  def room(self, new_room):
-    self.entity.room = new_room
-  @inventory.setter
-  def inventory(self, new_inv):
-    self._inventory = new_inv
+  @desc.setter
+  def desc(self, new_desc):
+    self.entity.desc = new_desc
   @ldesc.setter
   def ldesc(self, new_ldesc):
     self.entity.ldesc = new_ldesc
+  @room.setter
+  def room(self, new_room):
+    self.entity.room = new_room
+  @namelist.setter
+  def namelist(self, new_namelist):
+    self.entity.namelist = new_namelist
+  @inventory.setter
+  def inventory(self, new_inventory):
+    self._inventory = new_inventory
 
-  # This function should never be called.  It should be overridden by any derived classes.
+  """write(message)   <-- no operation, should be over-written by derived classes
+     in_zone()        <-- return zone_id of character's location
+     has_alias(alias) <-- check if alias is in self.namelist
+     debug()          <-- display state in readable string"""
+
   def write(self, message):
     logging.warning(f"Attempting to send message {message} to character {self.entity.name}")
     return
 
-  """in_zone()        <-- returns zone_id of the zone that character is occupying
-     has_alias(alias) <-- returns True if alias is once of the characters key-words"""
   def in_zone(self):
     if self.room == None:
       return None

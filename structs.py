@@ -39,7 +39,7 @@ class client:
   host_name:   str=None
 
 @dataclasses.dataclass
-class entity_data: # TODO: Put comment here explaining why entity doesn't have ldesc?
+class entity_data:
   """name     = what to be referred to as
      namelist = list of keywords to be targetted with
      desc     = shown when closely examined
@@ -49,7 +49,7 @@ class entity_data: # TODO: Put comment here explaining why entity doesn't have l
   # make sure they each get their own copy of the the namelist, not the same namelist
   namelist: list=dataclasses.field(default_factory=lambda:["unfinished", "entity"])
   desc:     editor.buffer=editor.buffer("This entity looks unfinished.")
-  room:     unique_identifier=dataclasses.field(default_factory=lambda:unique_identifier.from_string(config.VOID_ROOM))
+  room:     unique_identifier=None
 
   @property
   def Name(self):

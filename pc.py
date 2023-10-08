@@ -118,6 +118,10 @@ class pc(character):
   @property
   def id(self):
     return self._id
+  # As soon as this property is written, the call to super().__init__() above
+  # tries to access this specific property.  since no new setter has been written
+  # it raises an AttributeError.  so this function should be deleted and this
+  # linkless business should be handled elsewhere, good night! (oct 7, 23)
   @property
   def ldesc(self):
     out_str = f"{self} {self.title}"

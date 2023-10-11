@@ -57,8 +57,6 @@ class TestORM(unittest.TestCase):
         self.assertEqual(field, r.fields[idx])
         idx += 1
     self.assertEqual(idx, r.num_fields)
-    
-
 
   def test_column_class(self):
     c = orm.column("drink", str)
@@ -120,4 +118,6 @@ class TestORM(unittest.TestCase):
     manager = orm.orm(":memory:")
     manager.create_table("score", ("first_name", str), ("last_name", str), ("score", int))
     #insert("score", first_name="kyle", last_name="bang", score=94000)
-    
+
+if __name__ == "__main__":
+  unittest.main()

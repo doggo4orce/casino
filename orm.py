@@ -170,7 +170,6 @@ class result_set:
   @property
   def results(self):
     return self._results.copy()
-    
 
   def __iter__(self):
     return result_set_iterator(result_set)
@@ -194,7 +193,7 @@ class orm:
     self._connection = sqlite3.connect(db_file)
     self._cursor = self._connection.cursor()
 
-  """execute(query, params)                 <-- pass arguments directly to _cursor.execute
+  """execute(query, params)                 <-- pass query and params directly to _cursor.execute
      commit()                               <-- calls _connection.commit
      fetchone()                             <-- returns _cursor.fetchone()
      fetchall()                             <-- returns _cursor.fetchall()
@@ -362,9 +361,3 @@ class orm:
   # select("employee", ("first_name", "last_name"), 
   def select(self, *args):
     pass
-    
-if __name__ == "__main__":
-  record1 = result(age=39)
-
-  for field in record1.fields:
-    print(f"{field}={record1[field]}")

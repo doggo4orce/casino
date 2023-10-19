@@ -4,23 +4,23 @@ import logging
 import spec_procs
 import structs
 
-class object:
+class object_data:
   """Creates an object which characters can get, drop, and otherwise interact with.
     entity = aggregates name, namelist, description, and room
     ldesc = one line description shown after room description"""
   def __init__(self, proto=None):
-    self._entity = entity.entity_data()
+    self.entity = entity.entity_data()
     self.ldesc = "An unfinished object has been left here."
-    self._prefix_command_triggers = list()
-    self._suffix_command_triggers = list()
-    self._heart_beat_procs = list()
+    self.prefix_command_triggers = list()
+    self.suffix_command_triggers = list()
+    self.heart_beat_procs = list()
 
     if proto != None:
-      self._entity = dataclasses.replace(proto.entity)
+      self.entity = dataclasses.replace(proto.entity)
       self.ldesc = proto.ldesc
-      self._prefix_command_triggers = proto.prefix_command_triggers.copy()
-      self._suffix_command_triggers = proto.suffix_command_triggers.copy()
-      self._heart_beat_procs = proto.heart_beat_procs.copy()
+      self.prefix_command_triggers = proto.prefix_command_triggers.copy()
+      self.suffix_command_triggers = proto.suffix_command_triggers.copy()
+      self.heart_beat_procs = proto.heart_beat_procs.copy()
 
   @property
   def entity(self):

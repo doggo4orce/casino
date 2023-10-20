@@ -6,11 +6,11 @@ import string_handling
 class spec_proc_data:
   expected_args = []
 
-  """name      = representation as a string
-     func      = behaviour function, uses return value as message to nanny
-     args      = list of args that func is expecting
-     num_args  = number of args that func is expecting
-     arg_error = checks whether self.func accepts the correct parameters"""
+  """name        = representation as a string
+     func        = behaviour function, uses return value as message to nanny
+     args        = list of args that func is expecting
+     num_args    = number of args that func is expecting
+     arg_problem = checks whether self.func accepts the correct parameters"""
 
   def __init__(self, name, func=None):
     self.name = name
@@ -29,8 +29,8 @@ class spec_proc_data:
   def num_args(self):
     return len(self.args)
   @property
-  def arg_error(self):
-    return self.arg_error_brief() != None
+  def arg_problem(self):
+    return self.arg_error() != None
 
   @name.setter
   def name(self, new_name):
@@ -38,38 +38,51 @@ class spec_proc_data:
   @func.setter
   def func(self, new_func):
     self._func = new_func
+    if self.func == None:
+      logging.warning("spec_proc({self.name})")
+      logging.warning("  has no function")
+      return
+    arg_error = self.arg_error_brief()
+    if arg_error != None:
+      logging.warning(f"spec_proc({self.name})")
+      logging.warning(f"  arg error with function {self.func.__name__}")
+      logging.warning(f"  {arg_error}")
 
-  """arg_error_brief()  <-- first disagreement between self.args and self.expected_args
-     arg_error_full()   <-- same as above but with more context
+  """arg_error()        <-- describe problems with function parameters in the form of a paragraph
      consistent()       <-- check whether self.args is consistent with self.expected_args
-     check(*args)       <-- check whether args matches is consistent with self.args
+     check(*args)       <-- check whether args are appropriate for self.func
      call(*args)        <-- pass args to self.func"""
      
-  def arg_error_brief(self):
-    if self.expected_args == None and self.args != None:
-      return f"found arg '{self.args[0]}' when no args were expected"
+  def arg_error(self):
+    ret_val = f"spec_proc({self.name})\r\n"
+    # if no function, just say so
+    if self.func == None:
+      return "has no function"
+    # otherwise, build error message
+    ret_val += "  expected_args: "
+    if len(self.expected_args) == 0:
+      ret_val += "None\r\n"
+    else:
+      ret_val += f"{self.expected_args}\r\n"
+    ret_val += f"  function_args: "
+    if len(self.args) == 0:
+      ret_val += "None\r\n"
+    else:
+      ret_val += f"{', '.join(self.args)}\r\n"
+    # wrong number of arguments
+    if len(self.expected_args) != len(self.args):
+      return ret_val
     for idx, arg in enumerate(self.expected_args):
       if self.args[idx] != arg:
-        return f"expecting '{arg}' for {string_handling.ordinal(idx+1)} arg but found '{actual_args[idx]}'"
+        return ret_val
+    # no problem if we made it this far
     return None
 
-  def arg_error_full(self):
-    arg_error = self.first_fn_arg_error_brief()
-    problems = list()
-    if arg_error != None:
-      problems.append(f"Error: spec_proc({self.name})")
-      problems.append(f"  arg error with self.func={self.func.__name__}")
-      problems.append(f"  {arg_error}")
-    return problems
-
   def consistent(self):
-    return self.first_fn_arg_error_brief() == None
+    return self.arg_error_brief() == None
 
   def check(self, *args):
-    for idx, arg in enumerate(args):
-      if arg != self.args[idx]:
-        return False
-    return True
+    return self.arg_error_brief(*args) != None
 
   def call(self, *args):
     if self.func == None:

@@ -1,4 +1,5 @@
 import inspect
+import logging
 import string_handling
 
 # TODO (idea?): add 'behaviour' field to npc/npc_protos to manage the lists of spec_procs
@@ -11,9 +12,9 @@ class spec_proc_data:
      num_args  = number of args that func is expecting
      arg_error = checks whether self.func accepts the correct parameters"""
 
-  def __init__(self, name, func):
+  def __init__(self, name, func=None):
     self.name = name
-    self.func = fn
+    self.func = func
 
   @property
   def name(self):
@@ -40,7 +41,9 @@ class spec_proc_data:
 
   """arg_error_brief()  <-- first disagreement between self.args and self.expected_args
      arg_error_full()   <-- same as above but with more context
-     correct_fn_args()  <-- check whether self.args is consistent with self.expected_args"""
+     consistent()       <-- check whether self.args is consistent with self.expected_args
+     check(*args)       <-- check whether args matches is consistent with self.args
+     call(*args)        <-- pass args to self.func"""
      
   def arg_error_brief(self):
     if self.expected_args == None and self.args != None:
@@ -59,5 +62,25 @@ class spec_proc_data:
       problems.append(f"  {arg_error}")
     return problems
 
-  def correct_fn_args(self):
+  def consistent(self):
     return self.first_fn_arg_error_brief() == None
+
+  def check(self, *args):
+    for idx, arg in enumerate(args):
+      if arg != self.args[idx]:
+        return False
+    return True
+
+  def call(self, *args):
+    if self.func == None:
+      logging.error(f"Error: spec_proc({self.name})")
+      logging.error(f"  tried to call with no function")
+      return
+
+    try:
+      return self.func(*args)
+    except TypeError:
+      logging.error(f"Error: spec_proc({self.name})")
+      logging.error(f"  tried to call {self.func.__name__}")
+      logging.error(f"  expecting args: {', '.join(self.args)}")
+      logging.error(f"  was passed: {', '.join([str(arg) for arg in args])}")

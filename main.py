@@ -11,13 +11,6 @@ import game
 import nanny
 import server
 
-# structure of log timestamps
-logging.basicConfig(
-  level=logging.INFO,
-  format='%(asctime)s :: %(message)s',
-  datefmt='%b %d %H:%M:%S',
-)
-
 # command line argument handling
 parser = argparse.ArgumentParser(description='oMud Server')
 parser.add_argument('port', type=int, help='port to run the server on')

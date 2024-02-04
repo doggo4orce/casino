@@ -3,7 +3,6 @@ from mudlog import mudlog_type, mudlog
 import string_handling
 
 # IDEA: add 'behaviour' field to npc/npc_protos to manage the lists of spec_procs
-
 # IDEA: add class variable which is a list of all available cmd_trigger functions so they can be assigned using OLC
 
 class spec_proc_data:
@@ -37,7 +36,7 @@ class spec_proc_data:
     return len(self.args)
   @property
   def consistent(self):
-    return self.func != None and self.args == self.expected_args
+    return self.check(self.expected_args)
 
   @name.setter
   def name(self, new_name):
@@ -50,7 +49,6 @@ class spec_proc_data:
       mudlog(mudlog_type.WARNING, arg_error)
 
   """arg_error()        <-- describe problems with function parameters in the form of a paragraph
-     check(*args)       <-- check whether args are appropriate for self.func
      call(*args)        <-- pass args to self.func"""
      
   def arg_error(self):

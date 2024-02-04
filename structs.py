@@ -5,7 +5,7 @@ import editor
 import enum
 import entity_data
 import logging
-import object
+import object_data
 import olc
 import spec_procs
 import string_handling

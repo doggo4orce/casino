@@ -6,8 +6,11 @@ import structs
 
 class object_data:
   """Creates an object which characters can get, drop, and otherwise interact with.
-    entity = aggregates name, namelist, description, and room
-    ldesc = one line description shown after room description"""
+    entity                  = aggregates name, namelist, description, and room
+    ldesc                   = one line description shown after room description
+    prefix_command_triggers = spec procs that fire before commands processed
+    suffix_command_triggers = spec procs that fire after commands processed
+    heart_beat_procs        = spec procs that fire each heartbeat"""
   def __init__(self, proto=None):
     self.entity = entity.entity_data()
     self.ldesc = "An unfinished object has been left here."

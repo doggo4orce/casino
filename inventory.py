@@ -1,4 +1,4 @@
-import object
+import object_data
 
 class inventory:
   """Creates an inventory of objects (for rooms, characters, and containers)

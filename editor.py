@@ -10,8 +10,10 @@ OPEN_PARAGRAPH  = "<p>"
 CLOSE_PARAGRAPH = "</p>"
 
 class buffer:
-  """Used to keep organize editor input for writing rooms, messages, etc.
-     contents = the raw contents of buffer, one line at a time"""
+  """[ITERABLE] Used to keep organize editor input for writing rooms, messages, etc.
+     contents = the raw contents of buffer, one line at a time
+     num_lines = returns line count
+     is_empty = check if line count is zero"""
   def __init__(self, str=None):
     self._contents = list()
 
@@ -20,17 +22,6 @@ class buffer:
       
       for line in lines:
         self._contents.append(line.strip('\r'))
-
-  """add_line()            <- adds a line to the buffer
-     insert_line(idx, str) <- adds a line in position idx and re-orders if necessary
-     delete_line(idx)      <- deletes the line and re-orders
-     clear()               <- empty self._contents
-     make_copy()           <- returns a new buffer with identical contents
-     copy_from(buf)        <- resets the contents to be identical from those of buf
-     display(width)        <- returns buffer as string formatted to width.
-     clean_up()            <- returns lines with paragraphs tidied up, optionally fix typos
-     str()                 <- converts to string
-     preview(max_len)      <- shows up to the first max_len chars of first line"""
 
   def __getitem__(self, key):
     return self._contents[key]
@@ -45,6 +36,17 @@ class buffer:
   @property
   def is_empty(self):
     return self.num_lines == 0
+
+  """add_line()            <- adds a line to the buffer
+     insert_line(idx, str) <- adds a line in position idx and re-orders if necessary
+     delete_line(idx)      <- deletes the line and re-orders
+     clear()               <- empty self._contents
+     copy_from(buf)        <- resets the contents to be identical from those of buf
+     make_copy()           <- returns a new buffer with identical contents
+     display(width)        <- returns buffer as string formatted to width.
+     clean_up()            <- returns lines with paragraphs tidied up, optionally fix typos
+     str(numbers)          <- converts to string, called by __str__ with numbers=False
+     preview(max_len)      <- shows up to the first max_len chars of first non-empty line"""
 
   def add_line(self, line):
     self._contents.append(line)
@@ -73,16 +75,15 @@ class buffer:
   def clear(self):
     self._contents = list()
 
-  def make_copy(self):
-    ret_val = buffer()
-    for line in self._contents:
-      ret_val.add_line(line)
-    return ret_val
-
   def copy_from(self, buffer):
     self.clear()
     for line in buffer._contents:
       self.add_line(line)
+
+  def make_copy(self):
+    ret_val = buffer()
+    ret_val.copy_from(self)
+    return ret_val
 
   def display(self, width, format=True, indent=True, numbers=False, color=True):
     ret_val = ""

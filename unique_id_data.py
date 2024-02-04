@@ -38,6 +38,7 @@ class unique_id_data:
       new_id = None
     self._id = new_id
 
+  # TODO: get rid of the tag[tag] format and just reference stuff with two separate strings
   @classmethod
   def from_string(cls, ref_string):
     zone_id, id = string_handling.parse_reference(ref_string)

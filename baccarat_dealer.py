@@ -393,7 +393,6 @@ class baccarat_dealer_state(enum.IntEnum):
    baccarat_dealer_history() <- display the history of the shoe
    baccarat_dealer_intro()   <- basic response to a greeting
    baccarat_syntax_parser()  <- handles all syntax associated with the baccarat game
-   baccarat_table_render()   <- renders a snapshot of the current hand in ascii
    baccarat_dealing()        <- handles the baccarat game"""
 
 def baccarat_dealer_history(mud, me, ch, command, argument, db):
@@ -458,28 +457,6 @@ def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
   help_str += "  sit                    - sit down at the table (if there is room)\r\n"
   help_str += "  leave                  - stand up and leave the table\r\n"
   help_str += "  bet <player or banker> - bet a red chip on player or banker\r\n"
-
-  # IDLE                = 1
-  # BEGIN_SHOE          = 2
-  # SHUFFLE_SHOE        = 3
-  # FIRST_DRAW          = 4
-  # BURN_CARDS          = 5
-  # LAST_CALL_BETS      = 6
-  # NO_MORE_BETS        = 7
-  # PLAYER_FIRST        = 8
-  # BANKER_FIRST        = 9
-  # PLAYER_SECOND       = 10
-  # BANKER_SECOND       = 11
-  # SHOW_INITIAL        = 12
-  # CHECK_NATURAL       = 13
-  # CHECK_PLAYER        = 14
-  # DEAL_PLAYER_THIRD   = 15
-  # UPDATE_PLAYER_THIRD = 16
-  # CHECK_BANKER        = 17
-  # DEAL_BANKER_THIRD   = 18
-  # UPDATE_BANKER_THIRD = 19
-  # REPORT_WINNER       = 20
-  # CLEAR_CARDS         = 21
 
   if command == "bet":
     if me.bac_state not in [

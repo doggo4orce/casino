@@ -1,5 +1,6 @@
 from color import *
 import config
+import copy
 import dataclasses
 import enum
 import logging
@@ -76,14 +77,10 @@ class buffer:
     self._contents = list()
 
   def copy_from(self, buffer):
-    self.clear()
-    for line in buffer._contents:
-      self.add_line(line)
+    self._contents = copy.copy(buffer._contents)
 
   def make_copy(self):
-    ret_val = buffer()
-    ret_val.copy_from(self)
-    return ret_val
+    return copy.deepcopy(self)
 
   def display(self, width, format=True, indent=True, numbers=False, color=True):
     ret_val = ""

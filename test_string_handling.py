@@ -12,11 +12,25 @@ class TestStringHandling(unittest.TestCase):
     self.assertEqual(string_handling.ana("dog"), "a")
 
   def test_oaus(self):
-    self.assertTrue(string_handling.only_alpha_and_under_score("awef_as_htr_o"))
-    self.assertFalse(string_handling.only_alpha_and_under_score("user@gmailDOTcom"))
-    self.assertFalse(string_handling.only_alpha_and_under_score("userATgmail.com"))
-    self.assertFalse(string_handling.only_alpha_and_under_score("Hello world"))
-    self.assertFalse(string_handling.only_alpha_and_under_score("Goodbye!"))
+    self.assertTrue(string_handling.alpha_under_score("awef_as_htr_o"))
+    self.assertFalse(string_handling.alpha_under_score("user@gmailDOTcom"))
+    self.assertFalse(string_handling.alpha_under_score("userATgmail.com"))
+    self.assertFalse(string_handling.alpha_under_score("Hello5world"))
+    self.assertFalse(string_handling.alpha_under_score("Goodbye!"))
+
+  def test_oanu(self):
+    self.assertTrue(string_handling.alpha_num_under_score("janitors_closet12"))
+    self.assertTrue(string_handling.alpha_num_under_score("hallway_path"))
+    self.assertTrue(string_handling.alpha_num_under_score("hallway13"))
+    self.assertFalse(string_handling.alpha_num_under_score("janitor.closet"))
+    self.assertFalse(string_handling.alpha_num_under_score("hall@casino"))    
+
+  def test_ans(self):
+    self.assertTrue(string_handling.alpha_num_space("janitors closet12"))
+    self.assertTrue(string_handling.alpha_num_space("hallway path"))
+    self.assertTrue(string_handling.alpha_num_space("hallway13"))
+    self.assertFalse(string_handling.alpha_num_space("janitor.closet"))
+    self.assertFalse(string_handling.alpha_num_space("hall@casino"))
 
   def test_ordinal(self):
     self.assertEqual(string_handling.ordinal(0), "0th")
@@ -82,6 +96,21 @@ class TestStringHandling(unittest.TestCase):
 
     self.assertIsNone(result_global)
     self.assertEqual(result_local, local_id)
+
+  def test_proofread(self):
+    pairs = (
+      (
+         "Hello , how are     you guys ?",
+         "Hello, how are you guys?"
+      ),
+      (
+         "This sentence , has three   periods   .  .  .",
+         "This sentence, has three periods..."
+      )
+    )
+
+    for sloppy, clean in pairs:
+      self.assertEqual(string_handling.proofread(sloppy), clean)
 
 if __name__ == '__main__':
   unittest.main()

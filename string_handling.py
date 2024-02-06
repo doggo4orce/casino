@@ -8,9 +8,21 @@ def ana(noun):
   else:
     return "a"
 
-def only_alpha_and_under_score(str):
+def alpha_under_score(str):
   for c in str:
     if not c.isalpha() and c != '_':
+      return False
+  return True
+
+def alpha_num_under_score(str):
+  for c in str:
+    if not c.isalnum() and c != '_':
+      return False
+  return True
+
+def alpha_num_space(str):
+  for c in str:
+    if not c.isalnum() and c != ' ':
       return False
   return True
 
@@ -40,13 +52,7 @@ def oxford_comma(words):
 # so if valid_id('zn') and valid_id('rm') both return True, then 'zn[rm]'
 # is a sensible full identifier
 def valid_id(str):
-  valid = True
-
-  for j in range(0, len(str)):
-    if not str[j].isalnum() and str[j] not in {'_'}:
-      valid = False
-
-  return valid
+  return alpha_num_under_score(str)
 
 def strip_tags(str):
   pattern = re.compile(r'<c(\d{1,2})>')
@@ -135,24 +141,36 @@ def paragraph(text, width, indent=False):
 
 def parse_reference(code):
   # if its just a local reference, put the zone_id to None
-  if code.isalnum():
-    zone_id = None
-    id = code
-  # if it's a global reference, we'd better find [] brackets
-  else:
-    n = code.find('[')
-    # if not, then it's a broken local reference
-    if n == -1:
-      zone_id = None
-      id = None
-    # syntax is correct for global reference
-    else:
-      zone_id = code[:n]
-      id = code[n+1:-1]
-  return zone_id, id
+  if valid_id(code):
+    return None, code
+
+  # otherwise, we'd better find [] brackets
+  n = code.find('[')
+
+  # if not, then it's a broken global reference
+  if n == -1 or code[-1] != ']':
+    return None, None
+
+  # otherwise the format is good
+  zone_id = code[:n]
+  id = code[n+1:-1]
+
+  # one last check
+  if valid_id(zone_id) and valid_id(id):
+    return zone_id, id
+
+  return None, None
+
+def proofread(paragraph):
+  # find first . or ? or !
+  # then grab all subsequent . ? !
+  # bundle them together as a terminator to a sentence
+  # format the preceding sentence and capitalize the beginning
+  # repeat
+  pass
 
 # returns a cleaned up version of "Hello , how are     you guys ?"
-def proofread(paragraph):
+def proofread2(paragraph):
 
   formatted = ""
 
@@ -160,7 +178,7 @@ def proofread(paragraph):
 
   begin_sentence = True
 
-  for word in lines:
+  for idx, word in enumerate(lines):
 
     word = word.strip()
 
@@ -221,11 +239,7 @@ def proc_color_codes(line):
     line = line.replace(f'<c{j}>', ansi_color_sequence(j))
   return line
 
-def alpha_numeric_space(input):
-  for j in range(0, len(input)):
-    if input[j] != ' ' and not input[j].isalnum():
-      return False
-  return True
+
 
 if __name__ == '__main__':
   str = "Hello <c333> world! <c0>    OK Bye\r\n" + "Hi <c12> again <c0> ok finally bye bye.      <c3>"

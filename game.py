@@ -17,6 +17,8 @@ import string_handling
 import structs
 import zone
 
+# TODO : change reference format from global[local] to local@global
+
 class game:
   def __init__(self):
     """Creates a game world with rooms, objects, and characters.

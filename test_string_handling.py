@@ -52,5 +52,36 @@ class TestStringHandling(unittest.TestCase):
     self.assertEqual(string_handling.strip_tags(original1), goal1)
     self.assertEqual(string_handling.strip_tags(original2), goal2)
 
+  def test_paragraph(self):
+
+    indented_lines_width_7 = [
+      "  ... .",         # two words with indent fit exactly
+      "... ..",          # two words fit with spare space
+      ". .. ..",         # three words fit exactly
+      ".......",         # one word fits exactly
+      "..........",      # one word too big
+      ". . . .",         # four words fit exactly
+    ]
+
+    one_long_line = " ".join(indented_lines_width_7)
+    paragraph = "\r\n".join(indented_lines_width_7)
+
+    self.assertEqual(string_handling.paragraph(one_long_line, 7, indent=True), paragraph)
+
+  def test_parse_reference(self):
+    global_id = "some_zone_123"
+    local_id = "some_thing_123"
+    reference = f"{global_id}[{local_id}]"
+
+    result_global, result_local = string_handling.parse_reference(reference)
+
+    self.assertEqual(result_global, global_id)
+    self.assertEqual(result_local, local_id)
+
+    result_global, result_local = string_handling.parse_reference(local_id)
+
+    self.assertIsNone(result_global)
+    self.assertEqual(result_local, local_id)
+
 if __name__ == '__main__':
   unittest.main()

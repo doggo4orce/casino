@@ -68,7 +68,14 @@ def strip_tags(str):
     match = re.search(pattern, str)
 
   return str
-  
+
+# inputs a string of space-delimited words, and prints them as paragraph
+# with specified width and optional indent
+#
+# Notes:
+#   * Anything that is not an explicit space will be assumed to be part
+# of a word, including line breaks and punctuation.
+#   * If the first word is wider than the specified width, indent is ignored.
 def paragraph(text, width, indent=False):
   words = text.split(' ')
   line_length = 0
@@ -79,6 +86,10 @@ def paragraph(text, width, indent=False):
     par += "  "
 
   for idx, word in enumerate(words):
+    # if there are extra spaces in text, words will contain null strings
+    if word == '':
+      continue
+
     # it fits perfectly
     if line_length + len(strip_tags(word)) == width:
       par += word
@@ -97,17 +108,30 @@ def paragraph(text, width, indent=False):
       line_length += len(strip_tags(word)) + 1
       par += word + ' '
 
+    # line is empty and it still doesn't fit
+    elif line_length == 0 and len(strip_tags(word)) > width:
+      # add the word anyway
+      line_length += len(strip_tags(word)) + 1
+      par += word + ' '
+
+    # at initial indent and the first word doesn't fit
+    elif par == '  ' and 2 + len(strip_tags(word)) > width:
+      # delete the indent and write the word anyway
+      line_length = len(strip_tags(word)) + 1
+      par = word + ' '
+
     # it doesn't fit, so start a new line
     else:
       line_length = len(strip_tags(word)) + 1
-      par += '\r\n' + word + ' '
+      par = f"{par[:-1]}\r\n{word} "
 
   return par.rstrip()
 
 # used to read files in lib/
-def split_tag_value(line):
-  var_list = line.split()
-  return var_list[0], " ".join(var_list[1:])
+# should be deprecated since we now use sql
+# def split_tag_value(line):
+#   var_list = line.split()
+#   return var_list[0], " ".join(var_list[1:])
 
 def parse_reference(code):
   # if its just a local reference, put the zone_id to None

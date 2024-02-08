@@ -1,3 +1,4 @@
+import color
 import string_handling
 import unittest
 
@@ -109,8 +110,52 @@ class TestStringHandling(unittest.TestCase):
       )
     )
 
-    for sloppy, clean in pairs:
-      self.assertEqual(string_handling.proofread(sloppy), clean)
+    for pair in pairs:
+      self.assertEqual(string_handling.proofread(pair[0]), pair[1])
+
+  def test_yesno(self):
+    self.assertEqual(string_handling.yesno(True), "yes")
+    self.assertEqual(string_handling.yesno(False), "no")
+
+    self.assertEqual(string_handling.yesno(1), "yes")
+    self.assertEqual(string_handling.yesno(0), "no")
+
+  def test_tidy_color_tags(self):
+    pairs = (
+      (
+        "... <c3> ...",      # color code trapped between space
+        "...  <c3>..."       # space moved to left
+      ),
+      (
+        "... <c1>",          # string terminated with ' <cX>'
+        "...<c1> "           # space moved to the right
+      ),
+      (
+        ".. <c3><c1> ..",    # redundant color codes
+        "..  <c1>.."         # useless one removed
+      ),
+      (
+        ". <c4> <c5><c2>   <c3> .",
+        ".      <c3>."
+      )
+    )
+
+    for pair in pairs:
+      self.assertEqual(string_handling.tidy_color_tags(pair[0]), pair[1])
+
+  def test_proc_color(self):
+    pre = "This sentence <c1>has<c3> color <c6>codes.<c0>"
+    post = "This sentence {}has{} color {}codes.{}".format(
+      color.ansi_color_sequence(1),
+      color.ansi_color_sequence(3),
+      color.ansi_color_sequence(6),
+      color.ansi_color_sequence(0)
+    )
+
+    self.assertEqual(string_handling.proc_color(pre), post)
 
 if __name__ == '__main__':
+  #x = string_handling.proofread("This sentence , has three   periods   .  .  .")
+  #print(string_handling.proofread(x))
+  print("\nTODO: re-write the proofread function\n")
   unittest.main()

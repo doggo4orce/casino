@@ -161,16 +161,8 @@ def parse_reference(code):
 
   return None, None
 
-def proofread(paragraph):
-  # find first . or ? or !
-  # then grab all subsequent . ? !
-  # bundle them together as a terminator to a sentence
-  # format the preceding sentence and capitalize the beginning
-  # repeat
-  pass
-
 # returns a cleaned up version of "Hello , how are     you guys ?"
-def proofread2(paragraph):
+def proofread(paragraph):
 
   formatted = ""
 
@@ -178,14 +170,17 @@ def proofread2(paragraph):
 
   begin_sentence = True
 
+  # clean up capitalization, commas, and periods
   for idx, word in enumerate(lines):
 
     word = word.strip()
 
+    terminal_punct = {'.', '?', '!'}
+
     if word == '':
       continue
 
-    if word in {'.', '?', '!'}:
+    if word in terminal_punct:
       formatted += word + ' '
       begin_sentence = True
       continue
@@ -199,23 +194,37 @@ def proofread2(paragraph):
     else:
       formatted += ' ' + word
 
-    if word[-1:] in {'.', '?', '!'}:
+    if word[-1:] in terminal_punct:
       formatted += ' '
       begin_sentence = True
+
+  # clean up trailing punctuation
+  while True:
+    pattern = re.compile(r'([,.!?]) ([,.!?])')
+    match = re.search(pattern, formatted)
+
+    if match == None:
+      break
+
+    formatted = formatted.replace(
+      f"{match.group(1)} {match.group(2)}",
+      f"{match.group(1)}{match.group(2)}"
+    )
 
   return formatted.rstrip()
 
 def yesno(flag):
   if flag == True:
     return 'yes'
-  return 'no'
+  elif flag == False:
+    return 'no'
 
 def tidy_color_tags(line):
   tidy = False
 
   # first push all color tags forward to the next word
   while True:
-    pattern = re.compile(r' (<c\d+>) ')
+    pattern = re.compile(r' ((?:<c\d+>)+) ')
     match = re.search(pattern, line)
 
     if match == None:
@@ -231,18 +240,22 @@ def tidy_color_tags(line):
     if match == None:
       break
 
-    line = line.replace(f"{match.group(0)}", f"{match.group(1)}")
+    line = line.replace(match.group(0), f"{match.group(1)} ")
+
+  # now delete any redundant color tags
+  while True:
+    pattern = re.compile(r'(?:<c\d+>)+( *<c\d+>)')
+    match = re.search(pattern, line)
+
+    if match == None:
+      break
+
+    line = line.replace(match.group(0), match.group(1))
+
   return line
 
-def proc_color_codes(line):
+def proc_color(line):
   for j in range(0,256):
     line = line.replace(f'<c{j}>', ansi_color_sequence(j))
   return line
-
-
-
-if __name__ == '__main__':
-  str = "Hello <c333> world! <c0>    OK Bye\r\n" + "Hi <c12> again <c0> ok finally bye bye.      <c3>"
-  str = tidy_color_tags(str)
-  print(str)
 

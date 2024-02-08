@@ -162,7 +162,10 @@ def parse_reference(code):
   return None, None
 
 # returns a cleaned up version of "Hello , how are     you guys ?"
+# NOTE: this is quick and dirty and could use a re-write
 def proofread(paragraph):
+
+  NUM_SPACES_AFTER_PUNCTUATION = 2
 
   formatted = ""
 
@@ -181,7 +184,7 @@ def proofread(paragraph):
       continue
 
     if word in terminal_punct:
-      formatted += word + ' '
+      formatted += word + ' '*NUM_SPACES_AFTER_PUNCTUATION
       begin_sentence = True
       continue
     elif word == ',':
@@ -200,16 +203,18 @@ def proofread(paragraph):
 
   # clean up trailing punctuation
   while True:
-    pattern = re.compile(r'([,.!?]) ([,.!?])')
+    #pattern = re.compile(r'([,.!?]) ([,.!?])')
+    pattern = re.compile(r' ([,.!?])')
     match = re.search(pattern, formatted)
 
     if match == None:
       break
 
-    formatted = formatted.replace(
-      f"{match.group(1)} {match.group(2)}",
-      f"{match.group(1)}{match.group(2)}"
-    )
+    # formatted = formatted.replace(
+    #   f"{match.group(1)} {match.group(2)}",
+    #   f"{match.group(1)}{match.group(2)}"
+    # )
+    formatted = formatted.replace(match.group(0), match.group(1))
 
   return formatted.rstrip()
 

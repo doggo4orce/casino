@@ -101,8 +101,12 @@ class TestStringHandling(unittest.TestCase):
   def test_proofread(self):
     pairs = (
       (
-         "Hello , how are     you guys ?",
-         "Hello, how are you guys?"
+         "Hello , how are     you guys !? ! ?",
+         "Hello, how are you guys!?!?"
+      ),
+      (
+         "Hello ! how are you guys ? ",
+         "Hello!  How are you guys?"
       ),
       (
          "This sentence , has three   periods   .  .  .",

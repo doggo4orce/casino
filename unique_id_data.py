@@ -2,12 +2,6 @@ import dataclasses
 from mudlog import mudlog_type, mudlog
 import string_handling
 
-def valid_zone_id(zone_id):
-  return string_handling.only_alpha_and_under_score(zone_id)
-
-def valid_local_id(local_id):
-  return string_handling.only_alpha_and_under_score(local_id)
-
 class unique_id_data:
   """A unique_identifier is essentially an address for rooms 
      and proto types for objects and npcs.
@@ -26,14 +20,14 @@ class unique_id_data:
 
   @zone_id.setter
   def zone_id(self, new_zone_id):
-    if not valid_zone_id(new_zone_id):
+    if not string_handling.valid_id(new_zone_id):
       mudlog(mudlog_type.ERROR, f"trying to set invalid zone_id {new_zone_id}.")
       new_zone_id = None
     self._zone_id = new_zone_id
 
   @id.setter
   def id(self, new_id):
-    if not valid_zone_id(new_id):
+    if not string_handling.valid_id(new_id):
       mudlog(mudlog_type.ERROR, f"trying to set invalid zone_id {new_id}.")
       new_id = None
     self._id = new_id

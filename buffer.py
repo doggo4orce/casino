@@ -38,7 +38,8 @@ class buffer:
   def is_empty(self):
     return self.num_lines == 0
 
-  """add_line()            <- adds a line to the buffer
+  """add_line(line)        <- adds line to buffer
+     add_lines(lines)      <- adds lines to buffer
      insert_line(idx, str) <- adds a line in position idx and re-orders if necessary
      delete_line(idx)      <- deletes the line and re-orders
      clear()               <- empty self._contents
@@ -51,6 +52,10 @@ class buffer:
 
   def add_line(self, line):
     self._contents.append(line)
+
+  def add_lines(self, lines):
+    for line in lines:
+      self.add_line(line)
 
   def insert_line(self, idx, line):
     if idx < 0 or idx > self.num_lines:
@@ -116,6 +121,10 @@ class buffer:
             ret_val.add_line(line)
           break
 
+        # TODO: peek ahead to make sure a CLOSE_PARAGRAPH is coming
+        # otherwise, the OPEN_PARAGRAPH we just found should not be
+        # touched. Feb 9, 7:47
+
         # but if we did find a match, start splicing
         else:
           x = match.span()[0]
@@ -154,32 +163,56 @@ class buffer:
     return ret_val
 
   def display(self, width, format=True, indent=True, numbers=False, color=True):
+    temp_buf = self.make_copy()
+    final_buf = buffer()
     ret_val = ""
-    buf = self.make_copy()
 
     if format:
-      buf = buf.clean_up()
+      temp_buf = temp_buf.clean_up()
 
-    for idx, line in enumerate(buf._contents):
-      # This should also check that format=True (thur, feb 8, 7am)
-      if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
+    for line in temp_buf:
+      if format and (line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH):
         line = line[len(OPEN_PARAGRAPH):]
         line = line[:(-1)*len(CLOSE_PARAGRAPH)]
         line = string_handling.paragraph(line, width, indent)
 
-      if color:
-        line = string_handling.proc_color(line)
+      final_buf.add_line(line)
 
-      if numbers:
-        line = f"L{idx + 1}: " + line
-      
-      ret_val += line
+    ret_val = final_buf.str(numbers)
 
-      if idx != len(buf._contents) - 1:
-        ret_val += "\r\n"
+    if color:
+      ret_val = string_handling.proc_color(line)
 
     return ret_val
 
+  # def display2(self, width, format=True, indent=True, numbers=False, color=True):
+  #   ret_val = ""
+  #   buf = self.make_copy()
+
+  #   if format:
+  #     buf = buf.clean_up()
+
+  #   for idx, line in enumerate(buf._contents):
+
+  #     if format and (line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH):
+  #       line = line[len(OPEN_PARAGRAPH):]
+  #       line = line[:(-1)*len(CLOSE_PARAGRAPH)]
+  #       line = string_handling.paragraph(line, width, indent)
+
+  #     if color:
+  #       line = string_handling.proc_color(line)
+
+  #     if numbers:
+  #       line = f"L{idx + 1}: " + line
+      
+  #     ret_val += line
+
+  #     if idx != len(buf._contents) - 1:
+  #       ret_val += "\r\n"
+
+  #   return ret_val
+
+  # TODO:  adjust this to use '\r\n'.join(self._contents)'
   def str(self, numbers=False):
     ret_val = ""
     for idx, line in enumerate(self._contents):

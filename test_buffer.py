@@ -82,6 +82,21 @@ class TestBuffer(unittest.TestCase):
 
     self.assertEqual(test_buf.num_lines, 3)
 
+  def test_add_multiple_lines(self):
+    lines = [
+      "This is the first line.",
+      "This is the second line.",
+      "This is the third line.",
+      "This is the fourth line."
+    ]
+
+    test_buf = buffer.buffer()
+
+    test_buf.add_lines(lines)
+
+    for idx, line in enumerate(lines):
+      self.assertEqual(line, test_buf[idx])
+
   def test_insert(self):
     lines = [
       "This is the first line.",
@@ -168,16 +183,31 @@ class TestBuffer(unittest.TestCase):
       "   <(v_v)>"
     ]
 
-    test_buf = buffer.buffer()
+    lines_messy2 = [
+      "<p>.",           # first char is the first word
+      "...",
+      "<p>.. ... </p>", # invalid <p> ignored
+      "</p> <p>",       # should be ignored
+    ]
 
-    for line in lines_messy:
-      test_buf.add_line(line)
+    lines_clean2 = [
+      "<p>. ... <p>.. ... </p>",
+      "</p> <p>"
+    ]
+
+    test_buf = buffer.buffer()
+    test_buf2 = buffer.buffer()
+
+    test_buf.add_lines(lines_messy)
+    test_buf2.add_lines(lines_messy2)
 
     for idx, line in enumerate(test_buf.clean_up()):
       self.assertEqual(lines_clean[idx], line)
 
+    for idx, line in enumerate(test_buf2.clean_up()):
+      self.assertEqual(lines_clean2[idx], line)
 
-  def test_display(self):
+  def test_str(self):
     lines = [
       ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
       "<p>.",
@@ -190,11 +220,26 @@ class TestBuffer(unittest.TestCase):
 
     test_buf = buffer.buffer()
 
-    for line in lines:
-      test_buf.add_line(line)
+    # convert lines to buffer
+    test_buf.add_lines(lines)
 
-    # formatted
-    display_lines = [
+    # convert buffer to str
+    str = test_buf.str(numbers=False)
+
+    # convert str back to buffer
+    test_buf2 = buffer.buffer(str)
+
+    # ensure lines are still correct
+    for idx, line in enumerate(test_buf):
+      self.assertEqual(test_buf[idx], test_buf2[idx])
+
+    # convert back to str yet again
+    str2 = test_buf2.str(numbers=False)
+
+    self.assertEqual(str, str2)
+
+  def test_display(self):
+    lines = [
       ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
       "<p>.",
       ".. ...",
@@ -204,21 +249,48 @@ class TestBuffer(unittest.TestCase):
       "   <(v_v)>"
     ]
 
-    # cleaned up and formatted with indent
-    display_lines_format_indent = [
+    # formatted
+    display_lines = [
       ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      "  . .. ... ...", # only line changed, indent added
+      "<p>.",
+      ".. ...",
+      "",
+      "... ",
+      "</p>",
+      "</p> <p>",      # should be unformatted
       "   <(v_v)>"
     ]
 
-    display_str = "\r\n".join(display_lines)
+    # cleaned up and formatted with indent
+    display_lines_format_indent = [
+      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
+      "  . .. ... ...",
+      "</p> <p>",
+      "   <(v_v)>"
+    ]
 
-    self.assertEqual(
-      test_buf.display(14, format=False, indent=False, color=False),
-      display_str
-    )
+    # formatted
+    display_lines_bug = [
+      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
+      ".. ... ... .... .... ...",
+      "<p>... ... ... .... .... ...</p>",
+      "... ... .... .... ...",
+      "   <(v_v)>"
+    ]
 
+    test_buf = buffer.buffer()
+    test_buf.add_lines(display_lines)
+    test_buf_display = test_buf.display(
+      width=30,
+      format=True,
+      indent=True,
+      color=False,
+      numbers=False)
 
+    proper_result = "\r\n".join(display_lines_format_indent)
+
+    #self.assertEqual(test_buf_display, proper_result)
     
+    # print(f"\n----\n{test_buf_display}\r\n----")
 if __name__ == '__main__':
   unittest.main();

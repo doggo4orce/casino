@@ -85,6 +85,7 @@ class buffer:
     ret_val.copy_from(self)
     return ret_val
 
+  # displays the buffer contents in a single string
   def display(self, width, format=True, indent=True, numbers=False, color=True):
     ret_val = ""
     buf = self.make_copy()

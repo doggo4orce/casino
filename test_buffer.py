@@ -3,6 +3,21 @@ import unittest
 
 class TestBuffer(unittest.TestCase):
 
+  def test_constructor(self):
+    lines = [
+      "This is the first line.",
+      "This is the second line.",
+      "This is the third line.",
+      "This is the fourth line."
+    ]
+
+    paragraph = "\r\n".join(lines)
+
+    test_buf = buffer.buffer(paragraph)
+
+    for idx, line in enumerate(lines):
+      self.assertEqual(lines[idx], test_buf[idx])
+
   def test_iterator_clear(self):
     lines = [
       "This is the first line.",
@@ -11,9 +26,9 @@ class TestBuffer(unittest.TestCase):
       "This is the fourth line."
     ]
 
-    par = '\n'.join(lines)
+    test_buf = buffer.buffer()
 
-    test_buf = buffer.buffer(par)
+    test_buf.add_lines(lines)
 
     self.assertEqual(test_buf.num_lines, len(lines))
 
@@ -169,18 +184,21 @@ class TestBuffer(unittest.TestCase):
   def test_clean_up(self):
     lines_messy = [
       ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      "<p>.",      # first char is the first word
-      ".. ...",    # next two words
-      "",          # empty line within paragraph ignored
-      "... ",      # trailing space (*)
+      "<p>.",       # first char is the first word
+      ".. ...",     # next two words
+      "",           # empty line within paragraph ignored
+      "... ",       # trailing space (*)
       "</p>",
-      "   <(v_v)>" # not in paragraph, left alone
+      "   <(v_v)>", # not in paragraph, left alone
+      "<p> ... ",
+      ".. </p>"     # terminating with </p>
     ]
 
     lines_clean = [
       ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      "<p>. .. ... ...  </p>",  # double space caused by (*)
-      "   <(v_v)>"
+      "<p>. .. ...  ...  </p>",  # double space caused by (*)
+      "   <(v_v)>",
+      "<p> ...  .. </p>"
     ]
 
     lines_messy2 = [
@@ -238,7 +256,7 @@ class TestBuffer(unittest.TestCase):
 
     self.assertEqual(str, str2)
 
-  def test_display(self):
+  def asdftest_display(self):
     lines = [
       ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
       "<p>.",

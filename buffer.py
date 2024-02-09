@@ -17,10 +17,9 @@ class buffer:
     self._contents = list()
 
     if str != None:
-      lines = str.split('\n')
+      lines = str.split('\r\n')
       
-      for line in lines:
-        self._contents.append(line.strip('\r'))
+      self.add_lines(lines)
 
   def __getitem__(self, key):
     return self._contents[key]
@@ -88,6 +87,70 @@ class buffer:
     return copy.deepcopy(self)
 
   def clean_up(self):
+    original = self.str(numbers=False)
+    clean = ""
+    first_search = True
+
+    # group 0: the whole match
+    # group 1: \r\n if match starts with \r\n, otherwise null
+    # group 2: everything between paragraph tags
+    # group 3: \r\n if match ends with \r\n, otherwise null
+
+    pattern = re.compile(
+      r'((?:\r\n)?){}((?:.*?(?:\r\n)?)*?){}((?:\r\n)?)'.format(
+        OPEN_PARAGRAPH,
+        CLOSE_PARAGRAPH)
+    )
+
+    while True:
+      match = re.search(pattern, original)
+
+      if match == None:
+        clean += original
+        break
+
+      j = match.span()[0] # beginning of match
+      k = match.span()[1] # beginning of suffix
+
+      if first_search and j == 0:
+        pre_line_break = ""
+      else:
+        pre_line_break = "\r\n"
+
+      post_line_break = match.group(3)
+
+      paragraph = match.group(2).replace('\r\n', ' ')
+
+      clean += f"{original[:j]}{pre_line_break}{OPEN_PARAGRAPH}{paragraph}{CLOSE_PARAGRAPH}{post_line_break}"
+      original = original[k:]
+
+      first_search = False
+
+    return buffer(clean)    
+
+  def clean_up2(self):
+    ret_val = buffer() # store the return value
+    line_buf = ""      # store progress while building line
+    par_buf = ""       # store progress while building paragraph
+
+    for idx, line in self._contents:
+      if not p_open:
+        pattern = re.compile(OPEN_PARAGRAPH)
+        match = re.search(pattern, line)
+
+        if match == None:
+          ret_val.add_line(line)
+          continue
+
+        j = match.span()[0] # beginning of match
+        k = match.span()[1] # beginning of suffix
+
+        # line[:j] <-- what we will add to ret_val if </p> isn't also in this line
+        # line[k:] <-- what we will set p_buf to if it doesn't contain </p>
+
+    return None
+
+  def clean_up3(self):
     ret_val = buffer()
     p_buffer = ""
     p_open = False

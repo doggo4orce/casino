@@ -138,8 +138,8 @@ class TestBuffer(unittest.TestCase):
     test_buf1 = buffer.buffer()
     test_buf2 = buffer.buffer()
 
-    for j in range(0,3):
-      test_buf1.add_line(lines[j])
+    for line in lines:
+      test_buf1.add_line(line)
 
     test_buf2 = test_buf1.make_copy()
 
@@ -151,13 +151,73 @@ class TestBuffer(unittest.TestCase):
     # check that changing the original doesn't change the first
     self.assertNotEqual(test_buf1[0], test_buf2[0])
 
+  def test_clean_up(self):
+    lines_messy = [
+      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
+      "<p>.",      # first char is the first word
+      ".. ...",    # next two words
+      "",          # empty line within paragraph ignored
+      "... ",      # trailing space (*)
+      "</p>",
+      "   <(v_v)>" # not in paragraph, left alone
+    ]
+
+    lines_clean = [
+      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
+      "<p>. .. ... ...  </p>",  # double space caused by (*)
+      "   <(v_v)>"
+    ]
+
+    test_buf = buffer.buffer()
+
+    for line in lines_messy:
+      test_buf.add_line(line)
+
+    for idx, line in enumerate(test_buf.clean_up()):
+      self.assertEqual(lines_clean[idx], line)
+
+
   def test_display(self):
     lines = [
-      "The quick brown ",
-      " fox jumped over",
-      "       the",
-      "lazy dog."
+      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
+      "<p>.",
+      ".. ...",
+      "",
+      "... ",
+      "</p>",
+      "   <(v_v)>"
     ]
+
+    test_buf = buffer.buffer()
+
+    for line in lines:
+      test_buf.add_line(line)
+
+    # formatted
+    display_lines = [
+      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
+      "<p>.",
+      ".. ...",
+      "",
+      "... ",
+      "</p>",
+      "   <(v_v)>"
+    ]
+
+    # cleaned up and formatted with indent
+    display_lines_format_indent = [
+      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
+      "  . .. ... ...", # only line changed, indent added
+      "   <(v_v)>"
+    ]
+
+    display_str = "\r\n".join(display_lines)
+
+    self.assertEqual(
+      test_buf.display(14, format=False, indent=False, color=False),
+      display_str
+    )
+
 
     
 if __name__ == '__main__':

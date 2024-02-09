@@ -44,8 +44,8 @@ class buffer:
      clear()               <- empty self._contents
      copy_from(buf)        <- resets the contents to be identical from those of buf
      make_copy()           <- returns a new buffer with identical contents
+     clean_up()            <- puts paragraphs on separate single lines
      display(width)        <- returns buffer as string formatted to width.
-     clean_up()            <- returns lines with paragraphs tidied up, optionally fix typos
      str(numbers)          <- converts to string, called by __str__ with numbers=False
      preview(max_len)      <- shows up to the first max_len chars of first non-empty line"""
 
@@ -82,32 +82,6 @@ class buffer:
   def make_copy(self):
     return copy.deepcopy(self)
 
-  def display(self, width, format=True, indent=True, numbers=False, color=True):
-    ret_val = ""
-    buf = self.make_copy()
-
-    if format:
-      buf = buf.clean_up()
-
-    for idx, line in enumerate(buf._contents):
-      if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
-        line = line[len(OPEN_PARAGRAPH):]
-        line = line[:(-1)*len(CLOSE_PARAGRAPH)]
-        line = string_handling.paragraph(line, width, indent)
-
-      if color:
-        line = string_handling.proc_color_codes(line)
-
-      if numbers:
-        line = f"L{idx + 1}: " + line
-      
-      ret_val += line
-
-      if idx != len(buf._contents) - 1:
-        ret_val += "\r\n"
-
-    return ret_val
-
   def clean_up(self):
     ret_val = buffer()
     p_buffer = ""
@@ -115,6 +89,10 @@ class buffer:
 
     # go through one line at a time
     for line in self._contents:
+
+      # ignore empty lines within a paragraph
+      if p_open and line == "":
+        continue
 
       while (True):
         # if we're in the middle of a paragraph, find out if it closes on this line
@@ -172,6 +150,33 @@ class buffer:
 
         if line == "":
           break
+
+    return ret_val
+
+  def display(self, width, format=True, indent=True, numbers=False, color=True):
+    ret_val = ""
+    buf = self.make_copy()
+
+    if format:
+      buf = buf.clean_up()
+
+    for idx, line in enumerate(buf._contents):
+      # This should also check that format=True (thur, feb 8, 7am)
+      if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
+        line = line[len(OPEN_PARAGRAPH):]
+        line = line[:(-1)*len(CLOSE_PARAGRAPH)]
+        line = string_handling.paragraph(line, width, indent)
+
+      if color:
+        line = string_handling.proc_color(line)
+
+      if numbers:
+        line = f"L{idx + 1}: " + line
+      
+      ret_val += line
+
+      if idx != len(buf._contents) - 1:
+        ret_val += "\r\n"
 
     return ret_val
 

@@ -5,7 +5,7 @@ class TestSpecProc(unittest.TestCase):
   def test_spec_proc(self):
 
     def f(arg1,arg2):
-      pass
+      return 12
 
     spec1 = spec_proc_data.spec_proc_data("baker complains", f)
     spec2 = spec_proc_data.spec_proc_data("dealer waves")
@@ -27,6 +27,9 @@ class TestSpecProc(unittest.TestCase):
 
     # should cause error log since f expects two args
     spec1.call(1,2,3)
+
+    # should not complain
+    self.assertEqual(spec1.call(1,2), 12)
 
     # should cause error log since spec2 has no function
     spec2.call(1,2)

@@ -86,6 +86,7 @@ class buffer:
   def make_copy(self):
     return copy.deepcopy(self)
 
+  # EXPLAIN EXACTLY WHAT THIS DOES
   def clean_up(self):
     original = self.str(numbers=False)
     clean = ""
@@ -121,7 +122,15 @@ class buffer:
 
       paragraph = match.group(2).replace('\r\n', ' ')
 
-      clean += f"{original[:j]}{pre_line_break}{OPEN_PARAGRAPH}{paragraph}{CLOSE_PARAGRAPH}{post_line_break}"
+      clean += "{}{}{}{}{}{}".format(
+        original[:j],
+        pre_line_break,
+        OPEN_PARAGRAPH,
+        paragraph,
+        CLOSE_PARAGRAPH,
+        post_line_break
+      )
+
       original = original[k:]
 
       first_search = False
@@ -225,23 +234,21 @@ class buffer:
 
     return ret_val
 
-  def display(self, width, format=True, indent=True, numbers=False, color=True):
+  def display(self, width, indent=True, numbers=False, color=True):
     temp_buf = self.make_copy()
     final_buf = buffer()
     ret_val = ""
-
-    if format:
-      temp_buf = temp_buf.clean_up()
+    temp_buf = temp_buf.clean_up()
 
     for line in temp_buf:
-      if format and (line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH):
-        line = line[len(OPEN_PARAGRAPH):]
-        line = line[:(-1)*len(CLOSE_PARAGRAPH)]
+      if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
+        line = line[len(OPEN_PARAGRAPH):(-1)*len(CLOSE_PARAGRAPH)]
         line = string_handling.paragraph(line, width, indent)
 
       final_buf.add_line(line)
 
-    ret_val = final_buf.str(numbers)
+    if numbers:
+      ret_val = final_buf.str(numbers)
 
     if color:
       ret_val = string_handling.proc_color(line)

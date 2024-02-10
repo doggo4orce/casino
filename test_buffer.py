@@ -256,59 +256,39 @@ class TestBuffer(unittest.TestCase):
 
     self.assertEqual(str, str2)
 
-  def asdftest_display(self):
+  def test_display(self):
     lines = [
-      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      "<p>.",
-      ".. ...",
+      "... . . . .",
+      "      .",
+      "<p>... ..... ..... ",
+      " ... ...... .... ... ....",
+      " ....",
+      " </p>",
       "",
       "... ",
       "</p>",
-      "   <(v_v)>"
+      "   ......."
     ]
 
-    # formatted
     display_lines = [
-      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      "<p>.",
-      ".. ...",
-      "",
-      "... ",
-      "</p>",
-      "</p> <p>",      # should be unformatted
-      "   <(v_v)>"
+      "... . . . .",
+      "      .",
+      "<p>... ..... ..... ... ...... .... ... .... ....</p>",
+      "</p> <p>",      # lonely tags ignored
+      "   ......."
     ]
 
-    # cleaned up and formatted with indent
-    display_lines_format_indent = [
-      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      "  . .. ... ...",
-      "</p> <p>",
-      "   <(v_v)>"
-    ]
+    original_buf = buffer.buffer()
+    original_buf.add_lines(lines)
 
-    # formatted
-    display_lines_bug = [
-      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      ".. ... ... .... .... ...",
-      "<p>... ... ... .... .... ...</p>",
-      "... ... .... .... ...",
-      "   <(v_v)>"
-    ]
-
-    test_buf = buffer.buffer()
-    test_buf.add_lines(display_lines)
-    test_buf_display = test_buf.display(
+    display_buf = original_buf.display(
       width=30,
-      format=True,
       indent=True,
       color=False,
       numbers=False)
 
-    proper_result = "\r\n".join(display_lines_format_indent)
+    for idx, line in enumerate(display_buf):
+      self.assertEqual(display_buf[idx], display_lines[idx])
 
-    #self.assertEqual(test_buf_display, proper_result)
-    
-    # print(f"\n----\n{test_buf_display}\r\n----")
 if __name__ == '__main__':
   unittest.main();

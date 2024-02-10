@@ -26,7 +26,6 @@ def olc_writing_follow_up(d):
   else:
     d.write("You shouldn't see this!\r\n")
     
-
 def do_mlist(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)

@@ -1,6 +1,6 @@
 import spec_proc_data
 
-class heartbeat_proc_data(spec_proc_data.spec_proc_data):
+class hbeat_proc_data(spec_proc_data.spec_proc_data):
   """Heartbeat Procs are called once per heartbeat
      mud = the mud object
      me = the character or object to which the proc is attached

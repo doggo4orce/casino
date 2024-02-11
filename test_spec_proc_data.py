@@ -2,40 +2,35 @@ import spec_proc_data
 import unittest
 
 class TestSpecProc(unittest.TestCase):
+  
   def test_spec_proc(self):
+    spec_proc_data.spec_proc_data.set_expected_args("spec", "proc")
 
-    def f(arg1,arg2):
-      return 12
+    self.assertEqual(spec_proc_data.spec_proc_data.expected_args, ["spec", "proc"])
 
-    spec1 = spec_proc_data.spec_proc_data("baker complains", f)
-    spec2 = spec_proc_data.spec_proc_data("dealer waves")
+    def sp_bad(arg1, arg2):
+      return 1
 
-    self.assertEqual(spec1.name, "baker complains")
-    self.assertEqual(spec2.name, "dealer waves")
+    def sp_good(spec, proc):
+      return 2
 
-    self.assertIs(spec1.func, f)
-    self.assertEqual(spec2.func, None)
+    spec_bad = spec_proc_data.spec_proc_data("spec proc bad", sp_bad)
+    spec_good = spec_proc_data.spec_proc_data("spec proc good", sp_good)
 
-    self.assertEqual(spec1.num_args, 2)
-    self.assertEqual(spec1.args, ['arg1', 'arg2'])
+    self.assertEqual(spec_bad.name, "spec proc bad")
+    self.assertEqual(spec_good.name, "spec proc good")
 
-    self.assertIn("arg1", spec1.args)
-    self.assertIn("arg2", spec1.args)
+    self.assertEqual(spec_bad.func, sp_bad)
+    self.assertEqual(spec_good.func, sp_good)
 
-    self.assertFalse(spec1.check(1,2,3))
-    self.assertFalse(spec2.check(1,2))
+    self.assertFalse(spec_bad.check("x", "y"))
+    self.assertTrue(spec_bad.check("arg1", "arg2"))
 
-    # should cause error log since f expects two args
-    spec1.call(1,2,3)
+    self.assertFalse(spec_good.check("x", "y"))
+    self.assertTrue(spec_good.check("spec", "proc"))
 
-    # should not complain
-    self.assertEqual(spec1.call(1,2), 12)
-
-    # should cause error log since spec2 has no function
-    spec2.call(1,2)
-
-    self.assertFalse(spec1.consistent)
-    self.assertFalse(spec2.consistent)
+    self.assertFalse(spec_bad.consistent)
+    self.assertTrue(spec_good.consistent)
 
 if __name__ == "__main__":
   unittest.main()

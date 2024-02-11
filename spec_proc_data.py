@@ -2,12 +2,18 @@ import inspect
 from mudlog import mudlog_type, mudlog
 import string_handling
 
-# IDEA: add 'behaviour' field to npc/npc_protos to manage the lists of spec_procs
 # IDEA: add class variable which is a list of all available cmd_trigger functions so they can be assigned using OLC
 
 class spec_proc_data:
   # this is deliberately empty, and designed to be over-written by derived classes
   expected_args = []
+
+  @classmethod
+  def set_expected_args(cls, *args):
+    cls.expected_args = list()
+
+    for arg in args:
+      cls.expected_args.append(arg)
 
   """Creates a Special Procedure which can be attached to objects/characters/rooms
      name       = name of special procedure, for OLC and debug info
@@ -36,7 +42,7 @@ class spec_proc_data:
     return len(self.args)
   @property
   def consistent(self):
-    return self.check(self.expected_args)
+    return self.check(*self.expected_args)
 
   @name.setter
   def name(self, new_name):
@@ -48,8 +54,9 @@ class spec_proc_data:
     if arg_error != None:
       mudlog(mudlog_type.WARNING, arg_error)
 
-  """arg_error()        <-- describe problems with function parameters in the form of a paragraph
-     call(*args)        <-- pass args to self.func"""
+  """arg_error()        <- returns description of problem parameters
+     check(*args)       <- checks if args are expected by self.func
+     call(*args)        <- pass args to self.func"""
      
   def arg_error(self):
     ret_val = f"spec_proc({self.name})\r\n"
@@ -79,8 +86,8 @@ class spec_proc_data:
     return None
 
   def check(self, *args):
-    return self.func != None and self.args == args
-
+    return self.func != None and self.args == list(args)
+    
   def call(self, *args):
     if self.func == None:
       error = f"spec_proc({self.name})\r\n"

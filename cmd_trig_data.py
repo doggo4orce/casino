@@ -1,7 +1,7 @@
 import enum
 import spec_proc_data
 
-class cmd_trigger_data(spec_proc_data.spec_proc_data):
+class cmd_trig_data(spec_proc_data.spec_proc_data):
   """Command Triggers are called every time a player in the room enters a command
      mud = the mud object
      me = the character or object to which the trigger is attached
@@ -18,14 +18,14 @@ class cmd_trigger_data(spec_proc_data.spec_proc_data):
    Depending on whether and how much this list (and maybe even other
    lists) of messages grow(s), command_trigger.func might be adjusted
    to return a set"""
-class prefix_command_trigger_messages(enum.IntEnum):
+class prefix_cmd_trig_messages(enum.IntEnum):
   BLOCK_INTERPRETER = 1 # blocks command and all suffix_command_triggers
   RUN_INTERPRETER   = 2 # run command parser and any suffix_command_triggers
 
 # fired on mobs in the room before command is processed
-class prefix_command_trigger(cmd_trigger_data):
+class prefix_cmd_trig_data(cmd_trig_data):
   pass
 
 # fired on mobs in room after command is proceseed
-class suffix_command_trigger(cmd_trigger_data):
+class suffix_cmd_trig_data(cmd_trig_data):
   pass

@@ -6,8 +6,7 @@ import logging
 import re
 import string_handling
 
-EDITOR_HELP_STR = 
-"""Editor Commands
+EDITOR_HELP_STR = """Editor Commands
 ---------------------------------------------------
   /c                      - clear current buffer    
   /h                      - bring up this menu      

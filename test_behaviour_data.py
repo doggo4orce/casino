@@ -1,29 +1,42 @@
 import behaviour_data
-import cmd_trigger_data
-import heartbeat_proc_data
+import cmd_trig_data
+import hbeat_proc_data
 import spec_proc_data
 import unittest
-from unittest import mock
 
 class TestBehaviourData(unittest.TestCase):
-  def test_constructor(self):
-    test_behave = behaviour_data.behaviour_data()
-
   def test_assign(self):
 
-    def f(arg1, arg2):
-      return
+    def spec_proc_f(a,b):
+      return a
 
-    mock_spec1 = mock.Mock(spec=heartbeat_proc_data.heartbeat_proc_data)
-    mock_spec1.name.return_value = "mock heartbeat proc"
-    mock_spec1.func.return_value = f
-    mock_spec1.args.return_value = heartbeat_proc_data.heartbeat_proc_data.expected_args
+    spec_proc = spec_proc_data.spec_proc_data("general spec", spec_proc_f)
+
+    def prefix_cmd_trig_g(a,b):
+      return b
+
+    cmd_trig_data.cmd_trig_data.expected_args = ['a','b']
+    prefix_cmd_trig = cmd_trig_data.prefix_cmd_trig_data("prefix cmd trig", prefix_cmd_trig_g)
+
+    def suffix_cmd_trig_h(a,b):
+      return a + b
+
+    suffix_cmd_trig = cmd_trig_data.suffix_cmd_trig_data("suffix cmd trig", suffix_cmd_trig_h)
+
+    def hbeat_proc_q(a,b,c):
+      return c
+
+    hbeat_proc_data.hbeat_proc_data.expected_args = ['a','b','c']
+    hbeat_proc = hbeat_proc_data.hbeat_proc_data("heartbeat proc", hbeat_proc_q)
 
     test_behave = behaviour_data.behaviour_data()
 
-    test_behave.assign_spec_proc(mock_spec1)
+    test_behave.assign(spec_proc)
+    test_behave.assign(prefix_cmd_trig)
+    test_behave.assign(suffix_cmd_trig)
+    test_behave.assign(hbeat_proc)
 
-    self.assertTrue(isinstance(mock_spec1, heartbeat_proc_data.heartbeat_proc_data))
+    print(test_behave)
 
 if __name__ == "__main__":
   unittest.main()

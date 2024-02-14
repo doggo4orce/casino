@@ -1,47 +1,71 @@
-import cmd_trigger_data
-import heartbeat_proc_data
+import cmd_trig_data
+from color import *
+import hbeat_proc_data
 from mudlog import mudlog, mudlog_type
 import spec_proc_data
 
 class behaviour_data:
+  """Stores all special procedures for a room/object/character.
+     prefix_cmd_trigs = triggered by commands processed before command
+     suffix_cmd_trigs = triggered by commands, processed after command
+     hbeat_procs = heartbeat procs, called once every heartbeat"""
   def __init__(self):
-    self.prefix_command_triggers = list()
-    self.suffix_command_triggers = list()
-    self.heart_beat_procs = list()
+    self.prefix_cmd_trigs = list()
+    self.suffix_cmd_trigs = list()
+    self.hbeat_procs = list()
 
   @property
-  def prefix_command_triggers(self):
-    return self._prefix_command_triggers
+  def prefix_cmd_trigs(self):
+    return self._prefix_cmd_trigs
   @property
-  def suffix_command_triggers(self):
-    return self._suffix_command_triggers
+  def suffix_cmd_trigs(self):
+    return self._suffix_cmd_trigs
   @property
-  def heart_beat_procs(self):
-    return self._heart_beat_procs
+  def hbeat_procs(self):
+    return self._hbeat_procs
 
-  @prefix_command_triggers.setter
-  def prefix_command_triggers(self, new_triggers):
-    self._prefix_command_triggers = new_triggers
-  @suffix_command_triggers.setter
-  def suffix_command_triggers(self, new_triggers):
-    self._suffix_command_triggers = new_triggers
-  @heart_beat_procs.setter
-  def heart_beat_procs(self, new_triggers):
-    self._heart_beat_procs = new_triggers
+  @prefix_cmd_trigs.setter
+  def prefix_cmd_trigs(self, new_triggers):
+    self._prefix_cmd_trigs = new_triggers
+  @suffix_cmd_trigs.setter
+  def suffix_cmd_trigs(self, new_triggers):
+    self._suffix_cmd_trigs = new_triggers
+  @hbeat_procs.setter
+  def hbeat_procs(self, new_triggers):
+    self._hbeat_procs = new_triggers
 
-  def assign_spec_proc(self, spec_proc):
+  def assign(self, spec_proc):
     if not spec_proc.consistent:
-      mudlog(mudlog_type.ERROR, spec_proc.arg_error())
+      msg = f"Assignment of inconsistent spec_proc '{spec_proc.name}'."
+      mudlog(mudlog_type.ERROR, msg)
       return
-    if isinstance(spec_proc, cmd_trigger_data.prefix_command_trigger):
-      self.prefix_command_triggers.append(spec_proc)
-    elif isinstance(spec_proc, cmd_trigger_data.suffix_command_trigger):
-      self.suffix_command_triggers.append(spec_proc)
-    elif isinstance(spec_proc, heartbeat_proc_data.heartbeat_proc_data):
-      self.heart_beat_procs.append(spec_proc)
+    if isinstance(spec_proc, cmd_trig_data.prefix_cmd_trig_data):
+      self.prefix_cmd_trigs.append(spec_proc)
+    elif isinstance(spec_proc, cmd_trig_data.suffix_cmd_trig_data):
+      self.suffix_cmd_trigs.append(spec_proc)
+    elif isinstance(spec_proc, hbeat_proc_data.hbeat_proc_data):
+      self.hbeat_procs.append(spec_proc)
     else:
-      mudlog(mudlog_type.ERROR, f"Assigning unrecognized spec_proc type: {spec_proc.name}.")
+      mudlog(mudlog_type.ERROR, f"Assignment of unrecognized spec_proc type: '{spec_proc.name}'.")
 
   def assign_spec_procs(self, spec_procs):
     for spec_proc in spec_procs:
       self.assign_spec_proc(spec_proc)
+
+  def __str__(self):
+    p_cmd_trigs = ' '.join([spec.func.__name__.upper() for spec in self.prefix_cmd_trigs])
+    s_cmd_trigs = ' '.join([spec.func.__name__.upper() for spec in self.suffix_cmd_trigs])
+    h_procs = ' '.join([spec.func.__name__.upper() for spec in self.hbeat_procs])
+
+    if len(p_cmd_trigs) == 0:
+      p_cmd_trigs = "None"
+    if len(s_cmd_trigs) == 0:
+      s_cmd_trigs = "None"
+    if len(h_procs) == 0:
+      h_procs = "None"
+
+    ret_val = f"Prefix Cmd Trigs: {CYAN}{p_cmd_trigs}{NORMAL}\r\n"
+    ret_val += f"Suffix Cmd Trigs: {CYAN}{s_cmd_trigs}{NORMAL}\r\n"
+    ret_val += f"Heartbeat Procs: {CYAN}{h_procs}{NORMAL}"
+
+    return ret_val

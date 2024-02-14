@@ -9,11 +9,11 @@ import unique_id_data
 class character_data:
   """Creates a new char(acter) which can act within the world.
 
-    entity    = dataclass encapsulating name, appearance and location (see structs.py)
+    entity    = name, appearance and location
     name      = characters name (wrapped from entity)
     Name      = characters name capitalized (wrapped from entity)
     desc      = characters description as a buffer (wrapped from entity)
-    ldec      = how character is listed in a room to others (wrapped from entity)
+    ldesc      = how character is listed in a room to others (wrapped from entity)
     room      = what room character is in (wrapped from entity)
     namelist  = list of aliases for character to be accessed by (wrapped from entity)
     inventory = iterable container consisting of all objects held (see object.py)

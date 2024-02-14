@@ -6,12 +6,12 @@ import unique_id_data
 class entity_proto_data:
   """Used as blueprints to create entities."""
   name: str="an unfinished entity proto"
-  ldesc: str="An unfinished entity proto is here."
   namelist: list=None
+  ldesc: str="An unfinished entity proto is here."
   desc: str="This entity proto looks unfinished."
 
   def __post_init__(self):
-    self.namelist = ["unfinished", "entity proto"]
+    self.namelist = ["unfinished", "entity", "proto"]
   
 class entity_data:
   """name     = what to be referred to as
@@ -22,26 +22,25 @@ class entity_data:
   def __init__(self, proto=None):
     if proto == None:
       self.name = "an unfinished entity"
-      self.ldesc = "An unfinished entity is here."
       self.namelist = ["unfinished", "entity"]
+      self.ldesc = "An unfinished entity is here."
       self.desc = "This entity looks unfinished."
-      self.room = None
     else:
       self.name = proto.name
-      self.ldesc = proto.ldesc
       self.namelist = copy.copy(proto.namelist)
+      self.ldesc = proto.ldesc
       self.desc = proto.desc
-      self.room = None
+    self.room = None
 
   @property
   def name(self):
     return self._name
   @property
-  def ldesc(self):
-    return self._ldesc
-  @property
   def namelist(self):
     return self._namelist
+  @property
+  def ldesc(self):
+    return self._ldesc
   @property
   def desc(self):
     return self._desc
@@ -52,17 +51,14 @@ class entity_data:
   @name.setter
   def name(self, new_name):
     self._name = new_name
-  @ldesc.setter
-  def ldesc(self, new_ldesc):
-    self._ldesc = new_ldesc
-
   @namelist.setter
   def namelist(self, new_namelist):
     self._namelist = list()
-
     for alias in new_namelist:
       self.add_alias(alias)
-
+  @ldesc.setter
+  def ldesc(self, new_ldesc):
+    self._ldesc = new_ldesc
   @desc.setter
   def desc(self, new_desc):
     self._desc = new_desc
@@ -73,6 +69,7 @@ class entity_data:
   """Additional Properties:
      Name     = same as name but capitalized
      in_zone  = zone_id of entity's location (if any)"""
+
   @property
   def Name(self):
     return self.name.capitalize()

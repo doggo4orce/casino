@@ -10,7 +10,7 @@ import string_handling
 OPEN_PARAGRAPH  = "<p>"
 CLOSE_PARAGRAPH = "</p>"
 
-class buffer:
+class buffer_data:
   """[ITERABLE] Used to keep organize editor input for writing rooms, messages, etc.
      contents = the raw contents of buffer, one line at a time"""
   def __init__(self, str=None):
@@ -137,11 +137,11 @@ class buffer:
 
       first_search = False
 
-    return buffer(clean)    
+    return buffer_data(clean)    
 
   def display(self, width, indent=True, numbers=False, color=True):
     temp_buf = self.make_copy()
-    final_buf = buffer()
+    final_buf = buffer_data()
     ret_val = ""
     temp_buf = temp_buf.clean_up()
 

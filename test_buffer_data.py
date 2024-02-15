@@ -1,4 +1,4 @@
-import buffer
+import buffer_data
 import unittest
 
 class TestBuffer(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestBuffer(unittest.TestCase):
 
     paragraph = "\r\n".join(lines)
 
-    test_buf = buffer.buffer(paragraph)
+    test_buf = buffer_data.buffer_data(paragraph)
 
     for idx, line in enumerate(lines):
       self.assertEqual(lines[idx], test_buf[idx])
@@ -26,7 +26,7 @@ class TestBuffer(unittest.TestCase):
       "This is the fourth line."
     ]
 
-    test_buf = buffer.buffer()
+    test_buf = buffer_data.buffer_data()
 
     test_buf.add_lines(lines)
 
@@ -48,7 +48,7 @@ class TestBuffer(unittest.TestCase):
       "This is the fourth line."
     ]
 
-    test_buf = buffer.buffer();
+    test_buf = buffer_data.buffer_data();
 
     self.assertTrue(test_buf.is_empty)
     self.assertEqual(test_buf.num_lines, 0)
@@ -69,7 +69,7 @@ class TestBuffer(unittest.TestCase):
     self.assertEqual(test_buf.num_lines, 3)
 
     # reset
-    test_buf = buffer.buffer()
+    test_buf = buffer_data.buffer_data()
 
     for line in lines:
       test_buf.add_line(line)
@@ -84,7 +84,7 @@ class TestBuffer(unittest.TestCase):
     self.assertEqual(test_buf.num_lines, 3)
 
     # reset
-    test_buf = buffer.buffer()
+    test_buf = buffer_data.buffer_data()
 
     for line in lines:
       test_buf.add_line(line)
@@ -105,7 +105,7 @@ class TestBuffer(unittest.TestCase):
       "This is the fourth line."
     ]
 
-    test_buf = buffer.buffer()
+    test_buf = buffer_data.buffer_data()
 
     test_buf.add_lines(lines)
 
@@ -120,7 +120,7 @@ class TestBuffer(unittest.TestCase):
       "This is the fourth line."
     ]
 
-    test_buf = buffer.buffer()
+    test_buf = buffer_data.buffer_data()
 
     for j in range(0,3):
       test_buf.add_line(lines[j])
@@ -141,8 +141,8 @@ class TestBuffer(unittest.TestCase):
       "This is the fourth line."
     ]
 
-    test_buf1 = buffer.buffer()
-    test_buf2 = buffer.buffer()
+    test_buf1 = buffer_data.buffer_data()
+    test_buf2 = buffer_data.buffer_data()
 
     for j in range(0,3):
       test_buf1.add_line(lines[j])
@@ -165,8 +165,8 @@ class TestBuffer(unittest.TestCase):
       "This is the fourth line."
     ]
 
-    test_buf1 = buffer.buffer()
-    test_buf2 = buffer.buffer()
+    test_buf1 = buffer_data.buffer_data()
+    test_buf2 = buffer_data.buffer_data()
 
     for line in lines:
       test_buf1.add_line(line)
@@ -213,8 +213,8 @@ class TestBuffer(unittest.TestCase):
       "</p> <p>"
     ]
 
-    test_buf = buffer.buffer()
-    test_buf2 = buffer.buffer()
+    test_buf = buffer_data.buffer_data()
+    test_buf2 = buffer_data.buffer_data()
 
     test_buf.add_lines(lines_messy)
     test_buf2.add_lines(lines_messy2)
@@ -236,7 +236,7 @@ class TestBuffer(unittest.TestCase):
       "   <(v_v)>"
     ]
 
-    test_buf = buffer.buffer()
+    test_buf = buffer_data.buffer_data()
 
     # convert lines to buffer
     test_buf.add_lines(lines)
@@ -245,7 +245,7 @@ class TestBuffer(unittest.TestCase):
     str = test_buf.str(numbers=False)
 
     # convert str back to buffer
-    test_buf2 = buffer.buffer(str)
+    test_buf2 = buffer_data.buffer_data(str)
 
     # ensure lines are still correct
     for idx, line in enumerate(test_buf):
@@ -278,7 +278,7 @@ class TestBuffer(unittest.TestCase):
       "   ......."
     ]
 
-    original_buf = buffer.buffer()
+    original_buf = buffer_data.buffer_data()
     original_buf.add_lines(lines)
 
     display_buf = original_buf.display(

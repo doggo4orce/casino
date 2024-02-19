@@ -13,7 +13,7 @@ class TestBehaviourData(unittest.TestCase):
     spec_proc = spec_proc_data.spec_proc_data("general spec", spec_proc_f)
 
     def prefix_cmd_trig_g(a,b):
-      return b
+      retsurn b
 
     cmd_trig_data.cmd_trig_data.expected_args = ['a','b']
     prefix_cmd_trig = cmd_trig_data.prefix_cmd_trig_data("prefix cmd trig", prefix_cmd_trig_g)

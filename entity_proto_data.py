@@ -1,10 +1,11 @@
 import dataclasses
+import namelist_data
 
 class entity_proto_data:
   """Used as blueprints to create entities."""
   def __init__(self):
     self.name ="an unfinished entity proto"
-    self.namelist = ["unfinished", "entity", "proto"]
+    self.namelist = namelist_data.namelist_data("unfinished", "entity", "proto")
     self.ldesc = "An unfinished entity proto is here."
     self.desc = "This entity proto looks unfinished."
 

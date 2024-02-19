@@ -1,5 +1,6 @@
 import copy
 import dataclasses
+import namelist_data
 import unique_id_data
   
 class entity_data:
@@ -11,7 +12,7 @@ class entity_data:
   def __init__(self, proto=None):
     if proto == None:
       self.name = "an unfinished entity"
-      self.namelist = ["unfinished", "entity"]
+      self.namelist = namelist_data.namelist_data("unfinished", "entity")
       self.ldesc = "An unfinished entity is here."
       self.desc = "This entity looks unfinished."
     else:
@@ -42,9 +43,9 @@ class entity_data:
     self._name = new_name
   @namelist.setter
   def namelist(self, new_namelist):
-    self._namelist = list()
+    self._namelist = namelist_data.namelist_data()
     for alias in new_namelist:
-      self.add_alias(alias)
+      self._namelist.add_alias(alias)
   @ldesc.setter
   def ldesc(self, new_ldesc):
     self._ldesc = new_ldesc
@@ -69,22 +70,7 @@ class entity_data:
       return None
     return self.room.zone_id
 
-  """has_alias(alias)    <- check if alias is in self.namelist
-     add_alias(alias)    <- adds a new alias to self.namelist
-     remove_alias(alias) <- removes alias from self.namelist
-     debug()             <- display state in readable string"""
-
-  def has_alias(self, alias):
-    return alias in self.namelist
-
-  def add_alias(self, alias):
-    if not self.has_alias(alias):
-      self.namelist.append(alias)
-      
-  def remove_alias(self, alias):
-    if self.has_alias(alias):
-      self.namelist.remove(alias)
-
+  # display state in readable string
   def debug(self):
     ret_val = f"Name: {self.name}\r\n"
     ret_val += f"LDesc: {self.ldesc}\r\n"

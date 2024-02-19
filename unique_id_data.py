@@ -20,14 +20,18 @@ class unique_id_data:
 
   @zone_id.setter
   def zone_id(self, new_zone_id):
-    if not string_handling.valid_id(new_zone_id):
+    if new_zone_id == None:
+      self._zone_id = None
+    elif not string_handling.valid_id(new_zone_id):
       mudlog(mudlog_type.ERROR, f"trying to set invalid zone_id {new_zone_id}.")
       new_zone_id = None
     self._zone_id = new_zone_id
 
   @id.setter
   def id(self, new_id):
-    if not string_handling.valid_id(new_id):
+    if new_id == None:
+      self._id = None
+    elif not string_handling.valid_id(new_id):
       mudlog(mudlog_type.ERROR, f"trying to set invalid zone_id {new_id}.")
       new_id = None
     self._id = new_id

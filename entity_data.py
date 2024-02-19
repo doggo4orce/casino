@@ -1,17 +1,6 @@
 import copy
 import dataclasses
 import unique_id_data
-
-@dataclasses.dataclass
-class entity_proto_data:
-  """Used as blueprints to create entities."""
-  name: str="an unfinished entity proto"
-  namelist: list=None
-  ldesc: str="An unfinished entity proto is here."
-  desc: str="This entity proto looks unfinished."
-
-  def __post_init__(self):
-    self.namelist = ["unfinished", "entity", "proto"]
   
 class entity_data:
   """name     = what to be referred to as

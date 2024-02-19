@@ -25,5 +25,15 @@ class TestUniqueID(unittest.TestCase):
     self.assertEqual(uid.zone_id, "stockville")
     self.assertEqual(uid.id, "casino")
 
+    uid.zone_id = None
+    self.assertEqual(uid.zone_id, None)
+
+    self.assertEqual(str(uid), "None[casino]")
+
+    uid.id = None
+    self.assertEqual(uid.id, None)
+
+    print(str(uid))
+
 if __name__ == "__main__":
   unittest.main()

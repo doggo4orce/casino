@@ -1,4 +1,4 @@
-import object_data
+#import object_data
 
 class inventory:
   """Creates an inventory of objects (for rooms, characters, and containers)
@@ -40,3 +40,13 @@ class inventory_iterator:
       self._index += 1
       return result
     raise StopIteration
+
+if __name__ == "__main__":
+  inv = inventory()
+
+  inv.insert("dagger")
+  inv.insert("sword")
+
+  for o in inv:
+    print(o)
+  

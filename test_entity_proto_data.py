@@ -7,9 +7,9 @@ class TestEntityProtoData(unittest.TestCase):
 
   def test_proto(self):
     proto = entity_proto_data.entity_proto_data()
-    proto.name="a goblin"
-    proto.namelist= namelist_data.namelist_data("goblin")
-    proto.ldesc="A goblin stands here, smiling mischievously."
+    proto.name = "a goblin"
+    proto.namelist = namelist_data.namelist_data("goblin")
+    proto.ldesc = "A goblin stands here, smiling mischievously."
     proto.desc = "<p>It looks like it has something up its sleeve.</p>"
 
     ent = entity_data.entity_data(proto)

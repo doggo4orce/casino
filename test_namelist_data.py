@@ -32,6 +32,9 @@ class TestNamelist(unittest.TestCase):
       self.assertTrue(test_namelist.has_alias(word))
       self.assertEqual(test_namelist[idx], keywords[idx])
 
+    for idx, word in enumerate(test_namelist):
+      self.assertEqual(keywords[idx], test_namelist[idx])
+
     self.assertEqual(len(test_namelist), 4)
 
     test_namelist.remove_alias("very")
@@ -41,5 +44,6 @@ class TestNamelist(unittest.TestCase):
     self.assertEqual(test_namelist[2], keywords[3])
     
     self.assertFalse(test_namelist.has_alias("very"))
+
 if __name__ == "__main__":
   unittest.main()

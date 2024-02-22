@@ -1,5 +1,6 @@
 import behaviour_data
 import buffer_data
+from color import *
 import entity_data
 import entity_proto_data
 from mudlog import mudlog_type, mudlog
@@ -70,10 +71,10 @@ class npc_proto_data:
       self.behaviour.assign(spec_proc)
 
   def __str__(self):
-    ret_val = f"NPC: {CYAN}{self.entity.name}{NORMAL} "
-    ret_val += f"Alias: {CYAN}{' '.join(self.namelist)}{NORMAL}\r\n"
-    ret_val += buffer_data.buffer_data(self.entity.desc).display(width=65, indent=True)
-    ret_val += f"Desc:\r\n{self.entity.desc.str()}\r\n"
-    ret_val += f"L-Desc: {self.ldesc}\r\n"
+    ret_val = f"NPC: {CYAN}{self.entity_proto.name}{NORMAL}\r\n"
+    ret_val += f"Alias: {CYAN}{' '.join(self.entity_proto.namelist)}{NORMAL}\r\n"
+#    ret_val += buffer_data.buffer_data(self.entity_proto.desc).display(width=65, indent=False) + "\r\n"
+    ret_val += f"Desc: {CYAN}{self.entity_proto.desc}{NORMAL}\r\n"
+    ret_val += f"L-Desc: {CYAN}{self.ldesc}{NORMAL}\r\n"
     ret_val += str(self.behaviour)
     return ret_val

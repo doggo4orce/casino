@@ -28,26 +28,17 @@ class namelist_data:
     if self.has_alias(alias):
       self._aliases.remove(alias)
 
-  def __iter__(self):
-    return namelist_data_iterator(self)
-
   def __contains__(self, keyword):
     return keyword in self._aliases
 
   def __getitem__(self, key):
     return self._aliases[key]
 
-  def __setitem__(self, key, value):
-    if 0 <= key and key < len(self._aliases):
-      self._aliases[key] = value
-    else:
-      self._aliases[key] = value
-
   def __len__(self):
     return len(self._aliases)
 
   def __str__(self):
-    return str(self._values)
+    return str(self._aliases)
 
 class namelist_data_iterator:
   def __init__(self, namelist):
@@ -55,8 +46,10 @@ class namelist_data_iterator:
     self._idx = 0
 
   def __next__(self):
-    if self._idx < len(self._namelist._aliases):
-      ret_val = self._namelist._aliases[self._idx]
-      self._idx += 1
-      return ret_val
-    raise StopIteration
+    if self._idx < 0 or self._idx >= len(self._namelist._aliases):
+      raise StopIteration
+
+    ret_val = self._namelist._aliases[self._idx]
+    self._idx += 1
+    return ret_val
+

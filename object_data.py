@@ -1,7 +1,7 @@
 import dataclasses
 import entity_data
 import logging
-import spec_procs
+import spec_proc_data
 import structs
 
 class object_data:

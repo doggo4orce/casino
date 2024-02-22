@@ -16,6 +16,8 @@ class npc_proto_data:
     self.entity_proto = entity_proto_data.entity_proto_data()
     self.unique_id = unique_id_data.unique_id_data()
     self.behaviour = behaviour_data.behaviour_data()
+
+    # wrappd to entity_proto
     self.ldesc = "An unfinished npc proto_type stands here."
 
   @property
@@ -73,7 +75,6 @@ class npc_proto_data:
   def __str__(self):
     ret_val = f"NPC: {CYAN}{self.entity_proto.name}{NORMAL}\r\n"
     ret_val += f"Alias: {CYAN}{' '.join(self.entity_proto.namelist)}{NORMAL}\r\n"
-#    ret_val += buffer_data.buffer_data(self.entity_proto.desc).display(width=65, indent=False) + "\r\n"
     ret_val += f"Desc: {CYAN}{self.entity_proto.desc}{NORMAL}\r\n"
     ret_val += f"L-Desc: {CYAN}{self.ldesc}{NORMAL}\r\n"
     ret_val += str(self.behaviour)

@@ -1,7 +1,6 @@
 import enum
 import logging
 
-
 class tel_cmd(enum.IntEnum):
   SE   = 240 # end subnegotiation
   NOP  = 241

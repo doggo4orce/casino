@@ -18,7 +18,7 @@ class npc_proto_data:
     self.behaviour = behaviour_data.behaviour_data()
 
     # wrappd to entity_proto
-    self.ldesc = "An unfinished npc proto_type stands here."
+    self.ldesc = "An unfinished NPC prototype stands here."
 
   @property
   def entity_proto(self):
@@ -43,7 +43,7 @@ class npc_proto_data:
   # Wrapped properties
   @property
   def ldesc(self):
-    return self.entity_proto._ldesc
+    return self.entity_proto.ldesc
   @property
   def id(self):
     return self.unique_id.id

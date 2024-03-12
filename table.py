@@ -5,6 +5,10 @@ import string_handling
 #TODO: change name to table_data?
 class table(object.object):
   """guests          = list of guests' names at the table
+
+     # WARNING, what if two mobs are at the table with the same name?
+     # better to store as character references
+
      num_guests      = number of guests at the table
      num_seats       = maximum number of guests
      full            = True if the table is full, False otherwise"""

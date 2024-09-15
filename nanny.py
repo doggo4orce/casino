@@ -170,7 +170,7 @@ def handle_next_input(d, server, mud, db):
       d.char = new_char
       d.state = descriptor.descriptor_state.CHATTING
       mud.add_char(d.char)
-      logging.info(f"{d.login_info.name} [{d.client_info.host_name}] new player.")
+      logging.info(f"{d.login_info.name} [{d.client_info.term_host}] new player.")
       d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
       d.write("Welcome!  Have a great time!\r\n")
       logging.info(f"{d.login_info.name} has entered the game.")

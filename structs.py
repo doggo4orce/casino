@@ -12,17 +12,6 @@ import string_handling
 import unique_id_data
 
 @dataclasses.dataclass
-class client:
-  """ttype     = client name
-     width     = width of terminal window
-     length    = length of terminal window
-     host_name = name of client"""
-  term_type:   str=None
-  term_width:  int=None
-  term_length: int=None
-  host_name:   str=None
-
-@dataclasses.dataclass
 class zedit_save_data:
   """There should be a field here for each of the fields in the main menu for zedit.  Then the users
      selection for those fields can be saved here locally until they finish OLC and make their changes permanent."""

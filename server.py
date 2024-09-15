@@ -144,7 +144,7 @@ class server:
   def handle_disconnects(self, mud):
     for id in self.disconnects:
       d = self.descriptors[id]
-      logging.info(f"Closing link to {d.client_info.host_name}.")
+      logging.info(f"Closing link to {d.client_info.term_host}.")
       # if they were already logged in, their char is linkless
       if d.char:
         mud.lose_link(d.char)

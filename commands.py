@@ -250,8 +250,8 @@ def do_client(ch, scmd, argument, server, mud, db):
     out_str += f"  term_width     [{ORANGE}{ci.term_width}{NORMAL}]\r\n"
   if ci.term_length != None:
     out_str += f"  term_length    [{ORANGE}{ci.term_length}{NORMAL}]\r\n"
-  if ci.host_name != None:
-    out_str += f"  host_name      [{ORANGE}{ci.host_name}{NORMAL}]\r\n"
+  if ci.term_host != None:
+    out_str += f"  term_host      [{ORANGE}{ci.term_host}{NORMAL}]\r\n"
 
   ch.write(out_str)
 
@@ -465,7 +465,7 @@ def do_copyover(ch, scmd, argument, server, mud, db):
       fd = td.socket.fileno()
       name = td.char.name.lower()
       typ = td.socket.type
-      host = td.client_info.host_name
+      host = td.client_info.term_host
       ttype = td.client_info.term_type
       twidth = td.client_info.term_width
       tlength = td.client_info.term_length

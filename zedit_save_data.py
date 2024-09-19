@@ -1,5 +1,5 @@
 class zedit_save_data:
-  """Used to save temporarily until user quits OLC and finalizes their changes.
+  """Used to store changes until user quits OLC and finalizes.
      id     = unique identifier of zone
      name   = name of zone
      author = who to credit for the work

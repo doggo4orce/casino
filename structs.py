@@ -12,15 +12,6 @@ import string_handling
 import unique_id_data
 
 @dataclasses.dataclass
-class zedit_save_data:
-  """There should be a field here for each of the fields in the main menu for zedit.  Then the users
-     selection for those fields can be saved here locally until they finish OLC and make their changes permanent."""
-  id:          str=None
-  zone_name:   str=None
-  zone_author: str=None
-  zone_folder: str=None
-
-@dataclasses.dataclass
 class redit_save_data:
   """There should be a field here for each of the fields in the main menu for redit.  Then the users
      selection for those fields can be saved here locally until they finish OLC and make their changes permanent.

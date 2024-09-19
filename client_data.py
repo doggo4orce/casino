@@ -1,13 +1,13 @@
-class client:
+class client_data:
   """term_type      = client name
      term_width     = width of terminal window
      term_length    = length of terminal window
-     term_host      = name or IP of host (does this belong here?)"""
-  def __init__(self):
-    self._term_type = None
-    self._term_width = None
-    self._term_length = None
-    self._term_host = None
+     term_host      = name or IP of host as a string (does this belong here?)"""
+  def __init__(self, term_type=None, term_width=None, term_length=None, term_host=None):
+    self.term_type = term_type
+    self.term_width = term_width
+    self.term_length = term_length
+    self.term_host = term_host
 
   @property
   def term_type(self):

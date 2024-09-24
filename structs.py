@@ -12,21 +12,6 @@ import string_handling
 import unique_id_data
 
 @dataclasses.dataclass
-class redit_save_data:
-  """There should be a field here for each of the fields in the main menu for redit.  Then the users
-     selection for those fields can be saved here locally until they finish OLC and make their changes permanent.
-     uid        = unique identifier of room being edited
-     room_name  = name of room being edited
-     room_desc  = description of room being edited
-     room_exits = dictionary of exit vrefs using directions as keys
-     dir_edit   = direction specified on previous command to edit an exit"""
-  uid:         unique_id_data.unique_id_data=None
-  room_name:   str="An unfinished room"
-  room_desc:   str="You are in an unfinished room."
-  room_exits:  dict=dataclasses.field(default_factory=lambda:dict())
-  dir_edit:    int=None
-
-@dataclasses.dataclass
 class medit_save_data:
   """ fill this in when medit is developed """
   pass
@@ -171,13 +156,6 @@ class npc_proto_data:
     ret_val += f"Desc:\r\n{self.entity.desc.str()}\r\n"
     ret_val += f"L-Desc: {self.ldesc}\r\n"
     return ret_val
-
-@dataclasses.dataclass
-class room_attribute_data:
-  """name      = the title of the room (displayed first as one line)
-     desc      = the longer description of the room (shown as a following paragraph)"""
-  name: str="unnamed room"
-  desc: editor.buffer=editor.buffer("undescribed room")
 
 if __name__ == '__main__':
 

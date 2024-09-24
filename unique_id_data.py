@@ -41,6 +41,8 @@ class unique_id_data:
   def from_string(cls, ref_string):
     zone_id, id = string_handling.parse_reference(ref_string)
     return unique_id_data(zone_id, id)
-    
+
+  # TODO:  if zone_id == None, should this just return self.id?
+  # ALSO: should this be renamed to def vref(self) ?
   def __str__(self):
     return f"{self.zone_id}[{self.id}]"

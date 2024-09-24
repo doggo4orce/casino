@@ -157,9 +157,9 @@ def do_redit(ch, scmd, argument, server, mud, db):
     redit_save.room_name = rm.name
     redit_save.room_desc = rm.desc.make_copy()
 
-    # make a copy of all the exits as strings of either internal or external references
+    # make a copy of all the exits as virtual references
     for dir in exit.direction:
-      redit_save.room_exits[dir] = rm.get_destination(dir) # some of these will be None!
+      redit_save.room_exits[dir] = rm.get_destination(dir).vref # some of these will be None!
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (redit).\r\n")
   ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_REDIT, redit.redit_state.REDIT_MAIN_MENU, False, redit_save)

@@ -11,10 +11,10 @@ import structs
 
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
-      unique_id = for easy look-up, of the form zone[room]
-      exits     = exits in the cardinal directions leading to other rooms (identified by vref)
-      people    = list of characters in the room
-      contents  = list of objects on the ground"""
+      unique_id  = for easy look-up, of the form zone[room]
+      attributes =
+      people     = list of characters in the room
+      contents   = list of objects on the ground"""
   def __init__(self):
     self._unique_id = structs.unique_identifier()
     self._attributes = structs.room_attribute_data("Unfinished Room", "It looks unfinished.")
@@ -126,6 +126,8 @@ class room:
         return obj
     return None
 
+  # TODO: this function should take an exit, not a vref (which is what destination_code is currently expected to be)
+  # dont want to do this now though because im still working on exit.py
   def connect(self, direction, destination_code):
     # check if we're already connected
     ex = self.exit(direction)
@@ -196,6 +198,11 @@ class room:
   def exit_exists(self, direction):
     return self.get_destination(direction) != None
 
+  # TODO: rooms should not need to know about the database
+  # database should save rooms, not the other way around
+  # but it seems that this is already the way it works, and
+  # this function is not ever called.  consider it deprecated
+  # no longer tested or used, will eventually be deleted
   def save_to_db(self, c):
     """Saves the room and calls corresponding function for each exit through to database connection c"""
 

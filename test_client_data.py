@@ -11,7 +11,7 @@ class TestClient(unittest.TestCase):
     self.assertEqual(c.term_length, 50)
     self.assertEqual(c.term_host, "localhost")
 
-  def test_setters_and_getters(self):
+  def test_setters_getters(self):
     c = client_data.client_data()
 
     c.term_type = "mudmaster2000"

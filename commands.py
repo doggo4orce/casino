@@ -553,7 +553,7 @@ def show_obj_to_char(ch, obj):
 
 def do_move(ch, scmd, argument, server, mud, db):
   starting_room = mud.room_by_code(ch.room)
-  dest_ref = starting_room.get_destination(scmd)
+  dest_ref = starting_room.get_destination(scmd).vref
 
   if not dest_ref:
     ch.write("Alas, you cannot go that way.\r\n")

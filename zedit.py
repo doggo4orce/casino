@@ -142,6 +142,9 @@ def zedit_parse_edit_copy(d, input, server, mud):
     # copy all the exits
     for dir in exit.direction:
       if dir in rm.exits.keys():
+        # TODO: this will eventually cause a crash because
+        # the connect function will be re-written to accept an exit
+        # object rather than a direction and a vref
         rm2.connect(dir, rm.get_destination(dir))
 
     # insert the new room into the zone

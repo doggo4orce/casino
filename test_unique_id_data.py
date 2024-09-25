@@ -33,7 +33,14 @@ class TestUniqueID(unittest.TestCase):
     uid.id = None
     self.assertEqual(uid.id, None)
 
-    print(str(uid))
+  def test_with_parse_reference(self):
+    import string_handling
+    x,y = string_handling.parse_reference("global_id[local_id]")
+    uid = unique_id_data.unique_id_data(x,y)
+#    self.assertEqual(uid.id, "local_id")
+#    self.assertEqual(uid.zone_id, "global_id")
 
+    print(uid.id)
+    print(uid.zone_id)
 if __name__ == "__main__":
   unittest.main()

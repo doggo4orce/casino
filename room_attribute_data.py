@@ -1,22 +1,34 @@
+import exit_data
+from mudlog import mudlog_type, mudlog
+import unique_id_data
+
 # once this is done, make sure all of this is factored out of room and redit_save_data
 # remember desc is stored as a string, so go and look at the places where buffers are
 # used and make sure this class is never expected to give a buffer
 
-# sept 24, 2024, finished transferring code here from room.py
-# but now realize i should test exit thoroughly first
-# switching to that for now
-
 class room_attribute_data:
   """Creates a room_attribute_data object to store static room data.
-      name  = name of the room
-      desc  = description of room, stored as a string
-      exits = cardinal directions leading to other rooms (identified by vref)"""
-  def __init__(self, name=None, desc=None)
+      uid       = unique identifier of room
+      name      = name of the room
+      desc      = description of room, stored as a string
+      exits     = cardinal directions leading to other rooms"""
+  def __init__(self, zone_id=None, id=None, name=None, desc=None):
+    self.uid = unique_id_data.unique_id_data(zone_id, id)
     self.name = name
     self.desc = desc
-    # change this to a list of exits, and have exits themselves keep track of the associated direction?
-    # maybe?
-    self.exits = dict()
+    self._exits = list()
+
+  @property
+  def id(self):
+    return self.uid.id
+
+  @property
+  def zone_id(self):
+    return self.uid.zone_id
+
+  @property
+  def uid(self):
+    return self._uid
 
   @property
   def name(self):
@@ -30,6 +42,10 @@ class room_attribute_data:
   def exits(self):
     return self._exits
 
+  @uid.setter
+  def uid(self, new_uid):
+    self._uid = new_uid
+
   @name.setter
   def name(self, new_name):
     self._name = new_name
@@ -38,62 +54,75 @@ class room_attribute_data:
   def desc(self, new_desc):
     self._desc = new_desc
 
-  @exits.setter
-  def exits(self, new_exits):
-    for key, value in new_exits.items():
-      self.connect(key, value)
+  """connect(dir, zone_id, id) <- creates exit to specified room
+     disconnect(dir)           <- removes exit in specified dir
+     exit_letters              <- shows all exits abbreviated as letters "n s w" 
+     display_exits             <- displays all exits in string "[ Exits: n s w ]"
+     num_exits                 <- number of exits connected
+     exit(dir)                 <- returns exit object leading in dir
+     has_exit(dir)             <- checks if the room has an exit leading in direction dir
+     destination(dir)          <- returns zone_id and id of room dir leads to"""
 
-  """connect(dir, dest)        <- creates exit to room with vref string dest through direction dir
-     disconnect(dir)           <- removes exit with direction dir
-     list_exits()              <- shows exit letters, e.g. n s w 
-     show_exits()              <- shows exit string, e.g. [ Exits: n s w ]
-     exit(dir)                 <- returns exit object leading in direction dir or None
-     get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
-     exit_exists(dir)          <- checks if the room has an exit leading in direction dir
-     direction(self, ex)       <- returns direction of room exit, or None"""
+  def connect(self, direction, zone_id, id):
+    # cant have an exit without a direction
+    if direction == None:
+      warning = f"Trying to connect room {self.zone_id}:{self.id} in non-existant direction."
+      mudlog.mudlog(mudlog.mudlog_type.WARNING, warning)
+      return
 
-  def connect(self, direction, destination_code):
-    # check if we're already connected
-    ex = self.exit(direction)
-    if ex != None:
-      self.disconnect(direction)
-    self._exits[direction] = exit.exit(destination_code)
+    # zone_id can be null, but not id
+    if id == None:
+      warning = f"Trying to connect {self.zone_id}:{self.id} ({exit_data.direction(direction).name[0]}) to non-existant room."
+      mudlog.mudlog(mudlog.mudlog_type.WARNING, warning)
+      return
+
+    # in case we're already connected
+    self.disconnect(direction)
+
+    # perform the connection
+    self._exits.append(exit_data.exit_data(direction, zone_id, id))
 
   def disconnect(self, direction):
-    if self.exit(direction):
-      del self.exits[direction]
+    # if we're connected
+    for ex in self.exits:
+      if ex.direction == direction:
+        # then disconnect
+        self.exits.remove(ex)
 
-  def list_exits(self):
+  @property
+  def exit_letters(self):
     exit_str = ""
     if len(self.exits) == 0:
       return "None! "
-    for dir, ex in self.exits.items():
-      exit_str = exit_str + dir.name[0].lower() + ' '
+
+    for dir in exit_data.direction:
+      if self.has_exit(dir):
+        exit_str = exit_str + dir.name[0].lower() + ' '
+
     return exit_str
 
-  def show_exits(self):
-    return "[ Exits: {}]".format(self.list_exits())
+  @property
+  def display_exits(self):
+    return f"[ Exits: {self.exit_letters}]"
+
+  @property
+  def num_exits(self):
+    return len(self._exits)
 
   def exit(self, direction):
-    if direction in self.exits.keys():
-      return self.exits[direction]
-    return None
+    for ex in self.exits:
+      if ex.direction == direction:
+        return ex
 
-  def get_destination(self, direction):
-    exit = self.exit(direction)
-    if exit == None:
+  def has_exit(self, direction):
+    return self.exit(direction) != None
+
+  def destination(self, direction):
+    ex = self.exit(direction)
+    if ex == None:
       return None
-    return exit.destination
+    return ex.destination
 
-  def exit_exists(self, direction):
-    return self.get_destination(direction) != None
 
-  def direction(self, ex):
-    direction = None
 
-    # what direction does the exit lead in?
-    for dir in exit.direction:
-      if self.exit(dir) is ex:
-        direction = dir
-    
-    return direction
+

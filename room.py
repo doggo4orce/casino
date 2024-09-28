@@ -2,9 +2,9 @@ from color import *
 import database
 import enum
 import editor
-import exit
+import exit_data
 import inventory
-import object
+import object_data
 import pc
 import string_handling
 import structs

@@ -7,8 +7,8 @@ import editor
 import entity_data
 import gc
 import inventory
-import object
-import spec_procs
+import object_data
+import spec_proc_data
 import string_handling
 import structs
 

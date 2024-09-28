@@ -2,7 +2,7 @@ from color import *
 import config
 import descriptor
 import enum
-import exit
+import exit_data
 import os
 import string_handling
 import room

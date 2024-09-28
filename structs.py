@@ -7,10 +7,9 @@ import entity_data
 import logging
 import object_data
 import olc
-import spec_procs
+import spec_proc_data
 import string_handling
 import unique_id_data
-
 
 
 @dataclasses.dataclass

@@ -1,8 +1,8 @@
 import config
 import editor
-import exit
+import exit_data
 import logging
-import object
+import object_data
 import os
 import pc
 import room

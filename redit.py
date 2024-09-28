@@ -2,7 +2,7 @@ from color import *
 import descriptor
 import editor
 import enum
-import exit
+import exit_data
 import room
 import string_handling
 import structs

@@ -6,13 +6,13 @@ import telnet
 import commands
 import config
 import editor
-import exit
+import exit_data
 import descriptor
-import olc
+import olc_data
 import pc
 import redit
 import room
-import spec_procs
+import spec_proc_data
 import structs
 
 cmd_dict = dict()

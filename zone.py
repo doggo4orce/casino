@@ -7,7 +7,7 @@ import os
 from color import *
 import config
 import database
-import exit
+import exit_data
 import room
 import string_handling
 import structs

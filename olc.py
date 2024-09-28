@@ -9,10 +9,6 @@ import string_handling
 import structs
 import zedit
 
-class olc_mode(enum.IntEnum):
-  OLC_MODE_ZEDIT = 0
-  OLC_MODE_REDIT = 1
-
 def handle_input(d, input, server, mud, db):
   if d.olc.mode == olc_mode.OLC_MODE_ZEDIT:
   	zedit.zedit_parse(d, input, server, mud)

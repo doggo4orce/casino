@@ -12,9 +12,6 @@ class TestRoomAttribute(unittest.TestCase):
     self.assertEqual(r_att.id, "id")
     self.assertEqual(r_att.zone_id, "zone_id")
 
-  def test_asdf(self):
-    r_att = room_attribute_data.room_attribute_data("name", "description")
-
   def test_connections(self):
     r_att = room_attribute_data.room_attribute_data("name", "description")
 

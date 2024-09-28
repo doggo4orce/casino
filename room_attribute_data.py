@@ -61,7 +61,7 @@ class room_attribute_data:
      num_exits                 <- number of exits connected
      exit(dir)                 <- returns exit object leading in dir
      has_exit(dir)             <- checks if the room has an exit leading in direction dir
-     destination(dir)          <- returns zone_id and id of room dir leads to"""
+     destination(dir)          <- returns uid of room dir leads to"""
 
   def connect(self, direction, zone_id, id):
     # cant have an exit without a direction

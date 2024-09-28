@@ -11,51 +11,6 @@ import spec_proc_data
 import string_handling
 import unique_id_data
 
-
-@dataclasses.dataclass
-class pref_data:
-  def get(self, field):
-    if hasattr(self, field):
-      return getattr(self, field)
-    else:
-      logging.warning(f"Trying to access preference field {field} which is not defined.")
-
-  def set(self, field, value):
-    if hasattr(self, field):
-      setattr(self, field, value)
-    else:
-      logging.warning(f"Trying to set {field} to {value}, but {field} is not defined.")
-
-@dataclasses.dataclass
-class pref_data_numeric(pref_data):
-  screen_width:  int=config.DEFAULT_SCREEN_WIDTH
-  screen_length: int=config.DEFAULT_SCREEN_LENGTH
-
-@dataclasses.dataclass
-class pref_data_text(pref_data):
-  color_mode:    str=config.DEFAULT_COLOR_MODE
-
-@dataclasses.dataclass
-class pref_data_flags(pref_data):
-  active_idle:   int=config.DEFAULT_ACTIVE_IDLE
-  brief_mode:    int=config.DEFAULT_BRIEF_MODE
-  debug_mode:    int=config.DEFAULT_DEBUG_MODE
-
-  def set(self, field, val):
-    if val not in [0,1]:
-      logging.warning(f"set function called on {field} flag with value {val} which is neither 0 nor 1.")
-    else:
-      super().set(field, val)
-
-  def flip(self, field):
-    if getattr(self, field) == True:
-      setattr(self, field, False)
-    elif getattr(self, field) == False:
-      setattr(self, field, True)
-    else:
-      logging.warning(f"switch function called on {field}, which was neither on nor off, turning off.")
-      setattr(self, field, False)
-
 @dataclasses.dataclass
 class preferences:
   numeric: pref_data_numeric=dataclasses.field(default_factory=lambda:pref_data_numeric())

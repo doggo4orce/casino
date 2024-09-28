@@ -34,3 +34,12 @@ def mudlog(type, msg):
   # TODO: remove time stamps on subsequent lines while preserving formatting
   for line in lines:
     log_func(line)
+
+def info(msg):
+  mudlog(mudlog_type.INFO, msg)
+
+def warning(msg):
+  mudlog(mudlog_type.WARNING, msg)
+
+def error(msg):
+  mudlog(mudlog_type.ERROR, msg)

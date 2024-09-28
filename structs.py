@@ -11,27 +11,7 @@ import spec_procs
 import string_handling
 import unique_id_data
 
-@dataclasses.dataclass
-class medit_save_data:
-  """ fill this in when medit is developed """
-  pass
 
-@dataclasses.dataclass
-class oedit_save_data:
-  """ fill this in when oedit is developed """
-  pass
-
-@dataclasses.dataclass
-class olc_data:
-  """Interface for descriptor to work with their OLC data
-     mode      = which mode, redit, zedit, etc.
-     zone_id   = zone_id of room/obj/npc being editted
-     state     = which state in the menu system are you in
-     save_data = temporary parking space for OLC data specific to the object being edited"""
-  mode:      int=None
-  state:     int=None
-  changes:   bool=True
-  save_data: ...=None
 
 @dataclasses.dataclass
 class pref_data:

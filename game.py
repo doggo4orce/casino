@@ -1,17 +1,18 @@
 import baccarat_dealer
 import baccarat_table
 import cards
+import cmd_trig_data
 import config
 import dataclasses
+import hbeat_proc_data
 import enum
 import event
 import glob
-import logging
-import object
+import mudlog
+import object_data
 import os
 import pc
 import room
-import spec_procs
 import table
 import string_handling
 import structs
@@ -172,25 +173,25 @@ class game:
     # todo, give out warning and avoid crash if these references don't exist
     b_dealer = self.npc_by_code('stockville[baccarat_dealer]')
 
-    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger(
+    b_dealer.assign_spec_proc(cmd_trig_data.prefix_cmd_trig_data(
       "baccarat syntax handling", 
       baccarat_dealer.baccarat_dealer_syntax_parser
     ))
-    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger(
+    b_dealer.assign_spec_proc(cmd_trig_data.prefix_cmd_trig_data(
       "baccarat shoe history",
       baccarat_dealer.baccarat_dealer_history
     ))
-    b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger(
+    b_dealer.assign_spec_proc(cmd_trig_data.suffix_cmd_trig_data(
       "baccarat dealer greeting",
       baccarat_dealer.baccarat_dealer_intro
     ))
-    b_dealer.assign_spec_proc(spec_procs.heart_beat_proc(
+    b_dealer.assign_spec_proc(hbeat_proc_data.hbeat_proc_data(
       "baccarat deals a shoe",
       baccarat_dealer.baccarat_dealing
     ))
 
     b_table = self.obj_by_code('stockville[baccarat_table]')
-    b_table.assign_spec_proc(spec_procs.prefix_command_trigger(
+    b_table.assign_spec_proc(cmd_trig_data.prefix_cmd_trig_data(
       "baccarat table syntax parser",
       baccarat_table.baccarat_table_syntax_parser
     ))

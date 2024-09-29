@@ -1,9 +1,9 @@
-import logging
-import object
+import mudlog
+import object_data
 import string_handling
 
 #TODO: change name to table_data?
-class table(object.object):
+class table(object_data.object_data):
   """guests          = list of guests' names at the table
 
      # WARNING, what if two mobs are at the table with the same name?

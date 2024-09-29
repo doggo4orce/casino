@@ -6,8 +6,9 @@ import exit_data
 import inventory
 import object_data
 import pc
+import room_attribute_data
 import string_handling
-import structs
+import unique_id_data
 
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
@@ -16,8 +17,8 @@ class room:
       people     = list of characters in the room
       contents   = list of objects on the ground"""
   def __init__(self):
-    self._unique_id = structs.unique_identifier()
-    self._attributes = structs.room_attribute_data("Unfinished Room", "It looks unfinished.")
+    self._unique_id = unique_id_data.unique_id_data()
+    self._attributes = room_attribute_data.room_attribute_data("Unfinished Room", "It looks unfinished.")
     self._exits     = dict()
     self._people    = list()
     self._inventory = inventory.inventory()

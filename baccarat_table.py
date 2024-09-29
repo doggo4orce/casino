@@ -2,9 +2,9 @@ import commands
 import dataclasses
 import logging
 import nanny
-import object
+import object_data
 import pc
-import spec_procs
+import spec_proc_data
 import table
 
 @dataclasses.dataclass

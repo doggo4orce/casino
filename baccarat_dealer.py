@@ -7,7 +7,7 @@ import logging
 import nanny
 import pc
 import string_handling
-import spec_procs
+import spec_proc_data
 import structs
 
 class baccarat_hand:

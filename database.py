@@ -1,13 +1,15 @@
+import buffer_data
 import config
 import editor
 import exit_data
-import logging
+import mudlog
+import npc_proto_data
 import object_data
+import obj_proto_data
 import os
 import pc
 import room
 import string_handling
-import structs
 import sqlite3
 import zone
 
@@ -847,11 +849,11 @@ capitalize a word.</p>""")
       new_room.zone_id = item[0]
       new_room.id = item[1]
       new_room.name = item[2]
-      new_room.desc = editor.buffer(item[3])
+      new_room.desc = item[3]
       mud.zone_by_id(new_room.zone_id).add_room(new_room)
 
     for item in self.ex_table():
-      dir = exit.direction(item[0])
+      dir = exit_data.direction(item[0])
       o_zone = item[1]
       o_room = item[2]
       d_zone = item[3]
@@ -863,35 +865,31 @@ capitalize a word.</p>""")
         dest_ref = f"{d_zone}[{d_room}]"
 
       origin = mud.zone_by_id(o_zone).room_by_id(o_room)
-      dest = mud.zone_by_id(d_zone).room_by_id(d_room)
-      new_exit = exit.exit(dest_ref)
-
-      rm = mud.zone_by_id(o_zone).room_by_id(o_room)
-      rm.connect(dir, dest_ref)
+      origin.attributes.connect(dir, d_zone, d_room)
 
     for item in self.npc_table():
-      new_npcp = structs.npc_proto_data()
+      new_npcp = npc_proto_data.npc_proto_data()
       new_npcp.unique_id.zone_id = item[0]
       new_npcp.unique_id.id = item[1]
-      new_npcp.entity.name = item[2]
+      new_npcp.entity_proto.name = item[2]
       new_npcp.ldesc = item[3]
-      new_npcp.entity.desc = editor.buffer(item[4])
+      new_npcp.entity_proto.desc = item[4]
       mud.zone_by_id(new_npcp.unique_id.zone_id).add_npc(new_npcp)
 
     for item in self.obj_table():
-      new_op = structs.obj_proto_data()
+      new_op = obj_proto_data.obj_proto_data()
       new_op.unique_id.zone_id = item[0]
       new_op.unique_id.id = item[1]
-      new_op.entity.name = item[2]
+      new_op.entity_proto.name = item[2]
       new_op.ldesc = item[3]
-      new_op.entity.desc = editor.buffer(item[4])
+      new_op.entity_proto.desc = item[4]
       mud.zone_by_id(new_op.unique_id.zone_id).add_obj(new_op)
 
     for item in self.alias_table():
       if item[2] == "npc":
-        mud.zone_by_id(item[0]).npc_by_id(item[1]).entity.namelist.append(item[3])
+        mud.zone_by_id(item[0]).npc_by_id(item[1]).entity_proto.namelist.add_alias(item[3])
       elif item[2] == "obj":
-        mud.zone_by_id(item[0]).obj_by_id(item[1]).entity.namelist.append(item[3])
+        mud.zone_by_id(item[0]).obj_by_id(item[1]).entity_proto.namelist.add_alias(item[3])
 
 if __name__ == '__main__':
   os.system(f"rm test.db")

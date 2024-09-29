@@ -159,20 +159,6 @@ class room:
   def has_exit(self, direction):
     return self.attributes.has_exit(direction)
 
-  # TODO: doesn't look like this is called anywhere, delete it if not
-  def save_to_db(self, c):
-    """Saves the room and calls corresponding function for each exit through to database connection c"""
-
-    # check if the room already exists in the database
-    if database.wld_table_contains_room(c, self):
-      # if so, then delete it so we can re-add it below
-      database.wld_table_delete_room(c, self)
-
-    database.wld_table_add_room(c, self)
-
-    for ex in self.exits.values():
-      ex.save_to_db(self, c)
-
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"Description:\r\n{string_handling.paragraph(self.desc, 65, True)}\r\n"

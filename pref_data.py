@@ -46,7 +46,7 @@ class pref_data_flags(pref_data):
 
   def set(self, field, val):
     if val not in [True, False]:
-      mudlog.warning(f"Trying to set pref_data.{field} to {val}, which is neither True nor False.")
+      mudlog.warning(f"Trying to set pref_data_flags.{field} to {val}, which is neither True nor False.")
     else:
       super().set(field, val)
 
@@ -56,7 +56,7 @@ class pref_data_flags(pref_data):
     elif getattr(self, field) == False:
       setattr(self, field, True)
     else:
-      mudlog.warning(f"Trying to switch non-boolean pref_data.{field}, turning off.")
+      mudlog.warning(f"Trying to switch non-boolean pref_data_flags.{field}, turning off.")
       setattr(self, field, False)
 
 class preferences_data:

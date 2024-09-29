@@ -1,0 +1,12 @@
+TODO: factor this out of preferences and pc_save_data?
+
+-fields(dataclass)
+
+-numeric(fields)
+-boolean(fields)
+-textual(fields)
+
+-aggregate
+  -numeric
+  -boolean
+  -textual

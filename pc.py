@@ -123,7 +123,7 @@ class pc(character):
     self._pwd = "password"
     self._title = config.DEFAULT_TITLE
     self._id = None
-    self._prefs = structs.preferences()
+    self._prefs = structs.preferences_data()
     self._save_data = structs.pc_save_data()
 
   # Getters

@@ -12,13 +12,13 @@ class pref_data:
     if hasattr(self, field):
       return getattr(self, field)
     else:
-      mudlog.warning(f"Trying to access preference field {field} which is not defined.")
+      mudlog.warning(f"Trying to access non-existent {self.__class__.__name__}.{field}.")
 
   def set(self, field, value):
     if hasattr(self, field):
       setattr(self, field, value)
     else:
-      mudlog.warning(f"Trying to set {field} to {value}, but {field} is not defined.")
+      mudlog.warning(f"Trying to set non-existent {self.__class__.__name__}.{field} to {value}.")
 
 @dataclasses.dataclass
 class pref_data_numeric(pref_data):
@@ -46,7 +46,7 @@ class pref_data_flags(pref_data):
 
   def set(self, field, val):
     if val not in [True, False]:
-      mudlog.warning(f"set function called on {field} flag with value {val} which is neither True nor False.")
+      mudlog.warning(f"Trying to set pref_data.{field} to {val}, which is neither True nor False.")
     else:
       super().set(field, val)
 
@@ -56,5 +56,40 @@ class pref_data_flags(pref_data):
     elif getattr(self, field) == False:
       setattr(self, field, True)
     else:
-      mudlog.warning(f"switch function called on {field}, which was neither on nor off, turning off.")
+      mudlog.warning(f"Trying to switch non-boolean pref_data.{field}, turning off.")
       setattr(self, field, False)
+
+class preferences_data:
+  """Creates preferences_data object used to store various types of preferences,
+     each stored in their own corresponding derived subclass of pref_data
+     numeric = numeric preferences like screen_width and screen_length
+     text    = text preferences like color_mode in ['off', '16, '256']
+     flags   = boolean preferences like debug_mode or active_idle"""
+  def __init__(self):
+    self.numeric = pref_data_numeric()
+    self.text = pref_data_text()
+    self.flags = pref_data_flags()
+
+  def get(self, field):
+    if hasattr(self.numeric, field):
+      return self.numeric.get(field)
+    elif hasattr(self.text, field):
+      return self.text.get(field)
+    elif hasattr(self.flags, field):
+      return self.flags.get(field)
+    else:
+      mudlog.warning(f"Trying to get preferences_data.{field} which is not defined.")
+
+  def set(self, field, value):
+    if hasattr(self.numeric, field):
+      self.numeric.set(field, value)
+    elif hasattr(self.text, field):
+      self.text.set(field, value)
+    elif hasattr(self.flags, field):
+      self.flags.set(field, value)
+    else:
+      mudlog.warning(f"Trying to set non-existent preferences_data.{field} to {value}.")
+
+  def flip(self, field):
+    if hasattr(self.flags, field):
+      self.flags.flip(field)

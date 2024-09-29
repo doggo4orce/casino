@@ -11,26 +11,6 @@ import spec_proc_data
 import string_handling
 import unique_id_data
 
-@dataclasses.dataclass
-class preferences:
-  numeric: pref_data_numeric=dataclasses.field(default_factory=lambda:pref_data_numeric())
-  text:    pref_data_text=dataclasses.field(default_factory=lambda:pref_data_text())
-  flags:   pref_data_flags=dataclasses.field(default_factory=lambda:pref_data_flags())
-
-  def set(self, field, value):
-    if hasattr(field, self.numeric):
-      self.numeric.set(field, value)
-    elif hasattr(field, self.text):
-      self.text.set(field, value)
-    elif hasattr(field, self.flags):
-      self.flags.set(field, value)
-    else:
-      logging.warning(f"trying to set {field} to {value} but {field} is not defined.")
-
-  def flip(self, field):
-    if hasattr(field, self.flags):
-      self.flags.flip(field)
-
 """Note: any new fields added to
      pc_save_data_numerical or pc_save_data_non_numerical will be automatically saved."""
 @dataclasses.dataclass

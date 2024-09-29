@@ -11,21 +11,6 @@ import spec_proc_data
 import string_handling
 import unique_id_data
 
-"""Note: any new fields added to
-     pc_save_data_numerical or pc_save_data_non_numerical will be automatically saved."""
-@dataclasses.dataclass
-class pc_save_data_numerical:
-  hp: int=1
-
-@dataclasses.dataclass
-class pc_save_data_strings:
-  title: str=config.DEFAULT_TITLE
-
-@dataclasses.dataclass
-class pc_save_data:
-  numerical: pc_save_data_numerical=dataclasses.field(default_factory=lambda:pc_save_data_numerical())
-  non_numerical: pc_save_data_strings=dataclasses.field(default_factory=lambda:pc_save_data_strings())
-
 @dataclasses.dataclass # perhaps this should be moved to pc.py
 class npc_proto_data:
   entity: entity_data.entity_data = dataclasses.field(default_factory=lambda:entity_data.entity_data())

@@ -12,16 +12,13 @@ import unique_id_data
 
 class room:
   """Creates a new room which may be occupied by characters and objects (eventually)
-      unique_id  = for easy look-up, of the form zone[room]
       attributes =
       people     = list of characters in the room
       contents   = list of objects on the ground"""
   def __init__(self):
-    self._unique_id = unique_id_data.unique_id_data()
     self._attributes = room_attribute_data.room_attribute_data("Unfinished Room", "It looks unfinished.")
-    self._exits     = dict()
     self._people    = list()
-    self._inventory = inventory.inventory()
+    self._contents = inventory.inventory()
 
   # Getters
   @property
@@ -32,62 +29,64 @@ class room:
     return self.attributes.name
   @property
   def unique_id(self):
-    return self._unique_id
+    return self.attributes.uid
   @property
   def id(self):
-    return self._unique_id.id
+    return self.attributes.id
   @property
   def zone_id(self):
-    return self._unique_id.zone_id
+    return self.attributes.zone_id
   @property
   def desc(self):
-    return self._attributes.desc
+    return self.attributes.desc
   @property
   def exits(self):
-    return self._exits
+    return self.attributes.exits
   @property
   def people(self):
     return self._people
   @property
-  def inventory(self):
-    return self._inventory
+  def contents(self):
+    return self._contents
 
   # Setters
   @attributes.setter
   def attributes(self, new_attributes):
     self._attributes = new_attributes
+
   @name.setter
   def name(self, new_name):
-    self._attributes.name = new_name
+    self.attributes.name = new_name
+
   @unique_id.setter
   def unique_id(self, new_unique_id):
-    self._unique_id = new_unique_id
+    self.attributes.uid = new_uid
+
   @id.setter
   def id(self, new_id):
-    self._unique_id.id = new_id
+    self.attributes.id = new_id
+
   @zone_id.setter
   def zone_id(self, new_zone_id):
-    self._unique_id.zone_id = new_zone_id
+    self.attributes.zone_id = new_zone_id
+
   @desc.setter
   def desc(self, new_desc):
-    self._attributes.desc = new_desc
+    self.attributes.desc = new_desc
 
-  """add_char(ch)              <- adds character ch from the room      (does not modify ch.room)
-     remove_char(ch)           <- removes character ch from the room   (does not modify ch.room)
-     char_by_alias(name)       <- scans through people (pc's first) looking for name
-     pc_by_name(name)          <- scans through pcs in room with argument as name
+  """add_char(ch)              <- adds character to this room
+     remove_char(ch)           <- removes character ch from this room
+     char_by_alias(name)       <- look for char in room with name (prioritizes pc)
+     pc_by_name(name)          <- look for pc in room with name
      npc_by_alias(alias)       <- looks for npc in room with alias
      obj_by_alias(alias)       <- looks for obj in room with alias
-     connect(dir, dest)        <- creates exit to room with vref string dest through direction dir
-     disconnect(dir)           <- removes exit with direction dir
-     list_exits()              <- shows exit letters, e.g. n s w 
-     parse_tag(tag, value, rf) <- used to iterate through .room files via filestream rf
-     show_exits()              <- shows exit string, e.g. [ Exits: n s w ]
+     connect(dir, zone_id, id) <- creates exit to another room
+     disconnect(dir)           <- removes exit
+     display_exits()           <- shows exits to be displayed with room description
      echo(msg)                 <- sends msg to every character in the room
      exit(dir)                 <- returns exit object leading in direction dir or None
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
-     exit_exists(dir)          <- checks if the room has an exit leading in direction dir
-     direction(self, ex)       <- returns direction of room exit, or None
+     has_exit(dir)             <- checks if the room has an exit leading in direction dir
      save_to_db(c)             <- saves the room to cursor c"""
   def add_char(self, ch):
     ch.room = self.unique_id
@@ -127,29 +126,14 @@ class room:
         return obj
     return None
 
-  # TODO: this function should take an exit, not a vref (which is what destination_code is currently expected to be)
-  # dont want to do this now though because im still working on exit.py
-  def connect(self, direction, destination_code):
-    # check if we're already connected
-    ex = self.exit(direction)
-    if ex != None:
-      self.disconnect(direction)
-    self._exits[direction] = exit.exit(destination_code)
+  def connect(self, direction, zone_id, room_id):
+    self.attributes.connect(direction, zone_id, room_id)
 
   def disconnect(self, direction):
-    if self.exit(direction):
-      del self.exits[direction]
+    self.attributes.disconnect(direction)
 
-  def list_exits(self):
-    exit_str = ""
-    if len(self.exits) == 0:
-      return "None! "
-    for dir, ex in self.exits.items():
-      exit_str = exit_str + dir.name[0].lower() + ' '
-    return exit_str
-
-  def show_exits(self):
-    return "[ Exits: {}]".format(self.list_exits())
+  def display_exits(self):
+    return self.attributes.display_exits
 
   def echo(self, msg, **kwargs):
     exceptions = list()
@@ -166,44 +150,16 @@ class room:
       return self._exits[direction]
     return None
 
-  def parse_tag(self, tag, value, rf):
-    dir_tags = [dir.name for dir in exit.direction]
-
-    if tag == "id":
-      self.unique_id.id = value
-    elif tag == "desc":
-      self.desc = editor.buffer()
-      line = ""
-      while line != "~":
-        line = rf.readline()
-        line = line.rstrip()
-        if line != "~":
-          self.desc.add_line(line)
-        else:
-          break
-    elif tag.upper() in dir_tags:
-      self.connect(exit.direction(exit.direction[tag.upper()]), value)
-    # name, desc
-    elif hasattr(self.attributes, tag):
-      setattr(self.attributes, tag, value)
-    else:
-      pass# change the line below to throwing an exception
-      #logging.warning(f"Ignoring {value} from unrecognized tag {tag} while parsing {rf.name}.")
-
   def get_destination(self, direction):
     exit = self.exit(direction)
     if exit == None:
       return None
     return exit.destination
 
-  def exit_exists(self, direction):
-    return self.get_destination(direction) != None
+  def has_exit(self, direction):
+    return self.attributes.has_exit(direction)
 
-  # TODO: rooms should not need to know about the database
-  # database should save rooms, not the other way around
-  # but it seems that this is already the way it works, and
-  # this function is not ever called.  consider it deprecated
-  # no longer tested or used, will eventually be deleted
+  # TODO: doesn't look like this is called anywhere, delete it if not
   def save_to_db(self, c):
     """Saves the room and calls corresponding function for each exit through to database connection c"""
 
@@ -216,16 +172,6 @@ class room:
 
     for ex in self.exits.values():
       ex.save_to_db(self, c)
-
-  def direction(self, ex):
-    direction = None
-
-    # what direction does the exit lead in?
-    for dir in exit.direction:
-      if self.exit(dir) is ex:
-        direction = dir
-    
-    return direction
 
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"

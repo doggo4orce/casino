@@ -1,5 +1,7 @@
 TODO: factor this out of preferences and pc_save_data?
 
+possibility:
+
 -fields(dataclass)
 
 -numeric(fields)
@@ -10,3 +12,35 @@ TODO: factor this out of preferences and pc_save_data?
   -numeric
   -boolean
   -textual
+
+another possibility:
+
+class save_data:
+  -numeric(fields)
+  -boolean(fields)
+  -textual(fields)
+
+class pc_save_data(save_data):
+  pass
+
+class pc_pref_data(save_data):
+  pass
+
+
+TODO:  go back and thoroughly check formatting and testing for all these files one by one
+because i've been moving stuff around without doing testing followups for all the inner
+classes
+  -X namelist_data (add remove_all method)
+  -X entity_data
+  -X entity_proto_data
+  -obj_proto_data
+  -npc_proto_data
+  -object_data
+
+
+game ideas:
+-----------
+
+archer, when you start a fight, enemies are immediately affected by a debuf called AWAY, which takes 3 seconds to wear off, they cant hit you until it wears off and it simulates them travelling to get to you
+
+but when someone attacks an archer, this doesn't happen, unless you have the SNEAK ability

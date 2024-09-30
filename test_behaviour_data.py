@@ -36,7 +36,7 @@ class TestBehaviourData(unittest.TestCase):
     test_behave.assign(suffix_cmd_trig)
     test_behave.assign(hbeat_proc)
 
-    print(test_behave)
+    print(test_behave.debug())
 
 if __name__ == "__main__":
   unittest.main()

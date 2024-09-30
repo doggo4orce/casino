@@ -52,7 +52,7 @@ class behaviour_data:
     for spec_proc in spec_procs:
       self.assign_spec_proc(spec_proc)
 
-  def __str__(self):
+  def debug(self):
     p_cmd_trigs = ' '.join([spec.func.__name__.upper() for spec in self.prefix_cmd_trigs])
     s_cmd_trigs = ' '.join([spec.func.__name__.upper() for spec in self.suffix_cmd_trigs])
     h_procs = ' '.join([spec.func.__name__.upper() for spec in self.hbeat_procs])

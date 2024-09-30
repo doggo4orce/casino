@@ -28,6 +28,8 @@ class TestNamelist(unittest.TestCase):
 
     test_namelist = namelist_data.namelist_data(*keywords)
 
+    print(test_namelist)
+
     for idx, word in enumerate(keywords):
       self.assertTrue(test_namelist.has_alias(word))
       self.assertEqual(test_namelist[idx], keywords[idx])
@@ -35,7 +37,7 @@ class TestNamelist(unittest.TestCase):
     for idx, word in enumerate(test_namelist):
       self.assertEqual(keywords[idx], test_namelist[idx])
 
-    self.assertEqual(len(test_namelist), 4)
+    self.assertEqual(test_namelist.num_aliases, 4)
 
     test_namelist.remove_alias("very")
 
@@ -44,6 +46,9 @@ class TestNamelist(unittest.TestCase):
     self.assertEqual(test_namelist[2], keywords[3])
     
     self.assertFalse(test_namelist.has_alias("very"))
+
+    test_namelist.remove_all()
+    self.assertEqual(test_namelist.num_aliases, 0)
 
 if __name__ == "__main__":
   unittest.main()

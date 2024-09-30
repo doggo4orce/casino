@@ -9,10 +9,11 @@ class namelist_data:
         if type(alias) == str:
           self.add_alias(alias)
 
-  """add_alias(alias)    <- adds a new alias to self.aliases
-     has_alias(alias)    <- check if alias is in self.aliases
-     num_aliases()       <- count the number of aliases in self.alias
-     remove_alias(alias) <- removes alias from self.aliases"""
+  """add_alias(alias)    <- adds a new alias
+     has_alias(alias)    <- check if alias exists
+     num_aliases         <- count the number of aliases
+     remove_alias(alias) <- removes alias
+     remove_all()        <- removes all aliases"""
 
   def add_alias(self, alias):
     if not self.has_alias(alias):
@@ -21,6 +22,7 @@ class namelist_data:
   def has_alias(self, alias):
     return alias in self._aliases
 
+  @property
   def num_aliases(self):
     return len(self._aliases)
 
@@ -28,17 +30,17 @@ class namelist_data:
     if self.has_alias(alias):
       self._aliases.remove(alias)
 
+  def remove_all(self):
+    self._aliases = list()
+
   def __contains__(self, keyword):
     return keyword in self._aliases
 
   def __getitem__(self, key):
     return self._aliases[key]
 
-  def __len__(self):
-    return len(self._aliases)
-
   def __str__(self):
-    return str(self._aliases)
+    return ' '.join(self._aliases)
 
 class namelist_data_iterator:
   def __init__(self, namelist):

@@ -33,8 +33,8 @@ classes
   -X namelist_data (add remove_all method)
   -X entity_data
   -X entity_proto_data
-  -obj_proto_data
-  -npc_proto_data
+  -X obj_proto_data (now inherits from entity_proto_data)
+  -X npc_proto_data (now inherits from entity_proto_data)
   -object_data
 
 

@@ -10,4 +10,5 @@ class obj_proto_data(entity_proto_data.entity_proto_data):
   def debug(self):
     ret_val = ""
     ret_val += super().debug()
+    # append object specific data below
     return ret_val

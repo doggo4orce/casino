@@ -10,4 +10,5 @@ class npc_proto_data(entity_proto_data.entity_proto_data):
   def debug(self):
     ret_val = ""
     ret_val += super().debug()
+    # append NPC specific data below
     return ret_val

@@ -53,9 +53,9 @@ class behaviour_data:
       self.assign_spec_proc(spec_proc)
 
   def debug(self):
-    p_cmd_trigs = ' '.join([spec.func.__name__.upper() for spec in self.prefix_cmd_trigs])
-    s_cmd_trigs = ' '.join([spec.func.__name__.upper() for spec in self.suffix_cmd_trigs])
-    h_procs = ' '.join([spec.func.__name__.upper() for spec in self.hbeat_procs])
+    p_cmd_trigs = ' '.join([spec.name for spec in self.prefix_cmd_trigs])
+    s_cmd_trigs = ' '.join([spec.name for spec in self.suffix_cmd_trigs])
+    h_procs = ' '.join([spec.name for spec in self.hbeat_procs])
 
     if len(p_cmd_trigs) == 0:
       p_cmd_trigs = "None"

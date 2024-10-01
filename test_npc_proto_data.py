@@ -5,21 +5,22 @@ import npc_proto_data
 import unittest
 
 class TestNPCProtoData(unittest.TestCase):
-  def test_constructor(self):
-    ent_p = entity_proto_data.entity_proto_data()
+  def test_npc_proto_data(self):
     npc_p = npc_proto_data.npc_proto_data()
 
-    ent_p.name = "an entity proto"
-    ent_p.namelist = ["entity", "proto"]
-    ent_p.ldesc = "an entity proto exists here"
-    ent_p.desc = "<p>It looks like an entity proto.</p>"
+    npc_p.name = "a happy npc"
+    npc_p.remove_all_aliases()
+    npc_p.add_alias("happy")
+    npc_p.add_alias("npc")
+    npc_p.ldesc = "a happy npc wanders here"
+    npc_p.desc = "it looks happy"
 
-    npc_p.entity_proto = ent_p
-    self.assertEqual(npc_p.ldesc, "an entity proto exists here")
-    npc_p.ldesc = "change it using wrapped setter"
-    self.assertEqual(npc_p.ldesc, "change it using wrapped setter")
+    self.assertEqual(npc_p.name, "a happy npc")
+    self.assertTrue(npc_p.has_alias("happy"))
+    self.assertTrue(npc_p.has_alias("npc"))
+    self.assertEqual(npc_p.ldesc, "a happy npc wanders here")
+    self.assertEqual(npc_p.desc, "it looks happy")
 
-  def test_assign_spec_procs(self):
     def f(x,y):
       return x + y
 
@@ -31,24 +32,11 @@ class TestNPCProtoData(unittest.TestCase):
 
     proc_f = hbeat_proc_data.hbeat_proc_data("heartbeat f", f)
     proc_g = cmd_trig_data.prefix_cmd_trig_data("command g", g)
-
-    npc_p = npc_proto_data.npc_proto_data()
-    npc_p.entity_proto = entity_proto_data.entity_proto_data()
     
     npc_p.assign_spec_proc(proc_f)
     npc_p.assign_spec_proc(proc_g)
 
-  def test_id(self):
-    npc_p = npc_proto_data.npc_proto_data()
-    npc_p.entity_proto = entity_proto_data.entity_proto_data()
-
-    npc_p.id = "bob"
-    npc_p.zone_id = "general"
-
-    self.assertEqual(npc_p.id, "bob")
-    self.assertEqual(npc_p.zone_id, "general")
-
-    print(str(npc_p))
+    print(npc_p.debug())
 
 if __name__ == "__main__":
   unittest.main()

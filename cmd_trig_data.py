@@ -10,8 +10,8 @@ class cmd_trig_data(spec_proc_data.spec_proc_data):
      db = the main database"""
   expected_args = ['mud', 'me', 'ch', 'command', 'argument', 'db']
 
-  def __init__(self, name, func):
-    super().__init__(name, func)
+  # def __init__(self, name, func):
+  #   super().__init__(name, func)
 
 """These are messages which may be returned by func for prefix
    command trigger procs when called by interpret_msg() in nanny.py.  

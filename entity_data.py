@@ -6,7 +6,7 @@ import namelist_data
 class entity_data:
   """Manages attributes common to characters and objects.
      name      = what to be referred to as
-     namelist  = list of keywords to be targetted with
+     namelist  = list of keywords to be targetted with (PRIVATE)
      ldesc     = what to see when the entity is in a room
      desc      = shown when closely examined
      TODO: this should be changed to location, to be less misleading
@@ -17,12 +17,12 @@ class entity_data:
 
     if proto == None:
       self.name = "an unfinished entity"
-      self.namelist = namelist_data.namelist_data("unfinished", "entity")
+      self._namelist = namelist_data.namelist_data("unfinished", "entity")
       self.ldesc = "An unfinished entity is here."
       self.desc = "This entity looks unfinished."
     else:
       self.name = proto.name
-      self.namelist = copy.copy(proto.namelist)
+      self._namelist = copy.copy(proto.namelist)
       self.ldesc = proto.ldesc
       self.desc = proto.desc
       self.behaviour = copy.deepcopy(proto.behaviour)
@@ -32,9 +32,6 @@ class entity_data:
   @property
   def name(self):
     return self._name
-  @property
-  def namelist(self):
-    return self._namelist
   @property
   def ldesc(self):
     return self._ldesc
@@ -51,11 +48,6 @@ class entity_data:
   @name.setter
   def name(self, new_name):
     self._name = new_name
-  @namelist.setter
-  def namelist(self, new_namelist):
-    self._namelist = namelist_data.namelist_data()
-    for alias in new_namelist:
-      self._namelist.add_alias(alias)
   @ldesc.setter
   def ldesc(self, new_ldesc):
     self._ldesc = new_ldesc
@@ -86,27 +78,31 @@ class entity_data:
 
   """Wrapped to namelist:
 
-     add_alias(alias)       <- adds a new alias to namelist
-     has_alias(alias)       <- check namelist for alias
-     num_aliases            <- count aliases in namelist
-     remove_aliases(alias)  <- remove alias from namelist
-     remove_all_alias()     <- remove all aliases"""
+     add_alias(alias)        <- adds a new alias to namelist
+     has_alias(alias)        <- check namelist for alias
+     num_aliases             <- count aliases in namelist
+     remove_aliases(alias)   <- remove alias from namelist
+     remove_all_aliases()    <- remove all aliases
+     reset_aliases(*aliases) <- start fresh with new aliases"""
 
   def add_alias(self, alias):
-    self.namelist.add_alias(alias)
+    self._namelist.add_alias(alias)
       
   def has_alias(self, alias):
-    return self.namelist.has_alias(alias)
+    return self._namelist.has_alias(alias)
 
   @property
   def num_aliases(self):
-    return self.namelist.num_aliases
+    return self._namelist.num_aliases
 
   def remove_alias(self, alias):
-    self.namelist.remove_alias(alias)
+    self._namelist.remove_alias(alias)
 
   def remove_all_aliases(self):
-    self.namelist.remove_all()
+    self._namelist.remove_all()
+
+  def reset_aliases(self, *aliases):
+    self._namelist.reset(*aliases)
 
   """wrapped to behaviour:
 
@@ -124,7 +120,7 @@ class entity_data:
   def debug(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"LDesc: {CYAN}{self.ldesc}{NORMAL}\r\n"
-    ret_val += f"Alias: {CYAN}{self.namelist}{NORMAL}\r\n"
+    ret_val += f"Alias: {CYAN}{self._namelist}{NORMAL}\r\n"
     ret_val += f"Desc: {CYAN}{str(self.desc)}{NORMAL}\r\n"
     ret_val += f"Room: {CYAN}{self.room}{NORMAL}\r\n"
     ret_val += self.behaviour.debug()

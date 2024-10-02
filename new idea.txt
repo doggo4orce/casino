@@ -35,7 +35,10 @@ classes
   -X entity_proto_data
   -X obj_proto_data (now inherits from entity_proto_data)
   -X npc_proto_data (now inherits from entity_proto_data)
-  -object_data
+  -object_data (will inherit from entity_data)
+
+need to implement:
+  namelist.reset(*args)
 
 
 game ideas:

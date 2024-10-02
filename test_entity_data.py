@@ -8,15 +8,18 @@ class TestEntity(unittest.TestCase):
     ent = entity_data.entity_data()
 
     ent.name = "a young dog"
-    ent.namelist = namelist_data.namelist_data("dog", "young", "puppy")
+    ent.remove_all_aliases()
+    ent.add_alias("dog")
+    ent.add_alias("young")
+    ent.add_alias("puppy")
     ent.ldesc = "A young dog chases after a ball."
     ent.desc = "<p>It looks like a young puppy.</p>"
 
-    self.assertTrue(ent.namelist.has_alias("young"))
-    self.assertTrue(ent.namelist.has_alias("dog"))
-    self.assertTrue(ent.namelist.has_alias("puppy"))
-    self.assertFalse(ent.namelist.has_alias("cat"))
-    self.assertEqual(ent.namelist.num_aliases, 3)
+    self.assertTrue(ent.has_alias("young"))
+    self.assertTrue(ent.has_alias("dog"))
+    self.assertTrue(ent.has_alias("puppy"))
+    self.assertFalse(ent.has_alias("cat"))
+    self.assertEqual(ent.num_aliases, 3)
 
     self.assertEqual(ent.Name, "A young dog")
     self.assertEqual(ent.ldesc, "A young dog chases after a ball.")
@@ -28,7 +31,8 @@ class TestEntity(unittest.TestCase):
   def test_namelist(self):
     ent = entity_data.entity_data()
     ent.name = "a goblin"
-    ent.namelist = namelist_data.namelist_data("goblin")
+    ent.remove_all_aliases()
+    ent.add_alias("goblin")
     ent.ldesc = "A goblin stands here, smiling mischievously."
     ent.desc = "<p>It looks like it has something up its sleeve.</p>"
 

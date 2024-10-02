@@ -1,7 +1,4 @@
 from color import *
-import database
-import enum
-import editor
 import exit_data
 import inventory
 import object_data
@@ -10,7 +7,7 @@ import room_attribute_data
 import string_handling
 import unique_id_data
 
-class room:
+class room_data:
   """Creates a new room which may be occupied by characters and objects (eventually)
       attributes =
       people     = list of characters in the room
@@ -82,12 +79,11 @@ class room:
      obj_by_alias(alias)       <- looks for obj in room with alias
      connect(dir, zone_id, id) <- creates exit to another room
      disconnect(dir)           <- removes exit
-     display_exits()           <- shows exits to be displayed with room description
+     display_exits             <- shows exits to be displayed with room description
      echo(msg)                 <- sends msg to every character in the room
      exit(dir)                 <- returns exit object leading in direction dir or None
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
-     has_exit(dir)             <- checks if the room has an exit leading in direction dir
-     save_to_db(c)             <- saves the room to cursor c"""
+     has_exit(dir)             <- checks if the room has an exit leading in direction dir"""
   def add_char(self, ch):
     ch.room = self.unique_id
     self._people.append(ch)
@@ -132,6 +128,7 @@ class room:
   def disconnect(self, direction):
     self.attributes.disconnect(direction)
 
+  @property
   def display_exits(self):
     return self.attributes.display_exits
 
@@ -162,9 +159,6 @@ class room:
   def __str__(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"Description:\r\n{string_handling.paragraph(self.desc, 65, True)}\r\n"
-    ret_val += "Exits:\r\n"
-
-    for ex in self.exits:
-      ret_val += "  " + str(ex)
+    ret_val += self.display_exits()
 
     return ret_val

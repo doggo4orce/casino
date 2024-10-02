@@ -41,6 +41,7 @@ class TestNamelist(unittest.TestCase):
 
     test_namelist.remove_alias("very")
 
+    # remove this, there is no reason for it
     self.assertEqual(test_namelist[0], keywords[0])
     self.assertEqual(test_namelist[1], keywords[2])
     self.assertEqual(test_namelist[2], keywords[3])
@@ -50,5 +51,23 @@ class TestNamelist(unittest.TestCase):
     test_namelist.remove_all()
     self.assertEqual(test_namelist.num_aliases, 0)
 
+  def test_reset(self):
+    keywords = [
+      "some",
+      "very",
+      "nice",
+      "name"
+    ]
+
+    tn = namelist_data.namelist_data("remove", "this")
+
+    tn.reset(*keywords)
+
+    self.assertEqual(tn.num_aliases, 4)
+
+    for word in keywords:
+      self.assertTrue(tn.has_alias(word))
+
+    print(tn)
 if __name__ == "__main__":
   unittest.main()

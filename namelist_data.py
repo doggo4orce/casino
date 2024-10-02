@@ -13,7 +13,8 @@ class namelist_data:
      has_alias(alias)    <- check if alias exists
      num_aliases         <- count the number of aliases
      remove_alias(alias) <- removes alias
-     remove_all()        <- removes all aliases"""
+     remove_all()        <- removes all aliases
+     reset(*aliases)     <- start fresh with new aliases"""
 
   def add_alias(self, alias):
     if not self.has_alias(alias):
@@ -32,6 +33,11 @@ class namelist_data:
 
   def remove_all(self):
     self._aliases = list()
+
+  def reset(self, *aliases):
+    self.remove_all()
+    for alias in aliases:
+      self.add_alias(alias)
 
   def __contains__(self, keyword):
     return keyword in self._aliases

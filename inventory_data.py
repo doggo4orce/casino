@@ -1,6 +1,5 @@
-#import object_data
 
-class inventory:
+class inventory_data:
   """Creates an inventory of objects (for rooms, characters, and containers)
     contents = list of objects held by the inventory"""
   def __init__(self):
@@ -29,7 +28,7 @@ class inventory:
   def __len__(self):
     return len(self._contents)
 
-class inventory_iterator:
+class inventory_data_iterator:
   def __init__(self, inventory):
     self._inventory = inventory
     self._index = 0
@@ -41,12 +40,3 @@ class inventory_iterator:
       return result
     raise StopIteration
 
-if __name__ == "__main__":
-  inv = inventory()
-
-  inv.insert("dagger")
-  inv.insert("sword")
-
-  for o in inv:
-    print(o)
-  

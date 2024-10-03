@@ -1,3 +1,5 @@
+import copy
+
 class namelist_data:
   """May be used to identify an object, NPC, or any type of entity.
      aliases = a list of strings that may be used as identifiers"""
@@ -14,7 +16,8 @@ class namelist_data:
      num_aliases         <- count the number of aliases
      remove_alias(alias) <- removes alias
      remove_all()        <- removes all aliases
-     reset(*aliases)     <- start fresh with new aliases"""
+     reset(*aliases)     <- start fresh with new aliases
+     list()              <- returns copy of _aliases"""
 
   def add_alias(self, alias):
     if not self.has_alias(alias):
@@ -38,6 +41,9 @@ class namelist_data:
     self.remove_all()
     for alias in aliases:
       self.add_alias(alias)
+
+  def list(self):
+    return copy.copy(self._aliases)
 
   def __contains__(self, keyword):
     return keyword in self._aliases

@@ -69,5 +69,25 @@ class TestNamelist(unittest.TestCase):
       self.assertTrue(tn.has_alias(word))
 
     print(tn)
+
+  def test_list(self):
+    keywords = [
+      "some",
+      "very",
+      "nice",
+      "name"
+    ]
+
+    tn = namelist_data.namelist_data(*keywords)
+
+    names = tn.list()
+
+    for keyword in keywords:
+      self.assertIn(keyword, names)
+
+    names.remove("nice")
+
+    self.assertTrue(tn.has_alias("nice"))
+
 if __name__ == "__main__":
   unittest.main()

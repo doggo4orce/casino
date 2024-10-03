@@ -31,7 +31,11 @@ class TestObjectData(unittest.TestCase):
 
     self.assertEqual(obj.name, opd.name)
     self.assertEqual(obj.desc, opd.desc)
-    self.assertEqual()
+
+    for alias in opd.aliases():
+      self.assertTrue(obj.has_alias(alias))
+
+    self.assertEqual(opd.num_aliases, obj.num_aliases)
     
     print(obj.debug())
     

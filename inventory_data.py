@@ -33,7 +33,7 @@ class inventory_data:
     return obj in self._contents
 
   def __iter__(self):
-    return inventory_iterator(self)
+    return inventory_data_iterator(self)
 
   def __len__(self):
     return len(self._contents)

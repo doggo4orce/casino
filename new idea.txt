@@ -38,7 +38,8 @@ classes
   -object_data (will inherit from entity_data)
 
 need to implement:
-  namelist.reset(*args)
+  namelist.reset(*args) (done)
+
 
 
 game ideas:

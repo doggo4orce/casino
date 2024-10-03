@@ -27,7 +27,7 @@ class entity_data:
       self.desc = "This entity looks unfinished."
     else:
       self.name = proto.name
-      self._namelist = copy.copy(proto.namelist)
+      self._namelist = namelist_data.namelist_data(*proto.aliases())
       self.ldesc = proto.ldesc
       self.desc = proto.desc
       self.behaviour = copy.deepcopy(proto.behaviour)
@@ -83,7 +83,8 @@ class entity_data:
      num_aliases             <- count aliases in namelist
      remove_aliases(alias)   <- remove alias from namelist
      remove_all_aliases()    <- remove all aliases
-     reset_aliases(*aliases) <- start fresh with new aliases"""
+     reset_aliases(*aliases) <- start fresh with new aliases
+     aliases()               <- returns copy of aliases as list"""
 
   def add_alias(self, alias):
     self._namelist.add_alias(alias)
@@ -103,6 +104,9 @@ class entity_data:
 
   def reset_aliases(self, *aliases):
     self._namelist.reset(*aliases)
+
+  def aliases(self):
+    return self._namelist.list()
 
   """wrapped to behaviour:
 

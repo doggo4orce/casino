@@ -12,7 +12,7 @@ class entity_proto_data:
      behaviour = spec proc manager"""
   def __init__(self):
     self.name ="an unfinished entity proto"
-    self.namelist = namelist_data.namelist_data("unfinished", "entity", "proto")
+    self._namelist = namelist_data.namelist_data("unfinished", "entity", "proto")
     self.ldesc = "An unfinished entity proto is here."
     self.desc = "This entity proto looks unfinished."
     self.behaviour = behaviour_data.behaviour_data()
@@ -20,9 +20,6 @@ class entity_proto_data:
   @property
   def name(self):
     return self._name
-  @property
-  def namelist(self):
-    return self._namelist
   @property
   def ldesc(self):
     return self._ldesc
@@ -36,9 +33,6 @@ class entity_proto_data:
   @name.setter
   def name(self, new_name):
     self._name = new_name
-  @namelist.setter
-  def namelist(self, new_namelist):
-    self._namelist = new_namelist
   @ldesc.setter
   def ldesc(self, new_ldesc):
     self._ldesc = new_ldesc
@@ -51,27 +45,31 @@ class entity_proto_data:
 
   """Wrapped to namelist:
 
-     add_alias(alias)       <- adds a new alias to namelist
-     has_alias(alias)       <- check namelist for alias
-     num_aliases            <- count aliases in namelist
-     remove_aliases(alias)  <- remove alias from namelist
-     remove_all_alias()     <- remove all aliases"""
+     add_alias(alias)      <- adds a new alias to namelist
+     has_alias(alias)      <- check namelist for alias
+     num_aliases           <- count aliases in namelist
+     remove_aliases(alias) <- remove alias from namelist
+     remove_all_alias()    <- remove all aliases
+     aliases()             <- returns copy of aliases as list"""
 
   def add_alias(self, alias):
-    self.namelist.add_alias(alias)
+    self._namelist.add_alias(alias)
       
   def has_alias(self, alias):
-    return self.namelist.has_alias(alias)
+    return self._namelist.has_alias(alias)
 
   @property
   def num_aliases(self):
-    return self.namelist.num_aliases
+    return self._namelist.num_aliases
 
   def remove_alias(self, alias):
-    self.namelist.remove_alias(alias)
+    self._namelist.remove_alias(alias)
 
   def remove_all_aliases(self):
-    self.namelist.remove_all()
+    self._namelist.remove_all()
+
+  def aliases(self):
+    return self._namelist.list()
 
   """Wrapped to behaviour:
 

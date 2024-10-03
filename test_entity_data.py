@@ -46,5 +46,15 @@ class TestEntity(unittest.TestCase):
     ent.remove_all_aliases()
     self.assertEqual(ent.num_aliases, 0)
 
+  def test_alias_list(self):
+    ent = entity_data.entity_data()
+    ent.reset_aliases("goblin", "thief")
+    
+    names = ent.aliases()
+
+    self.assertIn("goblin", names)
+    self.assertIn("thief", names)
+    self.assertEqual(len(names), 2)
+
 if __name__ == "__main__":
   unittest.main()

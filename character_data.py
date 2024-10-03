@@ -2,14 +2,12 @@ import config
 import editor
 import entity_data
 import inventory
-import logging
-import structs
+import mudlog
 import unique_id_data
 
-class character_data:
-  """Creates a new char(acter) which can act within the world.
+class character_data(entity_data.entity_data):
+  """Creates a new character which can act within the world.
 
-    entity    = name, appearance and location
     name      = characters name (wrapped from entity)
     Name      = characters name capitalized (wrapped from entity)
     desc      = characters description as a buffer (wrapped from entity)
@@ -23,36 +21,15 @@ class character_data:
     so that they need not be distinguished between throughout this codebase.  While
     there is nothing stopping one from instantiating it directly, such use is not intended."""
   def __init__(self):
-    self.entity = entity_data.entity_data()
+    super().__init__()
     self.name = "an unfinished character"
-    self.desc = editor.buffer("This character looks unfinished.")
+    self.desc = "This character looks unfinished."
     self.ldesc = "An unfinished character is here."
     self.room = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
-    self.namelist = ["unfinished", "character"]
+    self.reset_alias("unfinished", "character")
     self.inventory = inventory.inventory()
 
   # Getters
-  @property
-  def entity(self):
-    return self._entity
-  @property
-  def name(self):
-    return self.entity.name
-  @property
-  def Name(self):
-    return self.entity.Name
-  @property
-  def desc(self):
-    return self.entity.desc
-  @property
-  def ldesc(self):
-    return self.entity.ldesc
-  @property
-  def room(self):
-    return self.entity.room
-  @property
-  def namelist(self):
-    return self.entity.namelist
   @property
   def inventory(self):
     return self.inventory
@@ -61,24 +38,6 @@ class character_data:
     return self.entity.in_zone
 
   # Setters
-  @entity.setter
-  def entity(self, new_ent):
-    self._entity = new_ent
-  @name.setter
-  def name(self, new_name):
-    self._entity.name = new_name
-  @desc.setter
-  def desc(self, new_desc):
-    self.entity.desc = new_desc
-  @ldesc.setter
-  def ldesc(self, new_ldesc):
-    self.entity.ldesc = new_ldesc
-  @room.setter
-  def room(self, new_room):
-    self.entity.room = new_room
-  @namelist.setter
-  def namelist(self, new_namelist):
-    self.entity.namelist = new_namelist
   @inventory.setter
   def inventory(self, new_inventory):
     self._inventory = new_inventory

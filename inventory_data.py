@@ -1,3 +1,4 @@
+import mudlog
 
 class inventory_data:
   """Creates an inventory of objects (for rooms, characters, and containers)
@@ -5,19 +6,28 @@ class inventory_data:
   def __init__(self):
     self._contents = []
 
-  def insert(self, obj):
+  """add_object(obj)      <- add object to inventory
+     has_object(obj)      <- check if object is in inventory
+     remove_object(obj)   <- remove object from inventory
+     obj_by_alias(alias)  <- look up object in inventory by alias"""
+
+  def add_object(self, obj):
     self._contents.append(obj)
 
-  def remove(self, obj):
-    if obj in self:
+  def has_object(self, obj):
+    return obj in self
+
+  def remove_object(self, obj):
+    if self.has_object(obj):
       self._contents.remove(obj)
     else:
-      logging.error(f"Trying to remove {obj} from inventory which doesn't contain it!")
+      mudlog.error(f"Trying to remove {obj} from inventory which doesn't contain it!")
     
   def obj_by_alias(self, alias):
-    for obj in self._contents:
+    for obj in self:
       if obj.has_alias(alias):
         return obj
+    return None
 
   def __contains__(self, obj):
     return obj in self._contents

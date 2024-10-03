@@ -9,9 +9,14 @@ class entity_data:
      namelist  = list of keywords to be targetted with (PRIVATE)
      ldesc     = what to see when the entity is in a room
      desc      = shown when closely examined
-     TODO: this should be changed to location, to be less misleading
+     TODO: room should be renamed to location, to be less misleading
      room      = reference to room if it is in one, and None otherwise
-     behaviour = spec proc manager"""
+     behaviour = spec proc manager
+
+     Additional Properties:
+     Name      = same as name but capitalized
+     in_zone   = zone_id of entity's location (if any)"""
+
   def __init__(self, proto=None):
     self.behaviour = behaviour_data.behaviour_data()
 
@@ -60,11 +65,6 @@ class entity_data:
   @room.setter
   def room(self, new_room):
     self._room = new_room
-
-  """additional Properties:
-
-     Name     = same as name but capitalized
-     in_zone  = zone_id of entity's location (if any)"""
 
   @property
   def Name(self):

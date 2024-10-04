@@ -6,10 +6,10 @@ class inventory_data:
   def __init__(self):
     self._contents = []
 
-  """add_object(obj)      <- add object to inventory
-     has_object(obj)      <- check if object is in inventory
-     remove_object(obj)   <- remove object from inventory
-     obj_by_alias(alias)  <- look up object in inventory by alias"""
+  """add_object(obj)         <- add object to inventory
+     has_object(obj)         <- check if object is in inventory
+     remove_object(obj)      <- remove object from inventory
+     object_by_alias(alias)  <- look up object in inventory by alias"""
 
   def add_object(self, obj):
     self._contents.append(obj)
@@ -23,7 +23,7 @@ class inventory_data:
     else:
       mudlog.error(f"Trying to remove {obj} from inventory which doesn't contain it!")
     
-  def obj_by_alias(self, alias):
+  def object_by_alias(self, alias):
     for obj in self:
       if obj.has_alias(alias):
         return obj

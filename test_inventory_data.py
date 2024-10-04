@@ -18,17 +18,17 @@ class TestInventory(unittest.TestCase):
 
     self.assertEqual(len(inv), 2)
 
-    self.assertEqual(obj1, inv.obj_by_alias("small"))
-    self.assertEqual(obj1, inv.obj_by_alias("sword"))
-    self.assertEqual(obj2, inv.obj_by_alias("hot"))
-    self.assertEqual(obj2, inv.obj_by_alias("lantern"))
+    self.assertEqual(obj1, inv.object_by_alias("small"))
+    self.assertEqual(obj1, inv.object_by_alias("sword"))
+    self.assertEqual(obj2, inv.object_by_alias("hot"))
+    self.assertEqual(obj2, inv.object_by_alias("lantern"))
 
     inv.remove_object(obj1)
 
-    self.assertIsNone(inv.obj_by_alias("small"))
-    self.assertIsNone(inv.obj_by_alias("sword"))
+    self.assertIsNone(inv.object_by_alias("small"))
+    self.assertIsNone(inv.object_by_alias("sword"))
 
-    self.assertEqual(obj2, inv.obj_by_alias("hot"))
+    self.assertEqual(obj2, inv.object_by_alias("hot"))
 
     print("should cause error message")
     inv.remove_object(obj1)

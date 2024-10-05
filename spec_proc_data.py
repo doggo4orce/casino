@@ -1,19 +1,10 @@
 import inspect
-from mudlog import mudlog_type, mudlog
+import mudlog
 import string_handling
-
-# IDEA: add class variable which is a list of all available cmd_trigger functions so they can be assigned using OLC
 
 class spec_proc_data:
   # this is deliberately empty, and designed to be over-written by derived classes
   expected_args = []
-
-  @classmethod
-  def set_expected_args(cls, *args):
-    cls.expected_args = list()
-
-    for arg in args:
-      cls.expected_args.append(arg)
 
   """Creates a Special Procedure which can be attached to objects/characters/rooms
      name       = name of special procedure, for OLC and debug info
@@ -52,7 +43,7 @@ class spec_proc_data:
     self._func = new_func
     arg_error = self.arg_error()
     if arg_error != None:
-      mudlog(mudlog_type.WARNING, arg_error)
+      mudlog.warning(arg_error)
 
   """arg_error()        <- returns description of problem parameters
      check(*args)       <- checks if args are expected by self.func
@@ -92,7 +83,7 @@ class spec_proc_data:
     if self.func == None:
       error = f"spec_proc({self.name})\r\n"
       error += "  tried to call with no function"
-      mudlog(mudlog_type.ERROR, error)
+      mudlog.error(error)
       return
     try:
       return self.func(*args)
@@ -101,4 +92,4 @@ class spec_proc_data:
       error +=f"  tried to call: {self.func.__name__}\r\n"
       error +=f"  expecting args: {', '.join(self.args)}\r\n"
       error +=f"  was passed: {', '.join([str(arg) for arg in args])}"
-      mudlog(mudlog_type.ERROR, error)
+      mudlog.error(error)

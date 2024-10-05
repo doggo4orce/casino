@@ -5,9 +5,7 @@ class TestHBeatProcData(unittest.TestCase):
 
   def test_hbeat_proc_data(self):
 
-    hbeat_proc_data.hbeat_proc_data.set_expected_args("hbeat", "proc", "data")
-
-    self.assertEqual(hbeat_proc_data.hbeat_proc_data.expected_args, ["hbeat", "proc", "data"])
+    hbeat_proc_data.hbeat_proc_data.expected_args = ["hbeat", "proc", "data"]
 
     def hb_bad(arg1, arg2):
       return arg1 + arg2

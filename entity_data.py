@@ -11,14 +11,12 @@ class entity_data:
      desc      = shown when closely examined
      TODO: room should be renamed to location, to be less misleading
      room      = reference to room if it is in one, and None otherwise
-     behaviour = spec proc manager
 
      Additional Properties:
      Name      = same as name but capitalized
      in_zone   = zone_id of entity's location (if any)"""
 
   def __init__(self, proto=None):
-    self.behaviour = behaviour_data.behaviour_data()
 
     if proto == None:
       self.name = "an unfinished entity"
@@ -30,7 +28,6 @@ class entity_data:
       self._namelist = namelist_data.namelist_data(*proto.aliases())
       self.ldesc = proto.ldesc
       self.desc = proto.desc
-      self.behaviour = copy.deepcopy(proto.behaviour)
 
     self.room = None
 
@@ -44,9 +41,6 @@ class entity_data:
   def desc(self):
     return self._desc
   @property
-  def behaviour(self):
-    return self._behaviour
-  @property
   def room(self):
     return self._room
 
@@ -59,9 +53,6 @@ class entity_data:
   @desc.setter
   def desc(self, new_desc):
     self._desc = new_desc
-  @behaviour.setter
-  def behaviour(self, new_behaviour):
-    self._behaviour = new_behaviour
   @room.setter
   def room(self, new_room):
     self._room = new_room
@@ -108,18 +99,6 @@ class entity_data:
   def aliases(self):
     return self._namelist.list()
 
-  """wrapped to behaviour:
-
-     assign_spec_proc(spec_proc)   <- assign a single spec proc to behaviour
-     assign_spec_procs(spec_procs) <- assign a list of spec procs to behaviour"""
-
-  def assign_spec_proc(self, spec_proc):
-    self.behaviour.assign(spec_proc)
-
-  def assign_spec_procs(self, spec_procs):
-    for spec_proc in spec_procs:
-      self.behaviour.assign(spec_proc)
-
   # display state in readable string
   def debug(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
@@ -127,5 +106,4 @@ class entity_data:
     ret_val += f"Alias: {CYAN}{self._namelist}{NORMAL}\r\n"
     ret_val += f"Desc: {CYAN}{str(self.desc)}{NORMAL}\r\n"
     ret_val += f"Room: {CYAN}{self.room}{NORMAL}\r\n"
-    ret_val += self.behaviour.debug()
     return ret_val

@@ -5,9 +5,7 @@ class TestCmdTrigData(unittest.TestCase):
 
   def test_cmd_trig_data(self):
 
-    cmd_trig_data.cmd_trig_data.set_expected_args("cmd", "trig")
-
-    self.assertEqual(cmd_trig_data.cmd_trig_data.expected_args, ["cmd", "trig"])
+    cmd_trig_data.cmd_trig_data.expected_args = ["cmd", "trig"]
 
     def ct_bad(arg1, arg2):
       return arg1 + arg2

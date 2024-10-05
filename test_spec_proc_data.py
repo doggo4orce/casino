@@ -4,9 +4,7 @@ import unittest
 class TestSpecProc(unittest.TestCase):
   
   def test_spec_proc(self):
-    spec_proc_data.spec_proc_data.set_expected_args("spec", "proc")
-
-    self.assertEqual(spec_proc_data.spec_proc_data.expected_args, ["spec", "proc"])
+    spec_proc_data.spec_proc_data.expected_args = ["spec", "proc"]
 
     def sp_bad(arg1, arg2):
       return 1

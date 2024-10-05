@@ -1,7 +1,7 @@
 import cmd_trig_data
 from color import *
 import hbeat_proc_data
-from mudlog import mudlog, mudlog_type
+import mudlog
 import spec_proc_data
 
 class behaviour_data:
@@ -34,10 +34,18 @@ class behaviour_data:
   def hbeat_procs(self, new_triggers):
     self._hbeat_procs = new_triggers
 
-  def assign(self, spec_proc):
+  """assign_proc(proc)         <- assign spec proc
+     assign_procs(spec_procs)  <- assign list of spec procs
+     remove_spec_procs()       <- remove all spec procs
+     remove_prefix_trigs()     <- remove all prefix_cmd_trigs
+     remove_suffic_trigs()     <- remove all suffix_cmd_trigs
+     remove_hbeat_procs()      <- remove all heartbeat procs
+     remove_all_procs()        <- remove all procs"""
+
+  def assign_proc(self, spec_proc):
     if not spec_proc.consistent:
-      msg = f"Assignment of inconsistent spec_proc '{spec_proc.name}'."
-      mudlog(mudlog_type.ERROR, msg)
+      msg = f"Attempting to assign inconsistent spec_proc '{spec_proc.name}'."
+      mudlog.error(msg)
       return
     if isinstance(spec_proc, cmd_trig_data.prefix_cmd_trig_data):
       self.prefix_cmd_trigs.append(spec_proc)
@@ -46,11 +54,26 @@ class behaviour_data:
     elif isinstance(spec_proc, hbeat_proc_data.hbeat_proc_data):
       self.hbeat_procs.append(spec_proc)
     else:
-      mudlog(mudlog_type.ERROR, f"Assignment of unrecognized spec_proc type: '{spec_proc.name}'.")
+      msg = f"Attempting to assign unrecognized spec_proc type: '{spec_proc.name}'."
+      mudlog.error(msg)
 
-  def assign_spec_procs(self, spec_procs):
-    for spec_proc in spec_procs:
-      self.assign_spec_proc(spec_proc)
+  def assign_procs(self, procs):
+    for proc in procs:
+      self.assign_spec_proc(proc)
+
+  def remove_prefix_trigs(self):
+    self.prefix_cmd_trigs = list()
+
+  def remove_suffix_trigs(self):
+    self.suffix_cmd_trigs = list()
+
+  def remove_hbeat_procs(self):
+    self.hbeat_procs = list()
+
+  def remove_all_procs(self):
+    self.remove_prefix_trigs()
+    self.remove_suffix_trigs()
+    self.remove_hbeat_procs()
 
   def debug(self):
     p_cmd_trigs = ' '.join([spec.name for spec in self.prefix_cmd_trigs])

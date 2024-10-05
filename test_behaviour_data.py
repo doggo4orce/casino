@@ -6,37 +6,42 @@ import unittest
 
 class TestBehaviourData(unittest.TestCase):
   def test_assign(self):
+    hbeat_proc_data.hbeat_proc_data.expected_args = ['a','b','c']
+
+    # applies to both prefix/suffix_cmd_trigs
+    cmd_trig_data.cmd_trig_data.expected_args = ['a','b']
 
     def spec_proc_f(a,b):
       return a
-
-    spec_proc = spec_proc_data.spec_proc_data("general spec", spec_proc_f)
-
     def prefix_cmd_trig_g(a,b):
-      retsurn b
-
-    cmd_trig_data.cmd_trig_data.expected_args = ['a','b']
-    prefix_cmd_trig = cmd_trig_data.prefix_cmd_trig_data("prefix cmd trig", prefix_cmd_trig_g)
-
+      return b
     def suffix_cmd_trig_h(a,b):
       return a + b
-
-    suffix_cmd_trig = cmd_trig_data.suffix_cmd_trig_data("suffix cmd trig", suffix_cmd_trig_h)
-
     def hbeat_proc_q(a,b,c):
       return c
 
-    hbeat_proc_data.hbeat_proc_data.expected_args = ['a','b','c']
+    spec_proc = spec_proc_data.spec_proc_data("general spec", spec_proc_f)
+    prefix_cmd_trig = cmd_trig_data.prefix_cmd_trig_data("prefix cmd trig", prefix_cmd_trig_g)
+    suffix_cmd_trig = cmd_trig_data.suffix_cmd_trig_data("suffix cmd trig", suffix_cmd_trig_h)
     hbeat_proc = hbeat_proc_data.hbeat_proc_data("heartbeat proc", hbeat_proc_q)
 
-    test_behave = behaviour_data.behaviour_data()
+    bd = behaviour_data.behaviour_data()
 
-    test_behave.assign(spec_proc)
-    test_behave.assign(prefix_cmd_trig)
-    test_behave.assign(suffix_cmd_trig)
-    test_behave.assign(hbeat_proc)
+    bd.assign_proc(spec_proc)
+    bd.assign_proc(prefix_cmd_trig)
+    bd.assign_proc(suffix_cmd_trig)
+    bd.assign_proc(hbeat_proc)
 
-    print(test_behave.debug())
+    self.assertIn(prefix_cmd_trig, bd.prefix_cmd_trigs)
+    self.assertIn(suffix_cmd_trig, bd.suffix_cmd_trigs)
+    self.assertIn(hbeat_proc, bd.hbeat_procs)
+
+    bd.remove_all_procs()
+
+    self.assertNotIn(prefix_cmd_trig, bd.prefix_cmd_trigs)
+    self.assertNotIn(suffix_cmd_trig, bd.suffix_cmd_trigs)
+    self.assertNotIn(hbeat_proc, bd.hbeat_procs)
+    
 
 if __name__ == "__main__":
   unittest.main()

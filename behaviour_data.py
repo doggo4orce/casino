@@ -1,5 +1,6 @@
 import cmd_trig_data
 from color import *
+import copy
 import hbeat_proc_data
 import mudlog
 import spec_proc_data
@@ -36,6 +37,7 @@ class behaviour_data:
 
   """assign_proc(proc)         <- assign spec proc
      assign_procs(spec_procs)  <- assign list of spec procs
+     copy_from(behaviour)      <- copy all spec procs
      remove_spec_procs()       <- remove all spec procs
      remove_prefix_trigs()     <- remove all prefix_cmd_trigs
      remove_suffic_trigs()     <- remove all suffix_cmd_trigs
@@ -60,6 +62,11 @@ class behaviour_data:
   def assign_procs(self, procs):
     for proc in procs:
       self.assign_spec_proc(proc)
+
+  def copy_from(self, behaviour):
+    self.prefix_cmd_trigs = copy.copy(behaviour.prefix_cmd_trigs)
+    self.suffix_cmd_trigs = copy.copy(behaviour.suffix_cmd_trigs)
+    self.hbeat_procs = copy.copy(behaviour.hbeat_procs)
 
   def remove_prefix_trigs(self):
     self.prefix_cmd_trigs = list()

@@ -80,9 +80,22 @@ class TestActorData(unittest.TestCase):
 
     ad.remove_procs()
 
-    print("Since procs were removed, no new output should be below this line.")
-
+    print("should be nothing between this line")
     ad.call_hbeat_procs("uossmud", "sql")
+    print("and this line")
+
+    ad.assign_procs(
+      [ pct1, pct2, sct1, sct2, hb1, hb2 ]
+    )
+
+    ad2 = actor_data.actor_data()
+
+    ad2.copy_from(ad)
+
+    print("Calling procs for second actor")
+    ad2.call_prefix_cmd_trigs("grottomud","beltriz", "slap", "in the face", "wld_files")
+    ad2.call_suffix_cmd_trigs("grottomud","roobiki", "cry", "into his arms", "social_files")
+    ad2.call_hbeat_procs("uossmud", "sql")
 
 if __name__ == "__main__":
   unittest.main()

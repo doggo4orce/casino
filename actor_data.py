@@ -15,7 +15,9 @@ class actor_data:
 
   """assign_proc(spec_proc)     <- assign spec proc to behaviour
      assign_procs(spec_procs)   <- assign list of procs to behaviour
+     copy_from(actor)           <- copy behaviour from actor
      remove_procs()             <- remove all procs from behaviour
+     copy_from(actor)           <- copy actor fields
      call_prefix_triggers(args) <- calls all prefix_cmd_trigs
      call_suffix_triggers(args) <- calls all suffix_cmd_trigs
      call_hbeat_procs(args)     <- calls all hbeat_procs"""
@@ -26,6 +28,9 @@ class actor_data:
   def assign_procs(self, spec_procs):
     for spec_proc in spec_procs:
       self._behaviour.assign_proc(spec_proc)
+
+  def copy_from(self, actor):
+    self._behaviour.copy_from(actor._behaviour)
 
   def remove_procs(self):
     self._behaviour.remove_all_procs()

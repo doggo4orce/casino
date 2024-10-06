@@ -2,7 +2,7 @@ import behaviour_data
 import cmd_trig_data
 
 class actor_data:
-  def __init__(self, behaviour):
+  def __init__(self, behaviour=None):
     self._behaviour = behaviour_data.behaviour_data()
 
     if behaviour != None:

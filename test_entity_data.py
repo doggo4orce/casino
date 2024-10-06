@@ -1,6 +1,8 @@
 import entity_data
 import entity_proto_data
 import namelist_data
+import unique_id_data
+
 import unittest
 
 class TestEntity(unittest.TestCase):
@@ -56,5 +58,29 @@ class TestEntity(unittest.TestCase):
     self.assertIn("thief", names)
     self.assertEqual(len(names), 2)
 
+  def test_copy(self):
+    ent = entity_data.entity_data()
+    ent.name = "a young dog"
+    ent.remove_all_aliases()
+    ent.add_alias("dog")
+    ent.add_alias("young")
+    ent.add_alias("puppy")
+    ent.ldesc = "A young dog chases after a ball."
+    ent.desc = "<p>It looks like a young puppy.</p>"
+    ent.room = unique_id_data.unique_id_data("casino", "bathroom")
+
+
+    ent2 = entity_data.entity_data()
+    ent2.copy_from(ent)
+
+    self.assertEqual(ent.name, ent2.name)
+    self.assertEqual(ent.desc, ent2.desc)
+    self.assertEqual(ent.room, ent2.room)
+    self.assertEqual(ent.aliases(), ent2.aliases())
+
+    ent.remove_alias("young")
+    self.assertFalse(ent.has_alias("young"))
+    self.assertTrue(ent2.has_alias("young"))
+    
 if __name__ == "__main__":
   unittest.main()

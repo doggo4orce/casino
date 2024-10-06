@@ -6,6 +6,7 @@ class npc_proto_data(entity_proto_data.entity_proto_data):
   def __init__(self):
     super().__init__()
     # define NPC specific fields below
+    self.behaviour = behaviour_data.behaviour_data()
 
   def debug(self):
     ret_val = ""

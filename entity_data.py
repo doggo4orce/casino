@@ -67,9 +67,8 @@ class entity_data:
       return None
     return self.room.zone_id
 
-  """Wrapped to namelist:
-
-     add_alias(alias)        <- adds a new alias to namelist
+  """add_alias(alias)        <- adds a new alias to namelist
+     copy_from(entity)       <- make a copy, ignores location
      has_alias(alias)        <- check namelist for alias
      num_aliases             <- count aliases in namelist
      remove_aliases(alias)   <- remove alias from namelist
@@ -79,7 +78,13 @@ class entity_data:
 
   def add_alias(self, alias):
     self._namelist.add_alias(alias)
-      
+
+  def copy_from(self, entity):
+    self.name = entity.name
+    self.desc = entity.desc
+    self.ldesc = entity.ldesc
+    self._namelist = copy.deepcopy(entity._namelist)
+
   def has_alias(self, alias):
     return self._namelist.has_alias(alias)
 

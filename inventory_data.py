@@ -1,3 +1,4 @@
+import copy
 import mudlog
 
 class inventory_data:
@@ -6,13 +7,24 @@ class inventory_data:
   def __init__(self):
     self._contents = []
 
-  """add_object(obj)         <- add object to inventory
-     has_object(obj)         <- check if object is in inventory
-     remove_object(obj)      <- remove object from inventory
-     object_by_alias(alias)  <- look up object in inventory by alias"""
+  """add_object(obj)        <- add object to inventory
+     contents()             <- returns a copy of self._contents
+     empty()                <- check if inventory is empty
+     has_object(obj)        <- check if object is in inventory
+     remove_object(obj)     <- remove object from inventory
+     remove_all()           <- remove all objects from inventory
+     object_by_alias(alias) <- look up object in inventory by alias
+     transfer_obj(obj, inv) <- transfer object to new inventory
+     transfer_all(inv)      <- transfer all contents to new inventory"""
 
   def add_object(self, obj):
     self._contents.append(obj)
+
+  def contents(self):
+    return copy.copy(self._contents)
+
+  def empty(self):
+    return len(self) == 0
 
   def has_object(self, obj):
     return obj in self
@@ -22,12 +34,33 @@ class inventory_data:
       self._contents.remove(obj)
     else:
       mudlog.error(f"Trying to remove {obj} from inventory which doesn't contain it!")
-    
+
+  def remove_all(self):
+    for obj in self.contents():
+      self.remove_object(obj)
+
   def object_by_alias(self, alias):
     for obj in self:
       if obj.has_alias(alias):
         return obj
     return None
+
+  def transfer_obj(self, obj, inv):
+    if obj == None:
+      mudlog.error(f"Trying to transfer object None from inventory.")
+    elif inv == None:
+      mudlog.error(f"Trying to transfer object from inventory None.")
+    else:
+      self.remove_object(obj)
+      inv.add_object(obj)
+
+  def transfer_all(self, inv):
+    if inv == None:
+      mudlog.error(f"Trying to transfer_all into inventory None.")
+      return
+
+    for obj in self.contents():
+      self.transfer_obj(obj, inv)
 
   def __contains__(self, obj):
     return obj in self._contents

@@ -33,5 +33,38 @@ class TestInventory(unittest.TestCase):
     print("should cause error message")
     inv.remove_object(obj1)
 
+  def test_transfer(self):
+    inv = inventory_data.inventory_data()
+    inv2 = inventory_data.inventory_data()
+
+    obj1 = object_data.object_data()
+    obj1.reset_aliases("small", "sword")
+
+    obj2 = object_data.object_data()
+    obj2.reset_aliases("hot", "lantern")
+
+    obj3 = object_data.object_data()
+    obj3.reset_aliases("steel", "mace")
+
+    inv.add_object(obj1)
+    inv.add_object(obj2)
+    inv.add_object(obj3)
+
+    inv.transfer_obj(obj2, inv2)
+
+    self.assertNotIn(obj2, inv)
+    self.assertIn(obj2, inv2)
+    self.assertEqual(len(inv), 2)
+    self.assertEqual(len(inv2), 1)
+
+    inv.transfer_all(inv2)
+
+    self.assertNotIn(obj1, inv)
+    self.assertNotIn(obj3, inv)
+
+    self.assertTrue(inv.empty())
+
+    self.assertEqual(len(inv2), 3)
+
 if __name__ == "__main__":
   unittest.main()

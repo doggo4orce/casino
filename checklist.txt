@@ -3,7 +3,7 @@ baccarat_table.py
 behaviour_data.py     x
 buffer_data.py        x
 cards.py
-character_data.py
+character_data.py     x
 cmd_trig_data.py      x
 color.py
 commands.py
@@ -24,7 +24,7 @@ namelist_data.py      x
 nanny.py
 npc_proto_data.py     x
 obj_proto_data.py     x
-object_data.py
+object_data.py        x
 olc.py
 orm.py
 paragraph.py          ?
@@ -34,7 +34,6 @@ room.py
 server.py
 spec_proc_data.py     x
 string_handling.py    x
-structs.py            phasing this out
 table.py
 telnet.py
 unique_id_data.py     x

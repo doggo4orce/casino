@@ -17,3 +17,17 @@ class pc_save_data:
   def __init__(self):
     self.numerical = pc_save_data_numerical()
     self.text = pc_save_data_strings()
+
+  @property
+  def hp(self):
+    return self.numerical.hp
+  @property
+  def title(self):
+    return self.text.title
+
+  @hp.setter
+  def hp(self, new_hp):
+    self.numerical.hp = new_hp
+  @title.setter
+  def title(self, new_title):
+    self.text.title = new_title

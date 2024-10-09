@@ -1,3 +1,4 @@
+from color import *
 import config
 import dataclasses
 import mudlog
@@ -19,6 +20,12 @@ class pref_data:
       setattr(self, field, value)
     else:
       mudlog.warning(f"Trying to set non-existent {self.__class__.__name__}.{field} to {value}.")
+
+  def debug(self):
+    ret_val = ""
+    for field in self.__dataclass_fields__:
+      ret_val += f"{field}: {CYAN}{getattr(self, field)}{NORMAL}\r\n"
+    return ret_val
 
 @dataclasses.dataclass
 class pref_data_numeric(pref_data):
@@ -59,6 +66,14 @@ class pref_data_flags(pref_data):
       mudlog.warning(f"Trying to switch non-boolean pref_data_flags.{field}, turning off.")
       setattr(self, field, False)
 
+  def flags_string(self):
+    fields = self.__dataclass_fields__
+    flags = [ field for field in fields if getattr(self, field)]
+    return ' '.join(flags)
+
+  def debug(self):
+    return f"Pref Flags: {CYAN}{self.flags_string()}{NORMAL}\r\n"
+
 class preferences_data:
   """Creates preferences_data object used to store various types of preferences,
      each stored in their own corresponding derived subclass of pref_data
@@ -93,3 +108,5 @@ class preferences_data:
   def flip(self, field):
     if hasattr(self.flags, field):
       self.flags.flip(field)
+    else:
+      mudlog.warning(f"Trying to flip non-existent preferences_data.{field}.")

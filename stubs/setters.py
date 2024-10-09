@@ -17,6 +17,17 @@ class A:
   def y(self, new_y):
     self._y = new_y
 
-x = A(2,3)
+class B:
+  def __init__(self, new_x, new_y):
+    self.inner = A(new_x, new_y)
 
-print(vars(x))
+
+weffer = B(2,3)
+
+weffer.wef = "hello"
+
+print(vars(weffer))
+
+weffer.inner.z = None
+
+print(vars(weffer))

@@ -1,38 +1,41 @@
 from color import *
+import buffer_data
 import exit_data
-import inventory
+import inventory_data
 import object_data
-import pc
+import pc_data
 import room_attribute_data
 import string_handling
 import unique_id_data
 
 class room_data:
   """Creates a new room which may be occupied by characters and objects (eventually)
-      attributes =
+      attributes = contains static data of room
       people     = list of characters in the room
       contents   = list of objects on the ground"""
   def __init__(self):
-    self._attributes = room_attribute_data.room_attribute_data("Unfinished Room", "It looks unfinished.")
-    self._people    = list()
-    self._contents = inventory.inventory()
+    self._attributes = room_attribute_data.room_attribute_data()
+    self.name = "Unfinished Room"
+    self.desc = "<p>This room has no description.  Use the REDIT command while standing inside this room to give it one!</p>"
+    self._people = list()
+    self._contents = inventory_data.inventory_data()
 
   # Getters
   @property
   def attributes(self):
     return self._attributes
   @property
-  def name(self):
-    return self.attributes.name
-  @property
-  def unique_id(self):
-    return self.attributes.uid
-  @property
   def id(self):
     return self.attributes.id
   @property
   def zone_id(self):
     return self.attributes.zone_id
+  @property
+  def unique_id(self):
+    return self.attributes.uid
+  @property
+  def name(self):
+    return self.attributes.name
   @property
   def desc(self):
     return self.attributes.desc
@@ -50,23 +53,18 @@ class room_data:
   @attributes.setter
   def attributes(self, new_attributes):
     self._attributes = new_attributes
-
-  @name.setter
-  def name(self, new_name):
-    self.attributes.name = new_name
-
-  @unique_id.setter
-  def unique_id(self, new_unique_id):
-    self.attributes.uid = new_uid
-
   @id.setter
   def id(self, new_id):
     self.attributes.id = new_id
-
   @zone_id.setter
   def zone_id(self, new_zone_id):
     self.attributes.zone_id = new_zone_id
-
+  @unique_id.setter
+  def unique_id(self, new_unique_id):
+    self.attributes.uid = new_uid
+  @name.setter
+  def name(self, new_name):
+    self.attributes.name = new_name
   @desc.setter
   def desc(self, new_desc):
     self.attributes.desc = new_desc
@@ -84,6 +82,7 @@ class room_data:
      exit(dir)                 <- returns exit object leading in direction dir or None
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
      has_exit(dir)             <- checks if the room has an exit leading in direction dir"""
+
   def add_char(self, ch):
     ch.room = self.unique_id
     self._people.append(ch)
@@ -143,9 +142,7 @@ class room_data:
         ch.write(msg)
 
   def exit(self, direction):
-    if direction in self._exits.keys():
-      return self._exits[direction]
-    return None
+    return self.attributes.exit(direction)
 
   def get_destination(self, direction):
     exit = self.exit(direction)
@@ -156,9 +153,11 @@ class room_data:
   def has_exit(self, direction):
     return self.attributes.has_exit(direction)
 
-  def __str__(self):
-    ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
-    ret_val += f"Description:\r\n{string_handling.paragraph(self.desc, 65, True)}\r\n"
-    ret_val += self.display_exits()
+  def debug(self):
+    buf = buffer_data.buffer_data(self.desc)
+
+    ret_val = f"{CYAN}{self.name}{NORMAL}\r\n"
+    ret_val += f"{buf.display(width=65, indent=True, numbers=True, color=True)}\r\n"
+    ret_val += f"{CYAN}{self.display_exits}{NORMAL}"
 
     return ret_val

@@ -52,6 +52,5 @@ class actor_data:
       proc.call(mud, self, db)
 
   def debug(self):
-    ret_val = "Actor:\r\n"
-    ret_val += self._behaviour.debug()
+    ret_val = self._behaviour.debug()
     return ret_val

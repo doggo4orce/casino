@@ -13,6 +13,12 @@ possibility:
   -boolean
   -textual
 
+major change (oct 6):
+  -character no longer derives from entity
+  -this means character and thus PC doesn't have an ldesc
+  -characters still manage inventories
+  -and still act as the common functionality between NPCs and PCs
+
 another possibility:
 
 class save_data:

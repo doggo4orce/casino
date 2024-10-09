@@ -15,7 +15,7 @@ class character_data(entity_data.entity_data):
     self.name = "an unfinished character"
     self.desc = "This character looks unfinished."
     self.ldesc = "An unfinished character is here."
-    self.room = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
+    self.room = None
     self.reset_aliases("unfinished", "character")
     self._inventory = inventory_data.inventory_data()
 
@@ -62,8 +62,7 @@ class character_data(entity_data.entity_data):
     return
 
   def debug(self):
-    ret_val = f"Character Information\r\n"
-    ret_val += super().debug()
+    ret_val = super().debug()
     return ret_val
 
   def __str__(self):

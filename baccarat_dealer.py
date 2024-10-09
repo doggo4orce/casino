@@ -3,12 +3,11 @@ from color import *
 import commands
 import enum
 import event
-import logging
+import mudlog
 import nanny
 import pc
 import string_handling
 import spec_proc_data
-import structs
 
 class baccarat_hand:
   """Creates a single hand of baccarat.

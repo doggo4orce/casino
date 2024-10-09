@@ -19,16 +19,16 @@ class room_attribute_data:
     self._exits = list()
 
   @property
+  def uid(self):
+    return self._uid
+
+  @property
   def id(self):
     return self.uid.id
 
   @property
   def zone_id(self):
     return self.uid.zone_id
-
-  @property
-  def uid(self):
-    return self._uid
 
   @property
   def name(self):
@@ -45,6 +45,14 @@ class room_attribute_data:
   @uid.setter
   def uid(self, new_uid):
     self._uid = new_uid
+
+  @id.setter
+  def id(self, new_id):
+    self.uid.id = new_id
+
+  @zone_id.setter
+  def zone_id(self, new_zone_id):
+    self.uid.zone_id = new_zone_id
 
   @name.setter
   def name(self, new_name):

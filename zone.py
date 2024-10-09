@@ -8,9 +8,8 @@ from color import *
 import config
 import database
 import exit_data
-import room
+import room_data
 import string_handling
-import structs
 
 class zone:
   """Creates a zone, which is a modular chunk of the game world.

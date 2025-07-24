@@ -32,8 +32,11 @@ def mudlog(type, msg):
   lines = msg.split("\r\n")
 
   # TODO: remove time stamps on subsequent lines while preserving formatting
-  for line in lines:
-    log_func(line)
+  log_func(lines[0])
+
+  if len(lines) > 1:
+    for line in lines[1:]:
+      print(f"{15*'-'} :: {line}")
 
 def info(msg):
   mudlog(mudlog_type.INFO, msg)

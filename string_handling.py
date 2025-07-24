@@ -49,8 +49,8 @@ def oxford_comma(words):
     return ', '.join(words[:-1]) + ', and ' + words[-1]
 
 # check if a vref str is a valid internal code, like a room within a zone
-# so if valid_id('zn') and valid_id('rm') both return True, then 'zn[rm]'
-# is a sensible full identifier
+# so if valid_id('zn') and valid_id('rm') both return True, then 'rm@zn'
+# is a sensible vref
 def valid_id(str):
   return alpha_num_under_score(str)
 
@@ -133,13 +133,24 @@ def paragraph(text, width, indent=False):
 
   return par.rstrip()
 
-# used to read files in lib/
-# should be deprecated since we now use sql
-# def split_tag_value(line):
-#   var_list = line.split()
-#   return var_list[0], " ".join(var_list[1:])
+def parse_reference(vref):
+  # first find '@'
+  codes = vref.split('@')
 
-def parse_reference(code):
+  # first check for local reference
+  if len(codes) == 1 and valid_id(vref):
+    return vref, None
+  # otherwise there should be one '@'
+  elif len(codes) != 2:
+    return None, None
+
+  # make sure codes are valid
+  if not (valid_id(codes[0]) and valid_id(codes[1])):
+    return None, None
+
+  return codes[0], codes[1]
+
+def parse_reference_old(code):
   # if its just a local reference, put the zone_id to None
   if valid_id(code):
     return None, code

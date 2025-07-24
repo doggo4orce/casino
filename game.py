@@ -3,20 +3,18 @@ import baccarat_table
 import cards
 import cmd_trig_data
 import config
-import dataclasses
 import hbeat_proc_data
 import enum
-import event
+import event_data
 import glob
 import mudlog
 import object_data
 import os
-import pc
-import room
+import npc_data
+import room_data
 import table
 import string_handling
-import structs
-import zone
+import zone_data
 
 # TODO : change reference format from global[local] to local@global
 
@@ -30,58 +28,58 @@ class game:
     self._zones     = dict()
     self._chars     = list()
     self._objects   = list()
-    self._events    = event.event_table()
+    self._events    = event_table_data.event_table_data()
 
-  """add_event(e)            <- add event e to self_events
-     heart_beat()            <- calls the event handlers heart_beat() function
-     call_heart_beat_procs() <- calls all pulsing special procedures for npcs
-     add_zone(zone)          <- adds a zone to the game
-     zone_by_id(id)          <- iterate through self.zones zones to find zone with identifier id
-     room_by_code(code)      <- look up room using unique_identifier code
-     npc_by_code(code)       <- look up npc prototype by code
-     obj_by_code(code)       <- look up object prototype by code
+  """add_event(e)               <- add event e to self_events
+     heart_beat()               <- calls the event handlers heart_beat() function
+     call_hbeat_procs()         <- calls all pulsing special procedures for npcs
+     add_zone(zone)             <- adds a zone to the game
+     zone_by_id(id)             <- iterate through self.zones zones to find zone with identifier id
+     room_by_code(code)         <- look up room using unique_identifier code
+     npc_by_code(code)          <- look up npc prototype by code
+     obj_by_code(code)          <- look up object prototype by code
      echo_around(ch, hide, msg) <- sends msg to all in room except ch and those in hide list
-     add_char(ch)            <- adds character ch to the wld, in the appropriate room or VOID_ROOM
-     extract_char(ch)        <- extracts character ch from the wld and the appropriate room
-     add_obj(obj)            <- these functions are the same
-     extract_obj(obj)        <- except for objects instead
-     assign_spec_procs()     <- assigns special procedures to elements of npc_proto
-     startup()               <- loads all of the zone folders in WORLD_FOLDER
-     load_npc(code)          <- looks up the npc in self.npc_proto and returns it or None
-     load_obj(vnum)          <- looks up the obj in self.objs and return a copy or None
-     read_npc_file(filename) <- reads all the npcs stored in filename
-     read_obj_file(filename) <- reads all the objects stored in a filename
-     pc_by_id(id)            <- searches chars for a pc with id and returns it if found
-     lose_link(ch)           <- disconnects player from their d (seen by players)
-     reconnect(d, ch)        <- reconnects player to their d (seen by players)"""
+     add_char(ch)               <- adds character ch to the wld, in the appropriate room or VOID_ROOM
+     extract_char(ch)           <- extracts character ch from the wld and the appropriate room
+     add_obj(obj)               <- these functions are the same
+     extract_obj(obj)           <- except for objects instead
+     assign_spec_procs()        <- assigns special procedures to elements of npc_proto
+     startup()                  <- loads all of the zone folders in WORLD_FOLDER
+     load_npc(code)             <- looks up the npc in self.npc_proto and returns it or None
+     load_obj(vnum)             <- looks up the obj in self.objs and return a copy or None
+     read_npc_file(filename)    <- reads all the npcs stored in filename
+     read_obj_file(filename)    <- reads all the objects stored in a filename
+     pc_by_id(id)               <- searches chars for a pc with id and returns it if found
+     lose_link(ch)              <- disconnects player from their d (seen by players)
+     reconnect(d, ch)           <- reconnects player to their d (seen by players)"""
 
   def add_event(self, e):
     self._events.add_event(e)
 
   def heart_beat(self, db):
-    self._events.heart_beat(self, db)
+    self._events.heartbeat(self, db)
 
-  def call_heart_beat_procs(self, db):
+  def call_hbeat_procs(self, db):
     for mob in self._chars:
-      if isinstance(mob, pc.npc):
-        mob.call_heart_beat_procs(self, db)
+      if isinstance(mob, npc_data.npc_data):
+        mob.call_hbeat_procs(self, db)
 
   def add_zone(self, zn):
     if self.zone_by_id(zn.id) == None:
       self._zones[zn.id] = zn
     else:
-      logging.warning("Trying to add zone {zn.name} but id '{zn.id}'' but already exists.")
+      logging.warning(f"Trying to add zone {zn.name} but id '{zn.id}'' but already exists.")
 
   def zone_by_id(self, id):
     if id not in self._zones.keys():
       return None
     return self._zones[id]
 
-  def room_by_code(self, code):
-    # expects a structs.unique_identifier() code
-    zone_id = code.zone_id
-    room_id = code.id
-    if zone_id == None and room_id == None:
+  def room_by_uid(self, uid):
+    zone_id = uid.zone_id
+    room_id = uid.id
+
+    if zone_id == None or id == None:
       return None
 
     zone = self.zone_by_id(zone_id)
@@ -91,8 +89,8 @@ class game:
     
     return zone.room_by_id(room_id)
     
-  def npc_by_code(self, code):
-    zone_id, npc_id = string_handling.parse_reference(code)
+  def npc_by_uid(self, uid):
+    zone_id, npc_id = string_handling.parse_reference(uid)
 
     if zone_id == None or npc_id == None:
       return None

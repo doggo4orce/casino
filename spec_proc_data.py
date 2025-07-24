@@ -53,16 +53,16 @@ class spec_proc_data:
     ret_val = f"spec_proc({self.name})\r\n"
     # if no function, just say so
     if self.func == None:
-      ret_val += "  has no function"
+      ret_val += "has no function"
       return ret_val
     # otherwise, build error message
-    ret_val += f"  arg error with function {self.func.__name__}\r\n"
-    ret_val += f"  expected_args: "
+    ret_val += f"arg error with function {self.func.__name__}\r\n"
+    ret_val += f"expected_args: "
     if len(self.expected_args) == 0:
       ret_val += "None\r\n"
     else:
       ret_val += f"{', '.join(self.expected_args)}\r\n"
-    ret_val += f"  function_args: "
+    ret_val += f"function_args: "
     if len(self.args) == 0:
       ret_val += "None"
     else:

@@ -21,9 +21,12 @@ class pref_data:
     else:
       mudlog.warning(f"Trying to set non-existent {self.__class__.__name__}.{field} to {value}.")
 
+  def fields(self):
+    return self.__dataclass_fields__
+
   def debug(self):
     ret_val = ""
-    for field in self.__dataclass_fields__:
+    for field in self.fields():
       ret_val += f"{field}: {CYAN}{getattr(self, field)}{NORMAL}\r\n"
     return ret_val
 
@@ -40,6 +43,7 @@ class pref_data_text(pref_data):
   """Derived pref_data class to store text preferences.
      color_mode = element of ['off', '16', or '256']"""
   color_mode: str = config.DEFAULT_COLOR_MODE
+  title:      str = config.DEFAULT_TITLE
 
 @dataclasses.dataclass
 class pref_data_flags(pref_data):

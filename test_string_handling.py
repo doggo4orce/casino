@@ -87,39 +87,39 @@ class TestStringHandling(unittest.TestCase):
     # proper global reference
     global_id = "some_zone_123"
     local_id = "some_thing_123"
-    reference = f"{global_id}[{local_id}]"
+    reference = f"{local_id}@{global_id}"
 
-    result_global, result_local = string_handling.parse_reference(reference)
+    result_local, result_global = string_handling.parse_reference(reference)
 
     self.assertEqual(result_global, global_id)
     self.assertEqual(result_local, local_id)
 
     # the global reference is missing
     reference = local_id
-    result_global, result_local = string_handling.parse_reference(reference)
+    result_local, result_global = string_handling.parse_reference(reference)
 
     # so only the local reference should be stored
     self.assertIsNone(result_global)
     self.assertEqual(result_local, local_id)
 
     # invalid_format because of invalid global id
-    reference = f"invalid_global![valid_local]"
+    reference = f"invalid_local!@valid_global"
 
-    result_global, result_local = string_handling.parse_reference(reference)
+    result_local, result_global = string_handling.parse_reference(reference)
     self.assertIsNone(result_global)
     self.assertIsNone(result_local)
 
     # invalid_format because of invalid local id
-    reference = f"valid_global[invalid_local!]"
+    reference = f"valid_local@invalid_global!"
 
-    result_global, result_local = string_handling.parse_reference(reference)
+    result_local, result_global = string_handling.parse_reference(reference)
     self.assertIsNone(result_global)
     self.assertIsNone(result_local)
 
     # unrecognizable format
-    reference = f"garble[de-gook)"
+    reference = f"garble@de@gook"
 
-    result_global, result_local = string_handling.parse_reference(reference)
+    result_local, result_global = string_handling.parse_reference(reference)
     self.assertIsNone(result_global)
     self.assertIsNone(result_local)
 

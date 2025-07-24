@@ -49,6 +49,8 @@ class TestRoomAttribute(unittest.TestCase):
     self.assertEqual(dest.zone_id, "casino")
     self.assertEqual(dest.id, "elevator07")
 
+    print(r_att.debug())
+
     # test disconnect(dir)
     r_att.disconnect(exit_data.direction.NORTH)
     ex = r_att.exit(exit_data.direction.NORTH)

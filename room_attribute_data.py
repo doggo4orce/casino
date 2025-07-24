@@ -1,3 +1,4 @@
+from color import *
 import exit_data
 from mudlog import mudlog_type, mudlog
 import unique_id_data
@@ -130,6 +131,16 @@ class room_attribute_data:
     if ex == None:
       return None
     return ex.destination
+
+  def debug(self):
+    ret_val = f"UID: {CYAN}{self.uid}{NORMAL}\r\n"
+    ret_val += f"Name: {CYAN}{self.name}{NORMAL}\r\n"
+    ret_val += f"Desc: {CYAN}{self.desc}{NORMAL}\r\n"
+
+    for ex in self._exits:
+      ret_val += ex.debug()
+
+    return ret_val
 
 
 

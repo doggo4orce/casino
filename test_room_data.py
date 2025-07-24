@@ -1,4 +1,5 @@
-import database
+import character_data
+import object_data
 import exit_data
 import room_data
 
@@ -22,25 +23,28 @@ class TestRoomData(unittest.TestCase):
 
     print(rm.debug())
 
-  def test_save_exit(self):
-    db = database.database(":memory:",test=True)
-    db.create_tables()
-
+  def test_add_remove_chars(self):
     rm = room_data.room_data()
-    rm.id = "hallway"
+
+    rm.name = "A Long Dark Hallway"
+    rm.desc = "<p>It is cold, dark, and damp, and miserable.</p>"
+    rm.id = "cold_hallway"
     rm.zone_id = "newbie_zone"
 
-    ex = exit_data.exit_data(exit_data.direction.EAST, "newbie_zone", "hallway2")
+    dummy = character_data.character_data()
+    obj = object_data.object_data()
 
-    db.save_exit(rm, ex)
+    rm.add_char(dummy)
+    rm.add_obj(obj)
 
-    self.assertTrue(db.contains_exit(rm, exit_data.direction.EAST))
+    self.assertTrue(rm.has_char(dummy))
+    self.assertTrue(rm.has_obj(obj))
 
-  # def test_save_room(self):
-  #   db = database.database(":memory:",test=True)
-  #   db.create_tables()
+    rm.remove_char(dummy)
+    rm.remove_obj(obj)
 
-  #   db.save_room(rm)
+    self.assertFalse(rm.has_char(dummy))
+    self.assertFalse(rm.has_obj(obj))
 
 if __name__ == "__main__":
   unittest.main()

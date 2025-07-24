@@ -8,6 +8,9 @@ class TestNPCProtoData(unittest.TestCase):
   def test_npc_proto_data(self):
     npc_p = npc_proto_data.npc_proto_data()
 
+    npc_p.id = 'happy_npc'
+    npc_p.zone_id = 'test_zone'
+
     npc_p.name = "a happy npc"
     npc_p.remove_all_aliases()
     npc_p.add_alias("happy")
@@ -27,8 +30,8 @@ class TestNPCProtoData(unittest.TestCase):
     def g(x,y,z):
       return x - y
     
-    hbeat_proc_data.hbeat_proc_data.set_expected_args("x", "y")
-    cmd_trig_data.cmd_trig_data.set_expected_args("x", "y", "z")
+    hbeat_proc_data.hbeat_proc_data.expected_args = ["x", "y"]
+    cmd_trig_data.cmd_trig_data.expected_args = ["x", "y", "z"]
 
     proc_f = hbeat_proc_data.hbeat_proc_data("heartbeat f", f)
     proc_g = cmd_trig_data.prefix_cmd_trig_data("command g", g)

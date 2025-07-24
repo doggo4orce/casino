@@ -21,14 +21,14 @@ class TestUniqueID(unittest.TestCase):
     self.assertIsNone(uid.zone_id)
     self.assertIsNone(uid.id)
 
-    uid = unique_id_data.unique_id_data.from_string("stockville[casino]")
+    uid = unique_id_data.unique_id_data.from_string("casino@stockville")
     self.assertEqual(uid.zone_id, "stockville")
     self.assertEqual(uid.id, "casino")
 
     uid.zone_id = None
     self.assertEqual(uid.zone_id, None)
 
-    self.assertEqual(str(uid), "None[casino]")
+    self.assertEqual(str(uid), "casino")
 
     uid.id = None
     self.assertEqual(uid.id, None)

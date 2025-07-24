@@ -52,7 +52,7 @@ class namelist_data:
     return self._aliases[key]
 
   def __str__(self):
-    return ' '.join(self._aliases)
+    return ', '.join(self._aliases)
 
 class namelist_data_iterator:
   def __init__(self, namelist):

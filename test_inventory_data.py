@@ -16,6 +16,9 @@ class TestInventory(unittest.TestCase):
     inv.add_object(obj1)
     inv.add_object(obj2)
 
+    self.assertEqual(inv[0], obj1)
+    self.assertEqual(inv[1], obj2)
+
     self.assertEqual(len(inv), 2)
 
     self.assertEqual(obj1, inv.object_by_alias("small"))

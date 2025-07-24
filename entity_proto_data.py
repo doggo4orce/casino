@@ -45,12 +45,13 @@ class entity_proto_data:
 
   """Wrapped to namelist:
 
-     add_alias(alias)      <- adds a new alias to namelist
-     has_alias(alias)      <- check namelist for alias
-     num_aliases           <- count aliases in namelist
-     remove_aliases(alias) <- remove alias from namelist
-     remove_all_alias()    <- remove all aliases
-     aliases()             <- returns copy of aliases as list"""
+     add_alias(alias)        <- adds a new alias to namelist
+     has_alias(alias)        <- check namelist for alias
+     num_aliases             <- count aliases in namelist
+     remove_aliases(alias)   <- remove alias from namelist
+     remove_all_alias()      <- remove all aliases
+     reset_aliases(*aliases) <- start fresh with new aliases
+     aliases()               <- returns copy of aliases as list"""
 
   def add_alias(self, alias):
     self._namelist.add_alias(alias)
@@ -68,6 +69,9 @@ class entity_proto_data:
   def remove_all_aliases(self):
     self._namelist.remove_all()
 
+  def reset_aliases(self, *aliases):
+    self._namelist.reset(*aliases)
+
   def aliases(self):
     return self._namelist.list()
 
@@ -77,17 +81,17 @@ class entity_proto_data:
      assign_spec_procs(spec_procs) <- assign a list of spec procs to behaviour"""
 
   def assign_spec_proc(self, spec_proc):
-    self.behaviour.assign(spec_proc)
+    self.behaviour.assign_proc(spec_proc)
 
   def assign_spec_procs(self, spec_procs):
     for spec_proc in spec_procs:
-      self.behaviour.assign(spec_proc)
+      self.behaviour.assign_proc(spec_proc)
 
   # display debugging information
   def debug(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"LDesc: {CYAN}{self.ldesc}{NORMAL}\r\n"
-    ret_val += f"Alias: {CYAN}{str(self.namelist)}{NORMAL}\r\n"
-    ret_val += f"Desc: {CYAN}{str(self.desc)}{NORMAL}\r\n"
+    ret_val += f"Alias: {CYAN}{self._namelist}{NORMAL}\r\n"
+    ret_val += f"Desc: {CYAN}{self.desc}{NORMAL}\r\n"
     ret_val += self.behaviour.debug()
     return ret_val

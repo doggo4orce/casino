@@ -36,13 +36,13 @@ class unique_id_data:
       new_id = None
     self._id = new_id
 
-  # TODO: get rid of the tag[tag] format and just reference stuff with two separate strings
   @classmethod
   def from_string(cls, ref_string):
-    zone_id, id = string_handling.parse_reference(ref_string)
+    id, zone_id = string_handling.parse_reference(ref_string)
     return unique_id_data(zone_id, id)
 
-  # TODO:  if zone_id == None, should this just return self.id?
-  # ALSO: should this be renamed to def vref(self) ?
   def __str__(self):
-    return f"{self.zone_id}[{self.id}]"
+    if self.zone_id == None:
+      return str(self._id)
+    else:
+      return f"{self.id}@{self.zone_id}"

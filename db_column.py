@@ -15,6 +15,10 @@ class db_column:
 
     if type in [int, str]:
       self._type = type
+    elif type.lower() == 'int':
+      self._type = int
+    elif type.lower() == 'text':
+      self._type = str
 
   @property
   def name(self):

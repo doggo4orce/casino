@@ -27,10 +27,10 @@ class db_result_set:
   def num_results(self):
     return len(self._results)
 
-  """add_column    <- insert new column, pads result fields with None
-     delete_column <- removes column and corresponding field from results
-     add_result    <- insert new result to self._results
-     delete_result <- remove result from self._results"""
+  """add_column(name)      <- insert new column, pads result fields with None
+     delete_column(name)   <- removes column and corresponding field from results
+     add_result(result)    <- insert new result to self._results
+     delete_result(result) <- remove result from self._results"""
 
   def add_column(self, name):
     if db_column.valid_column_name(name):
@@ -60,6 +60,9 @@ class db_result_set:
 
   def __contains__(self, result):
     return result in self._results
+
+  def __getitem__(self, key):
+    return self._results[key]
 
   def __str__(self):
     ret_val = ""

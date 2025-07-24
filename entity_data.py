@@ -104,5 +104,5 @@ class entity_data:
     ret_val += f"LDesc: {CYAN}{self.ldesc}{NORMAL}\r\n"
     ret_val += f"Alias: {CYAN}{self._namelist}{NORMAL}\r\n"
     ret_val += f"Desc: {CYAN}{str(self.desc)}{NORMAL}\r\n"
-    ret_val += f"Room: {CYAN}{self.room}{NORMAL}\r\n"
+    ret_val += f"Room: {CYAN}{self.room}{NORMAL}"
     return ret_val

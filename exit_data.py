@@ -1,3 +1,4 @@
+from color import *
 import enum
 import string_handling
 import unique_id_data
@@ -54,4 +55,8 @@ class exit_data:
     # sanity check handled internally to unique_id_data class
     self.destination.id = new_id
 
+  def debug(self):
+    if self._direction == None:
+      return None
 
+    return f"{direction(self.direction).name.lower().capitalize()}: {CYAN}{str(self.destination)}{NORMAL}"

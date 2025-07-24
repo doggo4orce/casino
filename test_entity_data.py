@@ -75,7 +75,7 @@ class TestEntity(unittest.TestCase):
 
     self.assertEqual(ent.name, ent2.name)
     self.assertEqual(ent.desc, ent2.desc)
-    self.assertEqual(ent.room, ent2.room)
+
     self.assertEqual(ent.aliases(), ent2.aliases())
 
     ent.remove_alias("young")

@@ -1,5 +1,6 @@
-from color import *
 import buffer_data
+import character_data
+from color import *
 import exit_data
 import inventory_data
 import object_data
@@ -69,8 +70,12 @@ class room_data:
   def desc(self, new_desc):
     self.attributes.desc = new_desc
 
-  """add_char(ch)              <- adds character to this room
+  """add_entity(entity)        <- (internal) add entity to room
+     remove_entity(entity)     <- (internal) remove entity from room
+     add_char(ch)              <- adds character to this room
      remove_char(ch)           <- removes character ch from this room
+     add_obj(obj)              <- add object to room
+     remove_obj(obj)           <- remove object from room
      char_by_alias(name)       <- look for char in room with name (prioritizes pc)
      pc_by_name(name)          <- look for pc in room with name
      npc_by_alias(alias)       <- looks for npc in room with alias
@@ -83,13 +88,43 @@ class room_data:
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
      has_exit(dir)             <- checks if the room has an exit leading in direction dir"""
 
+  def _add_entity(self, entity):
+    entity.room = self.unique_id
+    if isinstance(entity, character_data.character_data):
+      self._people.append(entity)
+    elif isinstance(entity, object_data.object_data):
+      self._contents.add_object(entity)
+
+  def _remove_entity(self, entity):
+    entity.room = None
+    if isinstance(entity, character_data.character_data):
+      self._people.remove(entity)
+    elif isinstance(entity, object_data.object_data):
+      self._contents.remove_object(entity)
+
+  def _has_entity(self, entity):
+    if isinstance(entity, character_data.character_data):
+      return entity in self._people
+    elif isinstance(entity, object_data.object_data):
+      return entity in self._contents
+
   def add_char(self, ch):
-    ch.room = self.unique_id
-    self._people.append(ch)
+    self._add_entity(ch)
 
   def remove_char(self, ch):
-    ch.room = None
-    self._people.remove(ch)
+    self._remove_entity(ch)
+
+  def has_char(self, ch):
+    return self._has_entity(ch)
+
+  def add_obj(self, obj):
+    self._add_entity(obj)
+
+  def remove_obj(self, obj):
+    self._remove_entity(obj)
+
+  def has_obj(self, obj):
+    return self._has_entity(obj)
 
   def char_by_alias(self, name):
     # first check for pc
@@ -154,10 +189,13 @@ class room_data:
     return self.attributes.has_exit(direction)
 
   def debug(self):
-    buf = buffer_data.buffer_data(self.desc)
-
-    ret_val = f"{CYAN}{self.name}{NORMAL}\r\n"
-    ret_val += f"{buf.display(width=65, indent=True, numbers=True, color=True)}\r\n"
-    ret_val += f"{CYAN}{self.display_exits}{NORMAL}"
-
+    ret_val = self.attributes.debug()
+    if len(self._people) > 0:
+      ret_val += "People:\r\n"
+      for ch in self._people:
+        ret_val += f"  {CYAN}{ch}{NORMAL}\r\n"
+    if len(self._contents) > 0:
+      ret_val += "Contents:\r\n"
+      for obj in self._contents:
+        ret_val += f"  {CYAN}{obj}{NORMAL}\r\n"
     return ret_val

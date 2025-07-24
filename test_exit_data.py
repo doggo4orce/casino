@@ -20,6 +20,8 @@ class TestExit(unittest.TestCase):
     self.assertEqual(ex.id, "cozy_cottage")
     self.assertEqual(ex.zone_id, "village")
 
+    print(ex.debug())
+
   def test_internal(self):
     ex = exit_data.exit_data()
 

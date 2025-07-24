@@ -1,7 +1,8 @@
 import collections
 from color import *
 import enum
-import pc
+import npc_data
+import pc_data
 import random
 
 class card_suit(enum.IntEnum):
@@ -164,7 +165,7 @@ class shoe:
 
     return ret_val
 
-class card_dealer(pc.npc):
+class card_dealer(npc_data.npc_data):
   def __init__(self):
     """shoe   = reference to the current shoe in progress if the dealer is working
        paused = a pause timer which may be set to"""

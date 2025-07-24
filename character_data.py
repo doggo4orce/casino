@@ -7,7 +7,7 @@ import unique_id_data
 
 class character_data(entity_data.entity_data):
   """Creates a new character which can act within the world.
-
+    room = uid of room character is in
     inventory = all objects held (private)"""
 
   def __init__(self):

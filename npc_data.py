@@ -1,5 +1,8 @@
 import actor_data
 import character_data
+from color import *
+import entity_data
+import unique_id_data
 
 class npc_data(character_data.character_data, actor_data.actor_data):
   """Creates a new NPC (non-playable character).
@@ -10,18 +13,36 @@ class npc_data(character_data.character_data, actor_data.actor_data):
   def __init__(self, proto=None):
     actor_data.actor_data.__init__(self)
     character_data.character_data.__init__(self)
+    self.uid = unique_id_data.unique_id_data()
     self.name = "an unfinished npc"
     self.desc = "This npc looks unfinished."
     self.ldesc = "An unfinished npc is here."
     self.reset_aliases("unfinished", "npc")
 
     if proto != None:
-      self.ldesc = proto.ldesc
+      self.zone_id = proto.zone_id
+      self.id = proto.id
+      entity_data.entity_data.__init__(self, proto)
       actor_data.actor_data.__init__(self, proto.behaviour)
+
+  @property
+  def id(self):
+    return self.uid.id
+  @property
+  def zone_id(self):
+    return self.uid.zone_id
+
+  @id.setter
+  def id(self, new_id):
+    self.uid.id = new_id
+  @zone_id.setter
+  def zone_id(self, new_zone_id):
+    self.uid.zone_id = new_zone_id
 
   """from_character(ch) <- returns npc created from ch
      copy_from(npc)     <- make copy of npc
      write(msg)         <- noop (see below)"""
+
   @classmethod
   def from_character(cls, ch):
     ret_val = cls()
@@ -29,9 +50,10 @@ class npc_data(character_data.character_data, actor_data.actor_data):
     return ret_val
 
   def copy_from(self, npc):
-    actor_data.actor_data.copy_from(self, ch)
-    character_data.character_data.copy_from(self, ch)
-    return ret_val
+    actor_data.actor_data.copy_from(self, npc)
+    character_data.character_data.copy_from(self, npc)
+    self.id = npc.id
+    self.zone_id = npc.zone_id
         
   """it's unclear what should be done with message, but since I'd like pcs and npcs
      to be as interchangeable as possible, this function ought to exist.
@@ -44,7 +66,8 @@ class npc_data(character_data.character_data, actor_data.actor_data):
     pass
 
   def debug(self):
-    ret_val = character_data.character_data.debug(self) + "\r\n"
+    ret_val = f"UID: {CYAN}{self.uid}{NORMAL}\r\n"
+    ret_val += character_data.character_data.debug(self) + "\r\n"
     ret_val += actor_data.actor_data.debug(self)
     return ret_val
 

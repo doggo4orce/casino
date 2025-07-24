@@ -6,11 +6,11 @@ class actor_data:
     self._behaviour = behaviour_data.behaviour_data()
 
     if behaviour != None:
-      for proc in behaviour.prefix_cmd_trigs():
+      for proc in behaviour.prefix_cmd_trigs:
         self._behaviour.assign_proc(proc)
-      for proc in behaviour.suffix_cmd_trigs():
+      for proc in behaviour.suffix_cmd_trigs:
         self._behaviour.assign_proc(proc)
-      for proc in behaviour.hbeat_procs():
+      for proc in behaviour.hbeat_procs:
         self._behaviour.assign_proc(proc)
 
   """assign_proc(spec_proc)     <- assign spec proc to behaviour

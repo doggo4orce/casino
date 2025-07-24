@@ -2,6 +2,7 @@ import dataclasses
 import entity_data
 import logging
 import spec_proc_data
+import unique_id_data
 
 class object_data(entity_data.entity_data):
   """Creates an object which characters can get, drop, and otherwise interact with.
@@ -18,6 +19,10 @@ class object_data(entity_data.entity_data):
       self.reset_aliases("unfinished", "object")
       self.ldesc = "An unfinished object has been left here."
       self.desc = "This object looks unfinished."
+
+  def copy_from(self, obj):
+    super().copy_from(obj)
+    # copy object specific fields here
 
   def debug(self):
     ret_val = super().debug()

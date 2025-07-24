@@ -62,6 +62,9 @@ class inventory_data:
     for obj in self.contents():
       self.transfer_obj(obj, inv)
 
+  def __getitem__(self, key):
+    return self._contents[key]
+
   def __contains__(self, obj):
     return obj in self._contents
 
@@ -77,8 +80,8 @@ class inventory_data_iterator:
     self._index = 0
 
   def __next__(self):
-    if self._index < len(self._inventory._contents):
-      result = self._inventory._contents[self._index]
+    if self._index < len(self._inventory):
+      result = self._inventory[self._index]
       self._index += 1
       return result
     raise StopIteration

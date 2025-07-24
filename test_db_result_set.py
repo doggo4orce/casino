@@ -43,7 +43,7 @@ class TestDbResultSet(unittest.TestCase):
     # now this should work
     rs.add_result(r4)
 
-    print(rs)
+    print(rs[0])
 
 if __name__ == "__main__":
   unittest.main()

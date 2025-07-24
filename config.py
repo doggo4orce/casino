@@ -25,8 +25,8 @@ PACKET_SIZE            = 256 # max bytes to read from socket each poll
 OMUD_VERSION           = '1.0 alpha'
 
 # configurable gameplay constants
-STARTING_ROOM          = 'stockville[recall]'
-VOID_ROOM              = 'stockville[void]'
+STARTING_ROOM          = 'recall@stockville'
+VOID_ROOM              = 'void@stockville'
 PLAYER_PROMPT          = '> '
 
 # player preferences

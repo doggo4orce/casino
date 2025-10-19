@@ -1,3 +1,5 @@
+from color import *
+
 class client_data:
   """term_type      = client name
      term_width     = width of terminal window
@@ -40,3 +42,8 @@ class client_data:
   @term_host.setter
   def term_host(self, new_term_host):
     self._term_host = new_term_host
+
+  def debug(self):
+    ret_val = f"Client: {CYAN}({self.term_length}x{self.term_width}) {self.term_type}{NORMAL}\r\n"
+    ret_val += f"Host: {CYAN}{self.term_host}{NORMAL}\r\n"
+    return ret_val

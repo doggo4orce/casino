@@ -11,6 +11,8 @@ class TestClient(unittest.TestCase):
     self.assertEqual(c.term_length, 50)
     self.assertEqual(c.term_host, "localhost")
 
+    print(c.debug())
+
   def test_setters_getters(self):
     c = client_data.client_data()
 
@@ -23,6 +25,8 @@ class TestClient(unittest.TestCase):
     self.assertEqual(c.term_width, 30)
     self.assertEqual(c.term_length, 50)
     self.assertEqual(c.term_host, "127.0.0.1")
+
+    print(c.debug())
     
 if __name__ == "__main__":
   unittest.main()

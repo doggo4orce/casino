@@ -1,3 +1,4 @@
+from color import *
 import collections
 import config
 import enum
@@ -52,3 +53,27 @@ class input_stream:
 
   def next_telnet(self):
     return self.telnet_q.popleft()
+
+  def debug(self):
+    ret_val = f"Buffer: {CYAN}{self.buffer.decode("utf-8")}{NORMAL}\r\n"
+    ret_val += f"Telnet: {CYAN}"
+    if self.telnet:
+      rete_val += str(self.telnet)
+    else:
+      ret_val += "None"
+    ret_val += NORMAL + "\r\n"
+    ret_val += f"Input: {CYAN}{self.input}{NORMAL}\r\n"
+    ret_val += f"State: {CYAN}{self.state.name}{NORMAL}\r\n"
+    ret_val += f"TELNET_Q: {CYAN}"
+    if not self.telnet_q:
+      ret_val += "empty"
+    else:
+      ret_val += "\r\n  " + "\r\n  ".join([str(telnet) for telnet in self.telnet_q])
+    ret_val += f"{NORMAL}\r\n"
+    ret_val += f"INPUT_Q: {CYAN}"
+    if not self.input_q:
+      ret_val += "empty"
+    else:
+      ret_val += "\r\n  " + "\r\n  ".join([input for input in self.input_q])
+    ret_val += f"{NORMAL}\r\n"
+    return ret_val

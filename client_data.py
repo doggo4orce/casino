@@ -44,6 +44,10 @@ class client_data:
     self._term_host = new_term_host
 
   def debug(self):
-    ret_val = f"Client: {CYAN}({self.term_length}x{self.term_width}) {self.term_type}{NORMAL}\r\n"
+    dimensions = ""
+    if self.term_length != None and self.term_width != None:
+      dimensions = f"({self.term_length}x{self.term_width})"
+
+    ret_val = f"Client: {CYAN}{dimensions}{self.term_type}{NORMAL}\r\n"
     ret_val += f"Host: {CYAN}{self.term_host}{NORMAL}\r\n"
     return ret_val

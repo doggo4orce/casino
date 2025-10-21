@@ -72,7 +72,7 @@ class server:
   def remove_descriptor_by_id(self, id):
     d = self.descriptors[id]
     d.socket.shutdown(1)
-    d.socket.close()
+    d.close()
     del self.descriptors[id]
 
   def greet_descriptor(self, d):
@@ -96,7 +96,7 @@ class server:
   def prepare_for_shutdown(self):
     for id in self.descriptors:
       self.descriptors[id].socket.shutdown(1)
-      self.descriptors[id].socket.close()
+      self.descriptors[id].close()
 
   def boot(self, domain, port):
     logging.info("Opening mother connection.")

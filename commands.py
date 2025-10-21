@@ -462,7 +462,7 @@ def do_copyover(ch, scmd, argument, server, mud, db):
 
       td.char.save_char(db)
 
-      fd = td.socket.fileno()
+      fd = td.fileno()
       name = td.char.name.lower()
       typ = td.socket.type
       host = td.client_info.term_host

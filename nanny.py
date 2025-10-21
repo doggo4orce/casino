@@ -7,13 +7,11 @@ import commands
 import config
 import editor
 import exit_data
-import descriptor
+import descriptor_data
 import olc_data
-import pc
-import redit
-import room
+import pc_data
+import room_data
 import spec_proc_data
-import structs
 
 cmd_dict = dict()
 
@@ -105,11 +103,10 @@ def writing_follow_up(d):
   #   reporting_bug, mailing letter, scribing scroll, etc.
 
 def handle_next_input(d, server, mud, db):
-  input = d.next_input()
+  msg = d.next_input()
   if not input:
     return
   d.has_prompt = False
-  msg = input.data
   stripped_msg = msg.strip()
   command, argument = (stripped_msg.split(" ", 1) + ["", ""])[:2]
   if d.writing:

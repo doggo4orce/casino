@@ -21,7 +21,7 @@ class login_data:
 class descriptor_state(enum.IntEnum):
   """Different states a descriptor can take, encoded as integers."""
   HANDSHAKE           = 0 # resolving connection
-  CHATTING            = 1 # in game (rename this)
+  CHATTING            = 1 # input processed by interpreter
   GET_NAME            = 2 # entering name at login
   CONFIRM_NAME        = 3 # confirming name upon character creation
   GET_NEW_PASS        = 4 # creating password for new character
@@ -31,7 +31,7 @@ class descriptor_state(enum.IntEnum):
   OLC                 = 8 # using OLC
 
 class descriptor_data:
-  def __init__(self, socket, host, ID):
+  def __init__(self, socket, host):
     """Creates a new descriptor which holds data relevant to the connection
       socket       = socket to communicate with user
       id           = unique id assigned by server
@@ -42,7 +42,9 @@ class descriptor_data:
       input_q      = queue of inputs ready to be passed one at a time to interpreter
       telnet       = storage for partially read telnet command, set to False when not used
       telnet_q     = telnet commands received from client
-      state        = what state the user is in
+      state        = descriptor_state of user
+      in_state     = input_state of user
+      overflow     = used to detect if input exceeds MAX_INPUT_LENGTH
       has_prompt   = set to False if they've sent a command since the last time we showed them their prompt
       client_info  = stores all connection information and telnet negotiation
       login_info   = login information supplied by player before char is assigned
@@ -52,7 +54,7 @@ class descriptor_data:
       write_buffer = a buffer to store player editing: descriptions, messages, etc
       write_target = where the buffer will be saved to upon completion"""
     self.socket       = socket
-    self.id           = ID
+    self.id           = None
     self.in_buf       = bytes(0)
     self.out_buf      = ""
     self.w_i          = 0
@@ -61,8 +63,10 @@ class descriptor_data:
     self.telnet       = False
     self.telnet_q     = collections.deque()
     self.state        = None
+    self.in_state     = input_state.NORMAL
+    self.overflow     = False
     self.has_prompt   = False
-    self.client       = None #client_data.client_data(None, None, None, host)
+    self.client       = client_data.client_data(None, None, None, host)
     self.login_info   = login_data(None, None)
     self.disconnected = False
     self.char         = None
@@ -81,20 +85,47 @@ class descriptor_data:
       mudlog.warning("descriptor created with")
 
   @property
+  def term_type(self):
+    return self.client.term_type
+  @property
+  def term_width(self):
+    return self.client.term_width
+  @property
+  def term_length(self):
+    return self.client.term_length
+  @property
+  def term_host(self):
+    return self.client.term_host
+
+  @term_type.setter
+  def term_type(self, new_term_type):
+    self.client.term_type = new_term_type
+  @term_width.setter
+  def term_width(self, new_term_width):
+    self.client.term_width = new_term_width
+  @term_length.setter
+  def term_length(self, new_term_length):
+    self.client.term_length = new_term_length
+  @term_host.setter
+  def term_host(self, new_term_host):
+    self.client.term_host = new_term_host
+
+  @property
   def writing(self):
     return self.write_buffer != None
 
   """close()                       <- closes socket
-     poll_for_input()              <- transfers any pending input into in_buf
+     send(bytes)                   <- call's corresponding socket function send
+     recv(size)                    <- call's corresponding socket function recv
+     poll_for_input(timeout)       <- moves pending input into in_buf
      parse_input()                 <- organizes input in_buf into a input_q
-     send(bytes)                   <- immediately sends raw bytestream to socket
      flush_output()                <- sends any pending output in out_buf
      fileno()                      <- returns file descriptor ID of socket
      write_prompt()                <- appends prompt to out_buf
      write(msg)                    <- appends msg to out_buf
      process_telnet_cmd()          <- organizes telnet commands in in_buf into telnet_q
      process_telnet_q()            <- parses any telnet commands which have been fully read
-     next_input()                  <- returns next complete command in input_q
+     next_input()                  <- pops next complete command in input_q
      start_writing(source, target) <- start editting source and save to target
      stop_writing(save)            <- save to write_target if save=True
      debug()                       <- return string of debugging info"""
@@ -102,13 +133,47 @@ class descriptor_data:
   def close(self):
     self.socket.close()
 
-  def poll_for_input(self):
-    rlist, wlist, elist = select.select([ self.socket ], [ ], [ ], 0)
+  def send(self, bytes):
+    try:
+      self.socket.send(bytes)
+    except socket.error:
+      mudlog.warning("Trying to write to disconnected socket: {}.".format(self.addr))
+      self.disconnected = True
+
+  def recv(self, size):
+    try:
+      ret_val = self.socket.recv(size)
+    except Exception as e:
+      mudlog.error(e)
+    return ret_val
+
+  def poll_for_input(self, timeout=0):
+    rlist, wlist, elist = select.select([ self.socket ], [ ], [ ], timeout)
     if self.socket in rlist:
-      read = self.socket.recv(config.PACKET_SIZE)
+      read = self.recv(config.PACKET_SIZE)
+      # if the socket is in rlist but has no input, then the client closed the connection
       if len(read) == 0:
         self.disconnected = True
       self.in_buf += read
+
+  def parse_input_revised(self):
+    next_input = ""
+    for b in self.in_buf:
+      print(int(b))
+      if self.in_state == input_state.NORMAL:
+        if self.w_i < config.MAX_INPUT_LENGTH:
+          if 
+          self.input[self.w_i] = b
+        elif chr(b) == '\n':
+          print("found newline")
+          self.input_q.append(self.input)
+          self.input = ""
+          self.w_i = 0
+          break
+        else:
+          self.overflow = True
+          pass # overflow discarded
+      self.w_i += 1
 
   def parse_input(self):
     r_i = 0
@@ -144,14 +209,13 @@ class descriptor_data:
         r_i = 0
         continue
       # for now we will just completely ignore carriage returns
-      elif self.in_buf[r_i] == descriptor.CARRIAGE_RETURN:
+      elif self.in_buf[r_i] == ord('\r'):
         pass
       # a LINE_FEED means we have a new input
-      elif self.in_buf[r_i] == descriptor.LINE_FEED:
-        parsed_msg =  self.input[:self.w_i].decode("utf-8")
+      elif self.in_buf[r_i] == ord('\n'):
+        parsed_msg = self.input[:self.w_i].decode("utf-8")
         unread_chars = max(0, self.w_i - config.MAX_INPUT_LENGTH)
-        finished_input = input(parsed_msg, unread_chars)
-        self.input_q.append(finished_input)
+        self.input_q.append(parsed_msg)
         self.w_i = 0
       # ignore non-printable characters
       elif not str(self.in_buf[r_i]).isprintable():
@@ -164,13 +228,6 @@ class descriptor_data:
         self.w_i += 1
       r_i += 1
     self.in_buf = bytes(0)
-
-  def send(self, bytes):
-    try:
-      self.socket.send(bytes)
-    except socket.error:
-      mudlog.warning("Trying to write to disconnected socket: {}.".format(self.addr))
-      self.disconnected = True
 
   def flush_output(self):
     if self.out_buf == "":

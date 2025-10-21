@@ -217,3 +217,19 @@ class tel_msg:
         tel_opt(self.opt).name, self.value[0], self.value[1], self.value[2], self.value[3])
     else:
       return 'IAC {} {} {} IAC SE'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name, self.code, self.value)
+
+  def __str__(self):
+    if self.opt == -1:
+      return 'IAC {}'.format(tel_cmd(self.cmd).name)
+    elif self.cmd in [ tel_cmd.DO, tel_cmd.DONT, tel_cmd.WILL, tel_cmd.WONT ]:
+      return 'IAC {} {}'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name)
+    elif self.cmd == tel_cmd.SB and self.opt == tel_opt.TTYPE:
+      if ttype_code(self.value[0]) == ttype_code.SEND:
+        return 'IAC {} {} {} IAC SE'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name, ttype_code(self.value[0]).name)
+      elif ttype_code(self.value[0]) == ttype_code.IS:
+        return 'IAC {} {} {} "{}" IAC SE'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name, ttype_code(self.value[0]).name, self.value[1:].decode("utf-8"))
+    elif self.cmd == tel_cmd.SB and self.opt == tel_opt.NAWS:
+      return 'IAC {} {} {} {} {} {} IAC SE'.format(tel_cmd(self.cmd).name,
+        tel_opt(self.opt).name, self.value[0], self.value[1], self.value[2], self.value[3])
+    else:
+      return 'IAC {} {} {} IAC SE'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name, self.code, self.value)

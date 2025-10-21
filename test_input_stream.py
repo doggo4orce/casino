@@ -6,9 +6,6 @@ import unittest
 class TestInputStream(unittest.TestCase):
   def test_parse_byte(self):
     stream = input_stream.input_stream()
-
-    buffer = b"get ap" + bytes([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.NAWS]) + b"ple\r\n"
-
     stream.parse_byte(ord('g'))
     stream.parse_byte(ord('e'))
     stream.parse_byte(ord('t'))
@@ -34,6 +31,20 @@ class TestInputStream(unittest.TestCase):
     stream.parse_byte(telnet.tel_opt.TTYPE)
     stream.parse_byte(ord('p'))
     stream.parse_byte(ord(' '))
+    stream.parse_byte(telnet.tel_cmd.IAC)
+    stream.parse_byte(telnet.tel_cmd.SB)
+    stream.parse_byte(telnet.tel_opt.TTYPE)
+    stream.parse_byte(telnet.ttype_code.IS)
+    stream.parse_byte(ord('t'))
+    stream.parse_byte(ord('i'))
+    stream.parse_byte(ord('n'))
+    stream.parse_byte(ord('t'))
+    stream.parse_byte(ord('i'))
+    stream.parse_byte(ord('n'))
+    stream.parse_byte(ord('+'))
+    stream.parse_byte(ord('+'))
+    stream.parse_byte(telnet.tel_cmd.IAC)
+    stream.parse_byte(telnet.tel_cmd.SE)
     stream.parse_byte(ord('a'))
     stream.parse_byte(ord('p'))
     stream.parse_byte(telnet.tel_cmd.IAC)
@@ -45,6 +56,11 @@ class TestInputStream(unittest.TestCase):
     stream.parse_byte(ord('p'))
     stream.parse_byte(ord('l'))
     stream.parse_byte(ord('e'))
+
+    self.assertEqual(stream.input, "drop apple")
+    self.assertEqual(stream.num_inputs, 1)
+    self.assertEqual(stream.num_telnets, 5)
+    self.assertEqual(stream.pop_input(), "get apple")
 
     print(stream.debug())
     

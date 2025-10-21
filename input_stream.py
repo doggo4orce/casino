@@ -25,6 +25,13 @@ class input_stream:
     self.telnet_q = collections.deque()
     self.input_q  = collections.deque()
 
+  @property
+  def num_inputs(self):
+    return len(self.input_q)
+  @property
+  def num_telnets(self):
+    return len(self.telnet_q)
+
   def parse_buffer(self):
     for b in self.buffer:
       self.parse_byte(b)
@@ -48,10 +55,10 @@ class input_stream:
         self.telnet_q.append(self.telnet)
         self.telnet = None
 
-  def next_input(self):
+  def pop_input(self):
     return self.input_q.popleft()
 
-  def next_telnet(self):
+  def pop_telnet(self):
     return self.telnet_q.popleft()
 
   def debug(self):

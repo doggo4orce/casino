@@ -10,13 +10,12 @@ class input_state(enum.IntEnum):
 
 class input_stream:
   """Used by descriptors to handle input polled from sockets.
-    buffer   =
-    telnet   =
-    input    =
-    state    =
-    telnet_q =
-    input_q  ="""
-
+    buffer   = storage for incoming normal bytes which have yet to be processed
+    telnet   = next telnet command currently being built
+    input    = next input currently being built
+    state    = determines how to interpret next byte
+    telnet_q = queue for fully processed telnet messages
+    input_q  = queue for fully processed inputs"""
   def __init__(self):
     self.buffer   = bytes(0)
     self.telnet   = None

@@ -35,6 +35,7 @@ class TestInputStream(unittest.TestCase):
     stream.parse_byte(telnet.tel_cmd.SB)
     stream.parse_byte(telnet.tel_opt.TTYPE)
     stream.parse_byte(telnet.ttype_code.IS)
+<<<<<<< Updated upstream
     stream.parse_byte(ord('t')) # part of telnet command
     stream.parse_byte(ord('i')) # part of telnet command
     stream.parse_byte(ord('n')) # part of telnet command
@@ -43,6 +44,16 @@ class TestInputStream(unittest.TestCase):
     stream.parse_byte(ord('n')) # part of telnet command
     stream.parse_byte(ord('+')) # part of telnet command
     stream.parse_byte(ord('+')) # part of telnet command
+=======
+    stream.parse_byte(ord('t')) # part of telnet sequence
+    stream.parse_byte(ord('i')) # part of telnet sequence
+    stream.parse_byte(ord('n')) # part of telnet sequence
+    stream.parse_byte(ord('t')) # part of telnet sequence
+    stream.parse_byte(ord('i')) # part of telnet sequence
+    stream.parse_byte(ord('n')) # part of telnet sequence
+    stream.parse_byte(ord('+')) # part of telnet sequence
+    stream.parse_byte(ord('+')) # part of telnet sequence
+>>>>>>> Stashed changes
     stream.parse_byte(telnet.tel_cmd.IAC)
     stream.parse_byte(telnet.tel_cmd.SE)
     stream.parse_byte(ord('a'))

@@ -35,14 +35,14 @@ class TestInputStream(unittest.TestCase):
     stream.parse_byte(telnet.tel_cmd.SB)
     stream.parse_byte(telnet.tel_opt.TTYPE)
     stream.parse_byte(telnet.ttype_code.IS)
-    stream.parse_byte(ord('t'))
-    stream.parse_byte(ord('i'))
-    stream.parse_byte(ord('n'))
-    stream.parse_byte(ord('t'))
-    stream.parse_byte(ord('i'))
-    stream.parse_byte(ord('n'))
-    stream.parse_byte(ord('+'))
-    stream.parse_byte(ord('+'))
+    stream.parse_byte(ord('t')) # part of telnet command
+    stream.parse_byte(ord('i')) # part of telnet command
+    stream.parse_byte(ord('n')) # part of telnet command
+    stream.parse_byte(ord('t')) # part of telnet command
+    stream.parse_byte(ord('i')) # part of telnet command
+    stream.parse_byte(ord('n')) # part of telnet command
+    stream.parse_byte(ord('+')) # part of telnet command
+    stream.parse_byte(ord('+')) # part of telnet command
     stream.parse_byte(telnet.tel_cmd.IAC)
     stream.parse_byte(telnet.tel_cmd.SE)
     stream.parse_byte(ord('a'))
@@ -62,7 +62,29 @@ class TestInputStream(unittest.TestCase):
     self.assertEqual(stream.num_telnets, 5)
     self.assertEqual(stream.pop_input(), "get apple")
 
-    print(stream.debug())
+    t = stream.pop_telnet()
+    t_comparison = telnet.tel_msg()
+    
+    t_comparison.parse_bytestream([
+      telnet.tel_cmd.IAC,
+      telnet.tel_cmd.DO,
+      telnet.tel_opt.NAWS
+      ])
+
+    print(str(t_comparison))
+    # self.assertEqual(str(t), str(t_comparison))
+
+    # t = stream.pop_telnet()
+    # self.assertEqual(str(t), "IAC DO TTYPE")
+
+    # t = stream.pop_telnet()
+    # self.assertEqual(str(t), "IAC WILL TTYPE")
+
+    # t = stream.pop_telnet()
+    # self.assertEqual(str(t), "IAC SB TTYPE IS \"tintin++\" IAC SE")
+
+    # t = stream.pop_telnet()
+    # self.assertEqual(str(t), "IAC SB TTYPE SEND IAC SE")
     
 if __name__ == "__main__":
   unittest.main()

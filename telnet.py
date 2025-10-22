@@ -62,9 +62,11 @@ class tel_msg:
   def __init__(self, *bytes):
     """Class designed to handle telnet negotiation messages, which will take
        one of the three forms:
-         (1) IAC CMD
-         (2) IAC CMD OPT -- if CMD in [DO, DONT, WILL, WONT]
+         (1) IAC CMD                   - most of these will be ignored
+         (2) IAC CMD OPT               - if CMD in [DO, DONT, WILL, WONT]
          (3) IAC SB OPT VALUE IAC SE
+       Note that we don't store the initial or terminating IAC.
+
        cmd   = command (eg, WILL, DONT, or SB)
        opt   = option (eg, TTYPE, NAWS or CHARSET)
        code  = code (eg, IS for TTYPE option or REQUEST for CHARSET option)
@@ -124,9 +126,28 @@ class tel_msg:
     return self.state == telnet_parse_state.IS_COMPLETE
 
   def debug(self):
-    ret_val = f"Command: {CYAN}{self.cmd.name if self.cmd else 'None'}{NORMAL}\r\n"
-    ret_val += f"Option: {CYAN}{self.opt.name if self.opt else 'None'}{NORMAL}\r\n"
-    ret_val += f"Value: {CYAN}{self.value.decode('utf-8')}{NORMAL}\r\n"
+    ret_val = f"Command: {CYAN}"
+    if not self.cmd:
+      ret_val += "None"
+    elif self.cmd in list(tel_cmd):
+      ret_val += self.cmd.name
+    else:
+      ret_val += f"{self.cmd} (unknown)"
+    ret_val += f"{NORMAL}\r\n"
+    ret_val += f"Option: {CYAN}"
+    if not self.opt:
+      ret_val += "None"
+    elif self.opt in list(tel_opt):
+      ret_val += self.opt.name
+    else:
+      ret_val += f"{self.opt} (unknown)"
+    ret_val += f"{NORMAL}\r\n"
+    ret_val += f"Value: {CYAN}"
+    if not self.value:
+      ret_val += "None"
+    else:
+      ret_val += ", ".join([str(b) for b in self.value])
+    ret_val += f"{NORMAL}\r\n"
     ret_val += f"State: {CYAN}{self.state.name}{NORMAL}"
     return ret_val
 

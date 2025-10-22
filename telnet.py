@@ -128,16 +128,16 @@ class tel_msg:
     ret_val = f"Command: {CYAN}"
     if not self.cmd:
       ret_val += "None"
-    elif self.cmd in list(tel_cmd):
-      ret_val += tel_cmd(self.cmd).name
+    elif self.cmd in tel_cmd:
+      ret_val += self.cmd.name
     else:
       ret_val += f"{self.cmd} (unknown)"
     ret_val += f"{NORMAL}\r\n"
     ret_val += f"Option: {CYAN}"
     if not self.opt:
       ret_val += "None"
-    elif self.opt in list(tel_opt):
-      ret_val += tel_opt(self.opt).name
+    elif self.opt in tel_opt:
+      ret_val += self.opt.name
     else:
       ret_val += f"{self.opt} (unknown)"
     ret_val += f"{NORMAL}\r\n"
@@ -149,6 +149,41 @@ class tel_msg:
     ret_val += f"{NORMAL}\r\n"
     ret_val += f"State: {CYAN}{self.state.name}{NORMAL}"
     return ret_val
+
+  def __str__(self):
+    incomplete = "(incomplete)"
+    ret_val = "IAC "
+
+    if not self.cmd:
+      return ret_val + incomplete
+
+    if self.cmd in tel_cmd:
+      ret_val += self.cmd.name
+    else:
+      ret_val += str(self.cmd)
+
+    if self.complete():
+      # IAC CMD format
+      return ret_val
+
+    ret_val += " "
+
+    if not self.opt:
+      return ret_val + incomplete
+
+    if self.opt in tel_opt:
+      ret_val += self.opt.name
+    else:
+      ret_val += str(self.opt)
+    
+    if self.complete():
+      # IAC CMD OPT format
+      return ret_val
+
+    ret_val += " "
+
+    if not self.payload:
+      return ret_val + incomplete
 
   def __str__(self):
     if not self.opt:

@@ -3,37 +3,37 @@ import enum
 import mudlog
 
 class tel_cmd(enum.IntEnum):
-  SE   = 240 # end subnegotiation
-  NOP  = 241 # null operation
-  AYT  = 246 # are you there?
-  GA   = 249 # go ahead
-  SB   = 250 # begin subnegotiation
-  WILL = 251 # will use option
-  WONT = 252 # wont use option
-  DO   = 253 # do (negotiation)
-  DONT = 254 # don't (negotiation)
-  IAC  = 255 # interpret as command
+  SE      = 240      # end subnegotiation
+  NOP     = 241      # null operation
+  AYT     = 246      # are you there?
+  GA      = 249      # go ahead
+  SB      = 250      # begin subnegotiation
+  WILL    = 251      # will use option
+  WONT    = 252      # wont use option
+  DO      = 253      # do (negotiation)
+  DONT    = 254      # don't (negotiation)
+  IAC     = 255      # interpret as command
 
 class tel_opt(enum.IntEnum):
-  ECHO    = 1   # local echo
-  SUPPGA  = 3   # suppress go ahead
-  TTYPE   = 24  # terminal type
-  NAWS    = 31  # negotiate window size
-  CHARSET = 42  # character set
-  MSSP    = 70  # mud server status protocol
-  MCCP    = 86  # mud client compression protocol
-  MSP     = 90  # mud sound protocol
-  MXP     = 91  # mud extension protocol
-  ATCP    = 200 # achaea telnet client protocol
+  ECHO    = 1        # local echo
+  SUPPGA  = 3        # suppress go ahead
+  TTYPE   = 24       # terminal type
+  NAWS    = 31       # negotiate window size
+  CHARSET = 42       # character set
+  MSSP    = 70       # mud server status protocol
+  MCCP    = 86       # mud client compression protocol
+  MSP     = 90       # mud sound protocol
+  MXP     = 91       # mud extension protocol
+  ATCP    = 200      # achaea telnet client protocol
 
 class ttype_code(enum.IntEnum):
-  IS   = 0 # client tells us what ttype is
-  SEND = 1 # we ask client what ttype is
+  IS      = 0        # client tells us what ttype is
+  SEND    = 1        # we ask client what ttype is
 
 class charset_code(enum.IntEnum):
-  REQUEST    = 1 # ask for list of supported charsets
-  ACCEPT     = 2 # accept proposed charset
-  REJECT     = 3 # reject proposed charset
+  REQUEST = 1        # ask for list of supported charsets
+  ACCEPT  = 2        # accept proposed charset
+  REJECT  = 3        # reject proposed charset
 
 # messages sent to clients
 do_ttype = bytes([tel_cmd.IAC, tel_cmd.DO, tel_opt.TTYPE])
@@ -48,34 +48,33 @@ will_echo = bytes([tel_cmd.IAC, tel_cmd.WILL, tel_opt.ECHO])
 wont_echo = bytes([tel_cmd.IAC, tel_cmd.WONT, tel_opt.ECHO])
 
 # ask client to send terminal type (client name)
-sb_ttype_send = bytes([tel_cmd.IAC, tel_cmd.SB, tel_opt.TTYPE,
-  ttype_code.SEND, tel_cmd.IAC, tel_cmd.SE])
+sb_ttype_send = bytes([tel_cmd.IAC, tel_cmd.SB, tel_opt.TTYPE, ttype_code.SEND, tel_cmd.IAC, tel_cmd.SE])
 
 class telnet_parse_state(enum.IntEnum):
-  GET_COMMAND   = 0 # just saw IAC
-  GET_OPTION    = 1 # just received command
-  GET_VALUE     = 2 # just began SB
-  GET_VALUE_IAC = 3 # probable end of SB
-  IS_COMPLETE   = 4 # parsing complete
+  GET_COMMAND     = 0 # just saw IAC
+  GET_OPTION      = 1 # just received command
+  GET_PAYLOAD     = 2 # just began SB
+  GET_PAYLOAD_IAC = 3 # probable end of SB
+  IS_COMPLETE     = 4 # parsing complete
 
 class tel_msg:
   def __init__(self, *bytes):
     """Class designed to handle telnet negotiation messages, which will take
        one of the three forms:
-         (1) IAC CMD                   - most of these will be ignored
-         (2) IAC CMD OPT               - if CMD in [DO, DONT, WILL, WONT]
-         (3) IAC SB OPT VALUE IAC SE
+         (1) IAC cmd                         - most of these will be processed but ignored
+         (2) IAC cmd                         - if cmd is a verb
+         (3) IAC SB option payload IAC SE    - subnegotiation format
        Note that we don't store the initial or terminating IAC.
 
-       cmd   = command (eg, WILL, DONT, or SB)
-       opt   = option (eg, TTYPE, NAWS or CHARSET)
-       code  = code (eg, IS for TTYPE option or REQUEST for CHARSET option)
-       value = value to hold subnegotiation data (eg, client name for TTYPE)
-       state = keeps track of how to interpret next byte"""
-    self.cmd        = None
-    self.opt        = None
-    self.value      = bytearray(0)
-    self.state      = telnet_parse_state.GET_COMMAND
+       cmd     = command (eg, WILL, DONT, or SB)
+       opt     = option (eg, TTYPE, NAWS or CHARSET)
+       code    = code (eg, IS for TTYPE option or REQUEST for CHARSET option)
+       payload = subnegotiation data (eg, client name for TTYPE)
+       state   = keeps track of how to interpret next byte"""
+    self.cmd     = None
+    self.opt     = None
+    self.payload = bytearray(0)
+    self.state   = telnet_parse_state.GET_COMMAND
 
     # possible initialization
     for b in bytes:
@@ -97,24 +96,24 @@ class tel_msg:
         self.state = telnet_parse_state.IS_COMPLETE
       else:
         # format (3)
-        self.state = telnet_parse_state.GET_VALUE
-    elif self.state == telnet_parse_state.GET_VALUE:
+        self.state = telnet_parse_state.GET_PAYLOAD
+    elif self.state == telnet_parse_state.GET_PAYLOAD:
       if b == tel_cmd.IAC:
         # probable end of subnegotiation
-        self.state = telnet_parse_state.GET_VALUE_IAC
+        self.state = telnet_parse_state.GET_PAYLOAD_IAC
       else:
-        self.value.append(b)
-    elif self.state == telnet_parse_state.GET_VALUE_IAC:
-      # value contained escaped IAC, subnegotiation continues
+        self.payload.append(b)
+    elif self.state == telnet_parse_state.GET_PAYLOAD_IAC:
+      # payload contained escaped IAC, subnegotiation continues
       if b == tel_cmd.IAC:
-        self.value.append(b)
-        self.state = telnet_parse_state.GET_VALUE
+        self.payload.append(b)
+        self.state = telnet_parse_state.GET_PAYLOAD
       elif b == tel_cmd.SE:
         self.state = telnet_parse_state.IS_COMPLETE
       else:
         mudlog.warning(f"Expecting IAC or SE but received byte {b}.")
     else:
-      # if in state IS_COMPLETE or GET_VALUE this shouldn't
+      # if in state IS_COMPLETE or GET_PAYLOAD this shouldn't
       # have been called
       mudlog.error(f"Found invalid state {self.state.name}.")
 
@@ -130,7 +129,7 @@ class tel_msg:
     if not self.cmd:
       ret_val += "None"
     elif self.cmd in list(tel_cmd):
-      ret_val += self.cmd.name
+      ret_val += tel_cmd(self.cmd).name
     else:
       ret_val += f"{self.cmd} (unknown)"
     ret_val += f"{NORMAL}\r\n"
@@ -138,15 +137,15 @@ class tel_msg:
     if not self.opt:
       ret_val += "None"
     elif self.opt in list(tel_opt):
-      ret_val += self.opt.name
+      ret_val += tel_opt(self.opt).name
     else:
       ret_val += f"{self.opt} (unknown)"
     ret_val += f"{NORMAL}\r\n"
-    ret_val += f"Value: {CYAN}"
-    if not self.value:
+    ret_val += f"Payload: {CYAN}"
+    if not self.payload:
       ret_val += "None"
     else:
-      ret_val += ", ".join([str(b) for b in self.value])
+      ret_val += ", ".join([str(b) for b in self.payload])
     ret_val += f"{NORMAL}\r\n"
     ret_val += f"State: {CYAN}{self.state.name}{NORMAL}"
     return ret_val
@@ -157,11 +156,11 @@ class tel_msg:
     elif self.cmd != tel_cmd.SB:
       return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name}"
     elif self.opt == tel_opt.TTYPE:
-      if ttype_code(self.value[0]) == ttype_code.SEND:
-        return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {ttype_code(self.value[0]).name} IAC SE"
-      elif ttype_code(self.value[0]) == ttype_code.IS:
-        return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {ttype_code(self.value[0]).name} \"{self.value[1:].decode('utf-8')}\" IAC SE"
+      if ttype_code(self.payload[0]) == ttype_code.SEND:
+        return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {ttype_code(self.payload[0]).name} IAC SE"
+      elif ttype_code(self.payload[0]) == ttype_code.IS:
+        return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {ttype_code(self.payload[0]).name} \"{self.payload[1:].decode('utf-8')}\" IAC SE"
     elif self.opt == tel_opt.NAWS:
-      return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {self.value[0]} {self.value[1]} {self.value[2]} {self.value[3]} IAC SE"
+      return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {self.payload[0]} {self.payload[1]} {self.payload[2]} {self.payload[3]} IAC SE"
     else: # this doesn't look right
-      return 'IAC {} {} {} IAC SE'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name, self.code, self.value)
+      return 'IAC {} {} {} IAC SE'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name, self.code, self.payload)

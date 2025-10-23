@@ -212,18 +212,22 @@ class tel_msg:
       if len(self.payload) < 4:
         return ret_val + " ".join([str(b) for b in self.payload]) + " " + incomplete
 
-      # express terminal dimenions as width
+      # express window size data as width x length
       ret_val += f"{self.payload[0]*256 + self.payload[1]}x{self.payload[2]*256 + self.payload[3]}"
     else:
       # we either don't recognize self.opt or don't have a special way to handle it
       ret_val += " ".join([str(b) for b in self.payload])
 
     if self.state == telnet_parse_state.GET_PAYLOAD:
+      # haven't received IAC SE yet
       return ret_val + " " + incomplete
 
     ret_val += " IAC"
 
     if self.state == telnet_parse_state.GET_PAYLOAD_IAC:
+      # received IAC but still waiting for SE
       return ret_val + " " + incomplete
 
-    return ret_val + " SE"
+    ret_val += " SE"
+
+    return ret_val

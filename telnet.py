@@ -35,7 +35,7 @@ class charset_code(enum.IntEnum):
   ACCEPT  = 2        # accept proposed charset
   REJECT  = 3        # reject proposed charset
 
-# messages sent to clients
+# tell client to negotiate terminal type
 do_ttype = bytes([tel_cmd.IAC, tel_cmd.DO, tel_opt.TTYPE])
 
 # tell client to negotiate window size
@@ -129,25 +129,29 @@ class tel_msg:
     if not self.cmd:
       ret_val += "None"
     elif self.cmd in tel_cmd:
-      ret_val += self.cmd.name
+      ret_val += tel_cmd(self.cmd).name
     else:
       ret_val += f"{self.cmd} (unknown)"
     ret_val += f"{NORMAL}\r\n"
+
     ret_val += f"Option: {CYAN}"
     if not self.opt:
       ret_val += "None"
     elif self.opt in tel_opt:
-      ret_val += self.opt.name
+      ret_val += tel_opt(self.opt).name
     else:
       ret_val += f"{self.opt} (unknown)"
     ret_val += f"{NORMAL}\r\n"
+
     ret_val += f"Payload: {CYAN}"
     if not self.payload:
       ret_val += "None"
     else:
       ret_val += ", ".join([str(b) for b in self.payload])
     ret_val += f"{NORMAL}\r\n"
+
     ret_val += f"State: {CYAN}{self.state.name}{NORMAL}"
+
     return ret_val
 
   def __str__(self):
@@ -155,14 +159,14 @@ class tel_msg:
     ret_val = "IAC "
 
     if not self.cmd:
-      return ret_val + incomplete
+      return "(blank)"
 
     if self.cmd in tel_cmd:
-      ret_val += self.cmd.name
+      ret_val += tel_cmd(self.cmd).name
     else:
-      ret_val += str(self.cmd)
+      ret_val += f"{self.cmd}"
 
-    if self.complete():
+    if not self.opt and self.complete():
       # IAC CMD format
       return ret_val
 
@@ -172,30 +176,45 @@ class tel_msg:
       return ret_val + incomplete
 
     if self.opt in tel_opt:
-      ret_val += self.opt.name
+      ret_val += tel_opt(self.opt).name
     else:
       ret_val += str(self.opt)
     
-    if self.complete():
+    if not self.payload and self.complete():
       # IAC CMD OPT format
       return ret_val
 
+    # if we got this far it must be subnegotiation
     ret_val += " "
 
     if not self.payload:
       return ret_val + incomplete
 
-  def __str__(self):
-    if not self.opt:
-      return f"IAC {tel_cmd(self.cmd).name}"
-    elif self.cmd != tel_cmd.SB:
-      return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name}"
-    elif self.opt == tel_opt.TTYPE:
-      if ttype_code(self.payload[0]) == ttype_code.SEND:
-        return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {ttype_code(self.payload[0]).name} IAC SE"
-      elif ttype_code(self.payload[0]) == ttype_code.IS:
-        return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {ttype_code(self.payload[0]).name} \"{self.payload[1:].decode('utf-8')}\" IAC SE"
-    elif self.opt == tel_opt.NAWS:
-      return f"IAC {tel_cmd(self.cmd).name} {tel_opt(self.opt).name} {self.payload[0]} {self.payload[1]} {self.payload[2]} {self.payload[3]} IAC SE"
-    else: # this doesn't look right
-      return 'IAC {} {} {} IAC SE'.format(tel_cmd(self.cmd).name, tel_opt(self.opt).name, self.code, self.payload)
+    if self.opt in tel_opt and tel_opt(self.opt) == tel_opt.TTYPE:
+      if len(self.payload) == 0:
+        return ret_val + incomplete
+
+      if self.payload[0] in ttype_code:
+        ret_val += ttype_code(self.payload[0]).name
+      else:
+        ret_val += str(self.payload[0])
+
+      ret_val += f" \"{self.payload[1:].decode("utf")}\""
+
+    elif self.opt in tel_opt and tel_opt(self.opt) == tel_opt.NAWS:
+      if len(self.payload) < 4:
+        return ret_val + " ".join([str(b) for b in self.payload]) + " " + incomplete
+
+      ret_val += f"{self.payload[0]*256 + self.payload[1]}x{self.payload[2]*256 + self.payload[3]}"
+    else:
+      ret_val += " ".join([str(b) for b in self.payload])
+
+    if self.state == telnet_parse_state.GET_PAYLOAD:
+      return ret_val + " " + incomplete
+
+    ret_val += " IAC"
+
+    if self.state == telnet_parse_state.GET_PAYLOAD_IAC:
+      return ret_val + " " + incomplete
+
+    return ret_val + " SE"

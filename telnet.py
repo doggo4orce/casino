@@ -187,26 +187,34 @@ class tel_msg:
     # if we got this far it must be subnegotiation
     ret_val += " "
 
+    # we haven't received payload yet
     if not self.payload:
       return ret_val + incomplete
 
     if self.opt in tel_opt and tel_opt(self.opt) == tel_opt.TTYPE:
+      # TTYPE negotiation: IAC SB TTYPE <code> <data> IAC SE
       if len(self.payload) == 0:
+        # haven't received code yet
         return ret_val + incomplete
 
       if self.payload[0] in ttype_code:
+        # code is IS or SEND
         ret_val += ttype_code(self.payload[0]).name
       else:
+        # unrecognized code
         ret_val += str(self.payload[0])
 
-      ret_val += f" \"{self.payload[1:].decode("utf")}\""
+      # peel code from payload and interpret the rest as data
+      ret_val += f" \"{self.payload[1:].decode("utf-8")}\""
 
     elif self.opt in tel_opt and tel_opt(self.opt) == tel_opt.NAWS:
+      # NAWS negotiation: IAC SB NAWS <width_high> <width_low> <length_high> <length_low> IAC SE
       if len(self.payload) < 4:
         return ret_val + " ".join([str(b) for b in self.payload]) + " " + incomplete
 
       ret_val += f"{self.payload[0]*256 + self.payload[1]}x{self.payload[2]*256 + self.payload[3]}"
     else:
+      # we either don't recognize self.opt or don't have a special way to handle it
       ret_val += " ".join([str(b) for b in self.payload])
 
     if self.state == telnet_parse_state.GET_PAYLOAD:

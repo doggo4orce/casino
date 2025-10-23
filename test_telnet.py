@@ -148,13 +148,12 @@ class TestTelnet(unittest.TestCase):
 
     t = telnet.tel_msg()
 
-    self.assertEqual(str(t), "(blank)")
     b_str = [
       242, # DM (which is not defined in telnet.py so will be unrecognized)
     ]
 
+    self.assertEqual(str(t), "(blank)")
     t.parse_bytestream(b_str)
-
     self.assertEqual(str(t), "IAC 242")
 
 if __name__ == "__main__":

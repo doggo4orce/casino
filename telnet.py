@@ -154,6 +154,17 @@ class tel_msg:
 
     return ret_val
 
+  def __eq__(self, other):
+    if self.cmd != other.cmd:
+      return False
+    if self.opt != other.opt:
+      return False
+    if self.payload != other.payload:
+      return False
+    if self.state != other.state:
+      return False
+    return True
+
   def __str__(self):
     incomplete = "(incomplete)"
     ret_val = "IAC "

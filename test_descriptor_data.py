@@ -84,33 +84,36 @@ class TestDescriptorData(unittest.TestCase):
     client.close()
     d.close()
 
-  def test_telnet_parsing(self):
-    mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    mother.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    mother.bind(("0.0.0.0", 1234))
-    mother.listen(1)
-  
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("0.0.0.0", 1234))
+  def test_ttype_negotiation(self):
+    client, host = socket.socketpair()
+    d = descriptor_data.descriptor_data(host, "12.4.4.19")
 
-    host, addr = mother.accept()
+    # client sends IAC WILL TTYPE
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.TTYPE]))
 
-    d_client = descriptor_data.descriptor_data(client, "client.dyn.dns.org")
-    d_host = descriptor_data.descriptor_data(host, "host.dyn.dns.org")
+    # host receives IAC WILL TTYPE
+    d.poll_for_input(1)
 
-    d_host.send(telnet.do_naws)
-    d_client.poll_for_input(1)
+    # host processes IAC WILL TTYPE, will automatically send IAC SB TTYPE SEND IAC SE
+    d.process_telnet_cmd()
 
-    self.assertEqual(d_client.pop_telnet(), telnet.tel_msg(telnet.tel_cmd.DO, telnet.tel_opt.NAWS))
+    # make sure it did
+    self.assertEqual(client.recv(1024), bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.SEND, telnet.tel_cmd.IAC, telnet.tel_cmd.SE ]))
 
-    d_client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.NAWS]))
-    d_host.poll_for_input(1)
+    # now similate the client responding with IAC SB TTYPE IS "tt++" IAC SE
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.IS, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE ]))
 
-    self.assertEqual(d_host.pop_telnet(), telnet.tel_msg(telnet.tel_cmd.WILL, telnet.tel_opt.NAWS))
-    
-    mother.close()
+    # host receives IAC SB TTYPE IS "tt++" IAC SE
+    d.poll_for_input(1)
+
+    # host processes IAC SB TTYPE IS "tt++" IAC SE, will store this information
+    d.process_telnet_cmd()
+
+    # make sure it did
+    self.assertEqual(d.client.term_type, "tt++")
+
     client.close()
-    host.close()
+    d.close()
 
   def test_process_telnet_cmd(self):
     mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -152,4 +155,4 @@ class TestDescriptorData(unittest.TestCase):
     host.close()
 
 if __name__ == "__main__":
-  unittest.main()
+  unittest.main(verbosity=2)

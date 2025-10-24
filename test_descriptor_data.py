@@ -12,23 +12,15 @@ class TestDescriptorData(unittest.TestCase):
     d.close()
 
   def test_send_recv(self):
-    mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    mother.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    mother.bind(("0.0.0.0", 1234))
-    mother.listen(1)
-  
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("0.0.0.0", 1234))
+    client, host = socket.socketpair()
+    d = descriptor_data.descriptor_data(host, "client.dyn.dns.org")
 
-    host, addr = mother.accept()
+    client.send(b"get apple")
+    self.assertEqual(d.recv(1024).decode("utf-8"), "get apple")
 
-    d_client = descriptor_data.descriptor_data(client, "client.dyn.dns.org")
-    d_host = descriptor_data.descriptor_data(host, "host.dyn.dns.org")
+    host.send(b"drop apple")
+    self.assertEqual(client.recv(1024).decode("utf-8"), "drop apple")
 
-    d_client.send(b"get apple\r\n")
-    self.assertEqual(d_host.recv(1024).decode("utf-8"), "get apple\r\n")
-
-    mother.close()
     client.close()
     host.close()
 

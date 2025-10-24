@@ -47,7 +47,7 @@ class descriptor_data:
       olc_state    = used in olc.handle_input to parse input and determine menus
       write_buffer = a buffer to store player editing: descriptions, messages, etc
       write_target = where the buffer will be saved to upon completion"""
-    self.socket       = socket
+    self._socket       = socket
     self.id           = None
     self.out_buf      = ""
     self.state        = None
@@ -66,37 +66,11 @@ class descriptor_data:
        open when that happens, clients cannot be attached to new sockets, and their connections
        will hang indefinitely.  The following ensures that sockets close automatically during copyovers."""
     try:
-      flags = fcntl.fcntl(self.socket, fcntl.F_GETFD, 0)
-      fcntl.fcntl(self.socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
+      flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
+      fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
     except Exception as e:
       mudlog.error(e)
       mudlog.warning("descriptor created with")
-
-  @property
-  def term_type(self):
-    return self.client.term_type
-  @property
-  def term_width(self):
-    return self.client.term_width
-  @property
-  def term_length(self):
-    return self.client.term_length
-  @property
-  def term_host(self):
-    return self.client.term_host
-
-  @term_type.setter
-  def term_type(self, new_term_type):
-    self.client.term_type = new_term_type
-  @term_width.setter
-  def term_width(self, new_term_width):
-    self.client.term_width = new_term_width
-  @term_length.setter
-  def term_length(self, new_term_length):
-    self.client.term_length = new_term_length
-  @term_host.setter
-  def term_host(self, new_term_host):
-    self.client.term_host = new_term_host
 
   @property
   def writing(self):
@@ -110,33 +84,34 @@ class descriptor_data:
      fileno()                      <- returns file descriptor ID of socket
      write_prompt()                <- appends prompt to out_buf
      write(msg)                    <- appends msg to out_buf
-     process_telnet_cmd()          <- parse next telnet command
-     process_telnet_q()            <- parses any telnet commands which have been fully read
+     process_telnet_cmd()          <- process next telnet command
+     process_telnet_q()            <- process all telnet commands
      pop_input()                   <- calls input_stream.pop_input()
-     start_writing(source, target) <- start editing source and save to target
+     pop_telnet()                  <- calls input_stream.pop_telnet()
+     start_writing(source, target) <- start editing source and save to target (when would these be different?)
      stop_writing(save)            <- save to write_target if save=True
      debug()                       <- return string of debugging info"""
 
   def close(self):
-    self.socket.close()
+    self._socket.close()
 
   def send(self, bytes):
     try:
-      self.socket.send(bytes)
+      self._socket.send(bytes)
     except socket.error:
       mudlog.warning("Trying to write to disconnected socket: {}.".format(self.addr))
       self.disconnected = True
 
   def recv(self, size):
     try:
-      ret_val = self.socket.recv(size)
+      ret_val = self._socket.recv(size)
     except Exception as e:
       mudlog.error(e)
     return ret_val
 
   def poll_for_input(self, timeout=0):
-    rlist, wlist, elist = select.select([ self.socket ], [ ], [ ], timeout)
-    if self.socket in rlist:
+    rlist, wlist, elist = select.select([ self._socket ], [ ], [ ], timeout)
+    if self._socket in rlist:
       read = self.recv(config.PACKET_SIZE)
       # if the socket is in rlist but has no input, then the client closed the connection
       if len(read) == 0:
@@ -150,7 +125,7 @@ class descriptor_data:
     self.out_buf = ""
 
   def fileno(self):
-    return self.socket.fileno()
+    return self._socket.fileno()
 
   def write_prompt(self):
     if self.writing:
@@ -177,13 +152,14 @@ class descriptor_data:
     message = self.input_stream.pop_telnet()
     if message.cmd == telnet.tel_cmd.WILL:
       if message.opt == telnet.tel_opt.TTYPE:
-        self.socket.send(telnet.sb_ttype_send)
+        self.send(telnet.sb_ttype_send)
     elif message.cmd == telnet.tel_cmd.SB:
       if message.opt == telnet.tel_opt.TTYPE:
-        self.client_info.term_type = message.payload.decode("utf-8")
+        if telnet.ttype_code(message.payload[0]) == telnet.ttype_code.IS:
+          self.client.term_type = message.payload[1:].decode("utf-8")
       elif message.opt == telnet.tel_opt.NAWS:
-        self.client_info.term_width = 256 * int(message.value[0]) + int(message.value[1])
-        self.client_info.term_length = 256 * int(message.value[2]) + int(message.value[3])
+        self.client.term_width = 256 * int(message.payload[0]) + int(message.payload[1])
+        self.client.term_length = 256 * int(message.payload[2]) + int(message.payload[3])
 
   def process_telnet_q(self):
     while self.input_stream.pop_telnet():
@@ -192,6 +168,10 @@ class descriptor_data:
   def pop_input(self):
     if self.input_stream.input_q:
       return self.input_stream.pop_input()
+
+  def pop_telnet(self):
+    if self.input_stream.telnet_q:
+      return self.input_stream.pop_telnet()
 
   def start_writing(self, source, target):
     self.write_buffer = source.make_copy()

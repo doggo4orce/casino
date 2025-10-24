@@ -69,7 +69,7 @@ class descriptor:
       olc_state    = used in olc.handle_input to parse input and determine menus
       write_buffer = a buffer to store player editing: descriptions, messages, etc
       write_target = where the buffer will be saved to upon completion"""
-    self.socket       = socket
+    self._socket       = socket
     self.id           = id
     self.in_buf       = bytes(0)
     self.out_buf      = ""

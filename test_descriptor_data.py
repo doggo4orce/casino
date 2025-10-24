@@ -22,60 +22,67 @@ class TestDescriptorData(unittest.TestCase):
     self.assertEqual(client.recv(1024).decode("utf-8"), "drop apple")
 
     client.close()
-    host.close()
+    d.close()
 
   def test_write_and_flush(self):
-    mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    mother.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    mother.bind(("0.0.0.0", 1234))
-    mother.listen(1)
-  
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("0.0.0.0", 1234))
+    client, host = socket.socketpair()
+    d = descriptor_data.descriptor_data(host, "foreignhost")
 
-    host, addr = mother.accept()
+    d.write("Welcome!")
+    d.flush_output()
 
-    d_client = descriptor_data.descriptor_data(client, "client.dyn.dns.org")
-    d_host = descriptor_data.descriptor_data(host, "host.dyn.dns.org")
+    self.assertEqual(client.recv(1024).decode("utf-8"), "Welcome!")
 
-    d_client.write("get apple\r\n")
-    d_client.flush_output()
-
-    self.assertEqual(d_host.recv(1024).decode("utf-8"), "get apple\r\n")
-
-    mother.close()
     client.close()
-    host.close()
+    d.close()
 
-  def test_input_stream(self):
-    mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    mother.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    mother.bind(("0.0.0.0", 1234))
-    mother.listen(1)
-  
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("0.0.0.0", 1234))
+  def test_poll_for_input(self):
+    # simulate a connection with client
+    client, host = socket.socketpair()
+    d = descriptor_data.descriptor_data(host, "foreignhost")
 
-    host, addr = mother.accept()
+    # client starts sending a command
+    client.send(b"get a")
 
-    d_client = descriptor_data.descriptor_data(client, "client.dyn.dns.org")
-    d_host = descriptor_data.descriptor_data(host, "host.dyn.dns.org")
+    # but then is interupted by a telnet message IAC WILL TTYPE
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.TTYPE]))
 
-    d_client.write("get a")
-    d_client.flush_output()
-    d_client.send(telnet.do_ttype)
-    d_client.write("pple\r\n")
-    d_client.flush_output()
+    # client resumes command and terminates it with \r\n
+    client.send(b"pple\r\n")
 
-    d_host.poll_for_input(1)
+    # client starts sending new command
+    client.send(b"drop a")
 
-    self.assertEqual(d_host.pop_input(), "get apple")
+    # but is interupted again, this time with IAC SB TTYPE IS "tt++" IAC SE
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.IS, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))    
 
-    self.assertEqual(d_host.pop_telnet(), telnet.tel_msg(telnet.tel_cmd.DO, telnet.tel_opt.TTYPE))
-    
-    mother.close()
+    # client finishes second command, but doesn't terminate with \r\n
+    client.send(b"pple")
+
+    # input is polled (which sends to input stream)
+    d.poll_for_input(1)
+
+    # check first input
+    self.assertEqual(d.pop_input(), "get apple")
+
+    # check first telnet command
+    self.assertEqual(d.pop_telnet(), telnet.tel_msg(telnet.tel_cmd.WILL, telnet.tel_opt.TTYPE))
+
+    # check second telnet command
+    self.assertEqual(d.pop_telnet(), telnet.tel_msg(telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.IS, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE))
+
+    # second input should not have gone through yet
+    self.assertIsNone(d.pop_input())
+
+    # but now the client follows up with terminating \r\n
+    client.send(b"\r\n")
+    d.poll_for_input(1)
+
+    # now second command shoul go through
+    self.assertEqual(d.pop_input(), "drop apple")
+
     client.close()
-    host.close()
+    d.close()
 
   def test_telnet_parsing(self):
     mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -131,12 +131,12 @@ class TestDescriptorData(unittest.TestCase):
     d_client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.TTYPE]))
     d_host.poll_for_input(1)
     d_host.process_telnet_cmd()
-    tc = telnet.tel_msg(telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.SEND, telnet.tel_cmd.IAC, telnet.tel_cmd.SE)
     d_client.poll_for_input(1)
-    self.assertEqual(d_client.pop_telnet(), tc)
+
+    self.assertEqual(d_client.pop_telnet(), telnet.tel_msg(telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.SEND, telnet.tel_cmd.IAC, telnet.tel_cmd.SE))
 
     # TTYPE subnegotiation
-    d_client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.SEND, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))
+    d_client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.IS, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))
     d_host.poll_for_input(1)
     d_host.process_telnet_cmd()
     self.assertEqual(d_host.client.term_type, "tt++")

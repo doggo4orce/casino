@@ -155,7 +155,7 @@ class descriptor_data:
         self.send(telnet.sb_ttype_send)
     elif message.cmd == telnet.tel_cmd.SB:
       if message.opt == telnet.tel_opt.TTYPE:
-        if telnet.ttype_code(message.payload[0]) == telnet.ttype_code.IS:
+        if message.payload[0] in telnet.ttype_code and telnet.ttype_code(message.payload[0]) == telnet.ttype_code.IS:
           self.client.term_type = message.payload[1:].decode("utf-8")
       elif message.opt == telnet.tel_opt.NAWS:
         self.client.term_width = 256 * int(message.payload[0]) + int(message.payload[1])

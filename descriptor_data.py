@@ -5,6 +5,7 @@ import config
 import dataclasses
 import enum
 import fcntl
+import input_stream_data
 import mudlog
 import select
 import socket
@@ -35,15 +36,8 @@ class descriptor_data:
     """Creates a new descriptor which holds data relevant to the connection
       socket       = socket to communicate with user
       id           = unique id assigned by server
-      in_buf       = input buffer stored as bytearray
       out_buf      = output buffer (stored as a string)
-      w_i          = index for writing messages for input_q
-      input        = holds incomplete input (waiting for \r\n) until ready to be added to input_q
-      input_q      = queue of inputs ready to be passed one at a time to interpreter
-      telnet       = storage for partially read telnet command, set to False when not used
-      telnet_q     = telnet commands received from client
       state        = descriptor_state of user
-      in_state     = input_state of user
       overflow     = used to detect if input exceeds MAX_INPUT_LENGTH
       has_prompt   = set to False if they've sent a command since the last time we showed them their prompt
       client_info  = stores all connection information and telnet negotiation
@@ -55,15 +49,8 @@ class descriptor_data:
       write_target = where the buffer will be saved to upon completion"""
     self.socket       = socket
     self.id           = None
-    self.in_buf       = bytes(0)
     self.out_buf      = ""
-    self.w_i          = 0
-    self.input        = bytearray(config.MAX_INPUT_LENGTH)
-    self.input_q      = collections.deque()
-    self.telnet       = False
-    self.telnet_q     = collections.deque()
     self.state        = None
-    self.in_state     = input_state.NORMAL
     self.overflow     = False
     self.has_prompt   = False
     self.client       = client_data.client_data(None, None, None, host)
@@ -73,6 +60,7 @@ class descriptor_data:
     self.olc          = None
     self.write_buffer = None
     self.write_target = None
+    self.input_stream = input_stream_data.input_stream_data()
 
     """When copyover is called, the mud calls itself as a child process.  If sockets are still
        open when that happens, clients cannot be attached to new sockets, and their connections
@@ -117,16 +105,15 @@ class descriptor_data:
   """close()                       <- closes socket
      send(bytes)                   <- call's corresponding socket function send
      recv(size)                    <- call's corresponding socket function recv
-     poll_for_input(timeout)       <- moves pending input into in_buf
-     parse_input()                 <- organizes input in_buf into a input_q
+     poll_for_input(timeout)       <- sends pending input to input_stream
      flush_output()                <- sends any pending output in out_buf
      fileno()                      <- returns file descriptor ID of socket
      write_prompt()                <- appends prompt to out_buf
      write(msg)                    <- appends msg to out_buf
-     process_telnet_cmd()          <- organizes telnet commands in in_buf into telnet_q
+     process_telnet_cmd()          <- parse next telnet command
      process_telnet_q()            <- parses any telnet commands which have been fully read
-     next_input()                  <- pops next complete command in input_q
-     start_writing(source, target) <- start editting source and save to target
+     pop_input()                   <- calls input_stream.pop_input()
+     start_writing(source, target) <- start editing source and save to target
      stop_writing(save)            <- save to write_target if save=True
      debug()                       <- return string of debugging info"""
 
@@ -154,80 +141,7 @@ class descriptor_data:
       # if the socket is in rlist but has no input, then the client closed the connection
       if len(read) == 0:
         self.disconnected = True
-      self.in_buf += read
-
-  def parse_input_revised(self):
-    next_input = ""
-    for b in self.in_buf:
-      print(int(b))
-      if self.in_state == input_state.NORMAL:
-        if self.w_i < config.MAX_INPUT_LENGTH:
-          if 
-          self.input[self.w_i] = b
-        elif chr(b) == '\n':
-          print("found newline")
-          self.input_q.append(self.input)
-          self.input = ""
-          self.w_i = 0
-          break
-        else:
-          self.overflow = True
-          pass # overflow discarded
-      self.w_i += 1
-
-  def parse_input(self):
-    r_i = 0
-    finished_input = ""
-    parsed_msg = ""
-    unread_chars = 0
-    # if we're still in the middle of processing a telnet command, pass
-    # the buffer to the command (not a typo) to grab what it needs
-    if self.telnet:
-      # it sends the rest back to us to continue parsing
-      self.in_buf = self.telnet.parse_bytestream(self.in_buf[r_i:])
-      # if this fails, then that means the entire buffer was consumed
-      # by the command, but still didn't complete it, so we should return
-      if self.telnet.complete():
-        self.telnet_q.append(self.telnet)
-        self.telnet = False
-      else:
-        self.in_buf = bytes(0)
-        return
-    # by now we've finished the partial command if we had one, or we're
-    # starting at the beginning of the buffer and never had a partial
-    # command at all
-    while r_i < len(self.in_buf):
-      # if a command is detected, fire the remaining buffer to a new telnet msg
-      if self.in_buf[r_i] == telnet.tel_cmd.IAC:
-        self.telnet = telnet.tel_msg()
-        self.in_buf = self.telnet.parse_bytestream(self.in_buf[r_i+1:])
-        if self.telnet.complete():
-          self.telnet_q.append(self.telnet)
-          self.telnet = False
-        # command sends us back only what wasn't processed, so the index
-        # must be reset, continue immediately so it isn't incremented
-        r_i = 0
-        continue
-      # for now we will just completely ignore carriage returns
-      elif self.in_buf[r_i] == ord('\r'):
-        pass
-      # a LINE_FEED means we have a new input
-      elif self.in_buf[r_i] == ord('\n'):
-        parsed_msg = self.input[:self.w_i].decode("utf-8")
-        unread_chars = max(0, self.w_i - config.MAX_INPUT_LENGTH)
-        self.input_q.append(parsed_msg)
-        self.w_i = 0
-      # ignore non-printable characters
-      elif not str(self.in_buf[r_i]).isprintable():
-        pass
-      else:
-        # if the buffer is full, stop writing, but increment w_i
-        # regardless so we know later that too much data was given
-        if self.w_i < config.MAX_INPUT_LENGTH:
-          self.input[self.w_i] = self.in_buf[r_i]
-        self.w_i += 1
-      r_i += 1
-    self.in_buf = bytes(0)
+      self.input_stream.parse_bytestream(read)
 
   def flush_output(self):
     if self.out_buf == "":
@@ -260,24 +174,24 @@ class descriptor_data:
     self.out_buf += msg
 
   def process_telnet_cmd(self):
-    cmd = self.telnet_q.popleft()
-    if cmd.cmd == telnet.tel_cmd.WILL:
-      if cmd.opt == telnet.tel_opt.TTYPE:
+    message = self.input_stream.pop_telnet()
+    if message.cmd == telnet.tel_cmd.WILL:
+      if message.opt == telnet.tel_opt.TTYPE:
         self.socket.send(telnet.sb_ttype_send)
-    elif cmd.cmd == telnet.tel_cmd.SB:
-      if cmd.opt == telnet.tel_opt.TTYPE:
-        self.client_info.term_type = cmd.value.decode("utf-8")
-      elif cmd.opt == telnet.tel_opt.NAWS:
-        self.client_info.term_width = 256 * int(cmd.value[0]) + int(cmd.value[1])
-        self.client_info.term_length = 256 * int(cmd.value[2]) + int(cmd.value[3])
+    elif message.cmd == telnet.tel_cmd.SB:
+      if message.opt == telnet.tel_opt.TTYPE:
+        self.client_info.term_type = message.payload.decode("utf-8")
+      elif message.opt == telnet.tel_opt.NAWS:
+        self.client_info.term_width = 256 * int(message.value[0]) + int(message.value[1])
+        self.client_info.term_length = 256 * int(message.value[2]) + int(message.value[3])
 
   def process_telnet_q(self):
-    while self.telnet_q:
+    while self.input_stream.pop_telnet():
       self.process_telnet_cmd()
 
-  def next_input(self):
-    if self.input_q:
-      return self.input_q.popleft()
+  def pop_input(self):
+    if self.input_stream.input_q:
+      return self.input_stream.pop_input()
 
   def start_writing(self, source, target):
     self.write_buffer = source.make_copy()
@@ -300,13 +214,10 @@ class descriptor_data:
       ret_val += self.client.debug()
 
     ret_val += f"State: {CYAN}{self.state}{NORMAL}\r\n"
-    ret_val += f"Input: {CYAN}{self.input}{NORMAL}\r\n"
-    ret_val += f"InputQ: {CYAN}"
-    
-    if not self.input_q:
-      ret_val += "Empty"
+
+    if self.input_stream == None:
+      ret_val += f"IStream: {CYAN}None{NORMAL}\r\n"
     else:
-      ret_val += "\r\n  " + '\r\n  '.join([input for input in self.input_q])
-    ret_val += f"{NORMAL}\r\n"
+      ret_val += self.input_stream.debug()
 
     return ret_val

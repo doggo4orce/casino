@@ -8,7 +8,7 @@ class input_state(enum.IntEnum):
   NORMAL = 0 # expecting normal input or IAC
   TELNET = 1 # expecting telnet code
 
-class input_stream:
+class input_stream_data:
   """Used by descriptors to handle input polled from sockets.
     buffer   = storage for incoming normal bytes which have yet to be processed
     telnet   = next telnet command currently being built
@@ -31,8 +31,8 @@ class input_stream:
   def num_telnets(self):
     return len(self.telnet_q)
 
-  def parse_buffer(self):
-    for b in self.buffer:
+  def parse_bytestream(self, stream):
+    for b in stream:
       self.parse_byte(b)
 
   def parse_byte(self, b):

@@ -7,9 +7,6 @@ class TestDescriptorData(unittest.TestCase):
   def test_debug(self):
     s = socket.socket()
     d = descriptor_data.descriptor_data(s, "localhost")
-    d.input = "I'm not finis-"
-    d.input_q.append("I've typed this command already.")
-    d.input_q.append("But it hasn't been processed yet.")
     print(d.debug())
     d.close()
 
@@ -57,7 +54,7 @@ class TestDescriptorData(unittest.TestCase):
     client.close()
     host.close()
 
-  def test_input_q(self):
+  def test_input_stream(self):
     mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     mother.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     mother.bind(("0.0.0.0", 1234))
@@ -71,17 +68,15 @@ class TestDescriptorData(unittest.TestCase):
     d_client = descriptor_data.descriptor_data(client, "client.dyn.dns.org")
     d_host = descriptor_data.descriptor_data(host, "host.dyn.dns.org")
 
-    d_client.write("get apple\r\n")
-
+    d_client.write("get a")
+    d_client.send(telnet.do_ttype)
+    d_client.write("pple\r\n")
     d_client.flush_output()
-    d_host.poll_for_input(1)
-    print(d_host.in_buf)
-    print(d_host.input_q)    
-    d_host.parse_input_revised()
 
-    print(d_host.in_buf)
-    print(d_host.input_q)
-    
+    d_host.poll_for_input(1)
+
+    self.assertEqual(d_host.pop_input(), "get apple")
+        
     mother.close()
     client.close()
     host.close()

@@ -1,32 +1,32 @@
-import input_stream
+import input_stream_data
 import telnet
 
 import unittest
 
-class TestInputStream(unittest.TestCase):
+class TestInputStreamData(unittest.TestCase):
   def test_parse_byte(self):
-    stream = input_stream.input_stream()
-    self.assertEqual(stream.state, input_stream.input_state.NORMAL)
+    stream = input_stream_data.input_stream_data()
+    self.assertEqual(stream.state, input_stream_data.input_state.NORMAL)
     stream.parse_byte(ord('g'))
     stream.parse_byte(ord('e'))
     stream.parse_byte(ord('t'))
-    self.assertEqual(stream.state, input_stream.input_state.NORMAL)
+    self.assertEqual(stream.state, input_stream_data.input_state.NORMAL)
 
     stream.parse_byte(telnet.tel_cmd.IAC)
-    self.assertEqual(stream.state, input_stream.input_state.TELNET)
+    self.assertEqual(stream.state, input_stream_data.input_state.TELNET)
     stream.parse_byte(telnet.tel_cmd.DO)
     stream.parse_byte(telnet.tel_opt.NAWS)
-    self.assertEqual(stream.state, input_stream.input_state.NORMAL)
+    self.assertEqual(stream.state, input_stream_data.input_state.NORMAL)
 
     stream.parse_byte(ord(' '))
     stream.parse_byte(ord('a'))
     stream.parse_byte(ord('p'))
-    self.assertEqual(stream.state, input_stream.input_state.NORMAL)
+    self.assertEqual(stream.state, input_stream_data.input_state.NORMAL)
     stream.parse_byte(ord('p'))
 
     stream.parse_byte(telnet.tel_cmd.IAC)
     stream.parse_byte(telnet.tel_cmd.DO)
-    self.assertEqual(stream.state, input_stream.input_state.TELNET)
+    self.assertEqual(stream.state, input_stream_data.input_state.TELNET)
     stream.parse_byte(telnet.tel_opt.TTYPE)
 
     stream.parse_byte(ord('l'))

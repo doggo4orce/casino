@@ -1,18 +1,18 @@
-import baccarat_dealer
+import baccarat_dealer_data
 import baccarat_table
 import cards
 import cmd_trig_data
 import config
 import hbeat_proc_data
 import enum
-import event_data
+import event_table_data
 import glob
 import mudlog
 import object_data
 import os
 import npc_data
 import room_data
-import table
+import table_data
 import string_handling
 import zone_data
 

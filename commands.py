@@ -1,4 +1,4 @@
-import descriptor
+import descriptor_data
 import exit_data
 import logging
 import math
@@ -6,16 +6,15 @@ import socket
 
 from color import *
 import config
-import event
+import event_data
 import nanny
 import olc
 import os
-import pc
-import room
+import pc_data
+import room_data
 import string_handling
-import structs
 import zedit
-import zone
+import zone_data
 
 def do_colors(ch, scmd, argument, server, mud, db):
   out_str = ""

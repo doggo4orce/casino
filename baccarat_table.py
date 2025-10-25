@@ -3,9 +3,9 @@ import dataclasses
 import logging
 import nanny
 import object_data
-import pc
+import pc_data
 import spec_proc_data
-import table
+import table_data
 
 @dataclasses.dataclass
 class baccarat_bet_data:
@@ -16,7 +16,7 @@ class guest_data:
   char:        pc.pc
   caught_up:   bool
 
-class baccarat_table(table.table):
+class baccarat_table(table_data.table_data):
   NUM_BACCARAT_SEATS = 3
 
   def __init__(self, proto=None):

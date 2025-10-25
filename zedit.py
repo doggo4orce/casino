@@ -1,12 +1,12 @@
 from color import *
 import config
-import descriptor
+import descriptor_data
 import enum
 import exit_data
 import os
 import string_handling
-import room
-import zone
+import room_data
+import zone_data
 
 class zedit_state(enum.IntEnum):
   ZEDIT_MAIN_MENU    = 1

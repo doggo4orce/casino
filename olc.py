@@ -1,12 +1,11 @@
 from color import *
 import config
-import descriptor
+import descriptor_data
 import enum
 import exit_data
 import logging
 import redit
 import string_handling
-import structs
 import zedit
 
 def handle_input(d, input, server, mud, db):

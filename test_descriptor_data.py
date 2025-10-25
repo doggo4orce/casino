@@ -5,20 +5,28 @@ import telnet
 import unittest
 
 class TestDescriptorData(unittest.TestCase):
-  def test_debug(self):
+  def test_attributes(self):
     s = socket.socket()
     d = descriptor_data.descriptor_data(s, "localhost")
+
     print(d.debug())
+
     d.close()
 
   def test_send_recv(self):
     client, host = socket.socketpair()
     d = descriptor_data.descriptor_data(host, "client.dyn.dns.org")
 
+    # client sends message
     client.send(b"get apple")
+
+    # make sure host received it
     self.assertEqual(d.recv(1024).decode("utf-8"), "get apple")
 
+    # host sends message
     host.send(b"drop apple")
+
+    # make sure client receives it
     self.assertEqual(client.recv(1024).decode("utf-8"), "drop apple")
 
     client.close()
@@ -28,9 +36,13 @@ class TestDescriptorData(unittest.TestCase):
     client, host = socket.socketpair()
     d = descriptor_data.descriptor_data(host, "foreignhost")
 
+    # host sends data (written to output buffer)
     d.write("Welcome!")
+
+    # host flushes output buffer (hence sending the message)
     d.flush_output()
 
+    # make sure the client received it
     self.assertEqual(client.recv(1024).decode("utf-8"), "Welcome!")
 
     client.close()
@@ -100,7 +112,7 @@ class TestDescriptorData(unittest.TestCase):
     # make sure it did
     self.assertEqual(client.recv(1024), bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.SEND, telnet.tel_cmd.IAC, telnet.tel_cmd.SE ]))
 
-    # now similate the client responding with IAC SB TTYPE IS "tt++" IAC SE
+    # now simulate the client responding with IAC SB TTYPE IS "tt++" IAC SE
     client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.IS, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE ]))
 
     # host receives IAC SB TTYPE IS "tt++" IAC SE
@@ -115,44 +127,49 @@ class TestDescriptorData(unittest.TestCase):
     client.close()
     d.close()
 
-  def test_process_telnet_cmd(self):
-    mother = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    mother.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    mother.bind(("0.0.0.0", 1234))
-    mother.listen(1)
-  
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("0.0.0.0", 1234))
+  def test_naws_negotiation(self):
+    client, host = socket.socketpair()
+    d = descriptor_data.descriptor_data(host, "naws.localhost.net")
 
-    host, addr = mother.accept()
+    # client sends IAC SB NAWS 2 3 4 5 IAC SE
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.NAWS, 2, 3, 4, 5, telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))
 
-    d_client = descriptor_data.descriptor_data(client, "client.dyn.dns.org")
-    d_host = descriptor_data.descriptor_data(host, "host.dyn.dns.org")
+    # host receives IAC SB NAWS 2 3 4 5 IAC SE
+    d.poll_for_input(1)
 
-    # TTYPE negotiation
-    d_client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.TTYPE]))
-    d_host.poll_for_input(1)
-    d_host.process_telnet_cmd()
-    d_client.poll_for_input(1)
+    # host processes IAC SB NAWS 2 3 4 5 IAC SE
+    d.process_telnet_cmd()
 
-    self.assertEqual(d_client.pop_telnet(), telnet.tel_msg(telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.SEND, telnet.tel_cmd.IAC, telnet.tel_cmd.SE))
+    # make sure it did
+    self.assertEqual(d.client.term_width, 2 * 256 + 3)
+    self.assertEqual(d.client.term_length, 4 * 256 + 5)
 
-    # TTYPE subnegotiation
-    d_client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.IS, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))
-    d_host.poll_for_input(1)
-    d_host.process_telnet_cmd()
-    self.assertEqual(d_host.client.term_type, "tt++")
-
-    # NAWS subnegotiation
-    d_client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.NAWS, 4, 3, 2, 5, telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))
-    d_host.poll_for_input(1)    
-    d_host.process_telnet_cmd()
-    self.assertEqual(d_host.client.term_width, 256*4 + 3)
-    self.assertEqual(d_host.client.term_length, 256*2 + 5)
-    
-    mother.close()
     client.close()
-    host.close()
+    d.close()
+
+  def test_process_telnet_q(self):
+    client, host = socket.socketpair()
+    d = descriptor_data.descriptor_data(host, "naws.localhost.net")
+
+    # client sends multiple commands
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.TTYPE]))
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.WILL, telnet.tel_opt.NAWS]))
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.NAWS, 2, 3, 4, 5, telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))
+    client.send(bytearray([telnet.tel_cmd.IAC, telnet.tel_cmd.SB, telnet.tel_opt.TTYPE, telnet.ttype_code.IS, ord('t'), ord('t'), ord('+'), ord('+'), telnet.tel_cmd.IAC, telnet.tel_cmd.SE]))
+
+    # host receives them
+    d.poll_for_input()
+
+    # host processes them
+    d.process_telnet_q()
+
+    # check that they are all processed correctly
+    self.assertEqual(d.client.term_width, 2 * 256 + 3)
+    self.assertEqual(d.client.term_length, 4 * 256 + 5)
+    self.assertEqual(d.client.term_type, "tt++")
+
+    client.close()
+    d.close()
 
 if __name__ == "__main__":
-  unittest.main(verbosity=2)
+  unittest.main()

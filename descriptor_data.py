@@ -162,7 +162,7 @@ class descriptor_data:
         self.client.term_length = 256 * int(message.payload[2]) + int(message.payload[3])
 
   def process_telnet_q(self):
-    while self.input_stream.pop_telnet():
+    while self.input_stream.num_telnets > 0:
       self.process_telnet_cmd()
 
   def pop_input(self):

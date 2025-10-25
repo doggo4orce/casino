@@ -14,8 +14,8 @@ import telnet
 @dataclasses.dataclass
 class login_data:
   """Keeps track of player's login credentials.  Used to look up character upon login.
-   name     = name typed at login
-   password = password typed when prompted"""
+     name     = name typed at login
+     password = password typed when prompted"""
   name: str = ""
   password: str = ""
 
@@ -51,7 +51,7 @@ class descriptor_data:
     self.id           = None
     self.out_buf      = ""
     self.state        = None
-    self.overflow     = False
+    self.overflow     = False # currently unimplemented
     self.has_prompt   = False
     self.client       = client_data.client_data(None, None, None, host)
     self.login_info   = login_data(None, None)
@@ -77,6 +77,7 @@ class descriptor_data:
     return self.write_buffer != None
 
   """close()                       <- closes socket
+     detach()                      <- detaches socket
      send(bytes)                   <- call's corresponding socket function send
      recv(size)                    <- call's corresponding socket function recv
      poll_for_input(timeout)       <- sends pending input to input_stream
@@ -94,6 +95,9 @@ class descriptor_data:
 
   def close(self):
     self._socket.close()
+
+  def detach(self):
+    self._socket.detach()
 
   def send(self, bytes):
     try:

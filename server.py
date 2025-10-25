@@ -18,16 +18,47 @@ class conn(typing.NamedTuple):
   host: str
 
 class server:
-  GREETINGS = """                      OurouborosMud\r\n\r\n\r\nBy what name do you wish to be known? """
-
+  """Creates a server to keep track of client connections (descriptors).
+     descriptors     = dict of connected clients handled (key = descriptor ID)
+     new_connections = recent connections yet to be handled
+     disconnects     = list of clients who have lost their connection
+     just_leaving    = list of clients who chose to quit the game
+     nextid          = ID to be assigned to next descriptor
+     shutdown_cmd    = check whether someone used shutdown command
+     copyover_cmd    = check whether someone used copyover command"""
   def __init__(self):
-    self.descriptors     = dict()
-    self.new_connections = list()
-    self.disconnects     = list()
-    self.just_leaving    = list()
-    self.nextid          = 0
-    self.shutdown_cmd    = False
-    self.copyover_cmd    = False
+    self._mother          = None
+    self._descriptors     = dict()
+    self._new_connections = list()
+    self._disconnects     = list()
+    self._just_leaving    = list()
+    self._nextid          = 0
+    self._shutdown_cmd    = False
+    self._copyover_cmd    = False
+
+  """copyover_recover(mud,file,db) <- pause all connections, reboot game, and restore them
+     add_descriptor(d)             <- add new client to descriptors and assign it's ID
+     remove_descriptor_by_id(id)   <- delete descriptor from descriptors
+     greet_descriptor(d)           <- send GREETINGS (config.py)
+     shutdown()                    <- prepare for shutdown or copyover
+     prepare_for_copyover()        <- detach all sockets in self.descriptors
+     prepare_for_shutdown()        <- detach all sockets in self.descriptors
+     boot(domain,port)             <- bind mother to (domain,port) and listen
+     check_new_connections()       <- accepts pending connections, adds to new_connections
+     handle_new_connections()      <- transfers from new_connections to descriptors and greets
+     check_for_disconnects()       <-
+     handle_disconnects()          <-
+     handle_quits()
+     poll_for_input()
+     flush_output()
+     write_prompts()
+     process_inputs(mud,db)
+     write_all(msg,exceptions)
+     send_all(bytes)
+     process_telnet_qs()
+     loop(mud,db)
+     """
+
 
   def copyover_recover(self, mud, file, db):
     logging.info("Recovering from Copyover.")
@@ -71,7 +102,6 @@ class server:
 
   def remove_descriptor_by_id(self, id):
     d = self.descriptors[id]
-    d.socket.shutdown(1)
     d.close()
     del self.descriptors[id]
 
@@ -91,12 +121,13 @@ class server:
 
   def prepare_for_copyover(self):
     for id in self.descriptors:
-      self.descriptors[id].socket.detach()
+      self.descriptors[id].detach()
+    # self._mother.close() ?
 
   def prepare_for_shutdown(self):
     for id in self.descriptors:
-      self.descriptors[id].socket.shutdown(1)
       self.descriptors[id].close()
+    # self._mother.close() ?
 
   def boot(self, domain, port):
     logging.info("Opening mother connection.")
@@ -176,15 +207,17 @@ class server:
       if not d.has_prompt:
         d.write_prompt()
 
-  def parse_telnet_q(self):
-    for d in self.descriptors.values():
-      if not d.disconnected:
-        d.parse_telnet_q()
+  # should be deleted i think
+  # def parse_telnet_q(self):
+  #   for d in self.descriptors.values():
+  #     if not d.disconnected:
+  #       d.parse_telnet_q()
 
-  def parse_input(self):
-    for d in self.descriptors.values():
-      if not d.disconnected:
-        d.parse_input()
+  # should be deleted i think
+  # def parse_input(self):
+  #   for d in self.descriptors.values():
+  #     if not d.disconnected:
+  #       d.parse_input()
 
   def process_inputs(self, mud, db):
     for d in self.descriptors.values():

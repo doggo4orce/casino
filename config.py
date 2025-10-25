@@ -57,3 +57,6 @@ DEFAULT_TITLE          = "the title-less"
 
 # starting rooms
 VOID_ROOM              = "stockville[void]"
+
+# eventually this belongs in a file dedicated to global constants
+GREETINGS = """                      OurouborosMud\r\n\r\n\r\nBy what name do you wish to be known? """

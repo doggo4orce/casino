@@ -28,11 +28,15 @@ class game_data:
     self._objects   = list()
     self._events    = event_table_data.event_table_data()
 
-  """add_event(event)           <- add event e to self_events
-     heartbeat()                <- calls the event handlers heart_beat() function
-     call_hbeat_procs(db)       <- calls all pulsing special procedures for npcs
+  """add_event(event)           <- add event to table
+     list_events()              <- returns list of events in table
+     num_events()               <- counts number of events in table
+     cancel_event(event)        <- removes an event from table
      add_zone(zone)             <- adds a zone to the game
+     list_zones()               <- returns list of zones in game
+     num_zones()                <- counts zones in game
      zone_by_id(id)             <- iterate through self.zones zones to find zone with identifier id
+     delete_zone(zone)          <- remove zone from game
      room_by_uid(zone_id, id)   <- look up room using uid
      npc_by_uid(zone_id, id)    <- look up npc prototype by code
      obj_by_uid(zone_id, id)    <- look up object prototype by code
@@ -47,29 +51,44 @@ class game_data:
      load_obj(zone_id, id)      <- instantiate obj from prototype
      pc_by_id(id)               <- look up pc in game with id
      lose_link(ch)              <- disconnects player from their d (seen by players)
-     reconnect(d, ch)           <- reconnects player to their d (seen by players)"""
+     reconnect(d, ch)           <- reconnects player to their d (seen by players)
+     heartbeat()                <- calls the event handlers heart_beat() function
+     call_hbeat_procs(db)       <- calls all pulsing special procedures for npcs"""
 
   def add_event(self, event):
-    self._events.add_event(e)
+    self._events.add_event(event)
 
-  def heartbeat(self, db):
-    self._events.heartbeat(self, db)
+  def list_events(self):
+    return self._events.list_events()
 
-  def call_hbeat_procs(self, db):
-    for mob in self._chars:
-      if isinstance(mob, npc_data.npc_data):
-        mob.call_hbeat_procs(self, db)
+  def num_events(self):
+    return self._events.num_events()
+
+  def cancel_event(self, event):
+    self._events.cancel_event(event)
 
   def add_zone(self, zone):
-    if self.zone_by_id(zn.id) == None:
-      self._zones[zn.id] = zn
+    if self.zone_by_id(zone.id) == None:
+      self._zones[zone.id] = zone
     else:
-      logging.error(f"Trying to add zone {zn.name} but id '{zn.id}'' but already exists.")
+      mudlog.error(f"Trying to add zone {zone.name} but id '{zone.id}'' but already exists.")
+
+  def list_zones(self):
+    return [zone for zone in self._zones.values()]
+
+  def num_zones(self):
+    return len(self.list_zones())
 
   def zone_by_id(self, id):
     if id not in self._zones.keys():
       return None
     return self._zones[id]
+
+  def delete_zone(self, zone):
+    try:
+      del self._zones[zone.id]
+    except KeyError:
+      mudlog.error(f"Trying to delete zone {zone} which did not exist!")
 
   def room_by_uid(self, zone_id, id):
     if zone_id == None or id == None:
@@ -263,6 +282,14 @@ class game_data:
     # now connect to the linkless char
     d.char = ch
     ch.d = d
+
+  def heartbeat(self, db):
+    self._events.heartbeat(self, db)
+
+  def call_hbeat_procs(self, db):
+    for mob in self._chars:
+      if isinstance(mob, npc_data.npc_data):
+        mob.call_hbeat_procs(self, db)
 
 if __name__ == '__main__':
   pass

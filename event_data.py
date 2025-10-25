@@ -11,7 +11,7 @@ class event_data:
     self._owner = owner
     self._function = function
 
-    if countdown < 0:
+    if countdown <= 0:
       mudlog.error(f"Tried to create event with negative countdown.  Countdown set to 1.")
       self.countdown = 1
     else:
@@ -71,7 +71,7 @@ class event_data:
     if self.function == None:
       ret_val += "(None)"
     else:
-      ret_val += f"{self.function.__name__}\r\n"
+      ret_val += f"{self.function.__name__}"
     ret_val += NORMAL + "\r\n"
 
     ret_val += f"Targets: {CYAN}"

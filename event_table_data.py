@@ -15,7 +15,9 @@ class event_table_data:
 
   """heartbeat(mud, db)  <- call heartbeat() for all events in current bucket++
      add_event(event)    <- add new event to table
-     delete_event(event) <- remove event from table
+     list_events()       <- returns list of scheduled events
+     num_events()        <- counts the number of events in table
+     cancel_event(event) <- remove event from table
      num_buckets()       <- number of buckets table is divided into"""
 
   def heartbeat(self, mud, db):
@@ -31,10 +33,19 @@ class event_table_data:
     event.countdown = new_countdown
     self._buckets[bucket].add_event(event)
 
-  def delete_event(self, event):
+  def list_events(self):
+    ret_val = list()
+    for bucket in self._buckets:
+      ret_val.extend(bucket.list_events())
+    return ret_val
+
+  def num_events(self):
+    return len(self.list_events())
+
+  def cancel_event(self, event):
     for bucket in self._buckets:
       if event in bucket:
-        bucket.delete_event(event)
+        bucket.cancel_event(event)
 
   def num_buckets(self):
     return len(self._buckets)
@@ -43,6 +54,8 @@ class event_table_data:
     ret_val = ""
 
     for j in range(0, self.num_buckets()):
+      if self._buckets[j].num_events() == 0:
+        continue
       ret_val += f"Bucket {j}:\r\n"
       ret_val += f"-----------\r\n"
       ret_val += self._buckets[j].debug() + "\r\n"

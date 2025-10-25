@@ -9,21 +9,25 @@ class event_bucket_data:
 
   """heartbeat(mud)      <- counts down each event and executes/deletes those pending
      add_event(event)    <- schedules new event
-     delete_event(event) <- deletes scheduled event (which may have already executed)
+     list_events()       <- returns copy of event list
+     cancel_event(event) <- deletes scheduled event (which may have already executed)
      num_events()        <- counts the number of scheduled events"""
 
   def heartbeat(self, mud, db):
     for event in self._events:
       if event.pending():
         event.execute(mud, db)
-        self.delete_event(event)
+        self.cancel_event(event)
       else:
         event.heartbeat()
 
   def add_event(self, event):
     self._events.append(event)
 
-  def delete_event(self, event):
+  def list_events(self):
+    return [list for list in self._events]
+
+  def cancel_event(self, event):
     self._events.remove(event)
 
   def num_events(self):

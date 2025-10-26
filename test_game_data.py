@@ -6,8 +6,14 @@ import event_data
 import game_data
 import npc_proto_data
 import obj_proto_data
+import pc_data
 import zone_data
 
+def create_live_test_players(num):
+  players = list()
+  sockets = list()
+  pc_data.pc_data()
+  
 class TestGameData(unittest.TestCase):
   def test_event_management(self):
     mud = game_data.game_data()
@@ -93,7 +99,7 @@ class TestGameData(unittest.TestCase):
     self.assertNotIn(zone2, mud.list_zones())
     self.assertEqual(mud.num_zones(), 0)
 
-  def test_entity_management(self):
+  def test_object_management(self):
     # build some test zones
     zone1 = zone_data.zone_data()
     zone1.name = "the newbie zone"
@@ -166,6 +172,59 @@ class TestGameData(unittest.TestCase):
 
     # look for object in the wrong zone
     self.assertIsNone(mud.obj_by_uid("veteran_zone", "sharp_knife"))
+
+  def test_npc_management(self):
+    # build some test zones
+    zone1 = zone_data.zone_data()
+    zone1.name = "the newbie zone"
+    zone1.id = "newbie_zone"
+    zone1.author = "bob"
+
+    zone2 = zone_data.zone_data()
+    zone2.name = "the veteran zone"
+    zone2.id = "veteran_zone"
+    zone2.author = "alice"
+
+    # build some npcs for zone 1
+    npc1 = npc_proto_data.npc_proto_data()
+    npc1.zone_id = "newbie_zone"
+    npc1.id = "wild_dog"
+
+    npc2 = npc_proto_data.npc_proto_data()
+    npc2.zone_id = "newbie_zone"
+    npc2.id = "tame_dog"
+
+    # build some npcs for zone 2
+    npc3 = npc_proto_data.npc_proto_data()
+    npc3.zone_id = "veteran_zone"
+    npc3.id = "wild_man"
+
+    npc4 = npc_proto_data.npc_proto_data()
+    npc4.zone_id = "veteran_zone"
+    npc4.id = "tame_man"
+
+    # add npcs to zones
+    zone1.add_npc(npc1)
+    zone1.add_npc(npc2)
+    zone2.add_npc(npc3)
+    zone2.add_npc(npc4)
+
+    # now put all of this into a game object
+    mud = game_data.game_data()
+    mud.add_zone(zone1)
+    mud.add_zone(zone2)
+
+    # look up npcs by their IDs
+    self.assertEqual(mud.npc_by_uid("newbie_zone", "wild_dog"), npc1)
+    self.assertEqual(mud.npc_by_uid("newbie_zone", "tame_dog"), npc2)
+    self.assertEqual(mud.npc_by_uid("veteran_zone", "wild_man"), npc3)
+    self.assertEqual(mud.npc_by_uid("veteran_zone", "tame_man"), npc4)
+
+    # look for npcs in the wrong zone
+    self.assertIsNone(mud.npc_by_uid("veteran_zone", "wild_dog"))
+
+  def test_room_management(self):
+
 
 
 if __name__ == "__main__":

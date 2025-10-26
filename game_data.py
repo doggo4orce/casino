@@ -71,7 +71,7 @@ class game_data:
     if self.zone_by_id(zone.id) == None:
       self._zones[zone.id] = zone
     else:
-      mudlog.error(f"Trying to add zone {zone.name} but id '{zone.id}'' but already exists.")
+      mudlog.error(f"Trying to add zone {zone.name} but id '{zone.id}' but already exists.")
 
   def list_zones(self):
     return [zone for zone in self._zones.values()]

@@ -148,6 +148,7 @@ def parse_reference(vref):
   if not (valid_id(codes[0]) and valid_id(codes[1])):
     return None, None
 
+  # codes[0] = local, codes[1] = global
   return codes[0], codes[1]
 
 def parse_reference_old(code):

@@ -84,8 +84,8 @@ class pc_data(character_data.character_data):
   #   db.save_prefs(self)
 
   def write(self, message):
-    if self._d != None:
-      self._d.write(message)
+    if self.descriptor != None:
+      self.descriptor.write(message)
 
   def debug(self):
     ret_val = super().debug()

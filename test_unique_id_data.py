@@ -33,5 +33,8 @@ class TestUniqueID(unittest.TestCase):
     uid.id = None
     self.assertEqual(uid.id, None)
 
+    uid2 = unique_id_data.unique_id_data(uid.zone_id, uid.id)
+    self.assertEqual(uid, uid2)
+
 if __name__ == "__main__":
   unittest.main()

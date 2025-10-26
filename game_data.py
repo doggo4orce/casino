@@ -12,8 +12,9 @@ import object_data
 import os
 import npc_data
 import room_data
-import table_data
 import string_handling
+import table_data
+import unique_id_data
 import zone_data
 
 class game_data:
@@ -23,43 +24,50 @@ class game_data:
        chars     = list of characters (including NPCS and PCs) in the game
        objects   = list of objects which are in the game
        events    = handles all events to take place in the future"""
-    self._zones     = dict()
-    self._chars     = list()
-    self._objects   = list()
-    self._events    = event_table_data.event_table_data()
+    self._zones      = dict()
+    self._characters = list()
+    self._objects    = list()
+    self._events     = event_table_data.event_table_data()
 
-  """add_event(event)           <- add event to table
-     list_events()              <- returns list of events in table
-     num_events()               <- counts number of events in table
-     cancel_event(event)        <- removes an event from table
-     add_zone(zone)             <- adds a zone to the game
-     list_zones()               <- returns list of zones in game
-     num_zones()                <- counts zones in game
-     zone_by_id(id)             <- iterate through self.zones zones to find zone with identifier id
-     delete_zone(zone)          <- remove zone from game
-     room_by_uid(zone_id, id)   <- look up room using uid
-     npc_by_uid(zone_id, id)    <- look up npc prototype by code
-     obj_by_uid(zone_id, id)    <- look up object prototype by code
-     echo_around(ch, hide, msg) <- sends msg to all in room except ch and those in hide list
-     add_char(ch)               <- add character to game, in ch.room or VOID_ROOM
-     extract_char(ch)           <- extracts character from the game
-     add_obj(obj)               <- these functions are the same
-     extract_obj(obj)           <- except for objects instead
-     assign_spec_procs()        <- assign special procedures to elements of npc_proto
-     startup()                  <- populate world and call assign_spec_procs()
-     load_npc(zone_id, id)      <- instantiate npc from prototype
-     load_obj(zone_id, id)      <- instantiate obj from prototype
-     pc_by_id(id)               <- look up pc in game with id
-     lose_link(ch)              <- disconnects player from their d (seen by players)
-     reconnect(d, ch)           <- reconnects player to their d (seen by players)
-     heartbeat()                <- calls the event handlers heart_beat() function
-     call_hbeat_procs(db)       <- calls all pulsing special procedures for npcs"""
+  """add_event(event)                <- add event to table
+     list_events()                   <- returns list of events in table
+     scheduled(event)                <- check if event is scheduled
+     num_events()                    <- counts number of events in table
+     cancel_event(event)             <- removes an event from table
+     add_zone(zone)                  <- adds a zone to the game
+     list_zones()                    <- returns list of zones in game
+     num_zones()                     <- counts zones in game
+     zone_by_id(id)                  <- search for zone with given id
+     delete_zone(zone)               <- remove zone from game
+     add_character_to_room(ch, room) <- add character to game in specified room
+     list_characters()               <- return list of characters in game
+     has_character(ch)               <- check if character is in the game
+     num_characters()                <- count the number of characters in the game
+     extract_character(ch)           <- extracts character completely from the game
+     room_by_uid(zone_id, id)        <- look up room using uid
+     npc_by_uid(zone_id, id)         <- look up npc prototype by code
+     obj_by_uid(zone_id, id)         <- look up object prototype by code
+     echo_around(ch, hide, msg)      <- sends msg to all in room except ch and those in hide list
+     add_obj(obj)                    <- these functions are the same  
+     extract_obj(obj)                <- except for objects instead
+     assign_spec_procs()             <- assign special procedures to elements of npc_proto
+     startup()                       <- populate world and call assign_spec_procs()
+     load_npc(zone_id, id)           <- instantiate npc from prototype
+     load_obj(zone_id, id)           <- instantiate obj from prototype
+     pc_by_id(id)                    <- look up pc in game with id
+     lose_link(ch)                   <- disconnects player from their d (seen by players)
+     reconnect(d, ch)                <- reconnects player to their d (seen by players)
+     heartbeat()                     <- calls the event handlers heart_beat() function
+     call_hbeat_procs(db)            <- calls all pulsing special procedures for npcs"""
 
   def add_event(self, event):
     self._events.add_event(event)
 
   def list_events(self):
     return self._events.list_events()
+
+  def scheduled(self, event):
+    return event in self.list_events()
 
   def num_events(self):
     return self._events.num_events()
@@ -123,21 +131,25 @@ class game_data:
 
     return zone.obj_by_id(id)
 
-  def echo_around(self, ch, hide, msg):
-    if hide == None:
-      hide = [ ]
+  def echo_around(self, ch, hide_from, msg):
+    if hide_from == None:
+      hide_from = [ ]
       
     hide_from.append(ch)
     self.room_by_uid(ch.room.zone_id, ch.room.id).echo(msg, exceptions = hide_from)
 
-  def add_char(self, ch):
+  def add_character_to_room(self, ch, room):
+    ch.room = unique_id_data.unique_id_data(room.zone_id, room.id)
+    self._add_character(ch)
+
+  def _add_character(self, ch):
     void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
 
     # place them in the world
-    self._chars.append(ch)
+    self._characters.append(ch)
 
     # if either zone or room code doesn't exist, move them to the VOID
-    if ch.room == None or ch.room.zone_id == None or ch.room.id == None:
+    if ch.room is None or ch.room.zone_id is None or ch.room.id is None:
       ch.room = void
 
     # now find the actual room
@@ -151,28 +163,46 @@ class game_data:
     # finally we have somewhere to add them!
     room.add_char(ch)
 
-  def extract_char(self, ch):
+  def list_characters(self):
+    return [ch for ch in self._characters]
+
+  def has_character(self, ch):
+    return ch in self.list_characters()
+
+  def extract_character(self, ch):
     # if they are in a room, remove them from that room
-    if ch.room != None:
+    if ch.room is not None:
       uid = ch.room
       self.room_by_uid(uid.zone_id, uid.id).remove_char(ch)
     # now remove them from the world
-    self._chars.remove(ch)
+    self._characters.remove(ch)
 
-  def add_obj(self, obj):
+  def _add_obj(self, obj):
+    void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
+
+    # place it in the world
     self._objects.append(obj)
-    uid = obj.room
-    room = self.room_by_uid(uid.zone_id, uid.id)
+
+    # if either zone or room code doesn't exist, move it to the VOID
+    if obj.room is None or obj.room.zone_id is None or obj.room.id is None:
+      obj.room = void
+
+    # now find the actual room
+    room = self.room_by_uid(obj.room.zone_id, obj.room.id)
     if room != None:
       room.add_obj(obj)
 
+  def add_obj_to_room(self, obj, room):
+    obj.room = unique_id_data.unique_id_data(room.zone_id, room.id)
+    self._add_obj(obj)
+
   def extract_obj(self, obj):
-    for ch in self._chars:
+    for ch in self._characters:
       if obj in ch.inventory:
         ch.inventory.remove(obj)
 
-    if obj.room != None:
-      self.room_by_code(ch.room).remove_obj(obj)
+    if obj.room is not None:
+      self.room_by_uid(obj.room.zone_id, obj.room.id).remove_obj(obj)
 
     self._objects.remove(obj)
 

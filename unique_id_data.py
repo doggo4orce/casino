@@ -46,3 +46,6 @@ class unique_id_data:
       return str(self._id)
     else:
       return f"{self.id}@{self.zone_id}"
+
+  def __eq__(self, other):
+    return self.zone_id == other.zone_id and self.id == other.id

@@ -3,7 +3,7 @@ import unittest
 
 class TestORM(unittest.TestCase):
 
-  def create_table(self):
+  def test_create_table(self):
     manager = orm.orm(":memory:")
     
     manager.create_table("employee", 
@@ -28,7 +28,7 @@ class TestORM(unittest.TestCase):
     self.assertFalse(manager.table_exists("badname!"))
     self.assertFalse(manager.table_exists("goodname"))
 
-  def insert(self):
+  def test_insert(self):
     manager = orm.orm(":memory:")
     manager.create_table("score", ("first_name", str), ("last_name", str), ("score", int))
 

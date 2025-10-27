@@ -257,6 +257,28 @@ class TestDbHandler(unittest.TestCase):
     self.assertEqual(bob['name'], 'bob')
     self.assertEqual(bob['age'], 21)
 
+  def test_apostrophe(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table("npcs",
+      ("name", str),
+      ("age", int),
+      ("desc", str)
+    )
+
+    handler.insert_record("npcs",
+      name="the baker",
+      age=52,
+      desc="He's got an apostrophe in his description."  
+    )
+
+    baker = handler.get_record("npcs", name="the baker")
+
+    self.assertEqual(baker["name"], "the baker")
+    self.assertEqual(baker["age"], 52)
+    self.assertEqual(baker["desc"], "He's got an apostrophe in his description.")
+
 
 if __name__ == "__main__":
   unittest.main()

@@ -8,7 +8,6 @@ import table
 import unittest
 
 class TestTable(unittest.TestCase):
-
   def create_object(self):
     op = structs.obj_proto_data()
     op.entity.name = "test table"

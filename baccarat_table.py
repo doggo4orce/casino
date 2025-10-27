@@ -13,7 +13,7 @@ class baccarat_bet_data:
 
 @dataclasses.dataclass
 class guest_data:
-  char:        pc.pc
+  char:        pc_data.pc_data
   caught_up:   bool
 
 class baccarat_table(table_data.table_data):
@@ -34,13 +34,13 @@ class baccarat_table(table_data.table_data):
     ret_val.heart_beat_procs = old_table.heart_beat_procs
 
     if old_table.num_seats != 3:
-      logging.warning(f"Changing {old_table}, which has {old_table.num_seats} to a baccarat table.")
-      logging.warning("Adjusting capacity to 3.")
+      mudlog.warning(f"Changing {old_table}, which has {old_table.num_seats} to a baccarat table.")
+      mudlog.warning("Adjusting capacity to 3.")
       ret_val.num_seats = 3
 
       for idx, guest in enumerate(old_table.guests):
         if idx >= 3:
-          logging.warning(f"Removing guest: {guest}.")
+          mudlog.warning(f"Removing guest: {guest}.")
         else:
           ret_val.add_player(guest)
 

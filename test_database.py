@@ -374,7 +374,7 @@ class TestDatabase(unittest.TestCase):
     obj_p2.remove_all_aliases()
     obj_p2.add_alias("old")
     obj_p2.add_alias("object")
-    obj_p2.ldesc = "an\'\' old object sits here"
+    obj_p2.ldesc = "an old object sits here"
     obj_p2.desc = "it looks old"
     obj_p2.id = "old_object"
     obj_p2.zone_id = "newbie_zone"
@@ -451,6 +451,14 @@ class TestDatabase(unittest.TestCase):
     self.assertEqual(db.num_zones(), 0)
     self.assertEqual(db.num_obj_protos(), 0)
     self.assertEqual(db.num_npc_protos(), 0)
+
+  def test_load_world(self):
+    mud = game_data.game_data()
+    db = database.database(":memory:")
+    db.connect()
+    db.create_tables()
+    db.load_stock()
+    db.load_world(mud)
 
   def test_load_stock(self):
     db = database.database(":memory:")

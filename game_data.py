@@ -1,6 +1,8 @@
 import baccarat_dealer_data
 import baccarat_table
-import cards
+import baccarat_procs
+import card_data
+import card_dealer_data
 import cmd_trig_data
 import config
 import hbeat_proc_data
@@ -223,30 +225,30 @@ class game_data:
     zone = self.zone_by_id("stockville")
 
     # todo, give out warning and avoid crash if these references don't exist
-    b_dealer = self.npc_by_code('stockville[baccarat_dealer]')
+    b_dealer = self.npc_by_uid('stockville', 'baccarat_dealer')
 
     b_dealer.assign_spec_proc(
       cmd_trig_data.prefix_cmd_trig_data(
         "baccarat syntax handling", 
-        baccarat_dealer.baccarat_dealer_syntax_parser
+        baccarat_procs.baccarat_dealer_syntax_parser
       )
     )
     b_dealer.assign_spec_proc(
       cmd_trig_data.prefix_cmd_trig_data(
         "baccarat shoe history",
-        baccarat_dealer.baccarat_dealer_history
+        baccarat_procs.baccarat_dealer_history
       )
     )
     b_dealer.assign_spec_proc(
       cmd_trig_data.suffix_cmd_trig_data(
         "baccarat dealer greeting",
-        baccarat_dealer.baccarat_dealer_intro
+        baccarat_procs.baccarat_dealer_intro
       )
     )
     b_dealer.assign_spec_proc(
       hbeat_proc_data.hbeat_proc_data(
         "baccarat deals a shoe",
-        baccarat_dealer.baccarat_dealing
+        baccarat_procs.baccarat_dealing
       )
     )
 
@@ -255,7 +257,7 @@ class game_data:
     b_table.assign_spec_proc(
       cmd_trig_data.prefix_cmd_trig_data(
         "baccarat table syntax parser",
-        baccarat_table.baccarat_table_syntax_parser
+        baccarat_procs.baccarat_dealer_syntax_parser
       )
     )
 
@@ -267,22 +269,20 @@ class game_data:
 
     # populating world manually at startup
     b_dealer = self.load_npc('stockville', 'baccarat_dealer')
-    b_dealer = cards.card_dealer.from_npc(b_dealer)
-    b_dealer = baccarat_dealer.baccarat_dealer.from_card_dealer(b_dealer)
-    b_dealer.room = unique_id_data.unique_id_data('stockville', 'casino')
-    b_dealer.bac_state = baccarat_dealer.baccarat_dealer_state.BEGIN_SHOE
-    self.add_char(b_dealer)
+    b_dealer = card_dealer_data.card_dealer_data.from_npc(b_dealer)
+    b_dealer = baccarat_dealer_data.baccarat_dealer_data.from_card_dealer(b_dealer)
+    b_dealer.bac_state = baccarat_dealer_data.baccarat_dealer_state.BEGIN_SHOE
+    self.add_character_to_room(b_dealer, self.room_by_uid('stockville', 'casino'))
 
     baker = self.load_npc('stockville', 'baker')
-    baker.room = unique_id_data.unique_id_data('stockville', 'recall')
-    self.add_char(baker)
+    self.add_character_to_room(baker, self.room_by_uid('stockville', 'recall'))
 
     bottle = self.load_obj('stockville', 'bottle')
     bottle.room = unique_id_data.unique_id_data('stockville', 'recall')
     self.add_obj(bottle)
 
     b_table = self.load_obj('stockville', 'baccarat_table')
-    b_table = table.table.from_obj(b_table)
+    b_table = table_data.table_data.from_obj(b_table)
     b_table = baccarat_table.baccarat_table.from_table(b_table)
     b_table.dealer = b_dealer
     b_table.room = unique_id_data.unique_id_data('stockville', 'casino')
@@ -292,7 +292,7 @@ class game_data:
     proto_type = self.npc_by_uid(zone_id, id)
 
     if proto_type == None:
-      logging.warning(f"Trying to load npc [{code}] which was not found.")
+      mudlog.warning(f"Trying to load npc [{code}] which was not found.")
       return None
 
     return npc_data.npc_data(proto_type)
@@ -301,10 +301,10 @@ class game_data:
     proto_type = self.obj_by_uid(zone_id, id)
 
     if proto_type == None:
-      logging.warning(f"Trying to load object [{code}] which was not found.")
+      mudlog.warning(f"Trying to load object [{code}] which was not found.")
       return None
 
-    return object.object(proto_type)
+    return object_data.object_data(proto_type)
 
   def pc_by_id(self, id):
     for ch in self._chars:

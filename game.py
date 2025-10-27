@@ -47,8 +47,6 @@ class game:
      startup()                  <- loads all of the zone folders in WORLD_FOLDER
      load_npc(code)             <- looks up the npc in self.npc_proto and returns it or None
      load_obj(vnum)             <- looks up the obj in self.objs and return a copy or None
-     read_npc_file(filename)    <- reads all the npcs stored in filename
-     read_obj_file(filename)    <- reads all the objects stored in a filename
      pc_by_id(id)               <- searches chars for a pc with id and returns it if found
      lose_link(ch)              <- disconnects player from their d (seen by players)
      reconnect(d, ch)           <- reconnects player to their d (seen by players)"""
@@ -244,32 +242,6 @@ class game:
     new_obj = object.object(proto_type)
     
     return new_obj
-
-  def read_npc_file(self, filename):
-    rf = open(filename, "r")
-    while True:
-      # expecting #VNUM or $ (final line)
-      line = rf.readline()
-      # file is terminated with $
-      if line[0] == '$':
-        return
-      # first thing is the virtual number
-      vnum = int(line[1:])
-      # now read the rest of the mob
-      self.npc_proto[vnum] = db.parse_npc(rf)
-
-  def read_obj_file(self, filename):
-    rf = open(filename, "r")
-    while True:
-      # expecting #VNUM or $ (final line)
-      line = rf.readline()
-      # file is terminated with $
-      if line[0] == '$':
-        return
-      # first thing is the virtual number
-      vnum = int(line[1:])
-      # now read the rest of the mob
-      self.obj_proto[vnum] = db.parse_obj(rf)
 
   def pc_by_id(self, id):
     for ch in self._chars:

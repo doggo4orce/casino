@@ -157,6 +157,7 @@ class db_handler:
   def insert_record(self, table, **record):
     table_columns = self.list_columns(table)
     column_names = self.list_column_names(table)
+    num_records = len(record.keys())
     extra_fields = [field for field in record.keys() if field not in column_names]
 
     # do not accept a record with an extra field
@@ -177,18 +178,12 @@ class db_handler:
         mudlog.error(f"Trying to insert record into table {table}, but {record[column.name]} is not of type {column.type}.")
         return
 
-    for field in record.keys():
-      if type(record[field]) == str:
-        record[field] = f"'{record[field]}'"
-      elif type(record[field]) == int:
-        record[field] = f"{record[field]}"
-
-    columns = ', '.join([key for key in record.keys()])
-    values = ', '.join([record[field] for field in record.keys()])
+    columns = ', '.join(record.keys())
+    values = ', '.join('?' * num_records)
 
     syntax = f"INSERT INTO {table} ({columns}) VALUES ({values})"
 
-    self.execute(syntax)
+    self.execute(syntax, tuple(record.values()))
     self.commit()
 
   def delete_records(self, table, **record):

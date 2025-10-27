@@ -70,6 +70,7 @@ class TestGameData(unittest.TestCase):
     mud.add_zone(zone2)
 
     # should fire an error and take no action
+    print("expecting two errors immediately below")
     mud.add_zone(zone3)
 
     # only zones 1 and 2 were added
@@ -90,6 +91,7 @@ class TestGameData(unittest.TestCase):
 
     # should fire error
     mud.delete_zone(zone1)
+    print("expecting 2 errors immediately above")
 
     # only zone 2 remains
     self.assertNotIn(zone1, mud.list_zones())
@@ -314,11 +316,12 @@ class TestGameData(unittest.TestCase):
 
   def test_load_world(self):
     mud = game_data.game_data()
-    db = database.database()
-
-    db.load_stock()
+    db = database.database(":memory:")
+    db.connect()
+    db.create_tables()
+    db.load_stock() # hard codes content into DB, eventually this won't be here
     mud.load_world(db)
-    mud.assign_spec_procs()
+    mud.startup()
 
   def test_echo_around(self):
     clients, players, mud, zone, room = test_utilities.create_single_room_test_world_and_players(3)

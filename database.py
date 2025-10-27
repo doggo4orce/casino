@@ -7,7 +7,7 @@ import room_data
 import zone_data
 
 class database:
-  NAMELIST_TABLE     = "namelist_table"
+  ALIAS_TABLE        = "alias_table"
   EXIT_TABLE         = "ex_table"
   PREF_NUMERIC_TABLE = "pref_table_numeric"
   PREF_TEXT_TABLE    = "pref_table_text"
@@ -69,7 +69,14 @@ class database:
      num_rooms()                         <- count rooms in database
 
      create_tables()                     <- creates all world data tables
-     show_table(name)                    <- displays contents of table"""
+     show_table(name)                    <- displays contents of table
+
+     zone_table()                        <- displays zones as result set
+     world_table()                       <- lists all rooms as result set
+     exit_table()                        <- lists all exits as result set
+     npc_table()                         <- lists all npc_protos as result set
+     obj_table()                         <- lists all obj_protos as result set
+     alias_table()                       <- lists all aliases as result set"""
 
   def connect(self):
     if self._db_file == None:
@@ -428,7 +435,7 @@ class database:
     if self.has_alias(zone_id, id, type, alias):
       self.delete_alias(zone_id, id, type, alias)
 
-    self._handler.insert_record(database.NAMELIST_TABLE,
+    self._handler.insert_record(database.ALIAS_TABLE,
       zone_id=zone_id,
       id=id,
       type=type,
@@ -436,7 +443,7 @@ class database:
     )
 
   def has_alias(self, zone_id, id, type, alias):
-    return self._handler.get_record(database.NAMELIST_TABLE,
+    return self._handler.get_record(database.ALIAS_TABLE,
       zone_id=zone_id,
       id=id,
       type=type,
@@ -448,7 +455,7 @@ class database:
       mudlog.error(f"Trying to delete non-existant alias {alias} from {type} {id}@{zone_id}.")
       return
 
-    self._handler.delete_records(database.NAMELIST_TABLE,
+    self._handler.delete_records(database.ALIAS_TABLE,
       zone_id=zone_id,
       id=id,
       type=type,
@@ -456,7 +463,7 @@ class database:
     )
 
   def num_aliases(self):
-    return self._handler.num_records(database.NAMELIST_TABLE)
+    return self._handler.num_records(database.ALIAS_TABLE)
 
   def show_table(self, name):
     return self._handler.show_table(name)
@@ -536,7 +543,7 @@ class database:
       ("author", str)
     )
 
-    self._handler.verify_columns(database.NAMELIST_TABLE,
+    self._handler.verify_columns(database.ALIAS_TABLE,
       ("zone_id", str),
       ("id", str),
       ("type", str),
@@ -545,10 +552,33 @@ class database:
 
     # copyover_table
 
+  def zone_table(self):
+    self._handler.search_table(database.ZONE_TABLE)
+    return self._handler.fetch_all()
+
+  def world_table(self):
+    self._handler.search_table(database.WORLD_TABLE)
+    return self._handler.fetch_all()
+
+  def exit_table(self):
+    self._handler.search_table(database.EXIT_TABLE)
+    return self._handler.fetch_all()
+
+  def npc_table(self):
+    self._handler.search_table(database.NPC_PROTO_TABLE)
+    return self._handler.fetch_all()
+
+  def obj_table(self):
+    self._handler.search_table(database.OBJ_PROTO_TABLE)
+    return self._handler.fetch_all()
+
+  def alias_table(self):
+    self._handler.search_table(database.ALIAS_TABLE)
+    return self._handler.fetch_all()
+
   def load_stock(self):
     stockville = zone_data.zone_data()
     stockville.name = "the city of stockville"
-    stockville.folder = "stockville city"
     stockville.id = "stockville"
     stockville.author = "kyle"
 
@@ -673,7 +703,6 @@ class database:
 
     # now do the same for the newbie zone
     newbie_zone = zone_data.zone_data()
-
     newbie_zone.name = "the newbie zone"
     newbie_zone.id = "newbie_zone"
     newbie_zone.author = "kyle"
@@ -723,56 +752,51 @@ capitalize a word.</p>"""
 
   def load_world(self, mud):
 
-    for item in self.z_table():
-      new_zone = zone.zone()
-      new_zone.id = item[0]
-      new_zone.name = item[1]
-      zone_author = item[2]
+    for zone in self.zone_table():
+      new_zone = zone_data.zone_data()
+      new_zone.id = zone['id']
+      new_zone.name = zone['name']
+      zone_author = zone['author']
       mud.add_zone(new_zone)
 
-    for item in self.wld_table():
-      new_room = room.room()
-      new_room.zone_id = item[0]
-      new_room.id = item[1]
-      new_room.name = item[2]
-      new_room.desc = item[3]
+    for room in self.world_table():
+      new_room = room_data.room_data()
+      new_room.zone_id = room['zone_id']
+      new_room.id = room['id']
+      new_room.name = room['name']
+      new_room.desc = room['desc']
       mud.zone_by_id(new_room.zone_id).add_room(new_room)
 
-    for item in self.ex_table():
-      dir = exit_data.direction(item[0])
-      o_zone = item[1]
-      o_room = item[2]
-      d_zone = item[3]
-      d_room = item[4]
+    for exit in self.exit_table():
+      dir = exit_data.direction(exit['direction'])
+      o_zone_id = exit['o_zone_id']
+      o_id = exit['o_id']
+      d_zone_id = exit['d_zone_id']
+      d_id = exit['d_id']
 
-      if o_zone == d_zone:
-        dest_ref = d_room
-      else:
-        dest_ref = f"{d_zone}[{d_room}]"
+      origin_room = mud.room_by_uid(o_zone_id, o_id)
+      origin_room.connect(dir, d_zone_id, d_id)
 
-      origin = mud.zone_by_id(o_zone).room_by_id(o_room)
-      origin.attributes.connect(dir, d_zone, d_room)
-
-    for item in self.npc_table():
+    for npcp in self.npc_table():
       new_npcp = npc_proto_data.npc_proto_data()
-      new_npcp.unique_id.zone_id = item[0]
-      new_npcp.unique_id.id = item[1]
-      new_npcp.entity_proto.name = item[2]
-      new_npcp.ldesc = item[3]
-      new_npcp.entity_proto.desc = item[4]
-      mud.zone_by_id(new_npcp.unique_id.zone_id).add_npc(new_npcp)
+      new_npcp.zone_id = npcp['zone_id']
+      new_npcp.id = npcp['id']
+      new_npcp.name = npcp['name']
+      new_npcp.ldesc = npcp['ldesc']
+      new_npcp.desc = npcp['desc']
+      mud.zone_by_id(new_npcp.zone_id).add_npc(new_npcp)
 
-    for item in self.obj_table():
-      new_op = obj_proto_data.obj_proto_data()
-      new_op.unique_id.zone_id = item[0]
-      new_op.unique_id.id = item[1]
-      new_op.entity_proto.name = item[2]
-      new_op.ldesc = item[3]
-      new_op.entity_proto.desc = item[4]
-      mud.zone_by_id(new_op.unique_id.zone_id).add_obj(new_op)
+    for objp in self.obj_table():
+      nobjp = obj_proto_data.obj_proto_data()
+      nobjp.zone_id = objp['zone_id']
+      nobjp.id = objp['id']
+      nobjp.name = objp['name']
+      nobjp.ldesc = objp['ldesc']
+      nobjp.desc = objp['desc']
+      mud.zone_by_id(nobjp.zone_id).add_obj(nobjp)
 
-    for item in self.alias_table():
-      if item[2] == "npc":
-        mud.zone_by_id(item[0]).npc_by_id(item[1]).entity_proto.namelist.add_alias(item[3])
-      elif item[2] == "obj":
-        mud.zone_by_id(item[0]).obj_by_id(item[1]).entity_proto.namelist.add_alias(item[3])
+    for alias in self.alias_table():
+      if alias['type'] == "npc":
+        mud.npc_by_uid(alias['zone_id'], alias['id']).add_alias(alias['alias'])
+      elif alias['type'] == "obj":
+        mud.obj_by_uid(alias['zone_id'], alias['id']).add_alias(alias['alias'])

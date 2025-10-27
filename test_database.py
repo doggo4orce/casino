@@ -18,9 +18,9 @@ class TestDatabase(unittest.TestCase):
     db.save_alias("goblin_cave", "small_goblin", "npc", "goblin")
     db.save_alias("goblin_cave", "small_goblin", "npc", "small")
 
-    print("Namelists Table  -=-")
-    print(db.show_table(database.database.NAMELIST_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("Namelists Table  -=-")
+    # print(db.show_table(database.database.NAMELIST_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
 
     self.assertTrue(db.has_alias("goblin_cave", "small_goblin", "npc", "goblin"))
     self.assertTrue(db.has_alias("goblin_cave", "small_goblin", "npc", "small"))
@@ -47,9 +47,9 @@ class TestDatabase(unittest.TestCase):
     self.assertTrue(db.has_exit("casino", "foyer", exit_data.direction.NORTH))
     self.assertTrue(db.has_exit("casino", "foyer", exit_data.direction.EAST))
     self.assertTrue(db._handler.num_records(database.database.EXIT_TABLE), 2)
-    print("Exit Table  -=-=-=-=")
-    print(db.show_table(database.database.EXIT_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("Exit Table  -=-=-=-=")
+    # print(db.show_table(database.database.EXIT_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
     self.assertEqual(db.num_exits(), 2)
 
     db.delete_exit("casino", "foyer", exit_data.direction.NORTH)
@@ -83,9 +83,9 @@ class TestDatabase(unittest.TestCase):
 
     db.save_pref_numeric(pc, 'screen_width', 19)
 
-    print("Pref Numeric -=-=-=-")
-    print(db.show_table(database.database.PREF_NUMERIC_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("Pref Numeric -=-=-=-")
+    # print(db.show_table(database.database.PREF_NUMERIC_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
 
     self.assertTrue(db.has_pref_numeric(pc.player_id, 'screen_width'))
     self.assertEqual(db.num_prefs_numeric(), 1)
@@ -118,9 +118,9 @@ class TestDatabase(unittest.TestCase):
     self.assertTrue(db.has_pref_text(pc2.player_id, 'color_mode'))
     self.assertTrue(db.has_pref_text(pc2.player_id, 'title'))
 
-    print("Pref Text    -=-=-=-")
-    print(db.show_table(database.database.PREF_TEXT_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("Pref Text    -=-=-=-")
+    # print(db.show_table(database.database.PREF_TEXT_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
 
     db.delete_pref_text(pc1.player_id, 'color_mode')
     self.assertFalse(db.has_pref_text(pc1.player_id, 'color_mode'))
@@ -159,9 +159,9 @@ class TestDatabase(unittest.TestCase):
     self.assertFalse(db.has_pref_flag(pc2.player_id, 'brief_mode'))
     self.assertTrue(db.has_pref_flag(pc2.player_id, 'debug_mode'))
 
-    print("Pref Flags   -=-=-=-")
-    print(db.show_table(database.database.PREF_FLAG_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("Pref Flags   -=-=-=-")
+    # print(db.show_table(database.database.PREF_FLAG_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
     db.close()
 
   def test_npc_proto(self):
@@ -188,10 +188,10 @@ class TestDatabase(unittest.TestCase):
     db.save_npc_proto(npc_p1)    
     db.save_npc_proto(npc_p2)
 
-    print("NPC -= Proto -=-=-=-")
-    print(db.show_table(database.database.NPC_PROTO_TABLE))
-    print(db.show_table(database.database.NAMELIST_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("NPC -= Proto -=-=-=-")
+    # print(db.show_table(database.database.NPC_PROTO_TABLE))
+    # print(db.show_table(database.database.NAMELIST_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
 
     self.assertTrue(db.has_npc_proto("nice_zone", "happy_npc"))
     self.assertTrue(db.has_npc_proto("bad_zone", "angry_npc"))
@@ -226,10 +226,10 @@ class TestDatabase(unittest.TestCase):
     db.save_obj_proto(obj_p1)
     db.save_obj_proto(obj_p2)
 
-    print("Object Proto -=-=-=-")
-    print(db.show_table(database.database.OBJ_PROTO_TABLE))
-    print(db.show_table(database.database.NAMELIST_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("Object Proto -=-=-=-")
+    # print(db.show_table(database.database.OBJ_PROTO_TABLE))
+    # print(db.show_table(database.database.NAMELIST_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
 
     db.close()
 
@@ -257,12 +257,12 @@ class TestDatabase(unittest.TestCase):
     db.save_room(rm1)
     db.save_room(rm2)
 
-    print("Room   -=-=-=-=-=-=-")
-    print(db.show_table(database.database.WORLD_TABLE))
-    print("-=-=-=--=-=-=-=-=-=-")
-    print("Exits  -=-=-=-=-=-=-")
-    print(db.show_table(database.database.EXIT_TABLE))
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("Room   -=-=-=-=-=-=-")
+    # print(db.show_table(database.database.WORLD_TABLE))
+    # print("-=-=-=--=-=-=-=-=-=-")
+    # print("Exits  -=-=-=-=-=-=-")
+    # print(db.show_table(database.database.EXIT_TABLE))
+    # print("-=-=-=-=-=-=-=-=-=-=")
 
     self.assertTrue(db.has_room('newbie_zone', 'cold_hallway'))
     self.assertTrue(db.has_room('newbie_zone', 'warm_hallway'))
@@ -310,9 +310,9 @@ class TestDatabase(unittest.TestCase):
     self.assertFalse(db.has_player(15))
 
 
-    print("Players  -=-=-=-=-=-")
-    print(db.show_table(database.database.PLAYER_TABLE))
-    print("-=-=-=--=-=-=-=-=-=-")
+    # print("Players  -=-=-=-=-=-")
+    # print(db.show_table(database.database.PLAYER_TABLE))
+    # print("-=-=-=--=-=-=-=-=-=-")
 
     db.delete_player(13)
     self.assertEqual(db.num_players(), 1)
@@ -374,7 +374,7 @@ class TestDatabase(unittest.TestCase):
     obj_p2.remove_all_aliases()
     obj_p2.add_alias("old")
     obj_p2.add_alias("object")
-    obj_p2.ldesc = "an old object sits here"
+    obj_p2.ldesc = "an\'\' old object sits here"
     obj_p2.desc = "it looks old"
     obj_p2.id = "old_object"
     obj_p2.zone_id = "newbie_zone"
@@ -423,17 +423,17 @@ class TestDatabase(unittest.TestCase):
     self.assertEqual(db.num_obj_protos(), 4)
     self.assertEqual(db.num_npc_protos(), 4)
 
-    print("Zone1  -=-=-=-=-=-=-")
-    print(db.show_table(database.database.ZONE_TABLE))
-    print(db.show_table(database.database.WORLD_TABLE))
-    print(db.show_table(database.database.OBJ_PROTO_TABLE))
-    print(db.show_table(database.database.NPC_PROTO_TABLE))
-    print("-= after deleting -=")
+    # print("Zone1  -=-=-=-=-=-=-")
+    # print(db.show_table(database.database.ZONE_TABLE))
+    # print(db.show_table(database.database.WORLD_TABLE))
+    # print(db.show_table(database.database.OBJ_PROTO_TABLE))
+    # print(db.show_table(database.database.NPC_PROTO_TABLE))
+    # print("-= after deleting -=")
     db.delete_zone(zone1.id)
-    print(db.show_table(database.database.ZONE_TABLE))
-    print(db.show_table(database.database.WORLD_TABLE))
-    print(db.show_table(database.database.OBJ_PROTO_TABLE))
-    print(db.show_table(database.database.NPC_PROTO_TABLE))
+    # print(db.show_table(database.database.ZONE_TABLE))
+    # print(db.show_table(database.database.WORLD_TABLE))
+    # print(db.show_table(database.database.OBJ_PROTO_TABLE))
+    # print(db.show_table(database.database.NPC_PROTO_TABLE))
 
     self.assertEqual(db.num_zones(), 1)
     self.assertEqual(db.num_rooms(), 2)
@@ -446,11 +446,18 @@ class TestDatabase(unittest.TestCase):
     self.assertEqual(db.show_table(database.database.WORLD_TABLE), "")
     self.assertEqual(db.show_table(database.database.OBJ_PROTO_TABLE), "")
     self.assertEqual(db.show_table(database.database.NPC_PROTO_TABLE), "")
-    print("-=-=-=-=-=-=-=-=-=-=")
+    # print("-=-=-=-=-=-=-=-=-=-=")
 
     self.assertEqual(db.num_zones(), 0)
     self.assertEqual(db.num_obj_protos(), 0)
     self.assertEqual(db.num_npc_protos(), 0)
 
+  def test_load_stock(self):
+    db = database.database(":memory:")
+    db.connect()
+    db.create_tables()
+    db.load_stock()
+
+#TODO can't store apostrophes in strings that get saved, this is an issue with db_handler.py im pretty sure
 if __name__ == "__main__":
   unittest.main()

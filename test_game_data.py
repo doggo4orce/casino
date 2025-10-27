@@ -5,6 +5,7 @@ import unittest
 # local modules
 import character_data
 import config
+import database
 import descriptor_data
 import event_data
 import game_data
@@ -262,6 +263,9 @@ class TestGameData(unittest.TestCase):
     # have game add character to specific room
     mud.add_character_to_room(char, room)
 
+    # make sure they went into the game
+    self.assertTrue(mud.has_character(char))
+
     # make sure they went into the room
     self.assertIn(char, room.people)
 
@@ -290,24 +294,36 @@ class TestGameData(unittest.TestCase):
     # make sure it went into the room
     self.assertIn(obj, room.contents)
 
-    uid = unique_id_data.unique_id_data(room.zone_id, room.id)
+    # and the game
+    self.assertIn(obj, mud.list_objects())
 
     # make sure its room field was set accordingly
-    self.assertEqual(obj.room, uid)
+    self.assertEqual(obj.room, unique_id_data.unique_id_data(room.zone_id, room.id))
 
     # now remove object from the mud
     mud.extract_obj(obj)
-    
+
+    # it should be nowhere
+    self.assertIsNone(obj.room)
+
+    # definitely not in the room
+    self.assertNotIn(obj, room.contents)
+
+    # or even the game
+    self.assertNotIn(obj, mud.list_objects())
+
+  def test_load_world(self):
+    mud = game_data.game_data()
+    db = database.database()
+
+    db.load_stock()
+    mud.load_world(db)
+    mud.assign_spec_procs()
 
   def test_echo_around(self):
     clients, players, mud, zone, room = test_utilities.create_single_room_test_world_and_players(3)
     bob, alice, sam = players
     bob_socket, alice_socket, sam_socket = clients
-
-    # put the players in the game
-    bob.room = room.unique_id
-    alice.room = room.unique_id
-    sam.room = room.unique_id
 
     # they'll be in the same room
     mud.add_character_to_room(bob, room)

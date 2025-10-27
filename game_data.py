@@ -48,9 +48,12 @@ class game_data:
      npc_by_uid(zone_id, id)         <- look up npc prototype by code
      obj_by_uid(zone_id, id)         <- look up object prototype by code
      echo_around(ch, hide, msg)      <- sends msg to all in room except ch and those in hide list
-     add_obj(obj)                    <- these functions are the same  
+     add_obj_to_room(obj, room)      <- put object on the ground in room
+     add_obj(obj)                    <- add object to game
+     list_objects()                  <- returns list of objects in the game
      extract_obj(obj)                <- except for objects instead
      assign_spec_procs()             <- assign special procedures to elements of npc_proto
+     load_world(db)                  <- load world from database
      startup()                       <- populate world and call assign_spec_procs()
      load_npc(zone_id, id)           <- instantiate npc from prototype
      load_obj(zone_id, id)           <- instantiate obj from prototype
@@ -98,6 +101,48 @@ class game_data:
     except KeyError:
       mudlog.error(f"Trying to delete zone {zone} which did not exist!")
 
+  def add_character_to_room(self, ch, room):
+    ch.room = unique_id_data.unique_id_data(room.zone_id, room.id)
+    self._add_character(ch)
+
+  def _add_character(self, ch):
+    void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
+
+    # place them in the world
+    self._characters.append(ch)
+
+    # if either zone or room code doesn't exist, move them to the VOID
+    if ch.room is None or ch.room.zone_id is None or ch.room.id is None:
+      ch.room = void
+
+    # now find the actual room
+    room = self.room_by_uid(ch.room.zone_id, ch.room.id)
+
+    # if the room doesn't exist, again move them to the VOID
+    if room == None:
+      uid = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
+      room = self.room_by_uid(uid.zone_id, uid.id)
+
+    # finally we have somewhere to add them!
+    room.add_char(ch)
+
+  def list_characters(self):
+    return [ch for ch in self._characters]
+
+  def has_character(self, ch):
+    return ch in self.list_characters()
+
+  def num_characters(self):
+    return len(self.list_characters())
+
+  def extract_character(self, ch):
+    # if they are in a room, remove them from that room
+    if ch.room is not None:
+      uid = ch.room
+      self.room_by_uid(uid.zone_id, uid.id).remove_char(ch)
+    # now remove them from the world
+    self._characters.remove(ch)
+
   def room_by_uid(self, zone_id, id):
     if zone_id == None or id == None:
       return None
@@ -138,46 +183,14 @@ class game_data:
     hide_from.append(ch)
     self.room_by_uid(ch.room.zone_id, ch.room.id).echo(msg, exceptions = hide_from)
 
-  def add_character_to_room(self, ch, room):
-    ch.room = unique_id_data.unique_id_data(room.zone_id, room.id)
-    self._add_character(ch)
+  """Note: One this mud boots, the room field of objects will be removed, as well as
+     that of entities, and we will make it so entities just know what inventory they
+     are in.  Rooms will have two inventories (one for objects, another for characters)."""
+  def add_obj_to_room(self, obj, room):
+    obj.room = unique_id_data.unique_id_data(room.zone_id, room.id)
+    self.add_obj(obj)
 
-  def _add_character(self, ch):
-    void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
-
-    # place them in the world
-    self._characters.append(ch)
-
-    # if either zone or room code doesn't exist, move them to the VOID
-    if ch.room is None or ch.room.zone_id is None or ch.room.id is None:
-      ch.room = void
-
-    # now find the actual room
-    room = self.room_by_uid(ch.room.zone_id, ch.room.id)
-
-    # if the room doesn't exist, again move them to the VOID
-    if room == None:
-      uid = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
-      room = self.room_by_uid(uid.zone_id, uid.id)
-
-    # finally we have somewhere to add them!
-    room.add_char(ch)
-
-  def list_characters(self):
-    return [ch for ch in self._characters]
-
-  def has_character(self, ch):
-    return ch in self.list_characters()
-
-  def extract_character(self, ch):
-    # if they are in a room, remove them from that room
-    if ch.room is not None:
-      uid = ch.room
-      self.room_by_uid(uid.zone_id, uid.id).remove_char(ch)
-    # now remove them from the world
-    self._characters.remove(ch)
-
-  def _add_obj(self, obj):
+  def add_obj(self, obj):
     void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
 
     # place it in the world
@@ -189,12 +202,12 @@ class game_data:
 
     # now find the actual room
     room = self.room_by_uid(obj.room.zone_id, obj.room.id)
-    if room != None:
+
+    if room is not None:
       room.add_obj(obj)
 
-  def add_obj_to_room(self, obj, room):
-    obj.room = unique_id_data.unique_id_data(room.zone_id, room.id)
-    self._add_obj(obj)
+  def list_objects(self):
+    return [obj for obj in self._objects]
 
   def extract_obj(self, obj):
     for ch in self._characters:

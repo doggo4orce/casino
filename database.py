@@ -1,5 +1,10 @@
 import db_handler
+import exit_data
 import mudlog
+import npc_proto_data
+import obj_proto_data
+import room_data
+import zone_data
 
 class database:
   NAMELIST_TABLE     = "namelist_table"
@@ -539,3 +544,235 @@ class database:
     )
 
     # copyover_table
+
+  def load_stock(self):
+    stockville = zone_data.zone_data()
+    stockville.name = "the city of stockville"
+    stockville.folder = "stockville city"
+    stockville.id = "stockville"
+    stockville.author = "kyle"
+
+    rm = room_data.room_data()
+    rm.name = "The Void"
+    rm.zone_id = "stockville"
+    rm.id = "void"
+    rm.desc = "<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because its last known location no longer exists. Head down to return to recall.</p>"
+  
+    rm.connect(exit_data.direction.DOWN, 'stockville', 'recall')
+    stockville._world[rm.id] = rm
+
+    rm = room_data.room_data()
+    rm.name = "Stockville Casino"
+    rm.zone_id = "stockville"
+    rm.id = "casino"
+    rm.desc = "<p>The heavy weight of bad decisions hangs thick in the air.</p>"
+    rm.connect(exit_data.direction.WEST, 'stockville', 'recall')
+    stockville._world[rm.id] = rm
+
+    rm = room_data.room_data()
+    rm.name = "Stockville Recall"
+    rm.zone_id = "stockville"
+    rm.id = "recall"
+    rm.desc = "<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>"
+    rm.connect(exit_data.direction.EAST, 'stockville', 'casino')
+    rm.connect(exit_data.direction.WEST, 'stockville', 'reading')
+    stockville._world[rm.id] = rm
+
+    rm = room_data.room_data()
+    rm.name = "Reading Room"
+    rm.zone_id = "stockville"
+    rm.id = "reading"
+    rm.desc = """<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>"
+
+  <c9>HINT HINT<c0>:  Time to make a message board!
+  ---------
+       But you can see here that this text
+       is not formatted along with the
+       paragraph above.  I can even use the
+       format command while editing this
+       room and this mini pargraph will not
+       be harmed!  <(^_^)7   6(*-*)^
+
+<p>But now Ive entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>"""
+    rm.connect(exit_data.direction.EAST, 'stockville', 'recall')
+    rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway1')
+    stockville.add_room(rm)
+
+    npcp = npc_proto_data.npc_proto_data()
+    npcp.reset_aliases('baccarat', 'dealer')
+    npcp.name = 'the baccarat card dealer'
+    npcp.desc = "<p>He looks like he's straight out of a bluegrass music video.</p>"
+    npcp.ldesc = 'A dealer stands here ready to hand out cards.'
+    npcp.zone_id = 'stockville'
+    npcp.id = 'baccarat_dealer'
+    stockville.add_npc(npcp)
+
+    npcp = npc_proto_data.npc_proto_data()
+    npcp.reset_aliases('baker', 'fat')
+    npcp.name = 'the baker'
+    npcp.desc = "<p>Hes a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>"
+    npcp.ldesc = "A baker is here, but dont give him a bottle."
+    npcp.zone_id = 'stockville'
+    npcp.id = 'baker'
+    stockville.add_npc(npcp)
+
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('baccarat', 'gaming', 'table')
+    op.name = 'a baccarat table'
+    op.desc = "<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>"
+    op.ldesc = "A gaming table has been set up here."
+    op.zone_id = 'stockville'
+    op.id = 'baccarat_table'
+    stockville.add_obj(op)
+
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('red', 'chip')
+    op.name = 'a red chip'
+    op.desc = "<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.ldesc = "A red casino chip has been left on the ground."
+    op.zone_id = 'stockville'
+    op.id = 'red_chip'
+    stockville.add_obj(op)
+
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('green', 'chip')
+    op.name = 'a green chip'
+    op.desc = "<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.ldesc = "A green casino chip has been left on the ground."
+    op.zone_id = 'stockville'
+    op.id = 'green_chip'
+    stockville.add_obj(op)
+
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('black', 'chip')
+    op.name = 'a black chip'
+    op.desc = "<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.ldesc = "A black casino chip has been left on the ground."
+    op.zone_id = 'stockville'
+    op.id = 'black_chip'
+    stockville.add_obj(op)
+
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('purple', 'chip')
+    op.name = 'a purple chip'
+    op.desc = "<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.ldesc = "A purple casino chip has been left on the ground."
+    op.zone_id = 'stockville'
+    op.id = 'purple_chip'
+    stockville.add_obj(op)
+
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('bottle')
+    op.name = 'a bottle'
+    op.desc = "<p>It's brown, sticky, and smells like stale beer inside.</p>"
+    op.ldesc = 'An empty bottle has been dropped here.'
+    op.zone_id = 'stockville'
+    op.id = 'bottle'
+    stockville.add_obj(op)
+    self.save_zone(stockville)
+
+    # now do the same for the newbie zone
+    newbie_zone = zone_data.zone_data()
+
+    newbie_zone.name = "the newbie zone"
+    newbie_zone.id = "newbie_zone"
+    newbie_zone.author = "kyle"
+
+    rm = room_data.room_data()
+    rm.name = "The Beginning of a Damp Hallway"
+    rm.zone_id = "newbie_zone"
+    rm.id = "hallway1"
+    rm.desc = "<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>"
+    rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway2')
+    rm.connect(exit_data.direction.SOUTH, 'stockville', 'reading')
+    newbie_zone.add_room(rm)
+
+    rm = room_data.room_data()
+    rm.name = "A Dark Corner in the Hallway"
+    rm.zone_id = "newbie_zone"
+    rm.id = "hallway2"
+    rm.desc = """<p>Ill start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
+them. Then I can close the tag whenever I want to, and I will!</p>
+
+<p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
+<c0>awkard spaces between words and tags. Just simply due to the way you enter words through the
+editor, they may come through one at a time. And you may put a period after some spaces and forget to
+capitalize a word.</p>"""
+    rm.connect(exit_data.direction.SOUTH, 'newbie_zone', 'hallway1')
+    newbie_zone.add_room(rm)
+
+    npcp = npc_proto_data.npc_proto_data()
+    npcp.reset_aliases('newbie', 'monster')
+    npcp.name = 'the newbie monster'
+    npcp.desc = "<p>He has googly eyes and drools all over the place as he growls.</p>"
+    npcp.ldesc = 'A newbie monster snarls furiously here.'
+    npcp.zone_id = 'newbie_zone'
+    npcp.id = 'newbie_monster'
+    newbie_zone.add_npc(npcp)
+
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('newbie', 'dagger')
+    op.name = 'a newbie dagger'
+    op.desc = "<p>It's so bright and shiny, even you can't lose it.</p>"
+    op.ldesk = 'Some idiot left a newbie dagger here.'
+    op.zone_id = 'newbie_zone'
+    op.id = 'newbie_dagger'
+    newbie_zone.add_obj(op)
+
+    self.save_zone(newbie_zone)
+
+  def load_world(self, mud):
+
+    for item in self.z_table():
+      new_zone = zone.zone()
+      new_zone.id = item[0]
+      new_zone.name = item[1]
+      zone_author = item[2]
+      mud.add_zone(new_zone)
+
+    for item in self.wld_table():
+      new_room = room.room()
+      new_room.zone_id = item[0]
+      new_room.id = item[1]
+      new_room.name = item[2]
+      new_room.desc = item[3]
+      mud.zone_by_id(new_room.zone_id).add_room(new_room)
+
+    for item in self.ex_table():
+      dir = exit_data.direction(item[0])
+      o_zone = item[1]
+      o_room = item[2]
+      d_zone = item[3]
+      d_room = item[4]
+
+      if o_zone == d_zone:
+        dest_ref = d_room
+      else:
+        dest_ref = f"{d_zone}[{d_room}]"
+
+      origin = mud.zone_by_id(o_zone).room_by_id(o_room)
+      origin.attributes.connect(dir, d_zone, d_room)
+
+    for item in self.npc_table():
+      new_npcp = npc_proto_data.npc_proto_data()
+      new_npcp.unique_id.zone_id = item[0]
+      new_npcp.unique_id.id = item[1]
+      new_npcp.entity_proto.name = item[2]
+      new_npcp.ldesc = item[3]
+      new_npcp.entity_proto.desc = item[4]
+      mud.zone_by_id(new_npcp.unique_id.zone_id).add_npc(new_npcp)
+
+    for item in self.obj_table():
+      new_op = obj_proto_data.obj_proto_data()
+      new_op.unique_id.zone_id = item[0]
+      new_op.unique_id.id = item[1]
+      new_op.entity_proto.name = item[2]
+      new_op.ldesc = item[3]
+      new_op.entity_proto.desc = item[4]
+      mud.zone_by_id(new_op.unique_id.zone_id).add_obj(new_op)
+
+    for item in self.alias_table():
+      if item[2] == "npc":
+        mud.zone_by_id(item[0]).npc_by_id(item[1]).entity_proto.namelist.add_alias(item[3])
+      elif item[2] == "obj":
+        mud.zone_by_id(item[0]).obj_by_id(item[1]).entity_proto.namelist.add_alias(item[3])

@@ -10,7 +10,7 @@ import typing
 # local modules
 import config
 import database
-import descriptor
+import descriptor_data
 import nanny
 
 class conn(typing.NamedTuple):

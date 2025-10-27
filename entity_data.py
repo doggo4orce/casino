@@ -18,16 +18,20 @@ class entity_data:
 
   def __init__(self, proto=None):
 
+    self.behaviour = behaviour_data.behaviour_data()
+
     if proto == None:
       self.name = "an unfinished entity"
       self._namelist = namelist_data.namelist_data("unfinished", "entity")
       self.ldesc = "An unfinished entity is here."
       self.desc = "This entity looks unfinished."
+      
     else:
       self.name = proto.name
       self._namelist = namelist_data.namelist_data(*proto.aliases())
       self.ldesc = proto.ldesc
       self.desc = proto.desc
+      self.behaviour.copy_from(proto.behaviour)
 
     self.room = None
 
@@ -78,6 +82,7 @@ class entity_data:
     self.desc = entity.desc
     self.ldesc = entity.ldesc
     self._namelist = copy.deepcopy(entity._namelist)
+    self.behaviour.copy_from(entity.behaviour)
 
   def has_alias(self, alias):
     return self._namelist.has_alias(alias)

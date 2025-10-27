@@ -1,6 +1,6 @@
 import commands
 import dataclasses
-import logging
+import mudlog
 import nanny
 import object_data
 import pc_data
@@ -16,7 +16,7 @@ class guest_data:
   char:        pc_data.pc_data
   caught_up:   bool
 
-class baccarat_table(table_data.table_data):
+class baccarat_table_data(table_data.table_data):
   NUM_BACCARAT_SEATS = 3
 
   def __init__(self, proto=None):
@@ -26,19 +26,15 @@ class baccarat_table(table_data.table_data):
   @classmethod
   def from_table(cls, old_table):
     ret_val = cls()
-    
-    ret_val.entity = old_table.entity
-    ret_val.ldesc = old_table.ldesc
-    ret_val.prefix_command_triggers = old_table.prefix_command_triggers
-    ret_val.suffix_command_triggers = old_table.suffix_command_triggers
-    ret_val.heart_beat_procs = old_table.heart_beat_procs
+
+    ret_val.copy_from(old_table)
 
     if old_table.num_seats != 3:
       mudlog.warning(f"Changing {old_table}, which has {old_table.num_seats} to a baccarat table.")
       mudlog.warning("Adjusting capacity to 3.")
       ret_val.num_seats = 3
 
-      for idx, guest in enumerate(old_table.guests):
+      for idx, guest in enumerate(old_table.guests()):
         if idx >= 3:
           mudlog.warning(f"Removing guest: {guest}.")
         else:

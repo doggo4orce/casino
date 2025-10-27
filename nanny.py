@@ -8,6 +8,7 @@ import config
 import editor
 import exit_data
 import descriptor_data
+import olc
 import olc_data
 import pc_data
 import room_data
@@ -16,12 +17,12 @@ import spec_proc_data
 cmd_dict = dict()
 
 def init_commands():
-  cmd_dict["north"]     = ( commands.do_move,        exit.direction.NORTH  )
-  cmd_dict["east"]      = ( commands.do_move,        exit.direction.EAST   )
-  cmd_dict["south"]     = ( commands.do_move,        exit.direction.SOUTH  )
-  cmd_dict["west"]      = ( commands.do_move,        exit.direction.WEST   )
-  cmd_dict["up"]        = ( commands.do_move,        exit.direction.UP     )
-  cmd_dict["down"]      = ( commands.do_move,        exit.direction.DOWN   )
+  cmd_dict["north"]     = ( commands.do_move,        exit_data.direction.NORTH  )
+  cmd_dict["east"]      = ( commands.do_move,        exit_data.direction.EAST   )
+  cmd_dict["south"]     = ( commands.do_move,        exit_data.direction.SOUTH  )
+  cmd_dict["west"]      = ( commands.do_move,        exit_data.direction.WEST   )
+  cmd_dict["up"]        = ( commands.do_move,        exit_data.direction.UP     )
+  cmd_dict["down"]      = ( commands.do_move,        exit_data.direction.DOWN   )
 
   cmd_dict["colors"]    = ( commands.do_colors,      0 )
   cmd_dict["copyover"]  = ( commands.do_copyover,    0 )

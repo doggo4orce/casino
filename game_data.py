@@ -1,5 +1,5 @@
 import baccarat_dealer_data
-import baccarat_table
+import baccarat_table_data
 import baccarat_procs
 import card_data
 import card_dealer_data
@@ -283,7 +283,7 @@ class game_data:
 
     b_table = self.load_obj('stockville', 'baccarat_table')
     b_table = table_data.table_data.from_obj(b_table)
-    b_table = baccarat_table.baccarat_table.from_table(b_table)
+    b_table = baccarat_table_data.baccarat_table_data.from_table(b_table)
     b_table.dealer = b_dealer
     b_table.room = unique_id_data.unique_id_data('stockville', 'casino')
     self.add_obj(b_table)

@@ -10,6 +10,7 @@ class table_data(object_data.object_data):
      num_seats       = maximum number of guests"""
 
   DEFAULT_NUM_SEATS = 2
+
   def __init__(self, num_seats=None, proto=None):
     if num_seats == None:
       num_seats = self.DEFAULT_NUM_SEATS

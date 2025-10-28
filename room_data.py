@@ -82,7 +82,7 @@ class room_data:
      obj_by_alias(alias)       <- looks for obj in room with alias
      connect(dir, zone_id, id) <- creates exit to another room
      disconnect(dir)           <- removes exit
-     display_exits             <- shows exits to be displayed with room description
+     display_exits()           <- shows exits to be displayed with room description
      echo(msg)                 <- sends msg to every character in the room
      exit(dir)                 <- returns exit object leading in direction dir or None
      get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
@@ -162,7 +162,6 @@ class room_data:
   def disconnect(self, direction):
     self.attributes.disconnect(direction)
 
-  @property
   def display_exits(self):
     return self.attributes.display_exits
 

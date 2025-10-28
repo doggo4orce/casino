@@ -92,8 +92,8 @@ class server:
         d.has_prompt = True
 
         # this needs to be factored through other code from when players enter the game?
-        d.char = db.load_player(name)
-        d.char.d = d
+        d.character = db.load_player(name)
+        d.character.descriptor = d
 
         db.load_flag_prefs(d.char)
 

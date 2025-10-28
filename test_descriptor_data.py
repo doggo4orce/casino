@@ -37,8 +37,10 @@ class TestDescriptorData(unittest.TestCase):
     d = descriptor_data.descriptor_data(host, "foreignhost")
 
     # host sends data (written to output buffer)
-    d.write("Welcome!")
+    d.write("Welc")
+    d.write("ome!")
 
+    print(d.debug())
     # host flushes output buffer (hence sending the message)
     d.flush_output()
 

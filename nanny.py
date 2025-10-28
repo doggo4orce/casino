@@ -94,7 +94,7 @@ def interpret_msg(d, command, argument, server, mud, db):
   # fire all suffix procs
   for mob in mud.room_by_uid(initial_room.zone_id, initial_room.id).people:
     if isinstance(mob, npc_data.npc_data):
-      mob.call_suffix_command_triggers(mud, d.character, command, argument, db)
+      mob.call_suffix_cmd_trigs(mud, d.character, command, argument, db)
 
   if not valid_command:
     d.write("Huh!?!\r\n")
@@ -160,13 +160,13 @@ def handle_next_input(d, server, mud, db):
     else:
       d.login_info.password = msg
       d.state = descriptor_data.descriptor_state.CONFIRM_PASS
-      d.write("\r\nPlease retype ≥password: ")
+      d.write("\r\nPlease retype password: ")
   elif d.state == descriptor_data.descriptor_state.CONFIRM_PASS:
     if msg == d.login_info.password:
       new_player = pc_data.pc_data()
       new_player.name = d.login_info.name
       new_player.password = d.login_info.password
-      new_player.d = d
+      new_player.descriptor = d
       new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
       new_player.player_id = db.next_unused_pid()
       db.save_player(new_player)

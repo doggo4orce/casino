@@ -317,17 +317,17 @@ class game_data:
 
   def lose_link(self, ch):
     self.room_by_uid(ch.room.zone_id, ch.room.id).echo(f"{ch} has lost his link.\r\n")
-    ch.d = None
+    ch.descriptor = None
 
   def reconnect(self, d, ch):
     # they might already have a connection
     if ch.d:
       # if so, kick it off
-      ch.d.disconnected = True
-      ch.d.char = None
+      ch.descriptor.disconnected = True
+      ch.descriptor.character = None
     # now connect to the linkless char
-    d.char = ch
-    ch.d = d
+    d.character = ch
+    ch.descriptor = d
 
   def heartbeat(self, db):
     self._events.heartbeat(self, db)

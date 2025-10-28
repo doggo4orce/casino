@@ -510,19 +510,25 @@ def do_look(ch, scmd, argument, server, mud, db):
 def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.numeric_prefs.screen_width, False)}{NORMAL}\r\n'
 
-  if not ch.brief_mode:
-    out_buf += rm.desc.display(ch.screen_width, format=True, indent=True, numbers=False, color=True)
+  # if not ch.brief_mode:
+  #   out_buf += rm.desc.display(ch.screen_width, format=True, indent=True, numbers=False, color=True)
   
-  out_buf += f'\r\n{CYAN}{rm.show_exits()}{NORMAL}\r\n'
+  desc = rm.desc
+  desc = string_handling.paragraph(desc, ch.numeric_prefs.screen_width, True)
+  desc = string_handling.proc_color(desc)
+
+  out_buf += desc
+
+  out_buf += f'\r\n{CYAN}{rm.display_exits()}{NORMAL}\r\n'
 
   for tch in rm.people:
     if tch != ch:
       out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.screen_width, False)}{NORMAL}"
-      if type(tch) == pc.pc and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
+      if type(tch) == pc_data.pc_data and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
         out_buf += " (olc)"
       out_buf += "\r\n"
 
-  for obj in rm.inventory:
+  for obj in rm.contents:
     out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.screen_width, False)}{NORMAL}\r\n"
 
   ch.write(out_buf)

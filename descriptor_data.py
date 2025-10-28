@@ -198,6 +198,8 @@ class descriptor_data:
 
     ret_val += f"State: {CYAN}{self.state}{NORMAL}\r\n"
 
+    ret_val += f"OutBuf: {CYAN}{self.out_buf}{NORMAL}\r\n"
+
     if self.input_stream == None:
       ret_val += f"IStream: {CYAN}None{NORMAL}\r\n"
     else:

@@ -5,6 +5,8 @@ import math
 import socket
 
 from color import *
+
+import buffer_data
 import config
 import event_data
 import nanny
@@ -110,15 +112,15 @@ def do_get(ch, scmd, argument, server, mud, db):
     ch.write("Usage: get <item>\r\n")
     return
 
-  rm = mud.room_by_code(ch.room)
-  obj = rm.inventory.obj_by_alias(args[0])
+  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  obj = rm.contents.object_by_alias(args[0])
 
   if obj == None:
     ch.write(f"There is no {args[0]} here.\r\n")
     return
 
-  rm.inventory.remove(obj)
-  ch.inventory.insert(obj)
+  rm.remove_object(obj)
+  ch.give_object(obj)
 
   ch.write(f"You get {obj}.\r\n")
   mud.echo_around(ch, None, f"{ch} gets {obj}.\r\n")
@@ -509,9 +511,10 @@ def do_look(ch, scmd, argument, server, mud, db):
 
 def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.numeric_prefs.screen_width, False)}{NORMAL}\r\n'
+  room_desc = buffer_data.buffer_data(rm.desc)
 
   # if not ch.brief_mode:
-  #   out_buf += rm.desc.display(ch.screen_width, format=True, indent=True, numbers=False, color=True)
+  #   out_buf += room_desc.display(ch.screen_width, indent=True, color=True,numbers=False)
   
   desc = rm.desc
   desc = string_handling.paragraph(desc, ch.numeric_prefs.screen_width, True)
@@ -531,6 +534,7 @@ def show_room_to_char(ch, rm):
   for obj in rm.contents:
     out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.screen_width, False)}{NORMAL}\r\n"
 
+  print(out_buf)
   ch.write(out_buf)
 
 def show_char_to_char(ch, tch):
@@ -606,16 +610,16 @@ def do_move(ch, scmd, argument, server, mud, db):
   # show them the new room
   show_room_to_char(ch, ending_room)
 
-def do_colors(ch, scmd, argument, server, mud, db):
-  import editor
+# def do_colors(ch, scmd, argument, server, mud, db):
+#   import editor
 
-  buf = editor.buffer()
+#   buf = editor.buffer()
 
-  for j in range(0, 16):
-    line = ""
-    for i in range(0, 16):
-      line += f"{ansi_color_sequence(10*j + i)}*"
-    ch.d.write(line + "\r\n" + NORMAL)
+#   for j in range(0, 16):
+#     line = ""
+#     for i in range(0, 16):
+#       line += f"{ansi_color_sequence(10*j + i)}*"
+#     ch.d.write(line + "\r\n" + NORMAL)
 
 def do_quit(ch, scmd, argument, server, mud, db):
   d = ch.d

@@ -4,7 +4,7 @@ import collections
 import config
 import dataclasses
 import enum
-import fcntl
+# import fcntl
 import input_stream_data
 import mudlog
 import select
@@ -65,11 +65,11 @@ class descriptor_data:
     """When copyover is called, the mud calls itself as a child process.  If sockets are still
        open when that happens, clients cannot be attached to new sockets, and their connections
        will hang indefinitely.  The following ensures that sockets close automatically during copyovers."""
-    try:
-      flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
-      fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
-    except Exception as e:
-      mudlog.error(e)
+    # try:
+    #   flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
+    #   fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
+    # except Exception as e:
+    #   mudlog.error(e)
 
   @property
   def writing(self):

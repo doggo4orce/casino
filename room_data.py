@@ -74,8 +74,9 @@ class room_data:
      remove_entity(entity)     <- (internal) remove entity from room
      add_char(ch)              <- adds character to this room
      remove_char(ch)           <- removes character ch from this room
-     add_obj(obj)              <- add object to room
-     remove_obj(obj)           <- remove object from room
+     add_object(obj)           <- add object to room
+     remove_object(obj)        <- remove object from room
+     has_object(obj)           <- check if obj is in character's inventory
      char_by_alias(name)       <- look for char in room with name (prioritizes pc)
      pc_by_name(name)          <- look for pc in room with name
      npc_by_alias(alias)       <- looks for npc in room with alias
@@ -120,10 +121,10 @@ class room_data:
   def add_obj(self, obj):
     self._add_entity(obj)
 
-  def remove_obj(self, obj):
+  def remove_object(self, obj):
     self._remove_entity(obj)
 
-  def has_obj(self, obj):
+  def has_object(self, obj):
     return self._has_entity(obj)
 
   def char_by_alias(self, name):

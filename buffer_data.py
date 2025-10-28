@@ -147,16 +147,18 @@ class buffer_data:
 
     for line in temp_buf:
       if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
+        print(f"Line: \r\n{line}\r\n passed paragraph check")
         line = line[len(OPEN_PARAGRAPH):(-1)*len(CLOSE_PARAGRAPH)]
+        print(f"After trimming:\r\n{line}\r\n")
         line = string_handling.paragraph(line, width, indent)
+        print(f"After formatting:\r\n{line}\r\n")
 
       final_buf.add_line(line)
 
-    if numbers:
-      ret_val = final_buf.str(numbers)
+    ret_val = final_buf.str(numbers)
 
     if color:
-      ret_val = string_handling.proc_color(line)
+      ret_val = string_handling.proc_color(ret_val)
 
     return ret_val
 

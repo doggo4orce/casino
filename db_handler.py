@@ -174,8 +174,6 @@ class db_handler:
       if column.name not in record.keys():
         continue
 
-      print(str(record))
-
       if type(record[column.name]) != column.type:
         mudlog.error(f"Trying to insert record into table {table}, but {record[column.name]} is not of type {column.type}.")
         return

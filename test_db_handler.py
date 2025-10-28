@@ -260,6 +260,7 @@ class TestDbHandler(unittest.TestCase):
   def test_apostrophe(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
+<<<<<<< Updated upstream
 
     handler.create_table("npcs",
       ("name", str),
@@ -279,6 +280,26 @@ class TestDbHandler(unittest.TestCase):
     self.assertEqual(baker["age"], 52)
     self.assertEqual(baker["desc"], "He's got an apostrophe in his description.")
 
+=======
+>>>>>>> Stashed changes
 
+    handler.create_table("npcs",
+      ("name", str),
+      ("age", int),
+      ("desc", str)
+    )
+
+    handler.insert_record("npcs",
+      name="the baker",
+      age=52,
+      desc="He's got an apostrophe in his description."  
+    )
+
+    baker = handler.get_record("npcs", name="the baker")
+
+    self.assertEqual(baker["name"], "the baker")
+    self.assertEqual(baker["age"], 52)
+    self.assertEqual(baker["desc"], "He's got an apostrophe in his description.")
+    
 if __name__ == "__main__":
   unittest.main()

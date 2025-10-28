@@ -4,7 +4,7 @@ from color import *
 import entity_data
 import unique_id_data
 
-class npc_data(character_data.character_data, actor_data.actor_data):
+class npc_data(actor_data.actor_data, character_data.character_data):
   """Creates a new NPC (non-playable character).
      ldesc = one line description shown after room description
      prefix_command_triggers = procs called before command is processed
@@ -66,8 +66,8 @@ class npc_data(character_data.character_data, actor_data.actor_data):
     pass
 
   def debug(self):
-    ret_val = f"UID: {CYAN}{self.uid}{NORMAL}\r\n"
-    ret_val += character_data.character_data.debug(self) + "\r\n"
+    ret_val = character_data.character_data.debug(self) + "\r\n"
+    ret_val += f"UID: {CYAN}{self.uid}{NORMAL}\r\n"
     ret_val += actor_data.actor_data.debug(self)
     return ret_val
 

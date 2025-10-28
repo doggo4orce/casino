@@ -1,3 +1,4 @@
+import config
 import unittest
 import unique_id_data
 
@@ -35,6 +36,11 @@ class TestUniqueID(unittest.TestCase):
 
     uid2 = unique_id_data.unique_id_data(uid.zone_id, uid.id)
     self.assertEqual(uid, uid2)
+
+  def test_starting_room(self):
+    uid = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+    self.assertEqual(uid.zone_id, 'stockville')
+    self.assertEqual(uid.id, 'recall')
 
 if __name__ == "__main__":
   unittest.main()

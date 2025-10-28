@@ -25,6 +25,9 @@ class database:
   """connect()                           <- connect to self._db_file
      close()                             <- close connection
 
+     name_used(name)                     <- check if player exists with name
+     next_unused_pid()                   <- find smallest unused player ID
+
      save_exit(zone_id, id, exit)        <- save exit
      has_exit(zone_id, id, direction)    <- check if exit already saved
      delete_exit(zone_id, id, direction) <- delete exit
@@ -88,6 +91,17 @@ class database:
   def close(self):
     self._handler.close()
 
+  def name_used(self, name):
+    return self._handler.get_record(database.PLAYER_TABLE,name=name) is not None
+
+  def next_unused_pid(self):
+    j = 1;
+
+    while self.has_player(j):
+      j += 1
+
+    return j
+
   def save_exit(self, zone_id, id, exit):
     if self.has_exit(zone_id, id, exit.direction):
       self.delete_exit(zone_id, id, exit.direction)
@@ -105,7 +119,7 @@ class database:
       direction=int(direction),
       o_zone_id=zone_id,
       o_id=id
-    ) != None
+    ) is not None
 
   def delete_exit(self, zone_id, id, direction):
     if not self.has_exit(zone_id, id, direction):
@@ -370,7 +384,7 @@ class database:
   def has_player(self, id):
     return self._handler.get_record(database.PLAYER_TABLE,
       id=id
-    ) != None
+    ) is not None
 
   def delete_player(self, id):
     if not self.has_player(id):

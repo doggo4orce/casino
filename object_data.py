@@ -1,10 +1,11 @@
 import dataclasses
+
+import actor_data
 import entity_data
-import logging
 import spec_proc_data
 import unique_id_data
 
-class object_data(entity_data.entity_data):
+class object_data(actor_data.actor_data, entity_data.entity_data):
   """Creates an object which characters can get, drop, and otherwise interact with.
      entity   = aggregates name, namelist, description, ldesc, and room"""
 
@@ -12,7 +13,8 @@ class object_data(entity_data.entity_data):
      not the case.  It's just that those differences have not been implemented yet.
      For example, objects will eventually have stats that do not yet appear here."""
   def __init__(self, proto=None):
-    super().__init__(proto)
+    actor_data.actor_data.__init__(self)
+    entity_data.entity_data.__init__(self, proto)
 
     if proto == None:
       self.name = "an unfinished object"
@@ -21,7 +23,7 @@ class object_data(entity_data.entity_data):
       self.desc = "This object looks unfinished."
 
   def copy_from(self, obj):
-    super().copy_from(obj)
+    entity_data.entity_data.copy_from(self, obj)
     # copy object specific fields here
 
   def debug(self):

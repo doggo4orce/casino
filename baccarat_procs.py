@@ -1,6 +1,7 @@
 from color import *
 
 import baccarat_dealer_data
+import baccarat_hand_data
 import baccarat_shoe_data
 import cmd_trig_data
 import mudlog
@@ -136,6 +137,7 @@ def baccarat_dealing(mud, me, db):
 
   if me.bac_state == baccarat_dealer_data.baccarat_dealer_state.IDLE:
     return
+
   if me.bac_paused > 0:
     me.bac_paused -= 1
     return
@@ -155,7 +157,7 @@ def baccarat_dealing(mud, me, db):
     pause = 30
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.FIRST_DRAW:
     first_card = me.draw()
-    me.initial_card_val = baccarat_hand.card_value(first_card)
+    me.initial_card_val = baccarat_hand_data.baccarat_hand_data.card_value(first_card)
     mud.echo_around(me, None, "{} draws the first card, which is {} {}.\r\n".format(
       me, string_handling.ana(cards.card_rank(first_card.rank).name), first_card))
     me.bac_state = baccarat_dealer_state.BURN_CARDS

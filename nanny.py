@@ -3,16 +3,20 @@ import logging
 import telnet
 
 # local modules
+import cmd_trig_data
 import commands
 import config
 import editor
 import exit_data
 import descriptor_data
+import mudlog
+import npc_data
 import olc
 import olc_data
 import pc_data
 import room_data
 import spec_proc_data
+import unique_id_data
 
 cmd_dict = dict()
 
@@ -62,35 +66,35 @@ def look_up_command(command):
 
 def interpret_msg(d, command, argument, server, mud, db):
   valid_command = False
-  initial_room = d.char.room
+  initial_room = d.character.room
 
   # they might just be hitting enter to see an updated prompt
   if command == "":
     d.has_prompt = False
     return
 
-
   # fire all prefix procs
-  for mob in mud.room_by_code(d.char.room).people:
-    if isinstance(mob, pc.npc):
-      if spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER == mob.call_prefix_command_triggers(mud, d.char, command, argument, db):
+  for mob in mud.room_by_uid(d.character.room.zone_id, d.character.room.id).people:
+    if isinstance(mob, npc_data.npc_data):
+      if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == mob.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
         return
 
-  for obj in mud.room_by_code(d.char.room).inventory:
-    if spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER == obj.call_prefix_command_triggers(mud, d.char, command, argument, db):
+  for obj in mud.room_by_uid(d.character.room.zone_id, d.character.room.id).contents:
+    if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == obj.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
       return
 
   cmd_key = look_up_command(command)
+
   if cmd_key != None:
     cmd_value = cmd_dict[cmd_key]
-    cmd_value[0](d.char, cmd_value[1], argument, server, mud, db)
+    cmd_value[0](d.character, cmd_value[1], argument, server, mud, db)
     d.has_prompt = False
     valid_command = True
 
   # fire all suffix procs
-  for mob in mud.room_by_code(initial_room).people:
-    if isinstance(mob, pc.npc):
-      mob.call_suffix_command_triggers(mud, d.char, command, argument, db)
+  for mob in mud.room_by_uid(initial_room.zone_id, initial_room.id).people:
+    if isinstance(mob, npc_data.npc_data):
+      mob.call_suffix_command_triggers(mud, d.character, command, argument, db)
 
   if not valid_command:
     d.write("Huh!?!\r\n")
@@ -154,26 +158,26 @@ def handle_next_input(d, server, mud, db):
     if len(msg) not in range(config.MIN_PASSWORD_LENGTH, config.MAX_PASSWORD_LENGTH - 1) or not msg.isprintable():
       d.write("Illegal password.\r\nPassword: ")
     else:
-      d.login_info = d.login_info._replace(password = msg)
+      d.login_info.password = msg
       d.state = descriptor_data.descriptor_state.CONFIRM_PASS
       d.write("\r\nPlease retype ≥password: ")
   elif d.state == descriptor_data.descriptor_state.CONFIRM_PASS:
     if msg == d.login_info.password:
-      new_char = pc.pc()
-      new_char.name = d.login_info.name
-      new_char.pwd = d.login_info.password
-      new_char.d = d
-      new_char.room = structs.unique_identifier.from_string(config.STARTING_ROOM)
-      new_char.id = db.next_unused_pid()
-      db.save_player(new_char)
+      new_player = pc_data.pc_data()
+      new_player.name = d.login_info.name
+      new_player.password = d.login_info.password
+      new_player.d = d
+      new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+      new_player.player_id = db.next_unused_pid()
+      db.save_player(new_player)
 
-      d.char = new_char
+      d.character = new_player
       d.state = descriptor_data.descriptor_state.CHATTING
-      mud.add_char(d.char)
-      logging.info(f"{d.login_info.name} [{d.client_info.term_host}] new player.")
+      mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room.zone_id, d.character.room.id))
+      mudlog.info(f"{d.login_info.name} [{d.client.term_host}] new player.")
       d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
       d.write("Welcome!  Have a great time!\r\n")
-      logging.info(f"{d.login_info.name} has entered the game.")
+      mudlog.info(f"{d.login_info.name} has entered the game.")
     else:
       d.state = descriptor_data.descriptor_state.GET_NEW_PASS
       d.write("\r\nPasswords don't match... start over.\r\nPassword: ")
@@ -209,10 +213,10 @@ def handle_next_input(d, server, mud, db):
         logging.info(f"{d.login_info.name} has entered the game.")
 
         # if their room has been deleted, put them in the void
-        if mud.room_by_code(d.char.room) == None:
+        if mud.room_by_code(d.character.room) == None:
           d.char.room = structs.unique_identifier.from_string(config.VOID_ROOM)
 
-        mud.add_char(d.char)
+        mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room.zone_id, d.character.room.id))
         mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
 
         db.load_flag_prefs(d.char)

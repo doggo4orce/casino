@@ -38,14 +38,10 @@ class baccarat_dealer_data(card_dealer_data.card_dealer_data):
       simulation_mode  = if True, game runs way too fast to play"""
     super().__init__()
     self._hand = baccarat_hand_data.baccarat_hand_data()
-    self._bac_state = baccarat_dealer_state.IDLE
-    self._bac_paused = 0
+    self.bac_state = baccarat_dealer_state.IDLE
+    self.bac_paused = 0
     self._initial_card_val = None
-    self._simulation_mode = False
-
-  @property
-  def bac_paused(self):
-    return self._bac_paused
+    self.simulation_mode = False
 
   @classmethod
   def from_card_dealer(cls, dealer):
@@ -125,11 +121,11 @@ class baccarat_dealer_data(card_dealer_data.card_dealer_data):
 
   def debug(self):
     ret_val = super().debug() + "\r\n"
-    ret_val += f"Hand:"
+    ret_val += f"Hand: "
     if len(self._hand) == 0:
       ret_val += f"{CYAN}empty{NORMAL}\r\n"
     else:
       ret_val += f"\r\n{self._hand.display2()}\r\n"
-    ret_val += f"State: {CYAN}{baccarat_dealer_state(self._bac_state).name}{NORMAL}\r\n"
-    ret_val += f"Baccarat Paused: {CYAN}{self._bac_paused}{NORMAL}"
+    ret_val += f"State: {CYAN}{baccarat_dealer_state(self.bac_state).name}{NORMAL}\r\n"
+    ret_val += f"Baccarat Paused: {CYAN}{self.bac_paused}{NORMAL}"
     return ret_val

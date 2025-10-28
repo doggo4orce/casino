@@ -28,7 +28,7 @@ class server:
      shutdown_cmd    = check whether someone used shutdown command
      copyover_cmd    = check whether someone used copyover command"""
   def __init__(self):
-    self._mother          = None
+    self.mother          = None
     self._descriptors     = dict()
     self._new_connections = list()
     self._disconnects     = list()

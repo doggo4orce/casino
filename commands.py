@@ -69,7 +69,7 @@ def do_give(ch, scmd, argument, server, mud, db):
     return
 
   # who to give it to
-  rm = mud.room_by_code(ch.room)
+  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
   tch = rm.char_by_alias(args[1])
 
   if tch == None:
@@ -416,7 +416,7 @@ def do_who(ch, scmd, argument, server, mud, db):
 
   for d in d_dict.values():
     if d.state == descriptor.descriptor_state.CHATTING:
-      out_str += f"{d.char.Name} {d.char.title}\r\n"
+      out_str += f"{d.character.Name} {d.character.title}\r\n"
       num_online += 1
 
   if len(d_dict) > 1:
@@ -459,10 +459,10 @@ def do_copyover(ch, scmd, argument, server, mud, db):
         td.write("Rebooting, come back in a few seconds.\r\n")
         continue
 
-      td.char.save_char(db)
+      td.character.save_char(db)
 
       fd = td.fileno()
-      name = td.char.name.lower()
+      name = td.character.name.lower()
       typ = td.socket.type
       host = td.client_info.term_host
       ttype = td.client_info.term_type
@@ -477,32 +477,32 @@ def do_look(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
-  rm = mud.room_by_code(ch.room)
+  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
   
   # if no args, then just look at the room
   if num_args == 0:
-    if ch.room == None:
+    if ch.room is None:
       ch.write("You are nowhere!\r\n")
       return
     show_room_to_char(ch, rm)
   elif num_args == 1:
     # first check for objects in inventory
     target = ch.inventory.obj_by_alias(args[0])
-    if target != None:
+    if target is not None:
       show_obj_to_char(ch, target)
       return
 
     # next check for npcs in same room
     target = rm.char_by_alias(args[0])
 
-    if target != None:
+    if target is not None:
       show_char_to_char(ch, target)
       return
 
     # then check for objects in the same room
     target = rm.obj_by_alias(args[0])
 
-    if target != None:
+    if target is not None:
       show_obj_to_char(ch, target)
     else:
       ch.write(f"You see no {args[0]} here.\r\n")

@@ -87,9 +87,17 @@ class spec_proc_data:
       return
     try:
       return self.func(*args)
-    except TypeError:
+    # except TypeError:
+    #   error = f"spec_proc({self.name})\r\n"
+    #   error +=f"  tried to call: {self.func.__name__}\r\n"
+    #   error +=f"  expecting args: {', '.join(self.args)}\r\n"
+    #   error +=f"  was passed: {', '.join([str(arg) for arg in args])}"
+    except TypeError as e:
+      import traceback
+      traceback.print_exc()
       error = f"spec_proc({self.name})\r\n"
-      error +=f"  tried to call: {self.func.__name__}\r\n"
-      error +=f"  expecting args: {', '.join(self.args)}\r\n"
-      error +=f"  was passed: {', '.join([str(arg) for arg in args])}"
+      error += f"  {type(e).__name__}: {e}\r\n"
+      error += f"  tried to call: {self.func.__name__}\r\n"
+      error += f"  expecting args: {', '.join(self.args)}\r\n"
+      error += f"  was passed: {', '.join([str(arg) for arg in args])}"
       mudlog.error(error)

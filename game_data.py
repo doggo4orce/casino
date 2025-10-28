@@ -233,18 +233,21 @@ class game_data:
         baccarat_procs.baccarat_dealer_syntax_parser
       )
     )
+
     b_dealer.assign_spec_proc(
       cmd_trig_data.prefix_cmd_trig_data(
         "baccarat shoe history",
         baccarat_procs.baccarat_dealer_history
       )
     )
+
     b_dealer.assign_spec_proc(
       cmd_trig_data.suffix_cmd_trig_data(
         "baccarat dealer greeting",
         baccarat_procs.baccarat_dealer_intro
       )
     )
+
     b_dealer.assign_spec_proc(
       hbeat_proc_data.hbeat_proc_data(
         "baccarat deals a shoe",
@@ -271,7 +274,6 @@ class game_data:
     b_dealer = self.load_npc('stockville', 'baccarat_dealer')
     b_dealer = card_dealer_data.card_dealer_data.from_npc(b_dealer)
     b_dealer = baccarat_dealer_data.baccarat_dealer_data.from_card_dealer(b_dealer)
-    b_dealer.bac_state = baccarat_dealer_data.baccarat_dealer_state.BEGIN_SHOE
     self.add_character_to_room(b_dealer, self.room_by_uid('stockville', 'casino'))
 
     baker = self.load_npc('stockville', 'baker')

@@ -8,8 +8,7 @@ class baccarat_shoe_data(shoe_data.shoe_data):
     super().__init__()
     self._history = list()
     self._extras = list()
-    for j in range(0, num_decks):
-      self.absorb_bottom(shoe_data.shoe_data.french_deck())
+    self.absorb_bottom(shoe_data.shoe_data.french_deck(num_decks))
 
   """report_history(result) <-- records an occurance of result to self.history
      report_extra(result)   <-- records an occurance of result to self.extras

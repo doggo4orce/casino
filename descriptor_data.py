@@ -4,7 +4,7 @@ import collections
 import config
 import dataclasses
 import enum
-# import fcntl
+import fcntl
 import input_stream_data
 import mudlog
 import select
@@ -70,7 +70,6 @@ class descriptor_data:
       fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
     except Exception as e:
       mudlog.error(e)
-      mudlog.warning("descriptor created with")
 
   @property
   def writing(self):

@@ -38,7 +38,7 @@ class db_handler:
      fetch_all()                     <- fetch all results
      show_table(name)                <- display table as a string
      search_table(table, **clause)   <- search table for records using clause
-     get_record(table, **key)
+     get_record(table, **key)        <- 
      verify_columns(table, *columns) <- add columns to table if missing"""
 
   def close(self):
@@ -173,6 +173,8 @@ class db_handler:
       # but if fields are missing that's OK
       if column.name not in record.keys():
         continue
+
+      print(str(record))
 
       if type(record[column.name]) != column.type:
         mudlog.error(f"Trying to insert record into table {table}, but {record[column.name]} is not of type {column.type}.")

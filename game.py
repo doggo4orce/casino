@@ -258,9 +258,9 @@ class game:
     if ch.d:
       # if so, kick it off
       ch.d.disconnected = True
-      ch.d.char = None
+      ch.d.character = None
     # now connect to the linkless char
-    d.char = ch
+    d.character = ch
     ch.d = d
 
 if __name__ == '__main__':

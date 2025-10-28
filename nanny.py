@@ -98,15 +98,17 @@ def interpret_msg(d, command, argument, server, mud, db):
 
 # what should they see when they finish writing? menu? etc.
 def writing_follow_up(d):
-  if d.state == descriptor.descriptor_state.OLC:
+  if d.state == descriptor_data.descriptor_state.OLC:
     olc.olc_writing_follow_up(d)
   # other possibilities:
   #   reporting_bug, mailing letter, scribing scroll, etc.
 
 def handle_next_input(d, server, mud, db):
-  msg = d.next_input()
-  if not input:
+  msg = d.input_stream.pop_input()
+
+  if not msg:
     return
+
   d.has_prompt = False
   stripped_msg = msg.strip()
   command, argument = (stripped_msg.split(" ", 1) + ["", ""])[:2]
@@ -114,11 +116,11 @@ def handle_next_input(d, server, mud, db):
     done_writing = editor.editor_handle_input(d, msg)
     if done_writing:
       writing_follow_up(d)
-  elif d.state == descriptor.descriptor_state.CHATTING:
+  elif d.state == descriptor_data.descriptor_state.CHATTING:
     interpret_msg(d, command, argument, server, mud, db)
-  elif d.state == descriptor.descriptor_state.OLC:
+  elif d.state == descriptor_data.descriptor_state.OLC:
     olc.handle_input(d, stripped_msg, server, mud, db)
-  elif d.state == descriptor.descriptor_state.GET_NAME:
+  elif d.state == descriptor_data.descriptor_state.GET_NAME:
     if command == "":
       d.disconnected = True
       return
@@ -126,36 +128,36 @@ def handle_next_input(d, server, mud, db):
       d.write("Invalid name, please try another.\r\nName: ")
       return
     command = command.lower()
-    d.login_info = d.login_info._replace(name = command)
+    d.login_info.name = command
     if db.name_used(command):
       logging.info(f"{command.capitalize()} is logging in.")
-      d.state = descriptor.descriptor_state.GET_PASSWORD
+      d.state = descriptor_data.descriptor_state.GET_PASSWORD
       d.send(bytes(telnet.will_echo))
       d.write("Password: ")
     else:
-      d.state = descriptor.descriptor_state.CONFIRM_NAME
+      d.state = descriptor_data.descriptor_state.CONFIRM_NAME
       d.write(f"Did I get that right, {d.login_info.name} (Y/N)? ")
-  elif d.state == descriptor.descriptor_state.CONFIRM_NAME:
+  elif d.state == descriptor_data.descriptor_state.CONFIRM_NAME:
     if command == "":
       d.disconnected = True
     elif command[0] in ['y', 'Y']:
-      d.state = descriptor.descriptor_state.GET_NEW_PASS
+      d.state = descriptor_data.descriptor_state.GET_NEW_PASS
       d.send(bytes(telnet.will_echo))
       d.write(f"Give me a password for {d.login_info.name}: ")
     elif command[0] in ['n', 'N']:
-      d.state = descriptor.descriptor_state.GET_NAME
+      d.state = descriptor_data.descriptor_state.GET_NAME
       d.write("Okay, what IS it, then? ")
     else:
       d.write("Please type Yes or No: ")
-  elif d.state == descriptor.descriptor_state.GET_NEW_PASS:
+  elif d.state == descriptor_data.descriptor_state.GET_NEW_PASS:
     # use msg instead of command so as to allow for spaces in passwords
     if len(msg) not in range(config.MIN_PASSWORD_LENGTH, config.MAX_PASSWORD_LENGTH - 1) or not msg.isprintable():
       d.write("Illegal password.\r\nPassword: ")
     else:
       d.login_info = d.login_info._replace(password = msg)
-      d.state = descriptor.descriptor_state.CONFIRM_PASS
-      d.write("\r\nPlease retype password: ")
-  elif d.state == descriptor.descriptor_state.CONFIRM_PASS:
+      d.state = descriptor_data.descriptor_state.CONFIRM_PASS
+      d.write("\r\nPlease retype ≥password: ")
+  elif d.state == descriptor_data.descriptor_state.CONFIRM_PASS:
     if msg == d.login_info.password:
       new_char = pc.pc()
       new_char.name = d.login_info.name
@@ -166,16 +168,16 @@ def handle_next_input(d, server, mud, db):
       db.save_player(new_char)
 
       d.char = new_char
-      d.state = descriptor.descriptor_state.CHATTING
+      d.state = descriptor_data.descriptor_state.CHATTING
       mud.add_char(d.char)
       logging.info(f"{d.login_info.name} [{d.client_info.term_host}] new player.")
       d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
       d.write("Welcome!  Have a great time!\r\n")
       logging.info(f"{d.login_info.name} has entered the game.")
     else:
-      d.state = descriptor.descriptor_state.GET_NEW_PASS
+      d.state = descriptor_data.descriptor_state.GET_NEW_PASS
       d.write("\r\nPasswords don't match... start over.\r\nPassword: ")
-  elif d.state == descriptor.descriptor_state.GET_PASSWORD:
+  elif d.state == descriptor_data.descriptor_state.GET_PASSWORD:
     # and here too for the same reason as above
     if not db.check_pwd(d.login_info.name, msg):
       d.write("\r\nWrong password.\r\nPassword: ")
@@ -203,7 +205,7 @@ def handle_next_input(d, server, mud, db):
         d.char = new_player
         d.char.d = d
         d.write("Welcome!  Have a great time!\r\n")
-        d.state = descriptor.descriptor_state.CHATTING
+        d.state = descriptor_data.descriptor_state.CHATTING
         logging.info(f"{d.login_info.name} has entered the game.")
 
         # if their room has been deleted, put them in the void
@@ -217,15 +219,15 @@ def handle_next_input(d, server, mud, db):
 
       elif ch.d:
         d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
-        d.state = descriptor.descriptor_state.GET_CONFIRM_REPLACE
+        d.state = descriptor_data.descriptor_state.GET_CONFIRM_REPLACE
       else:
         mud.reconnect(d, ch)
         logging.info(f"{ch} recovering lost connection.")
         mud.echo_around(ch, None, f"{ch} has reconnected.\r\n")
         ch.write("You have reconnected.\r\n")
-      d.state = descriptor.descriptor_state.CHATTING
+      d.state = descriptor_data.descriptor_state.CHATTING
 
-  elif d.state == descriptor.descriptor_state.GET_CONFIRM_REPLACE:
+  elif d.state == descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
     if command != "" and command[0] in ['Y', 'y']:
       ch = mud.pc_by_id(db.id_by_name(d.login_info.name))
       if not ch:
@@ -238,4 +240,4 @@ def handle_next_input(d, server, mud, db):
         mud.echo_around(ch, None, f"{ch} suddenly keels over in pain, surrounded by a white aura...\r\n")
         mud.echo_around(ch, None, f"{ch}'s body has been taken over by a new spirit!\r\n")
         d.write("You take over your own body -- already in use!\r\n")
-        d.state = descriptor.descriptor_state.CHATTING
+        d.state = descriptor_data.descriptor_state.CHATTING

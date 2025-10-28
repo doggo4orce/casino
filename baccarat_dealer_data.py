@@ -43,6 +43,10 @@ class baccarat_dealer_data(card_dealer_data.card_dealer_data):
     self._initial_card_val = None
     self._simulation_mode = False
 
+  @property
+  def bac_paused(self):
+    return self._bac_paused
+
   @classmethod
   def from_card_dealer(cls, dealer):
     ret_val = cls()

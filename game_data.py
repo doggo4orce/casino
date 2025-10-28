@@ -283,6 +283,7 @@ class game_data:
 
     b_table = self.load_obj('stockville', 'baccarat_table')
     b_table = table_data.table_data.from_obj(b_table)
+    b_table.num_seats = 3
     b_table = baccarat_table_data.baccarat_table_data.from_table(b_table)
     b_table.dealer = b_dealer
     b_table.room = unique_id_data.unique_id_data('stockville', 'casino')
@@ -330,7 +331,7 @@ class game_data:
     self._events.heartbeat(self, db)
 
   def call_hbeat_procs(self, db):
-    for mob in self._chars:
+    for mob in self._characters:
       if isinstance(mob, npc_data.npc_data):
         mob.call_hbeat_procs(self, db)
 

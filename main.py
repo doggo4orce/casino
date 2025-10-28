@@ -48,14 +48,14 @@ if cl_dict['c'] != None:
   network.copyover_recover(mud, cl_dict['c'], db)
 
 try:
-  loops_per_second = 10
+  loops_per_second = 30
   time_per_loop = float(1)/float(loops_per_second)
 
   while not network.shutdown_cmd and not network.copyover_cmd:
     network.loop(mud, db)
     time.sleep(time_per_loop)
-    mud.heart_beat(db)
-    mud.call_heart_beat_procs(db)
+    mud.heartbeat(db)
+    mud.call_hbeat_procs(db)
     # TODO: find out how long this function took to call and adjust sleep time accordingly
 
 except KeyboardInterrupt:

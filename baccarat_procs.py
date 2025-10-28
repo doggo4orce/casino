@@ -1,6 +1,9 @@
-import mudlog
+from color import *
+
+import baccarat_dealer_data
+import baccarat_shoe_data
 import cmd_trig_data
-#import spec_proc_data
+import mudlog
 
 """Special Procedures for the Baccarat dealer:
 
@@ -131,47 +134,47 @@ def baccarat_dealing(mud, me, db):
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(CYAN, DARK_GRAY, CYAN, DARK_GRAY, CYAN, DARK_GRAY, NORMAL)
   dragon_string = "{}D{}r{}a{}g{}o{}n{}!{}".format(CYAN, GREEN, CYAN, GREEN, CYAN, GREEN, CYAN, NORMAL)
 
-  if me.bac_state == baccarat_dealer_state.IDLE:
+  if me.bac_state == baccarat_dealer_data.baccarat_dealer_state.IDLE:
     return
   if me.bac_paused > 0:
     me.bac_paused -= 1
     return
-  if not isinstance(me, baccarat_dealer):
+  if not isinstance(me, baccarat_dealer_data.baccarat_dealer_data):
     logging.warning(f"{me} attempting to call 'baccarat_dealing' but is not a baccarat dealer")
     return
   
-  if me.bac_state == baccarat_dealer_state.BEGIN_SHOE:
-    me.shoe = baccarat_shoe(NUM_DECKS)
+  if me.bac_state == baccarat_dealer_data.baccarat_dealer_state.BEGIN_SHOE:
+    me.shoe = baccarat_shoe_data.baccarat_shoe_data(NUM_DECKS)
     mud.echo_around(me, None, f"{me} assembles a new shoe consisting of {NUM_DECKS} deck{'s' if NUM_DECKS > 1 else ' '}.\r\n")
-    me.bac_state = baccarat_dealer_state.SHUFFLE_SHOE
+    me.bac_state = baccarat_dealer_data.baccarat_dealer_state.SHUFFLE_SHOE
     pause = 30
-  elif me.bac_state == baccarat_dealer_state.SHUFFLE_SHOE:
+  elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.SHUFFLE_SHOE:
     me.shuffle()
     mud.echo_around(me, None, f"{me} shuffles the shoe.\r\n")
-    me.bac_state = baccarat_dealer_state.FIRST_DRAW
+    me.bac_state = baccarat_dealer_data.baccarat_dealer_state.FIRST_DRAW
     pause = 30
-  elif me.bac_state == baccarat_dealer_state.FIRST_DRAW:
+  elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.FIRST_DRAW:
     first_card = me.draw()
     me.initial_card_val = baccarat_hand.card_value(first_card)
     mud.echo_around(me, None, "{} draws the first card, which is {} {}.\r\n".format(
       me, string_handling.ana(cards.card_rank(first_card.rank).name), first_card))
     me.bac_state = baccarat_dealer_state.BURN_CARDS
     pause = 30
-  elif me.bac_state == baccarat_dealer_state.BURN_CARDS:
+  elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.BURN_CARDS:
     for j in range(0, me.initial_card_val):
       me.draw()
     mud.echo_around(me, None, f"{me} burns {me.initial_card_val} card{'s' if me.initial_card_val > 1 else ''}.\n")
-    me.bac_state = baccarat_dealer_state.LAST_CALL_BETS
+    me.bac_state = baccarat_dealer_data.baccarat_dealer_state.LAST_CALL_BETS
     pause = 30
-  elif me.bac_state == baccarat_dealer_state.LAST_CALL_BETS:
+  elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.LAST_CALL_BETS:
     commands.do_say(me, None, f"Last call, any more bets?", None, mud, db)
-    me.bac_state = baccarat_dealer_state.NO_MORE_BETS
+    me.bac_state = baccarat_dealer_data.baccarat_dealer_state.NO_MORE_BETS
     pause = 120
-  elif me.bac_state == baccarat_dealer_state.NO_MORE_BETS:
+  elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.NO_MORE_BETS:
     mud.echo_around(me, None, f"{me} gestures and says, 'No more bets.'\r\n")
-    me.bac_state = baccarat_dealer_state.PLAYER_FIRST
+    me.bac_state = baccarat_dealer_data.baccarat_dealer_state.PLAYER_FIRST
     pause = 30
-  elif me.bac_state == baccarat_dealer_state.PLAYER_FIRST:
+  elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.PLAYER_FIRST:
     if me.shoe.size < 6:
       commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud, db)
       mud.echo_around(me, None, "Player wins: {}{}{} (including pandas)\r\nBanker wins: {}{}{}\r\nTies: {}{}{}\r\nPandas: {}{}{}\r\nDragons: {}{}{}\r\n".format(

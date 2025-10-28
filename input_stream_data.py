@@ -55,6 +55,8 @@ class input_stream_data:
         self.telnet = None
 
   def pop_input(self):
+    if not self.input_q:
+      return None
     return self.input_q.popleft()
 
   def pop_telnet(self):

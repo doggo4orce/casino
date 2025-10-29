@@ -183,67 +183,94 @@ class TestBuffer(unittest.TestCase):
 
   def test_clean_up1(self):
     lines_messy = [
-      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3"
-      "<p> Hello, ",
-      "buddy I         miss you ! "
-      "Oh I     forgot to  close the paragraph . </p>"
+      ":) +-", # 5 + 2 (\r\n gets added by str()) = 7
+      "<p> Hello, ", # 11 + 2 = 13, so this is 20 so far
+      "buddy.</p>" # 10 + 2 = 12, so this is 32 so far
     ]
 
     lines_cleaned = [
-      ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-      "<p> Hello, buddy I         miss you ! Oh I     forgot to  close the paragraph . </p>"
+      ":) +-",
+      "<p> Hello, buddy.</p>"
     ]
-  
+
     test_buf = buffer_data.buffer_data()
     test_buf.add_lines(lines_messy)
+  
+    print(test_buf.str(numbers=True))
+
     test_buf = test_buf.clean_up()
+
+    print(test_buf.str(numbers=True))
 
     for idx, line in enumerate(test_buf.clean_up()):
       self.assertEqual(lines_cleaned[idx], line)
 
-  # def test_clean_up(self):
-  #   lines_messy = [
-  #     ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-  #     "<p>.",       # first char is the first word
-  #     ".. ...",     # next two words
-  #     "",           # empty line within paragraph ignored
-  #     "... ",       # trailing space (*)
-  #     "</p>",
-  #     "   <(v_v)>", # not in paragraph, left alone
-  #     "<p> ... ",
-  #     ".. </p>"     # terminating with </p>
-  #   ]
+  def test_clean_up2(self):
+    lines_messy = [
+      "<p>.. , ",
+      
+    ]
+    # buffer = buffer_data.buffer_data(desc)
 
-  #   lines_clean = [
-  #     ":) +------+ (*)=(*) ASCII ART 1 + 2 = 3",
-  #     "<p>. .. ...  ...  </p>",  # double space caused by (*)
-  #     "   <(v_v)>",
-  #     "<p> ...  .. </p>"
-  #   ]
+    # print(buffer.str(numbers=True))
+    
+  def test_clean_up(self):
+    pairs = (
+      (
+        [
+          "<p>Hi",             # first line broken during paragraph
+          "there friend.</p>", # paragraph closed on last line
+        ],
+        [
+          "<p>Hi there friend.</p>"
+        ]
+      ),
+      (
+        [
+          "<p>Hi ",            # trailing space on first line
+          "there friend.",     # second line broken before close
+          "How've you been?",  # third line broken before close
+          "</p>",              # no content, only close
+        ],
+        [
+          "<p>Hi there friend. How've you been?</p>", 
+        ]
+      ),
+      (
+        [
+          "verbatim<p>Go",     # open mid line
+          "to the",            # second line broken before close
+          "store</p>ascii"     # close mid line
+        ],
+        [
+          "verbatim",
+          "<p>Go to the store</p>",
+          "ascii"
+        ]
+      )
+    )
 
-  #   lines_messy2 = [
-  #     "<p>.",           # first char is the first word
-  #     "...",
-  #     "<p>.. ... </p>", # invalid <p> ignored
-  #     "</p> <p>",       # should be ignored
-  #   ]
+    # lines_messy2 = [
+    #   "<p>.",           # first char is the first word
+    #   "...",
+    #   "",                  # empty line within paragraph ignored
+    #   "<p>.. ... </p>", # invalid <p> ignored
+    #   "</p> <p>",       # should be ignored
+    #   "<p> ... ",
+    #   ".. </p>"          # terminating with </p>
+    # ]
 
-  #   lines_clean2 = [
-  #     "<p>. ... <p>.. ... </p>",
-  #     "</p> <p>"
-  #   ]
+    # lines_clean2 = [
+    #   "<p>. ... <p>.. ... </p>",
+    #   "</p> <p>"
+    # ]
 
-  #   test_buf = buffer_data.buffer_data()
-  #   test_buf2 = buffer_data.buffer_data()
-
-  #   test_buf.add_lines(lines_messy)
-  #   test_buf2.add_lines(lines_messy2)
-
-  #   for idx, line in enumerate(test_buf.clean_up()):
-  #     self.assertEqual(lines_clean[idx], line)
-
-  #   for idx, line in enumerate(test_buf2.clean_up()):
-  #     self.assertEqual(lines_clean2[idx], line)
+    for messy, clean in pairs:
+      test_buf = buffer_data.buffer_data()
+      test_buf.add_lines(messy)
+      test_buf = test_buf.clean_up()
+      for idx, line in enumerate(test_buf):
+        self.assertEqual(line, clean[idx])
 
   # def test_str(self):
   #   lines = [
@@ -260,6 +287,9 @@ class TestBuffer(unittest.TestCase):
 
   #   # convert lines to buffer
   #   test_buf.add_lines(lines)
+
+  #   # see what it looks like
+  #   print(test_buf.str(numbers=True))
 
   #   # convert buffer to str
   #   str = test_buf.str(numbers=False)

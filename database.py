@@ -637,7 +637,7 @@ class database:
        room and this mini pargraph will not
        be harmed!  <(^_^)7   6(*-*)^
 
-<p>But now Ive entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>"""
+<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>"""
     rm.connect(exit_data.direction.EAST, 'stockville', 'recall')
     rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway1')
     stockville.add_room(rm)

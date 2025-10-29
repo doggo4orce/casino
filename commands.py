@@ -512,6 +512,7 @@ def do_look(ch, scmd, argument, server, mud, db):
 def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.numeric_prefs.screen_width, False)}{NORMAL}\r\n'
   room_desc = buffer_data.buffer_data(rm.desc)
+  room_desc = room_desc.clean_up()
 
   if not ch.brief_mode:
     out_buf += room_desc.display(ch.screen_width, indent=True, color=True,numbers=False)
@@ -522,7 +523,7 @@ def show_room_to_char(ch, rm):
 
   out_buf += f'\r\n{CYAN}{rm.display_exits()}{NORMAL}\r\n'
 
-  for tch in rm.people:
+  for tch in rm.people:s
     if tch != ch:
       out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.screen_width, False)}{NORMAL}"
       if type(tch) == pc_data.pc_data and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
@@ -559,34 +560,24 @@ def show_obj_to_char(ch, obj):
   ch.write(out_buf)
 
 def do_move(ch, scmd, argument, server, mud, db):
-  starting_room = mud.room_by_code(ch.room)
-  dest_ref = starting_room.get_destination(scmd).vref
+  starting_room = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  destination = starting_room.get_destination(scmd)
 
-  if not dest_ref:
+  if not destination:
     ch.write("Alas, you cannot go that way.\r\n")
     return
 
-  # check to see if dest_ref is an internal vref or if it has a zone specifier
-  if string_handling.valid_id(dest_ref):
-    # check first to see if dest_ref is just a room_id (internal exit)
-    dest_id = structs.unique_identifier(ch.room.zone_id, dest_ref)
-
-  #elif: TODO: check for external exit that should be external and change it
-  else:
-    # in this case, the exit leads to a room in another zone (external exit)
-    dest_id = structs.unique_identifier.from_string(dest_ref)
-
-  ending_room = mud.room_by_code(dest_id)
+  ending_room = mud.room_by_uid(destination.zone_id, destination.id)
 
   left_msg = f"{ch} leaves {scmd.name.lower()}.\r\n"
 
   arrived_messages = {
-    exit.direction.NORTH: 'the south',
-    exit.direction.EAST:  'the east',
-    exit.direction.SOUTH: 'the north',
-    exit.direction.WEST:  'the east',
-    exit.direction.UP:    'below',
-    exit.direction.DOWN:  'above',
+    exit_data.direction.NORTH: 'the south',
+    exit_data.direction.EAST:  'the east',
+    exit_data.direction.SOUTH: 'the north',
+    exit_data.direction.WEST:  'the east',
+    exit_data.direction.UP:    'below',
+    exit_data.direction.DOWN:  'above',
   }
 
   arrived_msg = f"{ch} has arrived from {arrived_messages[scmd]}.\r\n"
@@ -605,8 +596,9 @@ def do_move(ch, scmd, argument, server, mud, db):
   ending_room.echo(arrived_msg)
   ending_room.add_char(ch)
 
-  # show them the new room
-  show_room_to_char(ch, ending_room)
+  # if player, show them the new room
+  if isinstance(ch, pc_data.pc_data):
+    show_room_to_char(ch, ending_room)
 
 # def do_colors(ch, scmd, argument, server, mud, db):
 #   import editor

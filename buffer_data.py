@@ -112,8 +112,14 @@ class buffer_data:
         clean += original
         break
 
+      print(f"Group 0: {repr(match.group(0))}\r\nGroup 1: {repr(match.group(1))}\r\nGroup 2: {repr(match.group(2))}\r\nGroup 3: {repr(match.group(3))}")
+
       j = match.span()[0] # beginning of match
       k = match.span()[1] # beginning of suffix
+
+      print(f"j: {j}\r\nk: {k}")
+
+      print(f"j-k contents: [{original[j:k]}]")
 
       if first_search and j == 0:
         pre_line_break = ""
@@ -122,7 +128,20 @@ class buffer_data:
 
       post_line_break = match.group(3)
 
-      paragraph = match.group(2).replace('\r\n', ' ')
+      print(f"Group 2: {repr(match.group(2))}")
+
+      # if previous line ended in space, we'll have ' \r\n', which should just be ' '
+      paragraph = match.group(2).replace(' \r\n', ' ')
+
+      print(f"Paragraph: {repr(paragraph)}")
+
+      # if final line consisted of only </p>, we have an extra trailing '\r\n'
+      paragraph = paragraph.rstrip()
+
+      # any remaining '\r\n' should just be ' '
+      paragraph = paragraph.replace('\r\n', ' ')
+
+      print(f"Paragraph: {repr(paragraph)}")
 
       clean += "{}{}{}{}{}{}".format(
         original[:j],
@@ -146,12 +165,13 @@ class buffer_data:
     temp_buf = temp_buf.clean_up()
 
     for line in temp_buf:
+      print(f"Before paragraph check:\r\n[{line}]\r\n")
       if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
         print(f"Line: \r\n{line}\r\n passed paragraph check")
         line = line[len(OPEN_PARAGRAPH):(-1)*len(CLOSE_PARAGRAPH)]
         print(f"After trimming:\r\n{line}\r\n")
         line = string_handling.paragraph(line, width, indent)
-        print(f"After formatting:\r\n{line}\r\n")
+        # print(f"After formatting:\r\n{line}\r\n")
 
       final_buf.add_line(line)
 

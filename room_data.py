@@ -86,7 +86,7 @@ class room_data:
      display_exits()           <- shows exits to be displayed with room description
      echo(msg)                 <- sends msg to every character in the room
      exit(dir)                 <- returns exit object leading in direction dir or None
-     get_destination(dir)      <- returns vref for room that the exit in direction dir leads to
+     get_destination(dir)      <- returns exit.destination for exit in direction dir
      has_exit(dir)             <- checks if the room has an exit leading in direction dir"""
 
   def _add_entity(self, entity):

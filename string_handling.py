@@ -174,7 +174,6 @@ def parse_reference_old(code):
   return None, None
 
 # returns a cleaned up version of "Hello , how are     you guys ?"
-# NOTE: this is quick and dirty and could use a re-write
 def proofread(paragraph):
 
   NUM_SPACES_AFTER_PUNCTUATION = 2
@@ -187,7 +186,6 @@ def proofread(paragraph):
 
   # clean up capitalization, commas, and periods
   for idx, word in enumerate(lines):
-
     word = word.strip()
 
     terminal_punct = {'.', '?', '!'}
@@ -215,7 +213,6 @@ def proofread(paragraph):
 
   # clean up trailing punctuation
   while True:
-    #pattern = re.compile(r'([,.!?]) ([,.!?])')
     pattern = re.compile(r' ([,.!?])')
     match = re.search(pattern, formatted)
 

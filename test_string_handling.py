@@ -136,6 +136,14 @@ class TestStringHandling(unittest.TestCase):
       (
          "This sentence , has three   periods   .  .  .",
          "This sentence, has three periods..."
+      ),
+      (
+         " Hello, \r\nbuddy I         miss you ! \r\nOh I     forgot to  close the paragraph . ",
+         "Hello, buddy I miss you!  Oh I forgot to close the paragraph."
+      ),
+      (
+         "  hey dude.. . . what\r\n is going on with \r\n              this paragraph right  ?  It's soooooooo stupid .\r\n",
+         "Hey dude....  What is going on with this paragrpah right?  It's soooooooo stupid."
       )
     )
 

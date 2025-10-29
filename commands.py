@@ -513,14 +513,12 @@ def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.numeric_prefs.screen_width, False)}{NORMAL}\r\n'
   room_desc = buffer_data.buffer_data(rm.desc)
 
-  # if not ch.brief_mode:
-  #   out_buf += room_desc.display(ch.screen_width, indent=True, color=True,numbers=False)
+  if not ch.brief_mode:
+    out_buf += room_desc.display(ch.screen_width, indent=True, color=True,numbers=False)
   
-  desc = rm.desc
-  desc = string_handling.paragraph(desc, ch.numeric_prefs.screen_width, True)
-  desc = string_handling.proc_color(desc)
-
-  out_buf += desc
+  # desc = rm.desc
+  # desc = string_handling.paragraph(desc, ch.numeric_prefs.screen_width, True)
+  # desc = string_handling.proc_color(desc)
 
   out_buf += f'\r\n{CYAN}{rm.display_exits()}{NORMAL}\r\n'
 

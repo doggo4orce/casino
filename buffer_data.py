@@ -126,6 +126,7 @@ class buffer_data:
       else:
         pre_line_break = "\r\n"
 
+      # here is what I should to use to split the string at </p> if it occurs mid line
       post_line_break = match.group(3)
 
       print(f"Group 2: {repr(match.group(2))}")

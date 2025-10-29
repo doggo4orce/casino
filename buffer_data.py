@@ -97,6 +97,70 @@ class buffer_data:
     # group 0: the whole match
     # group 1: \r\n if match starts with \r\n, otherwise null
     # group 2: everything between paragraph tags
+    # group 3: everything after paragraph tags, might be null
+    # group 4: \r\n if \r\n immediately follows paragraph tags, otherwise null
+
+    pattern = re.compile(
+      r'((?:\r\n)?){}((?:.*?(?:\r\n)?)*?){}(((?:\r\n)?).*)'.format(
+        OPEN_PARAGRAPH,
+        CLOSE_PARAGRAPH)
+    )
+
+    while True:
+      match = re.search(pattern, original)
+
+      if match == None:
+        clean += original
+        break
+
+      j = match.span()[0] # beginning of match
+      k = match.span()[1] # beginning of suffix
+
+      if first_search and j == 0:
+        pre_line_break = ""
+      else:
+        pre_line_break = "\r\n"
+
+      # this inserts a newline after paragraph, if there is more text immediately
+      if match.group(4) == "" and match.group(3) != "":
+        post_line_break = "\r\n"
+      else:
+        post_line_break = ""
+
+      # if previous line ended in space, we'll have ' \r\n', which should just be ' '
+      paragraph = match.group(2).replace(' \r\n', ' ')
+
+      # if final line consisted of only </p>, we have an extra trailing '\r\n'
+      paragraph = paragraph.rstrip()
+
+      # any remaining '\r\n' should just be ' '
+      paragraph = paragraph.replace('\r\n', ' ')
+
+      clean += "{}{}{}{}{}{}".format(
+        original[:j],
+        pre_line_break,
+        OPEN_PARAGRAPH,
+        paragraph,
+        CLOSE_PARAGRAPH,
+        post_line_break,
+        match.group(3)
+      )
+
+      original = match.group(3)
+
+      first_search = False
+
+    return buffer_data(clean)    
+
+  # EXPLAIN EXACTLY WHAT THIS DOES
+  def clean_up_backup(self):
+    original = self.str(numbers=False)
+    clean = ""
+    first_search = True
+
+    # group 0: the whole match
+    # group 1: \r\n if match starts with \r\n, otherwise null
+    # group 2: everything between paragraph tags
     # group 3: \r\n if match ends with \r\n, otherwise null
 
     pattern = re.compile(

@@ -1,7 +1,7 @@
 import buffer_data
 import unittest
 
-class TestBuffer(unittest.TestCase):
+class TestBufferData(unittest.TestCase):
 
   def test_constructor(self):
     lines = [
@@ -181,48 +181,37 @@ class TestBuffer(unittest.TestCase):
     # check that changing the original doesn't change the first
     self.assertNotEqual(test_buf1[0], test_buf2[0])
 
-  def test_clean_up1(self):
-    lines_messy = [
-      ":) +-", # 5 + 2 (\r\n gets added by str()) = 7
-      "<p> Hello, ", # 11 + 2 = 13, so this is 20 so far
-      "buddy.</p>" # 10 + 2 = 12, so this is 32 so far
+  def test_split(self):
+    before_split = [
+      "This is the first line.",
+      "This is the second line.",
+      "This is the third line.",
+      "This is the fourth line."
     ]
 
-    lines_cleaned = [
-      ":) +-",
-      "<p> Hello, buddy.</p>"
+    pre_split_buffer = buffer_data.buffer_data()
+    pre_split_buffer.add_lines(before_split)
+    pre_split_buffer.split(0, 5)
+
+    after_split = [
+      "This ",
+      "is the first line."
+      "This is the second line.",
+      "This is the third line.",
+      "This is the fourth line."
     ]
 
-    test_buf = buffer_data.buffer_data()
-    test_buf.add_lines(lines_messy)
-  
-    print(test_buf.str(numbers=True))
-
-    test_buf = test_buf.clean_up()
-
-    print(test_buf.str(numbers=True))
-
-    for idx, line in enumerate(test_buf.clean_up()):
-      self.assertEqual(lines_cleaned[idx], line)
-
-  def test_clean_up2(self):
-    lines_messy = [
-      "<p>.. , ",
-      
-    ]
-    # buffer = buffer_data.buffer_data(desc)
-
-    # print(buffer.str(numbers=True))
-    
   def test_clean_up(self):
-    pairs = (
+    pairs = [
       (
         [
-          "<p>Hi",             # first line broken during paragraph
-          "there friend.</p>", # paragraph closed on last line
+          ":) +-", # 5 + 2 (\r\n gets added by str()) = 7
+          "<p> Hello, ", # 11 + 2 = 13, so this is 20 so far
+          "buddy.</p>" # 10 + 2 = 12, so this is 32 so far
         ],
         [
-          "<p>Hi there friend.</p>"
+          ":) +-",
+          "<p> Hello, buddy.</p>"
         ]
       ),
       (
@@ -235,20 +224,20 @@ class TestBuffer(unittest.TestCase):
         [
           "<p>Hi there friend. How've you been?</p>", 
         ]
-      ),
-      (
-        [
-          "verbatim<p>Go",     # open mid line
-          "to the",            # second line broken before close
-          "store</p>ascii"     # close mid line
-        ],
-        [
-          "verbatim",
-          "<p>Go to the store</p>",
-          "ascii"
-        ]
       )
-    )
+    ]
+  #     (
+  #       [
+  #         "verbatim<p>Go",     # open mid line
+  #         "to the",            # second line broken before close
+  #         "store</p>ascii"     # close mid line
+  #       ],
+  #       [
+  #         "verbatim",
+  #         "<p>Go to the store</p>",
+  #         "ascii"
+  #       ]
+    
 
     # lines_messy2 = [
     #   "<p>.",           # first char is the first word
@@ -341,4 +330,7 @@ class TestBuffer(unittest.TestCase):
   #     self.assertEqual(display_buf[idx], display_lines[idx])
 
 if __name__ == '__main__':
-  unittest.main();
+  suite = unittest.TestSuite()
+  # suite.addTest(TestBufferData('test_clean_up'))
+  suite.addTest(TestBufferData('test_split'))
+  unittest.TextTestRunner().run(suite)

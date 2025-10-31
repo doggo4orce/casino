@@ -88,138 +88,45 @@ class buffer_data:
   def make_copy(self):
     return copy.deepcopy(self)
 
-  # EXPLAIN EXACTLY WHAT THIS DOES
+  def split(self, l, c):
+    temp = self[l]
+    self.delete_line(l)
+    self.insert_line(l, temp[c:])
+    self.insert_line(l, temp[:c])
+
+  # note, use the split function written above
+  # def pre_clean_up(self):
+  #   # look for any lines interupted by <p>
+  #   pattern = re.compile(rf'([\s\S])*?{OPEN_PARAGRAPH}')
+  #   # EXPLAIN EXACTLY WHAT THIS DOES
   def clean_up(self):
-    original = self.str(numbers=False)
+    buffer_string = self.str(numbers=False)
     clean = ""
-    first_search = True
 
-    # group 0: the whole match
-    # group 1: \r\n if match starts with \r\n, otherwise null
-    # group 2: everything between paragraph tags
-    # group 3: everything after paragraph tags, might be null
-    # group 4: \r\n if \r\n immediately follows paragraph tags, otherwise null
-
-    pattern = re.compile(
-      r'((?:\r\n)?){}((?:.*?(?:\r\n)?)*?){}(((?:\r\n)?).*)'.format(
-        OPEN_PARAGRAPH,
-        CLOSE_PARAGRAPH)
-    )
+    pattern = re.compile(rf'{OPEN_PARAGRAPH}([\s\S]*?){CLOSE_PARAGRAPH}')
 
     while True:
-      match = re.search(pattern, original)
+      match = re.search(pattern, buffer_string)
 
       if match == None:
-        clean += original
+        clean += buffer_string
         break
 
       j = match.span()[0] # beginning of match
       k = match.span()[1] # beginning of suffix
 
-      if first_search and j == 0:
-        pre_line_break = ""
-      else:
-        pre_line_break = "\r\n"
+      # content between paragraph tags
+      paragraph = match.group(1)
 
-      # this inserts a newline after paragraph, if there is more text immediately
-      if match.group(4) == "" and match.group(3) != "":
-        post_line_break = "\r\n"
-      else:
-        post_line_break = ""
-
-      # if previous line ended in space, we'll have ' \r\n', which should just be ' '
-      paragraph = match.group(2).replace(' \r\n', ' ')
-
-      # if final line consisted of only </p>, we have an extra trailing '\r\n'
-      paragraph = paragraph.rstrip()
-
-      # any remaining '\r\n' should just be ' '
-      paragraph = paragraph.replace('\r\n', ' ')
-
-      clean += "{}{}{}{}{}{}".format(
-        original[:j],
-        pre_line_break,
+      clean += "{}{}{}{}".format(
+        buffer_string[:j],
         OPEN_PARAGRAPH,
-        paragraph,
+        string_handling.clean_up_paragraph(paragraph),
         CLOSE_PARAGRAPH,
-        post_line_break,
-        match.group(3)
       )
 
-      original = match.group(3)
-
-      first_search = False
-
-    return buffer_data(clean)    
-
-  # EXPLAIN EXACTLY WHAT THIS DOES
-  def clean_up_backup(self):
-    original = self.str(numbers=False)
-    clean = ""
-    first_search = True
-
-    # group 0: the whole match
-    # group 1: \r\n if match starts with \r\n, otherwise null
-    # group 2: everything between paragraph tags
-    # group 3: \r\n if match ends with \r\n, otherwise null
-
-    pattern = re.compile(
-      r'((?:\r\n)?){}((?:.*?(?:\r\n)?)*?){}((?:\r\n)?)'.format(
-        OPEN_PARAGRAPH,
-        CLOSE_PARAGRAPH)
-    )
-
-    while True:
-      match = re.search(pattern, original)
-
-      if match == None:
-        clean += original
-        break
-
-      print(f"Group 0: {repr(match.group(0))}\r\nGroup 1: {repr(match.group(1))}\r\nGroup 2: {repr(match.group(2))}\r\nGroup 3: {repr(match.group(3))}")
-
-      j = match.span()[0] # beginning of match
-      k = match.span()[1] # beginning of suffix
-
-      print(f"j: {j}\r\nk: {k}")
-
-      print(f"j-k contents: [{original[j:k]}]")
-
-      if first_search and j == 0:
-        pre_line_break = ""
-      else:
-        pre_line_break = "\r\n"
-
-      # here is what I should to use to split the string at </p> if it occurs mid line
-      post_line_break = match.group(3)
-
-      print(f"Group 2: {repr(match.group(2))}")
-
-      # if previous line ended in space, we'll have ' \r\n', which should just be ' '
-      paragraph = match.group(2).replace(' \r\n', ' ')
-
-      print(f"Paragraph: {repr(paragraph)}")
-
-      # if final line consisted of only </p>, we have an extra trailing '\r\n'
-      paragraph = paragraph.rstrip()
-
-      # any remaining '\r\n' should just be ' '
-      paragraph = paragraph.replace('\r\n', ' ')
-
-      print(f"Paragraph: {repr(paragraph)}")
-
-      clean += "{}{}{}{}{}{}".format(
-        original[:j],
-        pre_line_break,
-        OPEN_PARAGRAPH,
-        paragraph,
-        CLOSE_PARAGRAPH,
-        post_line_break
-      )
-
-      original = original[k:]
-
-      first_search = False
+      # trim what was already processed
+      buffer_string = buffer_string[k:]
 
     return buffer_data(clean)    
 

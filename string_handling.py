@@ -173,6 +173,31 @@ def parse_reference_old(code):
 
   return None, None
 
+def clean_up_paragraph(paragraph):
+  # trim any leading linebreaks
+  while True:
+    if paragraph.startswith('\r\n'):
+      paragraph = paragraph.replace('\r\n', '', 1)
+    else:
+      break
+
+  # trim any repeated linebreaks
+  while True:
+    if paragraph.find('\r\n\r\n') == -1:
+      break
+    paragraph = paragraph.replace('\r\n\r\n', '\r\n')
+
+  # if linebreak happens between two spaces, delete the linebreak and one of the spaces
+  paragraph = paragraph.replace(' \r\n ', ' ')
+
+  # if linebreak happens after line that ends on a space, delete the linebreak
+  paragraph = paragraph.replace(' \r\n', ' ')
+
+  # replace all other line breaks with spaces
+  paragraph = paragraph.replace('\r\n', ' ')
+
+  return paragraph
+  
 # returns a cleaned up version of "Hello , how are     you guys ?"
 def proofread(paragraph):
 

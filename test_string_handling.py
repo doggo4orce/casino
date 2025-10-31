@@ -143,7 +143,7 @@ class TestStringHandling(unittest.TestCase):
       ),
       (
          "  hey dude.. . . what\r\n is going on with \r\n              this paragraph right  ?  It's soooooooo stupid .\r\n",
-         "Hey dude....  What is going on with this paragrpah right?  It's soooooooo stupid."
+         "Hey dude....  What is going on with this paragraph right?  It's soooooooo stupid."
       )
     )
 
@@ -190,6 +190,21 @@ class TestStringHandling(unittest.TestCase):
     )
 
     self.assertEqual(string_handling.proc_color(pre), post)
+
+  def test_clean_up_paragraph(self):
+    pairs = (
+      (
+        '... .. ...\r\n... ... \r\n....',
+        '... .. ... ... ... ....'
+      ),
+      (
+        '... \r\n ... ..\r\n\r\n.. \r\n\r\n\r\n ...',
+        '... ... .. .. ...'
+      )
+    )
+
+    for pair in pairs:
+      self.assertEqual(string_handling.clean_up_paragraph(pair[0]), pair[1])
 
 if __name__ == '__main__':
   #x = string_handling.proofread("This sentence , has three   periods   .  .  .")

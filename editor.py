@@ -68,6 +68,8 @@ def editor_handle_input(d, input):
 
   return False
 
+# TODO I've since written a buffer_data.split() function which can
+# probably be called directly in this code
 def editor_split_line(d, split):
   pattern = re.compile(r'(\d+) \'(.*)\'')
   match = re.search(pattern, split)

@@ -95,25 +95,49 @@ class buffer_data:
     self.insert_line(l, temp[:c])
 
   # note, use the split function written above
-  # def pre_clean_up(self):
-  #   # look for any lines interupted by <p>
-  #   pattern = re.compile(rf'([\s\S])*?{OPEN_PARAGRAPH}')
-  #   # EXPLAIN EXACTLY WHAT THIS DOES
+  def pre_clean_up(self):
+    buffer_string = self.str(numbers=False)
+    clean = ""
+
+    # look for any lines interupted by <p>
+    pattern = re.compile(rf'([^\r\n]*{OPEN_PARAGRAPH}')
+
+    while True:
+      match = re.search(pattern, buffer_string)
+
+      if match is None:
+        clean += buffer_string
+        break
+
+      j = match.span()[0] # beginning of match
+      k = match.span()[1] # immediately follows OPEN_PARAGRAPH
+
+      # content before paragraph tag
+      partial_line = match.group(1)
+
+      clean += "{}{}{}".format(
+        buffer_string[:j],
+        "\r\n",
+        OPEN_PARAGRAPH
+      )
+
+  # TODO: add better documentation for this function
   def clean_up(self):
     buffer_string = self.str(numbers=False)
     clean = ""
 
+    # look for text enclosed with paragraph tags
     pattern = re.compile(rf'{OPEN_PARAGRAPH}([\s\S]*?){CLOSE_PARAGRAPH}')
 
     while True:
       match = re.search(pattern, buffer_string)
 
-      if match == None:
+      if match is None:
         clean += buffer_string
         break
 
       j = match.span()[0] # beginning of match
-      k = match.span()[1] # beginning of suffix
+      k = match.span()[1] # immediately follows CLOSE_PARAGRAPH
 
       # content between paragraph tags
       paragraph = match.group(1)

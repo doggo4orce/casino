@@ -24,7 +24,10 @@ class baccarat_hand_data:
   def ascii_rep_banker(self, idx, row):
     return self.ascii_rep(self._banker, idx, row)
 
-  """add_card(card, target) <-- adds the card to either the player or banker's hand
+  """num_player_cards()     <-- count the number of player cards
+     num_banker_cards()     <-- count the number of banker cards
+     clear()                <-- remove all cards from hand and start fresh
+     add_card(card, target) <-- adds the card to either the player or banker's hand
      add_player(name)       <-- add a player to the game
      card_value(card)       <-- returns 7 if card is a SEVEN, 10 for a KING, etc.
      hand_value(cards)      <-- determines the score based on list of cards
@@ -44,6 +47,10 @@ class baccarat_hand_data:
 
   def num_banker_cards(self):
     return len(self._banker)
+
+  def clear(self):
+    self._player = list()
+    self._banker = list()
 
   def add_card(self, card, target):
     if target == "player":

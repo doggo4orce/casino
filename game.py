@@ -203,7 +203,7 @@ class game:
     b_dealer = cards.card_dealer.from_npc(b_dealer)
     b_dealer = baccarat_dealer.baccarat_dealer.from_card_dealer(b_dealer)
     b_dealer.room = structs.unique_identifier.from_string('stockville[casino]')
-    b_dealer.bac_state = baccarat_dealer.baccarat_dealer_state.BEGIN_SHOE
+    b_dealer.bac_state = baccarat_dealer.baccarat_dealer_state.IDLE
     self.add_char(b_dealer)
 
     baker = self.load_npc('stockville[baker]')

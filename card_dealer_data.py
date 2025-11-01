@@ -70,7 +70,9 @@ class card_dealer_data(npc_data.npc_data):
 
   def draw(self):
     if len(self._shoe) > 0:
-      return self._shoe.draw()
+      card = self._shoe.draw()
+      print(card.debug())
+      return card
     else:
       mudlog.error(f"{self.name} is trying to draw card from empy shoe.")
 

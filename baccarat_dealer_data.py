@@ -94,7 +94,7 @@ class baccarat_dealer_data(card_dealer_data.card_dealer_data):
     # shortcuts
     banker_score = self.hand.banker_score()
     player_third = None
-    if len(self.hand.player) == 3:
+    if len(self._hand.num_player_cards()) == 3:
       player_third = baccarat_hand.card_value(self.hand.player[2])
     if player_third == None:
       return banker_score in {0,1,2,3,4,5}

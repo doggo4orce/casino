@@ -82,7 +82,8 @@ class TestBaccaratProcs(unittest.TestCase):
     # dealer should be ready to start a shoe
     self.assertEqual(dealer.bac_state, baccarat_dealer_data.baccarat_dealer_state.BEGIN_SHOE)
 
-    baccarat_procs.baccarat_dealing(mud, dealer, db)
+    for j in range(0,13):
+      baccarat_procs.baccarat_dealing(mud, dealer, db)
 
     print(dealer.debug())
     # self.assertEqual(dealer.bac_state, baccarat_dealer_data.baccarat_dealer_state.SHUFFLE_SHOE)

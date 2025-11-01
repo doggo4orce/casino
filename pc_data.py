@@ -88,7 +88,7 @@ class pc_data(character_data.character_data):
       self.descriptor.write(message)
 
   def debug(self):
-    ret_val = super().debug()
+    ret_val = super().debug() + "\r\n"
     ret_val += f"Descriptor: {CYAN}{self.descriptor}{NORMAL}\r\n"
     ret_val += f"Id: {CYAN}{self.player_id}{NORMAL}\r\n"
     ret_val += self.numeric_prefs.debug()

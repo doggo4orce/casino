@@ -626,7 +626,7 @@ class database:
     rm.name = "Reading Room"
     rm.zone_id = "stockville"
     rm.id = "reading"
-    rm.desc = """<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>"
+    rm.desc = """<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
 
   <c9>HINT HINT<c0>:  Time to make a message board!
   ---------

@@ -241,7 +241,7 @@ def do_help(ch, scmd, argument, server, mud, db):
 def do_client(ch, scmd, argument, server, mud, db):
   have_info = False
 
-  ci = ch.d.client_info
+  ci = ch.descriptor.client
 
   out_str = "Connection Information:\r\n"
   
@@ -382,7 +382,7 @@ def do_gossip(ch, scmd, argument, server, mud, db):
   ch.write(f"{YELLOW}You gossip, '{argument}'{NORMAL}\r\n")
 
 def do_say(ch, scmd, argument, server, mud, db):
-  rm = mud.room_by_code(ch.room)
+  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
   rm.echo(f"{ch} says, '{argument}'\r\n", exceptions=[ch])
   ch.write(f"You say, '{argument}'\r\n")
 
@@ -402,8 +402,8 @@ def do_title(ch, scmd, argument, server, mud, db):
 
 def do_score(ch, scmd, argument, server, mud, db):
   out_str  = f"{GREEN}Name{NORMAL})      {ch.Name}\r\n"
-  out_str += f"{GREEN}Client{NORMAL})    {ch.d.client_info.term_type}\r\n"
-  out_str += f"{GREEN}Screen{NORMAL})    {ch.d.client_info.term_length}x{ch.d.client_info.term_width}\r\n"
+  out_str += f"{GREEN}Client{NORMAL})    {ch.descriptor.client.term_type}\r\n"
+  out_str += f"{GREEN}Screen{NORMAL})    {ch.descriptor.client.term_length}x{ch.d.client_info.term_width}\r\n"
 
   if ch.debug_mode:
     out_str += f"{GREEN}Room{NORMAL})      {ch.room}\r\n"
@@ -523,7 +523,7 @@ def show_room_to_char(ch, rm):
 
   out_buf += f'\r\n{CYAN}{rm.display_exits()}{NORMAL}\r\n'
 
-  for tch in rm.people:s
+  for tch in rm.people:
     if tch != ch:
       out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.screen_width, False)}{NORMAL}"
       if type(tch) == pc_data.pc_data and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
@@ -609,7 +609,7 @@ def do_move(ch, scmd, argument, server, mud, db):
 #     line = ""
 #     for i in range(0, 16):
 #       line += f"{ansi_color_sequence(10*j + i)}*"
-#     ch.d.write(line + "\r\n" + NORMAL)
+#     ch.descriptor.write(line + "\r\n" + NORMAL)
 
 def do_quit(ch, scmd, argument, server, mud, db):
   d = ch.d

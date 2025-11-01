@@ -1,5 +1,7 @@
 from color import *
-
+import cmd_trig_data
+import commands
+import config
 import baccarat_dealer_data
 import baccarat_hand_data
 import baccarat_shoe_data
@@ -14,7 +16,7 @@ import mudlog
    baccarat_dealing()        <- handles the baccarat game"""
 
 def baccarat_dealer_history(mud, me, ch, command, argument, db):
-  if not isinstance(me, baccarat_dealer):
+  if not isinstance(me, baccarat_dealer_data.baccarat_dealer_data):
     mudlog.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
 
@@ -52,7 +54,7 @@ def baccarat_dealer_history(mud, me, ch, command, argument, db):
   return cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER
 
 def baccarat_dealer_intro(mud, me, ch, command, argument, db):
-  if not isinstance(me, baccarat_dealer):
+  if not isinstance(me, baccarat_dealer_data.baccarat_dealer_data):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
   if command == "say" and argument.lower() == "hi":
@@ -60,7 +62,7 @@ def baccarat_dealer_intro(mud, me, ch, command, argument, db):
     return
 
 def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
-  if not isinstance(me, baccarat_dealer):
+  if not isinstance(me, baccarat_dealer_data.baccarat_dealer_data):
     logging.warning(f"Attempting to call inappropriate spec_proc 'baccarat_dealer_syntax_parser' on npc {me}.")
     return
 
@@ -85,7 +87,7 @@ def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
       baccarat_dealer_state.LAST_CALL_BETS,
       baccarat_dealer_state.NO_MORE_BETS]:  # <-- hasn't quite said no more bets
       ch.write("The dealer slaps you.\r\n")
-      return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+      return cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER
     else:
       ch.write("You put a red chip down on the table.\r\n")
       return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
@@ -97,15 +99,16 @@ def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
         names = [name.capitalize() for name in me.players]
         commands.do_say(me, None, f"Right now, we have {string_handling.oxford_comma(names)} playing.", None, mud, db)
     elif argument.lower() == "stop":
-      me.bac_state = baccarat_dealer_state.IDLE
+      me.bac_state = baccarat_dealer_data.baccarat_dealer_state.IDLE
     elif argument.lower() in ["start", "simulate"]:
-      if me.bac_state != baccarat_dealer_state.IDLE:
+      if me.bac_state != baccarat_dealer_data.baccarat_dealer_state.IDLE:
         ch.write("There is already a game in progress!\r\n")
         return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
       ch.write("You signal to the dealer to start the next shoe.\r\n")
+      mudlog.debug(f"{ch} signals to the dealer to start the next shoe.")
       mud.echo_around(ch, None, f"{ch} signals to the dealer to start the next shoe.\r\n")
       me.bac_paused = 10
-      me.bac_state = baccarat_dealer_state.BEGIN_SHOE
+      me.bac_state = baccarat_dealer_data.baccarat_dealer_state.BEGIN_SHOE
   
       if argument.lower() == "simulate":
         me.simulation_mode = True
@@ -123,7 +126,7 @@ def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
 
     else:
       ch.write(help_str)
-    return spec_procs.prefix_command_trigger_messages.BLOCK_INTERPRETER
+    return cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER
   elif command == "bet":
     if argument.lower() in ["player", "banker"]:
       pass
@@ -146,7 +149,8 @@ def baccarat_dealing(mud, me, db):
     return
   
   if me.bac_state == baccarat_dealer_data.baccarat_dealer_state.BEGIN_SHOE:
-    me.shoe = baccarat_shoe_data.baccarat_shoe_data(NUM_DECKS)
+    me.new_hand()
+    me.give_french_decks(NUM_DECKS)
     mud.echo_around(me, None, f"{me} assembles a new shoe consisting of {NUM_DECKS} deck{'s' if NUM_DECKS > 1 else ' '}.\r\n")
     me.bac_state = baccarat_dealer_data.baccarat_dealer_state.SHUFFLE_SHOE
     pause = 30

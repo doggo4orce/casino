@@ -206,8 +206,8 @@ def handle_next_input(d, server, mud, db):
         else:
           new_player.id = db.id_by_name(d.login_info.name)
 
-        d.char = new_player
-        d.char.d = d
+        d.chararacter = new_player
+        d.character.descriptor = d
         d.write("Welcome!  Have a great time!\r\n")
         d.state = descriptor_data.descriptor_state.CHATTING
         logging.info(f"{d.login_info.name} has entered the game.")
@@ -221,7 +221,7 @@ def handle_next_input(d, server, mud, db):
 
         db.load_flag_prefs(d.char)
 
-      elif ch.d:
+      elif ch.descriptor:
         d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
         d.state = descriptor_data.descriptor_state.GET_CONFIRM_REPLACE
       else:

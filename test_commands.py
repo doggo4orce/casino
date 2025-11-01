@@ -130,5 +130,7 @@ class TestCommands(unittest.TestCase):
     self.assertIn(ch, c_room.people)
     self.assertNotIn(ch, u_room.people)
 
+  def test_move_away_from_mob_with_scripts(self):
+    
 if __name__ == '__main__':
   unittest.main()

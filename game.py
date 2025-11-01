@@ -251,17 +251,17 @@ class game:
 
   def lose_link(self, ch):
     self.room_by_code(ch.room).echo(f"{ch} has lost his link.\r\n")
-    ch.d = None
+    ch.descriptor = None
 
   def reconnect(self, d, ch):
     # they might already have a connection
-    if ch.d:
+    if ch.descriptor:
       # if so, kick it off
-      ch.d.disconnected = True
-      ch.d.character = None
+      ch.descriptor.disconnected = True
+      ch.descriptor.character = None
     # now connect to the linkless char
     d.character = ch
-    ch.d = d
+    ch.descriptor = d
 
 if __name__ == '__main__':
   pass

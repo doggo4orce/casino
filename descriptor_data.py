@@ -56,7 +56,7 @@ class descriptor_data:
     self.client       = client_data.client_data(None, None, None, host)
     self.login_info   = login_data(None, None)
     self.disconnected = False
-    self.char         = None
+    self.character    = None
     self.olc          = None
     self.write_buffer = None
     self.write_target = None

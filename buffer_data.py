@@ -1,3 +1,4 @@
+import buffer_parser
 from color import *
 import config
 import copy
@@ -94,65 +95,70 @@ class buffer_data:
     self.insert_line(l, temp[c:])
     self.insert_line(l, temp[:c])
 
-  # note, use the split function written above
-  def pre_clean_up(self):
-    buffer_string = self.str(numbers=False)
-    clean = ""
-
-    # look for any lines interupted by <p>
-    pattern = re.compile(rf'([^\r\n]*{OPEN_PARAGRAPH}')
-
-    while True:
-      match = re.search(pattern, buffer_string)
-
-      if match is None:
-        clean += buffer_string
-        break
-
-      j = match.span()[0] # beginning of match
-      k = match.span()[1] # immediately follows OPEN_PARAGRAPH
-
-      # content before paragraph tag
-      partial_line = match.group(1)
-
-      clean += "{}{}{}".format(
-        buffer_string[:j],
-        "\r\n",
-        OPEN_PARAGRAPH
-      )
-
-  # TODO: add better documentation for this function
   def clean_up(self):
-    buffer_string = self.str(numbers=False)
-    clean = ""
+    parser = buffer_parser.buffer_parser()
+    clean_buffer = parser.parse_string(self.str(numbers=False))
+    return buffer_data(clean_buffer)
 
-    # look for text enclosed with paragraph tags
-    pattern = re.compile(rf'{OPEN_PARAGRAPH}([\s\S]*?){CLOSE_PARAGRAPH}')
+  # # note, use the split function written above
+  # def pre_clean_up(self):
+  #   buffer_string = self.str(numbers=False)
+  #   clean = ""
 
-    while True:
-      match = re.search(pattern, buffer_string)
+  #   # look for any lines interupted by <p>
+  #   pattern = re.compile(rf'([^\r\n]*{OPEN_PARAGRAPH}')
 
-      if match is None:
-        clean += buffer_string
-        break
+  #   while True:
+  #     match = re.search(pattern, buffer_string)
 
-      j = match.span()[0] # beginning of match
-      k = match.span()[1] # immediately follows CLOSE_PARAGRAPH
+  #     if match is None:
+  #       clean += buffer_string
+  #       break
 
-      # content between paragraph tags
-      paragraph = match.group(1)
+  #     j = match.span()[0] # beginning of match
+  #     k = match.span()[1] # immediately follows OPEN_PARAGRAPH
 
-      clean += "{}{}{}{}".format(
-        buffer_string[:j],
-        OPEN_PARAGRAPH,
-        string_handling.clean_up_paragraph(paragraph),
-        CLOSE_PARAGRAPH,
-      )
+  #     # content before paragraph tag
+  #     partial_line = match.group(1)
 
-      # trim what was already processed
-      buffer_string = buffer_string[k:]
+  #     clean += "{}{}{}".format(
+  #       buffer_string[:j],
+  #       "\r\n",
+  #       OPEN_PARAGRAPH
+  #     )
 
-    return buffer_data(clean)    
+  # # TODO: add better documentation for this function
+  # def clean_up(self):
+  #   buffer_string = self.str(numbers=False)
+  #   clean = ""
+
+  #   # look for text enclosed with paragraph tags
+  #   pattern = re.compile(rf'{OPEN_PARAGRAPH}([\s\S]*?){CLOSE_PARAGRAPH}')
+
+  #   while True:
+  #     match = re.search(pattern, buffer_string)
+
+  #     if match is None:
+  #       clean += buffer_string
+  #       break
+
+  #     j = match.span()[0] # beginning of match
+  #     k = match.span()[1] # immediately follows CLOSE_PARAGRAPH
+
+  #     # content between paragraph tags
+  #     paragraph = match.group(1)
+
+  #     clean += "{}{}{}{}".format(
+  #       buffer_string[:j],
+  #       OPEN_PARAGRAPH,
+  #       string_handling.clean_up_paragraph(paragraph),
+  #       CLOSE_PARAGRAPH,
+  #     )
+
+  #     # trim what was already processed
+  #     buffer_string = buffer_string[k:]
+
+  #   return buffer_data(clean)    
 
   def display(self, width, indent=True, numbers=False, color=True):
     temp_buf = self.make_copy()
@@ -161,11 +167,11 @@ class buffer_data:
     temp_buf = temp_buf.clean_up()
 
     for line in temp_buf:
-      print(f"Before paragraph check:\r\n[{line}]\r\n")
+      # print(f"Before paragraph check:\r\n[{line}]\r\n")
       if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
-        print(f"Line: \r\n{line}\r\n passed paragraph check")
+        # print(f"Line: \r\n{line}\r\n passed paragraph check")
         line = line[len(OPEN_PARAGRAPH):(-1)*len(CLOSE_PARAGRAPH)]
-        print(f"After trimming:\r\n{line}\r\n")
+        # print(f"After trimming:\r\n{line}\r\n")
         line = string_handling.paragraph(line, width, indent)
         # print(f"After formatting:\r\n{line}\r\n")
 

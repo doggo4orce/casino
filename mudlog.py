@@ -1,3 +1,4 @@
+import config
 import enum
 import logging
 
@@ -9,9 +10,10 @@ logging.basicConfig(
 )
 
 class mudlog_type(enum.IntEnum):
-  INFO = 0
-  WARNING = 1
-  ERROR = 2
+  DEBUG = 0
+  INFO = 1
+  WARNING = 2
+  ERROR = 3
 
 def mudlog(type, msg):
 
@@ -25,6 +27,9 @@ def mudlog(type, msg):
     case mudlog_type.ERROR:
       log_func = logging.error
       msg = f"ERROR: {msg}"
+    case mudlog_type.DEBUG:
+      log_func = logging.info
+      msg = f"DEBUG: {msg}"
     case _:
       logging.error(f"Unrecognized log type {type} received, assuming error.")
       log_func = logging.error
@@ -46,3 +51,7 @@ def warning(msg):
 
 def error(msg):
   mudlog(mudlog_type.ERROR, msg)
+
+def debug(msg):
+  if config.DEBUG_MODE:
+    mudlog(mudlog_type.DEBUG, msg)

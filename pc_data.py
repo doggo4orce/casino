@@ -61,17 +61,17 @@ class pc_data(character_data.character_data):
 
   # numeric prefs properties
   @property
-  def screen_width(self):
-    return self.numeric_prefs.screen_width
+  def page_width(self):
+    return self.numeric_prefs.page_width
   @property
-  def screen_length(self):
-    return self.numeric_prefs.screen_length
+  def page_length(self):
+    return self.numeric_prefs.page_length
 
   # text prefs properties
   @property
   def color_mode(self):
     return self.text_prefs.color_mode
-  
+
   """set_pref(str, val) <- updates preference with name str to val (see do_prefs in commands.py)
      save_char(db)      <- saves character to database
      write(msg)         <- sends msg to descriptor controlling self"""
@@ -79,9 +79,9 @@ class pc_data(character_data.character_data):
   def set_pref(self, attr_str, new_val):
     self.preferences.set(attr_str, new_val)
 
-  # def save_char(self, db):
-  #   db.save_player(self)
-  #   db.save_prefs(self)
+  def save_char(self, db):
+    db.save_player(self)
+    db.save_preferences(self)
 
   def write(self, message):
     if self.descriptor != None:

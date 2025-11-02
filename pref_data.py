@@ -33,16 +33,17 @@ class pref_data:
 @dataclasses.dataclass
 class pref_data_numeric(pref_data):
   """Derived pref_data class to store numeric preferences.
-     screen_width = width that text should be formatted to
-     screen_length = (not yet used) for formatting large output"""
-  screen_width:  int = config.DEFAULT_SCREEN_WIDTH
-  screen_length: int = config.DEFAULT_SCREEN_LENGTH
+     page_width = width that text should be formatted to
+     page_length = (not yet used) for formatting large output"""
+  page_width:  int = config.DEFAULT_PAGE_WIDTH
+  page_length: int = config.DEFAULT_PAGE_LENGTH
 
 @dataclasses.dataclass
 class pref_data_text(pref_data):
   """Derived pref_data class to store text preferences.
      color_mode = element of ['off', '16', or '256']"""
   color_mode: str = config.DEFAULT_COLOR_MODE
+  # title does NOT Belong here
   title:      str = config.DEFAULT_TITLE
 
 @dataclasses.dataclass

@@ -256,69 +256,72 @@ def do_client(ch, scmd, argument, server, mud, db):
 
   ch.write(out_str)
 
-def do_db(ch, scmd, argument, server, mud, db):
-  db_help = "Use the following syntax:\r\n"
-  db_help += f"  db show tables          - list table in database\r\n"
-  db_help += f"  db rows <table name>    - show rows of a table\r\n"
-  db_help += f"  db reset confirm        - reset database to stock\r\n"
-  db_help += f"  db columns <table name> - show columns of a table\r\n"
+# def do_db(ch, scmd, argument, server, mud, db):
+#   db_help = "Use the following syntax:\r\n"
+#   db_help += f"  db show tables          - list table in database\r\n"
+#   db_help += f"  db rows <table name>    - show rows of a table\r\n"
+#   db_help += f"  db reset confirm        - reset database to stock\r\n"
+#   db_help += f"  db columns <table name> - show columns of a table\r\n"
 
-  args = argument.split()
-  num_args = len(args)
+#   args = argument.split()
+#   num_args = len(args)
 
-  if num_args == 0:
-    ch.write(db_help)
-    return
-  if num_args == 2:
-    if args[0] == "reset" and args[1] == "confirm":
-      ch.write("Resetting 'data.db' to stock condition.  Perform a copyover to reset the world.")
-      db.drop_tables()
-      db.create_tables()
-      db.load_stock()
-      return
-    if args[0] == "show":
-      if args[1] == "tables":
-        table_buf = "The following tables exist in the database:\r\n"
-        for table_name in db.table_list():
-          table_buf += f"  {table_name:<{20}} {db.row_count(table_name)} rows loaded\r\n"
-        ch.write(table_buf)
-        return
-    if args[0] == "columns":
-      table_name = args[1]
+#   if num_args == 0:
+#     ch.write(db_help)
+#     return
+#   if num_args == 2:
+#     if args[0] == "reset" and args[1] == "confirm":
+#       ch.write("Resetting 'data.db' to stock condition.  Perform a copyover to reset the world.")
+#       db.drop_tables()
+#       db.create_tables()
+#       db.load_stock()
+#       return
+#     if args[0] == "show":
+#       if args[1] == "tables":
+#         table_buf = "The following tables exist in the database:\r\n"
+#         for table_name in db.list_tables():
+#           table_buf += f"  {table_name:<{20}} {db.num_records(table_name)} rows loaded\r\n"
+#         ch.write(table_buf)
+#         return
+#     if args[0] == "columns":
+#       table_name = args[1]
 
-      if table_name not in db.table_list():
-        ch.write("That table does not exist.\r\n")
-        return
-      else:
-        table_buf = f"The following columns exist for {args[1]}:\r\n"
-        for column in db.column_list(args[1]):
-          table_buf += f"  {column}\r\n"
-        ch.write(table_buf)
-        return
-    elif args[0] == "rows":
-      table_name = args[1]
+#       if table_name not in db.list_tables():
+#         ch.write("That table does not exist.\r\n")
+#         return
+#       else:
+#         table_buf = f"The following columns exist for {args[1]}:\r\n"
+#         for column in db.list_columns(args[1]):
+#           table_buf += f"  {column.name:<{20}} {column.sqlite3_type}\r\n"
+#         ch.write(table_buf)
+#         return
+#     elif args[0] == "rows":
+#       table_name = args[1]
 
-      if table_name not in db.table_list():
-        ch.write("That table does not exist.\r\n")
-        return
-      else:
-        table_buf = f"The following rows exist for {args[1]}:\r\n"
-        db.execute(f"SELECT * FROM {args[1]}")
-        for line in db.fetchall():
-          line_buf = ""
-          for col in line:
-            line_buf += f"{col:.16} ".ljust(16)
-          line_buf = line_buf[:-1]
-          table_buf += line_buf + "\r\n"
-        ch.write(table_buf)
-        return
+#       if table_name not in db.list_tables():
+#         ch.write("That table does not exist.\r\n")
+#         return
+#       else:
+#         table_buf = f"The following rows exist for {args[1]}:\r\n"
+#         db.execute(f"SELECT * FROM {args[1]}")
+#         for line in db.fetchall():
+#           line_buf = ""
+#           for col in line:
+#             line_buf += f"{col:.16} ".ljust(16)
+#           line_buf = line_buf[:-1]
+#           table_buf += line_buf + "\r\n"
+#         ch.write(table_buf)
+#         return
         
 
 def do_prefs(ch, scmd, argument, server, mud, db):
+  if not isinstance(ch, pc_data.pc_data):
+    return
+
   onoff = ['off', 'on']
   prefs_help = "Customizable Preferences:\r\n"
-  prefs_help += f"  screen_width   [{ORANGE}{ch.screen_width}{NORMAL}]\r\n"
-  prefs_help += f"  screen_length  [{ORANGE}{ch.screen_length}{NORMAL}]\r\n"
+  prefs_help += f"  page_width     [{ORANGE}{ch.page_width}{NORMAL}]\r\n"
+  prefs_help += f"  page_length    [{ORANGE}{ch.page_length}{NORMAL}]\r\n"
   prefs_help += f"  color_mode     [{ORANGE}{ch.color_mode}{NORMAL}]\r\n"
   prefs_help += "\r\n"
   prefs_help += f"To change one of these options, use: prefs set <option> <value>\r\n"
@@ -341,17 +344,17 @@ def do_prefs(ch, scmd, argument, server, mud, db):
       return
     option = args[1]
     value = args[2]
-    if option in ['screen_width', 'screen_length']:
+    if option in ['page_width', 'page_length']:
       if not value.isdecimal():
         ch.write(f"{option} must take an integer value.\r\n")
         return
-      ch.prefs.set(option, int(value))
+      ch.numeric_prefs.set(option, int(value))
     elif option == 'color_mode':
       accepted = ['off', '16', '256']
       if value not in accepted:
         ch.write(f"Acceptable values for {option} are {string_handling.oxford_comma(accepted)}.\r\n")
         return
-      ch.prefs.set(option, value)
+      ch.text_prefs.set(option, value)
     else:
       ch.write(f"Option '{option}' cannot be set.\r\n")
       return
@@ -378,7 +381,7 @@ def do_pindex(ch, scmd, argument, server, mud, db):
 def do_gossip(ch, scmd, argument, server, mud, db): 
   # TODO: change this function to write to all characters in the game so that we can work towards
   # not interacting with descriptors directly
-  server.write_all(f"{YELLOW}{ch} gossips, '{argument}'{NORMAL}\r\n", exceptions=[ch.d])
+  server.write_all(f"{YELLOW}{ch} gossips, '{argument}'{NORMAL}\r\n", exceptions=[ch.descriptor])
   ch.write(f"{YELLOW}You gossip, '{argument}'{NORMAL}\r\n")
 
 def do_say(ch, scmd, argument, server, mud, db):
@@ -390,7 +393,7 @@ def do_save(ch, scmd, argument, server, mud, db):
   ch.write(f"Saving {ch}.\r\n")
 
   db.save_player(ch)
-  db.save_prefs(ch)
+  db.save_preferences(ch)
 
 def do_title(ch, scmd, argument, server, mud, db):
   ch.title = argument
@@ -417,8 +420,11 @@ def do_who(ch, scmd, argument, server, mud, db):
   out_str += f"-------\r\n{YELLOW}"
 
   for d in d_dict.values():
-    if d.state == descriptor.descriptor_state.CHATTING:
-      out_str += f"{d.character.Name} {d.character.title}\r\n"
+    if d.state == descriptor_data.descriptor_state.CHATTING:
+      out_str += d.character.Name
+      if d.character.title is not None:
+        out_str += f" {d.character.title}"
+      out_str += "\r\n"
       num_online += 1
 
   if len(d_dict) > 1:
@@ -452,12 +458,12 @@ def do_copyover(ch, scmd, argument, server, mud, db):
   out_msg_others = f"\r\n{RED}Time stops for a moment as {ch} folds space and time.{NORMAL}\r\n"
   out_msg_self = f"\r\n{RED}Time stops for a moment as you fold space and time.{NORMAL}\r\n"
 
-  server.write_all(out_msg_others, exceptions = [ch.d])
+  server.write_all(out_msg_others, exceptions = [ch.descriptor])
   ch.write(out_msg_self)
 
   with open(config.COPYOVER_PATH, "w") as wf:
     for id, td in server.descriptors.items():
-      if td.state != descriptor.descriptor_state.CHATTING:
+      if td.state != descriptor_data.descriptor_state.CHATTING:
         td.write("Rebooting, come back in a few seconds.\r\n")
         continue
 
@@ -465,15 +471,16 @@ def do_copyover(ch, scmd, argument, server, mud, db):
 
       fd = td.fileno()
       name = td.character.name.lower()
-      typ = td.socket.type
-      host = td.client_info.term_host
-      ttype = td.client_info.term_type
-      twidth = td.client_info.term_width
-      tlength = td.client_info.term_length
+      typ = td.type
+      host = td.client.term_host
+      ttype = td.client.term_type
+      twidth = td.client.term_width
+      tlength = td.client.term_length
 
       wf.write(f"{fd} {name} {typ} {host} {ttype} {twidth} {tlength}\n")
 
-  server.copyover_cmd = True
+  # TODO: this shouldn't be touching a private field, but I also don't think copyover_cmd should be public either.  do I need to write a function to modify this cleanly?
+  server._copyover_cmd = True
 
 def do_look(ch, scmd, argument, server, mud, db):
   args = argument.split()
@@ -510,30 +517,25 @@ def do_look(ch, scmd, argument, server, mud, db):
       ch.write(f"You see no {args[0]} here.\r\n")
 
 def show_room_to_char(ch, rm):
-  out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.numeric_prefs.screen_width, False)}{NORMAL}\r\n'
+  out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.page_width, False)}{NORMAL}\r\n'
   room_desc = buffer_data.buffer_data(rm.desc)
   room_desc = room_desc.clean_up()
 
   if not ch.brief_mode:
-    out_buf += room_desc.display(ch.screen_width, indent=True, color=True,numbers=False)
-  
-  # desc = rm.desc
-  # desc = string_handling.paragraph(desc, ch.numeric_prefs.screen_width, True)
-  # desc = string_handling.proc_color(desc)
+    out_buf += room_desc.display(ch.page_width, indent=True, color=True,numbers=False) + '\r\n'
 
-  out_buf += f'\r\n{CYAN}{rm.display_exits()}{NORMAL}\r\n'
+  out_buf += f'{CYAN}{rm.display_exits()}{NORMAL}\r\n'
 
   for tch in rm.people:
     if tch != ch:
-      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.screen_width, False)}{NORMAL}"
+      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.page_width, False)}{NORMAL}"
       if type(tch) == pc_data.pc_data and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
         out_buf += " (olc)"
       out_buf += "\r\n"
 
   for obj in rm.contents:
-    out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.screen_width, False)}{NORMAL}\r\n"
+    out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.page_width, False)}{NORMAL}\r\n"
 
-  print(out_buf)
   ch.write(out_buf)
 
 def show_char_to_char(ch, tch):
@@ -612,10 +614,10 @@ def do_move(ch, scmd, argument, server, mud, db):
 #     ch.descriptor.write(line + "\r\n" + NORMAL)
 
 def do_quit(ch, scmd, argument, server, mud, db):
-  d = ch.d
-  room = mud.room_by_code(ch.room)
+  d = ch.descriptor
+  room = mud.room_by_uid(ch.room.zone_id, ch.room.id)
   ch.save_char(db)
-  mud.extract_char(ch)
+  mud.extract_character(ch)
 
   for tch in room.people:
      if tch != ch:
@@ -623,5 +625,5 @@ def do_quit(ch, scmd, argument, server, mud, db):
 
   ch.write("Goodbye!\r\n")
   d.has_prompt = True
-  server.just_leaving.append(d.id)
+  server.quit(d)
 

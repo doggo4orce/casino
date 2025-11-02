@@ -30,8 +30,8 @@ VOID_ROOM              = 'void@stockville'
 PLAYER_PROMPT          = '> '
 
 # player preferences
-DEFAULT_SCREEN_LENGTH  = 50
-DEFAULT_SCREEN_WIDTH   = 80
+DEFAULT_PAGE_LENGTH    = 50
+DEFAULT_PAGE_WIDTH     = 80
 DEFAULT_COLOR_MODE     = '256'
 DEFAULT_BRIEF_MODE     = False
 DEFAULT_ACTIVE_IDLE    = False

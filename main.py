@@ -27,7 +27,7 @@ network = server.server()
 mud = game_data.game_data()
 
 # fire up database
-db = database.database(":memory:")
+db = database.database(config.DATABASE_FILE)
 db.connect()
 db.create_tables()
 db.load_stock()

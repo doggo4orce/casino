@@ -54,6 +54,7 @@ class db_handler:
     self._cursor = self._connection.cursor()
 
   def execute(self, query, parameters = ()):
+    # print(query)
     return self._cursor.execute(query, parameters)
 
   def commit(self):
@@ -239,8 +240,10 @@ class db_handler:
     for field in result.fields:
       ret_val.add_column(field)
 
+    # add the first result
     ret_val.add_result(result)
 
+    # then add the rest
     while (True):
       result = self.fetch_one()
       if result == None:
@@ -248,8 +251,6 @@ class db_handler:
       else:
         ret_val.add_result(result)
 
-    #print(f"returning result set")
-    #print(str(ret_val))
     return ret_val
 
   def show_table(self, name):
@@ -258,7 +259,6 @@ class db_handler:
     return str(rs)
 
   def search_table(self, table, **clause):
-    #print(f"searching table {table} with clause: {str(clause)}")
     sql = f"SELECT * FROM {table}"
     filter_list = list()
     
@@ -272,7 +272,6 @@ class db_handler:
 
       filter_str = " AND ".join(filter_list)
     
-      
       sql += f" WHERE {filter_str}"
 
     self.execute(sql)

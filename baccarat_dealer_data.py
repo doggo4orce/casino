@@ -101,7 +101,7 @@ class baccarat_dealer_data(card_dealer_data.card_dealer_data):
     banker_score = self._baccarat_hand.banker_score()
     player_third = None
     if self.num_player_cards() == 3:
-      player_third = baccarat_hand_data.baccarat_hand_data.card_value(self._baccarat_hand.player[2])
+      player_third = baccarat_hand_data.baccarat_hand_data.card_value(self._baccarat_hand.peek_card(2, 'player'))
     if player_third == None:
       return banker_score in {0,1,2,3,4,5}
     if banker_score in {0,1,2}:

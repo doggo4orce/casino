@@ -31,7 +31,7 @@ def init_commands():
   cmd_dict["colors"]    = ( commands.do_colors,      0 )
   cmd_dict["copyover"]  = ( commands.do_copyover,    0 )
   cmd_dict["client"]    = ( commands.do_client,      0 )
-  cmd_dict["db"]        = ( commands.do_db,          0 )
+  # cmd_dict["db"]        = ( commands.do_db,          0 )
   cmd_dict["drop"]      = ( commands.do_drop,        0 )
   cmd_dict["goto"]      = ( commands.do_goto,        0 )
   cmd_dict["help"]      = ( commands.do_help,        0 )
@@ -134,7 +134,7 @@ def handle_next_input(d, server, mud, db):
     command = command.lower()
     d.login_info.name = command
     if db.name_used(command):
-      logging.info(f"{command.capitalize()} is logging in.")
+      mudlog.info(f"{command.capitalize()} is logging in.")
       d.state = descriptor_data.descriptor_state.GET_PASSWORD
       d.send(bytes(telnet.will_echo))
       d.write("Password: ")
@@ -183,7 +183,7 @@ def handle_next_input(d, server, mud, db):
       d.write("\r\nPasswords don't match... start over.\r\nPassword: ")
   elif d.state == descriptor_data.descriptor_state.GET_PASSWORD:
     # and here too for the same reason as above
-    if not db.check_pwd(d.login_info.name, msg):
+    if not db.check_password(d.login_info.name, msg):
       d.write("\r\nWrong password.\r\nPassword: ")
     else:
       # turn localecho back on
@@ -193,33 +193,37 @@ def handle_next_input(d, server, mud, db):
 
       # nothing found, log in normally
       if ch == None:
-        new_player = pc.pc()
-        new_player.name = d.login_info.name
-        new_player.room = structs.unique_identifier.from_string(config.STARTING_ROOM)
-        new_player.title = config.DEFAULT_TITLE
+        new_player = pc_data.pc_data()
 
-        if db.id_by_name(d.login_info.name) == None:
-          # TODO: replace with index error exception
-          logging.error(f"Error: Trying to load player {d.login_info.name} which is not contained in the database.")
+        # player now knows their own name
+        new_player.name = d.login_info.name
+
+        player_id = db.id_by_name(d.login_info.name)
+
+        if player_id is None:
+          mudlog.error(f"Error: Trying to load player {d.login_info.name} which is not contained in the database.")
           d.disconnected = True
           return
-        else:
-          new_player.id = db.id_by_name(d.login_info.name)
 
-        d.chararacter = new_player
+        # set up some default data in case load fails
+        new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+        new_player.title = config.DEFAULT_TITLE
+
+        # load the player from the database
+        db.load_player(new_player, player_id)
+
+        d.character = new_player
         d.character.descriptor = d
         d.write("Welcome!  Have a great time!\r\n")
         d.state = descriptor_data.descriptor_state.CHATTING
-        logging.info(f"{d.login_info.name} has entered the game.")
+        mudlog.info(f"{d.login_info.name} has entered the game.")
 
         # if their room has been deleted, put them in the void
-        if mud.room_by_code(d.character.room) == None:
-          d.char.room = structs.unique_identifier.from_string(config.VOID_ROOM)
+        if mud.room_by_uid(d.character.room.zone_id, d.character.room.id) == None:
+          d.character.room = structs.unique_identifier.from_string(config.VOID_ROOM)
 
         mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room.zone_id, d.character.room.id))
-        mud.echo_around(d.char, None, f"{d.login_info.name} has entered the game.\r\n")
-
-        db.load_flag_prefs(d.char)
+        mud.echo_around(d.character, None, f"{d.login_info.name} has entered the game.\r\n")
 
       elif ch.descriptor:
         d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")

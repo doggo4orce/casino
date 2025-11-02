@@ -1,5 +1,6 @@
 import database
 import exit_data
+import game_data
 import pc_data
 import namelist_data
 import npc_proto_data
@@ -19,7 +20,7 @@ class TestDatabase(unittest.TestCase):
     db.save_alias("goblin_cave", "small_goblin", "npc", "small")
 
     # print("Namelists Table  -=-")
-    # print(db.show_table(database.database.NAMELIST_TABLE))
+    # print(db.show_table(database.database.ALIAS_TABLE))
     # print("-=-=-=-=-=-=-=-=-=-=")
 
     self.assertTrue(db.has_alias("goblin_cave", "small_goblin", "npc", "goblin"))
@@ -31,6 +32,8 @@ class TestDatabase(unittest.TestCase):
     self.assertTrue(db.has_alias("goblin_cave", "small_goblin", "npc", "goblin"))
     self.assertFalse(db.has_alias("goblin_cave", "small_goblin", "npc", "small"))
     self.assertEqual(db.num_aliases(), 1)
+
+    db.close()
 
   def test_exits(self):
     db = database.database(":memory:")
@@ -72,22 +75,19 @@ class TestDatabase(unittest.TestCase):
 
     db.save_all_prefs_numeric(pc)
 
-    self.assertTrue(db.has_pref_numeric(pc.player_id, 'screen_length'))
-    self.assertTrue(db.has_pref_numeric(pc.player_id, 'screen_width'))
+    self.assertTrue(db.has_pref_numeric(pc.player_id, 'page_length'))
+    self.assertTrue(db.has_pref_numeric(pc.player_id, 'page_width'))
+    
     self.assertEqual(db.num_prefs_numeric(), 2)
 
-    db.delete_pref_numeric(pc.player_id, 'screen_length')
-    self.assertFalse(db.has_pref_numeric(pc.player_id, 'screen_length'))
-    self.assertTrue(db.has_pref_numeric(pc.player_id, 'screen_width'))
+    db.delete_pref_numeric(pc.player_id, 'page_length')
+    self.assertFalse(db.has_pref_numeric(pc.player_id, 'page_length'))
+    self.assertTrue(db.has_pref_numeric(pc.player_id, 'page_width'))
     self.assertEqual(db.num_prefs_numeric(), 1)
 
-    db.save_pref_numeric(pc, 'screen_width', 19)
+    db.save_pref_numeric(pc, 'page_width', 19)
 
-    # print("Pref Numeric -=-=-=-")
-    # print(db.show_table(database.database.PREF_NUMERIC_TABLE))
-    # print("-=-=-=-=-=-=-=-=-=-=")
-
-    self.assertTrue(db.has_pref_numeric(pc.player_id, 'screen_width'))
+    self.assertTrue(db.has_pref_numeric(pc.player_id, 'page_width'))
     self.assertEqual(db.num_prefs_numeric(), 1)
 
     db.close()
@@ -190,7 +190,7 @@ class TestDatabase(unittest.TestCase):
 
     # print("NPC -= Proto -=-=-=-")
     # print(db.show_table(database.database.NPC_PROTO_TABLE))
-    # print(db.show_table(database.database.NAMELIST_TABLE))
+    # print(db.show_table(database.database.ALIAS_TABLE))
     # print("-=-=-=-=-=-=-=-=-=-=")
 
     self.assertTrue(db.has_npc_proto("nice_zone", "happy_npc"))
@@ -228,7 +228,7 @@ class TestDatabase(unittest.TestCase):
 
     # print("Object Proto -=-=-=-")
     # print(db.show_table(database.database.OBJ_PROTO_TABLE))
-    # print(db.show_table(database.database.NAMELIST_TABLE))
+    # print(db.show_table(database.database.ALIAS_TABLE))
     # print("-=-=-=-=-=-=-=-=-=-=")
 
     db.close()
@@ -309,14 +309,16 @@ class TestDatabase(unittest.TestCase):
     self.assertTrue(db.has_player(14))
     self.assertFalse(db.has_player(15))
 
-
-    # print("Players  -=-=-=-=-=-")
-    # print(db.show_table(database.database.PLAYER_TABLE))
-    # print("-=-=-=--=-=-=-=-=-=-")
-
     db.delete_player(13)
     self.assertEqual(db.num_players(), 1)
     self.assertFalse(db.has_player(13))
+
+    pc3 = pc_data.pc_data()
+    db.load_player(pc3, 14)
+
+    self.assertEqual(pc3.player_id, 14)
+    self.assertEqual(pc3.name, "roobiki")
+    self.assertEqual(pc3.password, "abbey")
 
     db.close()  
 

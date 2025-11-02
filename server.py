@@ -45,6 +45,9 @@ class server:
   def copyover_cmd(self):
     return self._copyover_cmd
 
+  @property
+  def descriptors(self):\
+    return self._descriptors
 
   """copyover_recover(mud,file,db) <- pause all connections, reboot game, and restore them
      add_descriptor(d)             <- add new client to descriptors and assign it's ID
@@ -58,7 +61,8 @@ class server:
      handle_new_connections()      <- transfers from new_connections to descriptors and greets
      check_for_disconnects()       <- appends anyone with disconnected flag to disconnects
      handle_disconnects()          <- calls lose_link and removes disconnected descriptors
-     handle_quits()                <- removes anyone just_leaving from descriptors
+     quit(d)                       <- adds d.id to self._just_leaving
+     handle_quits()                <- removes anyone self._just_leaving from descriptors
      poll_for_input(timeout)       <- call's each descriptor's poll_for_input function
      flush_output()                <- flush every descriptor's output
      write_prompts()               <- write prompts to descriptors who have processed output
@@ -69,7 +73,7 @@ class server:
      loop(mud,db)                  <- run through game loop (frequency determined in main.py)"""
 
   def copyover_recover(self, mud, file, db):
-    logging.info("Recovering from Copyover.")
+    mudlog.info("Recovering from Copyover.")
 
     with open(file) as rf:
       for line in rf:
@@ -78,14 +82,16 @@ class server:
         fd = int(fd)
         typ = int(typ)
 
+        print(fd, typ)
+
         s = socket.socket(socket.AF_INET, typ, 0, fd)
         d = descriptor_data.descriptor_data(s, host)
 
         d.state = descriptor_data.descriptor_state.CHATTING
 
-        d.client_info.term_type = ttype
-        d.client_info.term_width = twidth
-        d.client_info.term_length = tlength
+        d.client.term_type = ttype
+        d.client.term_width = twidth
+        d.client.term_length = tlength
 
         # telnet won't send ttype again, and other clients send different data if you ask a second time
         d.send(bytes(telnet.do_naws))
@@ -95,9 +101,9 @@ class server:
         d.character = db.load_player(name)
         d.character.descriptor = d
 
-        db.load_flag_prefs(d.char)
+        db.load_flag_prefs(d.character)
 
-        mud.add_char(d.char)
+        mud.add_char(d.character)
         self.add_descriptor(d)
 
     logging.info("Removing old Copyover File.")
@@ -183,7 +189,7 @@ class server:
   def handle_disconnects(self, mud):
     for id in self._disconnects:
       d = self._descriptors[id]
-      mudlog.info(f"Closing link to {d.client_info.term_host}.")
+      mudlog.info(f"Closing link to {d.client.term_host}.")
       # if they were already logged in, their char is linkless
       if d.char:
         mud.lose_link(d.char)
@@ -193,10 +199,13 @@ class server:
       self.remove_descriptor_by_id(id)
     self._disconnects.clear()
 
+  def quit(self, d):
+    self._just_leaving.append(d.id)
+
   def handle_quits(self):
     for id in self._just_leaving:
       d = self._descriptors[id]
-      mudlog.info(f"{d.char.name} has left the game.")
+      mudlog.info(f"{d.character.name} has left the game.")
       self.remove_descriptor_by_id(id)
 
     self._just_leaving.clear()

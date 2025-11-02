@@ -13,6 +13,7 @@ import mudlog
 import object_data
 import os
 import npc_data
+import pc_data
 import room_data
 import string_handling
 import table_data
@@ -310,7 +311,7 @@ class game_data:
     return object_data.object_data(proto_type)
 
   def pc_by_id(self, id):
-    for ch in self._chars:
+    for ch in self._characters:
       if type(ch) == pc_data.pc_data and ch.id == id:
         return ch
     return None

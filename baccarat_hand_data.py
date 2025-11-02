@@ -1,4 +1,6 @@
 import mudlog
+import string_handling
+
 
 class baccarat_hand_data:
   """Creates a single hand of baccarat.
@@ -10,7 +12,7 @@ class baccarat_hand_data:
 
   def ascii_rep(self, cards, idx, row):
     if row not in range(0,5):
-      mudlog.error(f"function {ascii_rep_banker} called with bad row {row}")
+      mudlog.error(f"function {ascii_rep} called with bad row {row}")
       return None
     try:
       return cards[idx].ascii_rep()[row]
@@ -33,6 +35,7 @@ class baccarat_hand_data:
      hand_value(cards)      <-- determines the score based on list of cards
      player_score()         <-- return's player's current score
      banker_score()         <-- returns the banker's current score
+     peek_card(n, target)   <-- peek at nth card from banker or player
      player_natural()       <-- checks if player's first two cards add to 8/9
      banker_natural()       <-- same but for player
      panda()                <-- checks if the player won with three card 8
@@ -75,6 +78,14 @@ class baccarat_hand_data:
 
   def banker_score(self):
     return self.hand_value(self._banker)
+
+  def peek_card(self, n, target):
+    if target == 'player':
+      return self._player[n]
+    elif target == 'banker':
+      return self._banker[n]
+    else:
+      mudlog.error(f"Trying to peek at {target}'s {string_handling.ordinal(n)} card.")
 
   def player_natural(self):
     return self.player_score() in {8,9} and len(self._player) == 2

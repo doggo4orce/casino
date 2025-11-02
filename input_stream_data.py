@@ -63,7 +63,7 @@ class input_stream_data:
     return self.telnet_q.popleft()
 
   def debug(self):
-    ret_val = f"Buffer: {CYAN}{self.buffer.decode("utf-8")}{NORMAL}\r\n"
+    ret_val = f"Buffer: {CYAN}{self.buffer.decode('utf-8')}{NORMAL}\r\n"
     ret_val += f"Telnet: {CYAN}"
     if self.telnet:
       rete_val += str(self.telnet)

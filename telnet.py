@@ -216,7 +216,7 @@ class tel_msg:
         ret_val += str(self.payload[0])
 
       # peel code from payload and interpret the rest as data
-      ret_val += f" \"{self.payload[1:].decode("utf-8")}\""
+      ret_val += f" \"{self.payload[1:].decode('utf-8')}\""
 
     elif self.opt in tel_opt and tel_opt(self.opt) == tel_opt.NAWS:
       # NAWS negotiation: IAC SB NAWS <width_high> <width_low> <length_high> <length_low> IAC SE

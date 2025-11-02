@@ -25,7 +25,6 @@ class TestCommands(unittest.TestCase):
     # create tiny test world
     mud, zone, room = test_utilities.create_single_room_test_world()
 
-    room.desc = "<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>"
     # add a player to the room
     player = pc_data.pc_data()
     mud.add_character_to_room(player, room)
@@ -130,7 +129,14 @@ class TestCommands(unittest.TestCase):
     self.assertIn(ch, c_room.people)
     self.assertNotIn(ch, u_room.people)
 
-  def test_move_away_from_mob_with_scripts(self):
-    
+  def test_prefs(self):
+    # create tiny test world
+    mud, zone, room = test_utilities.create_single_room_test_world()
+
+    # add a player to the room
+    player = pc_data.pc_data()
+
+    commands.do_prefs(player, None, None, None, mud, None)
+
 if __name__ == '__main__':
   unittest.main()

@@ -34,7 +34,8 @@ class database:
      num_exits()                         <- count exits
 
      save_preferences(pc)                <- save all numeric/text/flag prefs
-     
+
+     load_all_prefs_numeric(pc)          <- load all numeric preferences to pc     
      save_pref_numeric(pc, field, value) <- save numeric preference
      save_all_prefs_numeric(pc)          <- save all numeric preferences
      has_pref_numeric(id, field)         <- check if preference already saved
@@ -42,6 +43,7 @@ class database:
      delete_all_prefs_numeric(id)        <- delete all numeric preferences by id
      num_prefs_numeric()                 <- count text preferences in database
 
+     load_all_prefs_text(pc)             <- load all text preferences to pc
      save_pref_text(pc, field, value)    <- save text preference
      save_all_prefs_text(pc)             <- save all text preferences
      has_pref_text(id, field)            <- check if preference already saved
@@ -49,6 +51,7 @@ class database:
      delete_all_prefs_text(id)           <- delete all text preferences by id
      num_prefs_text()                    <- count text preferences in database
 
+     load_all_prefs_flag(pc)             <- load all flag preferences to pc
      save_pref_flag(pc, field, value)    <- save flag preference
      save_all_prefs_flag(pc)             <- save all flag preferences
      has_pref_flag(id, field)            <- check if preference already saved
@@ -70,6 +73,16 @@ class database:
      has_room(zone_id, id)               <- check if room already saved
      delete_room(zone_id, id)            <- delete room (with exits) from database
      num_rooms()                         <- count rooms in database
+
+     load_player(pc)                     <- loads player data to player
+     save_player(pc)                     <- save player
+     has_player(id)                      <- check if player already saved
+     delete_player(id)                   <- delete player from database
+     num_players()                       <- count players in database
+
+     load_player(pc)                     <- load player from database
+     check_password(name, password)      <- check if password is correct
+     id_by_name(name)                    <- lookup player id by name
 
      create_tables()                     <- creates all world data tables
      show_table(name)                    <- displays contents of table
@@ -135,10 +148,15 @@ class database:
   def num_exits(self):
     return self._handler.num_records(database.EXIT_TABLE)
 
+  def load_preferences(self, pc):
+    self.load_all_prefs_numeric(pc)
+    self.load_all_prefs_text(pc)
+    self.load_all_prefs_flag(pc)
+
   def save_preferences(self, pc):
-    self.save_all_pref_numeric(pc)
-    self.save_all_pref_text(pc)
-    self.save_all_pref_flag(pc)
+    self.save_all_prefs_numeric(pc)
+    self.save_all_prefs_text(pc)
+    self.save_all_prefs_flag(pc)
 
   def save_pref_numeric(self, pc, field, value):
     if self.has_pref_numeric(pc.player_id, field):
@@ -149,6 +167,11 @@ class database:
       field=field,
       value=value
     )
+
+  def load_all_prefs_numeric(self, pc):
+    self._handler.search_table(database.PREF_NUMERIC_TABLE, id=pc.player_id)
+    for record in self._handler.fetch_all():
+      pc.set_pref(record['field'], record['value'])
 
   def save_all_prefs_numeric(self, pc):
     for field in pc.numeric_prefs.fields():
@@ -188,6 +211,11 @@ class database:
       value=value
     )
 
+  def load_all_prefs_text(self, pc):
+    self._handler.search_table(database.PREF_TEXT_TABLE, id=pc.player_id)
+    for record in self._handler.fetch_all():
+      pc.set_pref(record['field'], record['value'])
+
   def save_all_prefs_text(self, pc):
     for field in pc.text_prefs.fields():
       self.save_pref_text(pc, field, getattr(pc.text_prefs, field))
@@ -216,6 +244,12 @@ class database:
   def num_prefs_text(self):
     return self._handler.num_records(database.PREF_TEXT_TABLE)
 
+  def load_all_prefs_flag(self, pc):
+    self._handler.search_table(database.PREF_FLAG_TABLE, id=pc.player_id)
+
+    for record in self._handler.fetch_all():
+      pc.set_pref(record['field'], bool(record['value']))
+
   def save_pref_flag(self, pc, field, value):
     if self.has_pref_flag(pc.player_id, field):
       self.delete_pref_flag(pc.player_id, field)
@@ -229,6 +263,7 @@ class database:
   def save_all_prefs_flag(self, pc):
     for field in pc.flag_prefs.fields():
       self.save_pref_flag(pc, field, getattr(pc.flag_prefs, field))
+
 
   def has_pref_flag(self, id, field):
     return self._handler.get_record(database.PREF_FLAG_TABLE,
@@ -284,7 +319,7 @@ class database:
       id=id
     )
 
-    self._handler.delete_records(database.NAMELIST_TABLE,
+    self._handler.delete_records(database.ALIAS_TABLE,
       zone_id=zone_id,
       id=id,
       type='npc'
@@ -324,7 +359,7 @@ class database:
       id=id
     )
 
-    self._handler.delete_records(database.NAMELIST_TABLE,
+    self._handler.delete_records(database.ALIAS_TABLE,
       zone_id=zone_id,
       id=id,
       type='obj'
@@ -397,6 +432,25 @@ class database:
 
   def num_players(self):
     return self._handler.num_records(database.PLAYER_TABLE)
+
+  def load_player(self, pc, player_id):
+    record = self._handler.get_record(database.PLAYER_TABLE, id=player_id)
+
+    pc.name = record['name']
+    pc.password = record['password']
+    pc.player_id = player_id
+
+    self.load_all_prefs_flag(pc)
+    self.load_all_prefs_numeric(pc)
+    self.load_all_prefs_text(pc)
+
+  def check_password(self, name, password):
+    record = self._handler.get_record(database.PLAYER_TABLE, name=name)
+    return record['password'] == password
+
+  def id_by_name(self, name):
+    record = self._handler.get_record(database.PLAYER_TABLE, name=name)
+    return record['id']
 
   def save_zone(self, zone):
     if self.has_zone(zone.id):

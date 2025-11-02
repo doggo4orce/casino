@@ -190,18 +190,18 @@ def baccarat_dealing(mud, me, db):
     if me.shoe_length() < 6:
       commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud, db)
       mud.echo_around(me, None, "Player wins: {}{}{} (including pandas)\r\nBanker wins: {}{}{}\r\nTies: {}{}{}\r\nPandas: {}{}{}\r\nDragons: {}{}{}\r\n".format(
-        BLUE, me.shoe.count_reports(baccarat_history_data.history_entry.PLAYER_WIN) + me.shoe.count_reports(history_entry.PANDA), NORMAL,
-        RED, me.shoe.count_reports(baccarat_history_data.history_entry.BANKER_WIN), NORMAL,
-        GREEN, me.shoe.count_reports(baccarat_history_data.history_entry.TIE), NORMAL,
-        MAGENTA, me.shoe.count_reports(baccarat_history_data.history_entry.PANDA), NORMAL,
-        CYAN, me.shoe.count_reports(baccarat_history_data.history_entry.DRAGON), NORMAL))
+        BLUE, me.count_reports(baccarat_history_data.history_entry.PLAYER_WIN) + me.count_reports(baccarat_history_data.history_entry.PANDA), NORMAL,
+        RED, me.count_reports(baccarat_history_data.history_entry.BANKER_WIN), NORMAL,
+        GREEN, me.count_reports(baccarat_history_data.history_entry.TIE), NORMAL,
+        MAGENTA, me.count_reports(baccarat_history_data.history_entry.PANDA), NORMAL,
+        CYAN, me.count_reports(baccarat_history_data.history_entry.DRAGON), NORMAL))
       mud.echo_around(me, None, "3-card 9/8's: {}{}{}\r\nNatural 9/8's: {}{}{}\r\nAny 8/7's: {}{}{}\r\n".format(
-        YELLOW, me.shoe.count_extras(baccarat_history_data.extra_side_bet.THREE_CARD_9_8), NORMAL,
-        YELLOW, me.shoe.count_extras(baccarat_history_data.baccarat_history_data.extra_side_bet.NATURAL_9_8), NORMAL,
-        YELLOW, me.shoe.count_extras(baccarat_history_data.extra_side_bet.ANY_8_7), NORMAL
+        YELLOW, me.count_extras(baccarat_history_data.extra_side_bet.THREE_CARD_9_8), NORMAL,
+        YELLOW, me.count_extras(baccarat_history_data.extra_side_bet.NATURAL_9_8), NORMAL,
+        YELLOW, me.count_extras(baccarat_history_data.extra_side_bet.ANY_8_7), NORMAL
         ))
       me.clear_shoe()
-      me.bac_state = baccarat_dealer_state.IDLE
+      me.bac_state = baccarat_dealer_data.baccarat_dealer_state.IDLE
       me.bac_paused = 0
       me.simulation_mode = False
       return
@@ -275,7 +275,8 @@ def baccarat_dealing(mud, me, db):
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.REPORT_WINNER
       pause = 30
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.DEAL_BANKER_THIRD:
-    banker_third = me.deal_next_card('banker')
+    banker_third = me.draw()
+    me.deal(banker_third,'banker')
     mud.echo_around(me, None, "{} deals {} {} to the banker.\r\n".format(
       me, string_handling.ana(card_data.card_rank(banker_third.rank).name), banker_third))
     me.bac_state = baccarat_dealer_data.baccarat_dealer_state.UPDATE_BANKER_THIRD
@@ -299,20 +300,20 @@ def baccarat_dealing(mud, me, db):
       me.report_history(baccarat_history_data.history_entry.BANKER_WIN)
     else:
       commands.do_say(me, None, f"Player and banker tie!", None, mud, db)
-      me.report_history(history_entry.TIE)
+      me.report_history(baccarat_history_data.history_entry.TIE)
     # Check Michael's Side Bets
     if me.three_card_9_8():
-      me.report_extra(extra_side_bet.THREE_CARD_9_8)
+      me.report_extra(baccarat_history_data.extra_side_bet.THREE_CARD_9_8)
     if me.natural_9_8():
-      me.report_extra(extra_side_bet.NATURAL_9_8)
+      me.report_extra(baccarat_history_data.extra_side_bet.NATURAL_9_8)
     if me.any_8_7():
-      me.report_extra(extra_side_bet.ANY_8_7)
+      me.report_extra(baccarat_history_data.extra_side_bet.ANY_8_7)
     me.clear_baccarat_hand()
-    me.bac_state = baccarat_dealer_state.CLEAR_CARDS
+    me.bac_state = baccarat_dealer_data.baccarat_dealer_state.CLEAR_CARDS
     pause = 60
-  elif me.bac_state == baccarat_dealer_state.CLEAR_CARDS:
+  elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.CLEAR_CARDS:
     mud.echo_around(me, None, f"{me} clears the cards from the table.\n")
-    me.bac_state = baccarat_dealer_state.LAST_CALL_BETS
+    me.bac_state = baccarat_dealer_data.baccarat_dealer_state.LAST_CALL_BETS
     pause = 120
 
   if pause != 0 and not me.simulation_mode:

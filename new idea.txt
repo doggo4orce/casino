@@ -1,0 +1,88 @@
+TODO: factor this out of preferences and pc_save_data?
+
+possibility:
+
+-fields(dataclass)
+
+-numeric(fields)
+-boolean(fields)
+-textual(fields)
+
+-aggregate
+  -numeric
+  -boolean
+  -textual
+
+major change (oct 6):
+  -character no longer derives from entity
+  -this means character and thus PC doesn't have an ldesc
+  -characters still manage inventories
+  -and still act as the common functionality between NPCs and PCs
+
+another possibility:
+
+class save_data:
+  -numeric(fields)
+  -boolean(fields)
+  -textual(fields)
+
+class pc_save_data(save_data):
+  pass
+
+class pc_pref_data(save_data):
+  pass
+
+TODO:  go back through all the re-written classes and ask self which fields should be private, and remove the corresponding getters/setters
+
+classes
+  -X namelist_data (add remove_all method)
+  -X entity_data
+  -X entity_proto_data
+  -X obj_proto_data (now inherits from entity_proto_data)
+  -X npc_proto_data (now inherits from entity_proto_data)
+  -X object_data (will inherit from entity_data)
+  -X inventory_data
+  -rooms
+  -character, pc, and npc
+  -zone
+  -game
+  -descriptors
+  -server
+
+spec procs:
+  -get_name() function that returns the (optional) name of the spec proc, and if it doesn't have one, returns thte name of the function as a string
+
+  - are these actually needed? when would you ever want to remove a specific proc? the only case i can imagine is if you're assigning them with OLC
+
+  def unassign_spec_proc(self, proc):
+    if proc in self.prefix_cmd_trigs:
+      self.prefix_cmd_trigs.remove(proc)
+    elif proc in self.suffix_cmd_trigs:
+      self.suffix_cmd_trigs.remove(proc)
+    elif proc in self.hbeat_procs:
+      self.hbeat_procs.remove(proc)
+
+  def unassign_spec_procs(self, procs):
+    for proc in procs:
+      self.unassign_spec_proc(proc)
+
+  -for now i will leave these unimplemented, and instead just have an option to remove ALL of the procs
+
+  -find a way to reference these uniquely.  we don't have to have to keep track of the names and function names of every reference
+
+  -should they have virtual refs?
+  -will they be assigned using OLC?
+ 
+TODO:
+  -entity should have behaviour removed, since pcs will get it otherwise
+  -add new class actor_data which has behaviour field, which npc_proto_data and obj_proto_data will keep
+  -actor_data hands all calling of spec procs through behaviour class
+  -npc_data and object_data inherit from actor_data
+  -difference between behaviour and actor is behaviour just stores the data for spec_procs, whereas actor will actually call the procs
+
+game ideas:
+-----------
+
+archer, when you start a fight, enemies are immediately affected by a debuf called AWAY, which takes 3 seconds to wear off, they cant hit you until it wears off and it simulates them travelling to get to you
+
+but when someone attacks an archer, this doesn't happen, unless you have the SNEAK ability

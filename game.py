@@ -1,21 +1,22 @@
 import baccarat_dealer
 import baccarat_table
 import cards
+import cmd_trig_data
 import config
-import dataclasses
+import hbeat_proc_data
 import enum
-import event
+import event_data
 import glob
-import logging
-import object
+import mudlog
+import object_data
 import os
-import pc
-import room
-import spec_procs
+import npc_data
+import room_data
 import table
 import string_handling
-import structs
-import zone
+import zone_data
+
+# TODO : change reference format from global[local] to local@global
 
 class game:
   def __init__(self):
@@ -27,58 +28,56 @@ class game:
     self._zones     = dict()
     self._chars     = list()
     self._objects   = list()
-    self._events    = event.event_table()
+    self._events    = event_table_data.event_table_data()
 
-  """add_event(e)            <- add event e to self_events
-     heart_beat()            <- calls the event handlers heart_beat() function
-     call_heart_beat_procs() <- calls all pulsing special procedures for npcs
-     add_zone(zone)          <- adds a zone to the game
-     zone_by_id(id)          <- iterate through self.zones zones to find zone with identifier id
-     room_by_code(code)      <- look up room using unique_identifier code
-     npc_by_code(code)       <- look up npc prototype by code
-     obj_by_code(code)       <- look up object prototype by code
+  """add_event(e)               <- add event e to self_events
+     heart_beat()               <- calls the event handlers heart_beat() function
+     call_hbeat_procs()         <- calls all pulsing special procedures for npcs
+     add_zone(zone)             <- adds a zone to the game
+     zone_by_id(id)             <- iterate through self.zones zones to find zone with identifier id
+     room_by_code(code)         <- look up room using unique_identifier code
+     npc_by_code(code)          <- look up npc prototype by code
+     obj_by_code(code)          <- look up object prototype by code
      echo_around(ch, hide, msg) <- sends msg to all in room except ch and those in hide list
-     add_char(ch)            <- adds character ch to the wld, in the appropriate room or VOID_ROOM
-     extract_char(ch)        <- extracts character ch from the wld and the appropriate room
-     add_obj(obj)            <- these functions are the same
-     extract_obj(obj)        <- except for objects instead
-     assign_spec_procs()     <- assigns special procedures to elements of npc_proto
-     startup()               <- loads all of the zone folders in WORLD_FOLDER
-     load_npc(code)          <- looks up the npc in self.npc_proto and returns it or None
-     load_obj(vnum)          <- looks up the obj in self.objs and return a copy or None
-     read_npc_file(filename) <- reads all the npcs stored in filename
-     read_obj_file(filename) <- reads all the objects stored in a filename
-     pc_by_id(id)            <- searches chars for a pc with id and returns it if found
-     lose_link(ch)           <- disconnects player from their d (seen by players)
-     reconnect(d, ch)        <- reconnects player to their d (seen by players)"""
+     add_char(ch)               <- adds character ch to the wld, in the appropriate room or VOID_ROOM
+     extract_char(ch)           <- extracts character ch from the wld and the appropriate room
+     add_obj(obj)               <- these functions are the same
+     extract_obj(obj)           <- except for objects instead
+     assign_spec_procs()        <- assigns special procedures to elements of npc_proto
+     startup()                  <- loads all of the zone folders in WORLD_FOLDER
+     load_npc(code)             <- looks up the npc in self.npc_proto and returns it or None
+     load_obj(vnum)             <- looks up the obj in self.objs and return a copy or None
+     pc_by_id(id)               <- searches chars for a pc with id and returns it if found
+     lose_link(ch)              <- disconnects player from their d (seen by players)
+     reconnect(d, ch)           <- reconnects player to their d (seen by players)"""
 
   def add_event(self, e):
     self._events.add_event(e)
 
   def heart_beat(self, db):
-    self._events.heart_beat(self, db)
+    self._events.heartbeat(self, db)
 
-  def call_heart_beat_procs(self, db):
+  def call_hbeat_procs(self, db):
     for mob in self._chars:
-      if isinstance(mob, pc.npc):
-        mob.call_heart_beat_procs(self, db)
+      if isinstance(mob, npc_data.npc_data):
+        mob.call_hbeat_procs(self, db)
 
   def add_zone(self, zn):
     if self.zone_by_id(zn.id) == None:
       self._zones[zn.id] = zn
     else:
-      logging.warning("Trying to add zone {zn.name} but id '{zn.id}'' but already exists.")
+      logging.warning(f"Trying to add zone {zn.name} but id '{zn.id}'' but already exists.")
 
   def zone_by_id(self, id):
     if id not in self._zones.keys():
       return None
     return self._zones[id]
 
-  def room_by_code(self, code):
-    # expects a structs.unique_identifier() code
-    zone_id = code.zone_id
-    room_id = code.id
-    if zone_id == None and room_id == None:
+  def room_by_uid(self, uid):
+    zone_id = uid.zone_id
+    room_id = uid.id
+
+    if zone_id == None or id == None:
       return None
 
     zone = self.zone_by_id(zone_id)
@@ -88,8 +87,8 @@ class game:
     
     return zone.room_by_id(room_id)
     
-  def npc_by_code(self, code):
-    zone_id, npc_id = string_handling.parse_reference(code)
+  def npc_by_uid(self, uid):
+    zone_id, npc_id = string_handling.parse_reference(uid)
 
     if zone_id == None or npc_id == None:
       return None
@@ -170,25 +169,25 @@ class game:
     # todo, give out warning and avoid crash if these references don't exist
     b_dealer = self.npc_by_code('stockville[baccarat_dealer]')
 
-    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger(
+    b_dealer.assign_spec_proc(cmd_trig_data.prefix_cmd_trig_data(
       "baccarat syntax handling", 
       baccarat_dealer.baccarat_dealer_syntax_parser
     ))
-    b_dealer.assign_spec_proc(spec_procs.prefix_command_trigger(
+    b_dealer.assign_spec_proc(cmd_trig_data.prefix_cmd_trig_data(
       "baccarat shoe history",
       baccarat_dealer.baccarat_dealer_history
     ))
-    b_dealer.assign_spec_proc(spec_procs.suffix_command_trigger(
+    b_dealer.assign_spec_proc(cmd_trig_data.suffix_cmd_trig_data(
       "baccarat dealer greeting",
       baccarat_dealer.baccarat_dealer_intro
     ))
-    b_dealer.assign_spec_proc(spec_procs.heart_beat_proc(
+    b_dealer.assign_spec_proc(hbeat_proc_data.hbeat_proc_data(
       "baccarat deals a shoe",
       baccarat_dealer.baccarat_dealing
     ))
 
     b_table = self.obj_by_code('stockville[baccarat_table]')
-    b_table.assign_spec_proc(spec_procs.prefix_command_trigger(
+    b_table.assign_spec_proc(cmd_trig_data.prefix_cmd_trig_data(
       "baccarat table syntax parser",
       baccarat_table.baccarat_table_syntax_parser
     ))
@@ -204,7 +203,7 @@ class game:
     b_dealer = cards.card_dealer.from_npc(b_dealer)
     b_dealer = baccarat_dealer.baccarat_dealer.from_card_dealer(b_dealer)
     b_dealer.room = structs.unique_identifier.from_string('stockville[casino]')
-    b_dealer.bac_state = baccarat_dealer.baccarat_dealer_state.BEGIN_SHOE
+    b_dealer.bac_state = baccarat_dealer.baccarat_dealer_state.IDLE
     self.add_char(b_dealer)
 
     baker = self.load_npc('stockville[baker]')
@@ -244,32 +243,6 @@ class game:
     
     return new_obj
 
-  def read_npc_file(self, filename):
-    rf = open(filename, "r")
-    while True:
-      # expecting #VNUM or $ (final line)
-      line = rf.readline()
-      # file is terminated with $
-      if line[0] == '$':
-        return
-      # first thing is the virtual number
-      vnum = int(line[1:])
-      # now read the rest of the mob
-      self.npc_proto[vnum] = db.parse_npc(rf)
-
-  def read_obj_file(self, filename):
-    rf = open(filename, "r")
-    while True:
-      # expecting #VNUM or $ (final line)
-      line = rf.readline()
-      # file is terminated with $
-      if line[0] == '$':
-        return
-      # first thing is the virtual number
-      vnum = int(line[1:])
-      # now read the rest of the mob
-      self.obj_proto[vnum] = db.parse_obj(rf)
-
   def pc_by_id(self, id):
     for ch in self._chars:
       if type(ch) == pc.pc and ch.id == id:
@@ -278,17 +251,17 @@ class game:
 
   def lose_link(self, ch):
     self.room_by_code(ch.room).echo(f"{ch} has lost his link.\r\n")
-    ch.d = None
+    ch.descriptor = None
 
   def reconnect(self, d, ch):
     # they might already have a connection
-    if ch.d:
+    if ch.descriptor:
       # if so, kick it off
-      ch.d.disconnected = True
-      ch.d.char = None
+      ch.descriptor.disconnected = True
+      ch.descriptor.character = None
     # now connect to the linkless char
-    d.char = ch
-    ch.d = d
+    d.character = ch
+    ch.descriptor = d
 
 if __name__ == '__main__':
   pass

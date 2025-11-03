@@ -8,6 +8,24 @@ def ana(noun):
   else:
     return "a"
 
+def alpha_under_score(str):
+  for c in str:
+    if not c.isalpha() and c != '_':
+      return False
+  return True
+
+def alpha_num_under_score(str):
+  for c in str:
+    if not c.isalnum() and c != '_':
+      return False
+  return True
+
+def alpha_num_space(str):
+  for c in str:
+    if not c.isalnum() and c != ' ':
+      return False
+  return True
+
 def ordinal(n):
   first_digit = n % 10
   if first_digit == 1:
@@ -31,16 +49,10 @@ def oxford_comma(words):
     return ', '.join(words[:-1]) + ', and ' + words[-1]
 
 # check if a vref str is a valid internal code, like a room within a zone
-# so if valid_id('zn') and valid_id('rm') both return True, then 'zn[rm]'
-# is a sensible full identifier
+# so if valid_id('zn') and valid_id('rm') both return True, then 'rm@zn'
+# is a sensible vref
 def valid_id(str):
-  valid = True
-
-  for j in range(0, len(str)):
-    if not str[j].isalnum() and str[j] not in {'_'}:
-      valid = False
-
-  return valid
+  return alpha_num_under_score(str)
 
 def strip_tags(str):
   pattern = re.compile(r'<c(\d{1,2})>')
@@ -62,7 +74,14 @@ def strip_tags(str):
     match = re.search(pattern, str)
 
   return str
-  
+
+# inputs a string of space-delimited words, and prints them as paragraph
+# with specified width and optional indent
+#
+# Notes:
+#   * Anything that is not an explicit space will be assumed to be part
+# of a word, including line breaks and punctuation.
+#   * If the first word is wider than the specified width, indent is ignored.
 def paragraph(text, width, indent=False):
   words = text.split(' ')
   line_length = 0
@@ -73,6 +92,10 @@ def paragraph(text, width, indent=False):
     par += "  "
 
   for idx, word in enumerate(words):
+    # if there are extra spaces in text, words will contain null strings
+    if word == '':
+      continue
+
     # it fits perfectly
     if line_length + len(strip_tags(word)) == width:
       par += word
@@ -91,38 +114,94 @@ def paragraph(text, width, indent=False):
       line_length += len(strip_tags(word)) + 1
       par += word + ' '
 
+    # line is empty and it still doesn't fit
+    elif line_length == 0 and len(strip_tags(word)) > width:
+      # add the word anyway
+      line_length += len(strip_tags(word)) + 1
+      par += word + ' '
+
+    # at initial indent and the first word doesn't fit
+    elif par == '  ' and 2 + len(strip_tags(word)) > width:
+      # delete the indent and write the word anyway
+      line_length = len(strip_tags(word)) + 1
+      par = word + ' '
+
     # it doesn't fit, so start a new line
     else:
       line_length = len(strip_tags(word)) + 1
-      par += '\r\n' + word + ' '
+      par = f"{par[:-1]}\r\n{word} "
 
   return par.rstrip()
 
-# used to read files in lib/
-def split_tag_value(line):
-  var_list = line.split()
-  return var_list[0], " ".join(var_list[1:])
+def parse_reference(vref):
+  # first find '@'
+  codes = vref.split('@')
 
-def parse_reference(code):
+  # first check for local reference
+  if len(codes) == 1 and valid_id(vref):
+    return vref, None
+  # otherwise there should be one '@'
+  elif len(codes) != 2:
+    return None, None
+
+  # make sure codes are valid
+  if not (valid_id(codes[0]) and valid_id(codes[1])):
+    return None, None
+
+  # codes[0] = local, codes[1] = global
+  return codes[0], codes[1]
+
+def parse_reference_old(code):
   # if its just a local reference, put the zone_id to None
-  if code.isalnum():
-    zone_id = None
-    id = code
-  # if it's a global reference, we'd better find [] brackets
-  else:
-    n = code.find('[')
-    # if not, then it's a broken local reference
-    if n == -1:
-      zone_id = None
-      id = None
-    # syntax is correct for global reference
-    else:
-      zone_id = code[:n]
-      id = code[n+1:-1]
-  return zone_id, id
+  if valid_id(code):
+    return None, code
 
+  # otherwise, we'd better find [] brackets
+  n = code.find('[')
+
+  # if not, then it's a broken global reference
+  if n == -1 or code[-1] != ']':
+    return None, None
+
+  # otherwise the format is good
+  zone_id = code[:n]
+  id = code[n+1:-1]
+
+  # one last check
+  if valid_id(zone_id) and valid_id(id):
+    return zone_id, id
+
+  return None, None
+
+def clean_up_paragraph(paragraph):
+  # trim any leading linebreaks
+  while True:
+    if paragraph.startswith('\r\n'):
+      paragraph = paragraph.replace('\r\n', '', 1)
+    else:
+      break
+
+  # trim any repeated linebreaks
+  while True:
+    if paragraph.find('\r\n\r\n') == -1:
+      break
+    paragraph = paragraph.replace('\r\n\r\n', '\r\n')
+
+  # if linebreak happens between two spaces, delete the linebreak and one of the spaces
+  paragraph = paragraph.replace(' \r\n ', ' ')
+
+  # if linebreak happens after line that ends on a space, delete the linebreak
+  paragraph = paragraph.replace(' \r\n', ' ')
+
+  # replace all other line breaks with spaces
+  paragraph = paragraph.replace('\r\n', ' ')
+
+  return paragraph
+  
 # returns a cleaned up version of "Hello , how are     you guys ?"
 def proofread(paragraph):
+
+  NUM_SPACES_AFTER_PUNCTUATION = 2
 
   formatted = ""
 
@@ -130,15 +209,17 @@ def proofread(paragraph):
 
   begin_sentence = True
 
-  for word in lines:
-
+  # clean up capitalization, commas, and periods
+  for idx, word in enumerate(lines):
     word = word.strip()
+
+    terminal_punct = {'.', '?', '!'}
 
     if word == '':
       continue
 
-    if word in {'.', '?', '!'}:
-      formatted += word + ' '
+    if word in terminal_punct:
+      formatted += word + ' '*NUM_SPACES_AFTER_PUNCTUATION
       begin_sentence = True
       continue
     elif word == ',':
@@ -151,23 +232,38 @@ def proofread(paragraph):
     else:
       formatted += ' ' + word
 
-    if word[-1:] in {'.', '?', '!'}:
+    if word[-1:] in terminal_punct:
       formatted += ' '
       begin_sentence = True
+
+  # clean up trailing punctuation
+  while True:
+    pattern = re.compile(r' ([,.!?])')
+    match = re.search(pattern, formatted)
+
+    if match == None:
+      break
+
+    # formatted = formatted.replace(
+    #   f"{match.group(1)} {match.group(2)}",
+    #   f"{match.group(1)}{match.group(2)}"
+    # )
+    formatted = formatted.replace(match.group(0), match.group(1))
 
   return formatted.rstrip()
 
 def yesno(flag):
   if flag == True:
     return 'yes'
-  return 'no'
+  elif flag == False:
+    return 'no'
 
 def tidy_color_tags(line):
   tidy = False
 
   # first push all color tags forward to the next word
   while True:
-    pattern = re.compile(r' (<c\d+>) ')
+    pattern = re.compile(r' ((?:<c\d+>)+) ')
     match = re.search(pattern, line)
 
     if match == None:
@@ -183,22 +279,22 @@ def tidy_color_tags(line):
     if match == None:
       break
 
-    line = line.replace(f"{match.group(0)}", f"{match.group(1)}")
+    line = line.replace(match.group(0), f"{match.group(1)} ")
+
+  # now delete any redundant color tags
+  while True:
+    pattern = re.compile(r'(?:<c\d+>)+( *<c\d+>)')
+    match = re.search(pattern, line)
+
+    if match == None:
+      break
+
+    line = line.replace(match.group(0), match.group(1))
+
   return line
 
-def proc_color_codes(line):
+def proc_color(line):
   for j in range(0,256):
     line = line.replace(f'<c{j}>', ansi_color_sequence(j))
   return line
-
-def alpha_numeric_space(input):
-  for j in range(0, len(input)):
-    if input[j] != ' ' and not input[j].isalnum():
-      return False
-  return True
-
-if __name__ == '__main__':
-  str = "Hello <c333> world! <c0>    OK Bye\r\n" + "Hi <c12> again <c0> ok finally bye bye.      <c3>"
-  str = tidy_color_tags(str)
-  print(str)
 

@@ -4,15 +4,6 @@ import string_handling
 import sqlite3
 import string
 
-def only_char_and_under_score(str):
-  for c in str:
-    if not c.isalpha() and c != '_':
-      return False
-  return True
-
-def valid_field_name(field_name):
-  return only_char_and_under_score(field_name)
-
 # allow characters and underscores only
 def valid_table_name(table_name):
   return only_char_and_under_score(table_name)
@@ -205,7 +196,7 @@ class orm:
      column_in_table(col_name, tab_name)    <-- decides if given table has given column
      table_exists(tab_name)                 <-- check if table with given name has been created
      create_table(tab_name, *columns)       <-- create_table("employee", ("name", str), ("salary", int))
-     valid_field(tab_name, col_name, field) <-- check if field is appropropriate data type for column
+     valid_field(tab_name, col_name, field) <-- check if field is appropriate data type for column
      insert(tab_name, **kwargs)             <-- insert("employee", name="bob", salary="50000")"""
 
   def execute(self, query, params = ()):

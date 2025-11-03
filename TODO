@@ -1,0 +1,6 @@
+-write unit tests for unique_id
+-go back to finish testing for entity_data
+-go back to structs.py and look at which other classes can be moved 
+elsewhere or maybe even (olc stuff for one?)
+-eventually, structs.py should contain only the definition of dataclasses 
+that use non-custom datatypes (so that any file can import it)

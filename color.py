@@ -8,7 +8,7 @@ def ansi_color_sequence(num):
   return u"\u001b[38;5;{}m".format(num)
 
 # basic 8 foreground colors
-# BLACK   = ansi_color_sequence(0)
+BLACK   = ansi_color_sequence(0)
 # for now, 0 reserved for NORMAL
 RED     = ansi_color_sequence(1)
 GREEN   = ansi_color_sequence(2)

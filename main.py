@@ -1,22 +1,15 @@
 # Python Modules
 import argparse
-import logging
+import mudlog
 import os
 import time
 
 # Local Modules
 import config
 import database
-import game
+import game_data
 import nanny
 import server
-
-# structure of log timestamps
-logging.basicConfig(
-  level=logging.INFO,
-  format='%(asctime)s :: %(message)s',
-  datefmt='%b %d %H:%M:%S',
-)
 
 # command line argument handling
 parser = argparse.ArgumentParser(description='oMud Server')
@@ -25,11 +18,19 @@ parser.add_argument('-c', type=str, metavar='copyover_file', help='run the MUD u
 parser.add_argument('-a', help='the MUD is being run from the autorun script')
 cl_dict = vars(parser.parse_args())
 
-logging.info(f"OurouborosMUD {config.OMUD_VERSION}")
+mudlog.info(f"OurouborosMUD {config.OMUD_VERSION}")
 
-mud = game.game()
+# create game server
 network = server.server()
+
+# create world
+mud = game_data.game_data()
+
+# fire up database
 db = database.database(config.DATABASE_FILE)
+db.connect()
+db.create_tables()
+db.load_stock()
 
 # load contents of database
 mud.load_world(db)
@@ -37,7 +38,7 @@ mud.load_world(db)
 # populate world with npcs/objs and assign spec procs
 mud.startup()
 
-logging.info(f"Running game on port {cl_dict['port']}.")
+mudlog.info(f"Running game on port {cl_dict['port']}.")
 network.boot("0.0.0.0", cl_dict['port'])
 
 # loading commands
@@ -47,18 +48,18 @@ if cl_dict['c'] != None:
   network.copyover_recover(mud, cl_dict['c'], db)
 
 try:
-  loops_per_second = 10
+  loops_per_second = 30
   time_per_loop = float(1)/float(loops_per_second)
 
   while not network.shutdown_cmd and not network.copyover_cmd:
     network.loop(mud, db)
     time.sleep(time_per_loop)
-    mud.heart_beat(db)
-    mud.call_heart_beat_procs(db)
+    mud.heartbeat(db)
+    mud.call_hbeat_procs(db)
     # TODO: find out how long this function took to call and adjust sleep time accordingly
 
 except KeyboardInterrupt:
-  logging.error("SYSERR: Received SIGHUP, SIGINT, or SIGTERM.  Shutting down...")
+  mudlog.error("SYSERR: Received SIGHUP, SIGINT, or SIGTERM.  Shutting down...")
 
 else:
   network.shutdown()
@@ -67,4 +68,4 @@ else:
   if network.copyover_cmd:
     os.system(f"python3 main.py -c {config.COPYOVER_PATH} {cl_dict['port']}")
   else:
-    logging.info("Done.")
+    mudlog.info("Done.")

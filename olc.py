@@ -1,17 +1,12 @@
 from color import *
 import config
-import descriptor
+import descriptor_data
 import enum
-import exit
+import exit_data
 import logging
 import redit
 import string_handling
-import structs
 import zedit
-
-class olc_mode(enum.IntEnum):
-  OLC_MODE_ZEDIT = 0
-  OLC_MODE_REDIT = 1
 
 def handle_input(d, input, server, mud, db):
   if d.olc.mode == olc_mode.OLC_MODE_ZEDIT:
@@ -26,7 +21,6 @@ def olc_writing_follow_up(d):
   else:
     d.write("You shouldn't see this!\r\n")
     
-
 def do_mlist(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
@@ -158,9 +152,9 @@ def do_redit(ch, scmd, argument, server, mud, db):
     redit_save.room_name = rm.name
     redit_save.room_desc = rm.desc.make_copy()
 
-    # make a copy of all the exits as strings of either internal or external references
+    # make a copy of all the exits as virtual references
     for dir in exit.direction:
-      redit_save.room_exits[dir] = rm.get_destination(dir) # some of these will be None!
+      redit_save.room_exits[dir] = rm.get_destination(dir).vref # some of these will be None!
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (redit).\r\n")
   ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_REDIT, redit.redit_state.REDIT_MAIN_MENU, False, redit_save)

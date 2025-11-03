@@ -1,699 +1,686 @@
-import config
-import editor
-import exit
-import logging
-import object
-import os
-import pc
-import room
-import string_handling
-import structs
-import sqlite3
-import zone
+import db_handler
+import exit_data
+import mudlog
+import npc_proto_data
+import obj_proto_data
+import room_data
+import zone_data
 
 class database:
-  def __init__(self, name):
-    self._name = name
-   
-    if os.path.exists(name):
-      self._conn = sqlite3.connect(name)
-      self._cursor = self._conn.cursor()
-    else:
-      self._conn = sqlite3.connect(name)
-      self._cursor = self._conn.cursor()
-      self.create_tables()
-      self.load_stock()
+  ALIAS_TABLE        = "alias_table"
+  EXIT_TABLE         = "ex_table"
+  PREF_NUMERIC_TABLE = "pref_table_numeric"
+  PREF_TEXT_TABLE    = "pref_table_text"
+  PREF_FLAG_TABLE    = "pref_table_flags"
+  NPC_PROTO_TABLE    = "npc_proto_table"
+  OBJ_PROTO_TABLE    = "obj_proto_table"
+  WORLD_TABLE        = "wld_table"
+  PLAYER_TABLE       = "p_table"
+  ZONE_TABLE         = "z_table"
 
-  """create_tables()         <-- creates all database tables
-     execute(line)           <-- returns execution of (SQL line)
-     fetchall()              <-- returns cursor.fetchall()
-     fetchone()              <-- returns cursor.fetchone()
+  def __init__(self, db_file=None):
+    self._db_file = db_file
+    self._handler = db_handler.db_handler()
 
-     contains_exit(rm, dir, ex) <-- check if the exit will collide with an existing exit
-     add_exit(rm, ex)        <-- add ex from rm to the database
-     delete_exit(rm, ex)     <-- delete ex from rm from the database
-     save_exit(rm, ex)       <-- creates or updates ex from rm in the database
+  """connect()                           <- connect to self._db_file
+     close()                             <- close connection
 
-     contains_obj(obj)       <-- check whether obj (obj_proto) will collide with existing entry
-     add_obj(obj)            <-- add obj to the database
-     delete_obj(obj)         <-- deletes obj from the database
-     save_obj(obj)           <-- creates or updates obj in the database
+     name_used(name)                     <- check if player exists with name
+     next_unused_pid()                   <- find smallest unused player ID
 
-     contains_player(p)      <-- check whether p will collide with an existing player
-     add_player(p)           <-- add p to the database
-     delete_player(p)        <-- delete p from the database
-     save_player(p)          <-- creates or updates p in the database
+     save_exit(zone_id, id, exit)        <- save exit
+     has_exit(zone_id, id, direction)    <- check if exit already saved
+     delete_exit(zone_id, id, direction) <- delete exit
+     num_exits()                         <- count exits
 
-     contains_pref(p, tag)   <-- check whether cpref will collide with an existing preference
-     add_pref(p, tag, val)   <-- add p's pref with tag as val
-     delete_pref(p, tag)     <-- delete p's pref with tag
-     save_pref(p, tag, val)  <-- creates or updates p's pref with tag in the database as val
+     save_preferences(pc)                <- save all numeric/text/flag prefs
 
-     contains_npc(np)        <-- check whether np (npc_proto) will collide with existing entry
-     add_npc(np)             <-- add np to the database
-     delete_npc(np)          <-- deletes np from the database
-     save_npc(np)            <-- creates or updates np in the database
+     load_all_prefs_numeric(pc)          <- load all numeric preferences to pc     
+     save_pref_numeric(pc, field, value) <- save numeric preference
+     save_all_prefs_numeric(pc)          <- save all numeric preferences
+     has_pref_numeric(id, field)         <- check if preference already saved
+     delete_pref_numeric(id, field)      <- delete preference from database
+     delete_all_prefs_numeric(id)        <- delete all numeric preferences by id
+     num_prefs_numeric()                 <- count text preferences in database
 
-     contains_room(rm)       <-- check whether rm will collide with an existing room
-     add_room(rm)            <-- adds rm to the database
-     delete_room(rm)         <-- deletes rm from the database
-     save_room(rm)           <-- creates or updates rm in the database
+     load_all_prefs_text(pc)             <- load all text preferences to pc
+     save_pref_text(pc, field, value)    <- save text preference
+     save_all_prefs_text(pc)             <- save all text preferences
+     has_pref_text(id, field)            <- check if preference already saved
+     delete_pref_text(id, field)         <- delete preference from database
+     delete_all_prefs_text(id)           <- delete all text preferences by id
+     num_prefs_text()                    <- count text preferences in database
 
-     contains_zone(zn)       <-- check whether zn will collide with an existing zone
-     add_zone(zn)            <-- add zn to the database
-     delete_zone(zn)         <-- deletes zn from the database
-     save_zone(zn)           <-- creates or updates zn in the database
+     load_all_prefs_flag(pc)             <- load all flag preferences to pc
+     save_pref_flag(pc, field, value)    <- save flag preference
+     save_all_prefs_flag(pc)             <- save all flag preferences
+     has_pref_flag(id, field)            <- check if preference already saved
+     delete_pref_flag(id, field)         <- delete preference from database
+     delete_all_prefs_flag(id)           <- delete all flag preferences by id
+     num_prefs_flag()                    <- count flag preferences in database
 
-     load_ptable(mud)        <-- load all player id's and names
-     load_zones(mud)         <-- load all zones
-     load_npcs(mud)          <-- load all npc_proto's
-     load_objs(mud)          <-- load all obj_proto's
-     load_game(mud)          <-- load entire database
+     save_npc_proto(proto)               <- save npc prototype
+     has_npc_proto(zone_id, id)          <- check if npc prototype already saved
+     delete_npc_proto(zone_id, id)       <- delete npc prototype from database
+     num_npc_protos()                    <- count npc prototypes in database
 
-     ex_table()              <-- loads exit table
-     ex_table_str()          <-- print exit table
-     npc_table()             <-- loads npc table
-     npc_table_str()         <-- print npc table
-     obj_table()             <-- loads obj table
-     obj_table_str()         <-- print obj table
-     p_table_str()           <-- loads player table
-     p_table_str()           <-- print player table
-     rm_table()              <-- loads room table
-     rm_table_str()          <-- print room table
-     z_table()               <-- loads zone table
-     z_table_str()           <-- print zone table
+     save_obj_proto(proto)               <- save object prototype
+     has_obj_proto(zone_id, id)          <- check if object prototype already saved
+     delete_obj_proto(zone_id, id)       <- delete object prototype
+     num_obj_protos()                    <- count object prototypes in database
 
-     load_stock()            <-- hard-codes a stock world into the DB
-     load_world(mud)         <-- loads zones, rooms, obj/npc_protos into mud
+     save_room(room)                     <- save room (with exits)
+     has_room(zone_id, id)               <- check if room already saved
+     delete_room(zone_id, id)            <- delete room (with exits) from database
+     num_rooms()                         <- count rooms in database
 
-     next_unused_pid()       <-- figure out the lowest player ID not in use
-     name_used(name)         <-- check if a player with name exists
-     check_pwd(name, pwd)    <-- check if the password is correct for the player
-     player_name_by_id(id)   <-- player name that corresponds to id
-     player_id_by_name(name) <-- player id that corresponds to id
+     load_player(pc)                     <- loads player data to player
+     save_player(pc)                     <- save player
+     has_player(id)                      <- check if player already saved
+     delete_player(id)                   <- delete player from database
+     num_players()                       <- count players in database
 
-     Used for debugging info (called in commands.do_db)
-     table_list()            <-- returns a list of table names
-     row_count(table_name)   <-- counts number of rows loaded to table_name
-     close()                 <-- closes conn"""
-      
-  def create_tables(self):
+     load_player(pc)                     <- load player from database
+     check_password(name, password)      <- check if password is correct
+     player_id_by_name(name)             <- lookup player id by name
 
-    self.execute("""CREATE TABLE ex_table (
-        direction   integer,
-        o_zone_id   text,
-        o_id        text,
-        d_zone_id   text,
-        d_id        text)""")
+     create_tables()                     <- creates all world data tables
+     show_table(name)                    <- displays contents of table
 
-    self.execute("""CREATE TABLE p_table (
-        id          integer,
-        name        text,
-        password    text)""")
+     zone_table()                        <- displays zones as result set
+     world_table()                       <- lists all rooms as result set
+     exit_table()                        <- lists all exits as result set
+     npc_table()                         <- lists all npc_protos as result set
+     obj_table()                         <- lists all obj_protos as result set
+     alias_table()                       <- lists all aliases as result set"""
 
-    self.execute("""CREATE TABLE pref_table_numeric (
-        id          integer,
-        tag         text,
-        value       integer)""")
+  def connect(self):
+    if self._db_file == None:
+      mudlog.error("Trying to connect to non-existent database file.")
+      return
 
-    self.execute("""CREATE TABLE pref_table_text (
-        id          integer,
-        tag         text,
-        value       text)""")
+    self._handler.connect(self._db_file)
 
-    self.execute("""CREATE TABLE pref_table_flag (
-        id          integer,
-        tag         text,
-        value       integer)""")
-
-    self.execute("""CREATE TABLE npc_table (
-        zone_id     text,
-        id          text,
-        name        text,
-        ldesc       text,
-        dscn        text)""")
-
-    self.execute("""CREATE TABLE obj_table (
-        zone_id     text,
-        id          text,
-        name        text,
-        ldesc       text,
-        dscn        text)""")
-
-    self.execute("""CREATE TABLE alias_table (
-        zone_id     text,
-        id          text,
-        typ         text,
-        alias       text)""")
-
-    self.execute("""CREATE TABLE wld_table (
-        zone_id     text,
-        id          text,
-        name        text,
-        description text)""")
-
-    self.execute("""CREATE TABLE z_table (
-        id          text,
-        name        text,
-        author      text)""")
-
-  def drop_tables(self):
-    self.execute("DROP TABLE IF EXISTS ex_table")
-    self.execute("DROP TABLE IF EXISTS p_table")
-    self.execute("DROP TABLE IF EXISTS pref_table_numeric")
-    self.execute("DROP TABLE IF EXISTS pref_table_text")
-    self.execute("DROP TABLE IF EXISTS pref_table_flag")
-    self.execute("DROP TABLE IF EXISTS npc_table")
-    self.execute("DROP TABLE IF EXISTS obj_table")
-    self.execute("DROP TABLE IF EXISTS alias_table")
-    self.execute("DROP TABLE IF EXISTS wld_table")
-    self.execute("DROP TABLE IF EXISTS z_table")
-
-  def execute(self, line, parameters=()):
-    try:
-      ret_val = self._cursor.execute(line, parameters)
-    except sqlite3.ProgrammingError:
-      logging.error(f"SQL Programming Error with line {line} and parameters {parameters}.")
-    else:
-      self._conn.commit()
-      return ret_val
-
-  def fetchall(self):
-    return self._cursor.fetchall()
-
-  def fetchone(self):
-    return self._cursor.fetchone()
-
-  def contains_exit(self, rm, ex):
-    room_id = rm.id
-    zone_id = rm.zone_id
-
-    self.execute("SELECT * FROM ex_table WHERE o_zone_id=:zone_id AND o_id=:room_id AND direction=:dir", {
-      'zone_id': zone_id,
-      'room_id': room_id,
-      'dir':     rm.direction(ex)})
-    return len(self.fetchall()) != 0
-
-  def _add_exit(self, rm, ex):
-    id = rm.id
-    zone_id = rm.zone_id
-
-    if ex.internal:
-      ex.zone_id = zone_id
-
-    self.execute("INSERT INTO ex_table VALUES (:dir, :ozid, :orid, :dzid, :did)", {
-      'dir':     rm.direction(ex),
-      'ozid':    zone_id,
-      'orid':    id,
-      'dzid':    ex.zone_id,
-      'did':     ex.room_id})
-
-  def _delete_exit(self, rm, ex):
-    room_id = rm.id
-    zone_id = rm.zone_id
-
-    self.execute("DELETE FROM ex_table WHERE o_zone_id=:zone_id AND o_id=:room_id AND direction=:dir", {
-      'zone_id': zone_id,
-      'room_id': room_id,
-      'dir':     rm.direction(ex)})
-
-  def save_exit(self, rm, ex):
-    if self.contains_exit(rm, ex):
-      self._delete_exit(rm, ex)
-    self._add_exit(rm, ex)
-
-  def contains_obj(self, op):
-    self.execute("SELECT * FROM obj_table WHERE zone_id=:zid AND id=:id", {
-      'zid':     op.zone_id, 
-      'id':      op.id})
-    return len(self.fetchall()) != 0
-
-  def _add_obj(self, op):
-    self.execute("INSERT INTO obj_table VALUES (:zone_id, :id, :name, :ldesc, :dscn)", {
-      'zone_id': op.zone_id,
-      'id':      op.id,
-      'name':    op.entity.name,
-      'ldesc':   op.ldesc,
-      'dscn':    op.entity.desc.str()})
-
-  def _delete_obj(self, op):
-    self.execute("DELETE FROM obj_table WHERE zone_id=:zid AND id=:id", {
-      'zid': op.zone_id,
-      'id':  op.id})
-
-  def save_obj(self, op):
-    if self.contains_obj(op):
-      self.delete_obj(op)
-    self._add_obj(op)
-    self.save_obj_aliases(op)
-
-  def contains_flag_pref(self, p, attr):
-    self.execute("SELECT * FROM pref_table_flag WHERE id=:id AND tag=:tag", {
-      'id': p.id,
-      'tag': attr})
-    return len(self.fetchall()) != 0
-
-  def _add_flag_pref(self, p, attr, value):
-    self.execute("INSERT INTO pref_table_flag VALUES(:id, :tag, :value)", {
-      'id': p.id,
-      'tag': attr,
-      'value': value}) # save flag as 1 or 0
-
-  def _delete_flag_pref(self, p, attr):
-    self.execute("DELETE FROM pref_table_flag WHERE id=:id AND tag=:tag", {
-     'id': p.id,
-     'tag': attr})
-
-  def save_flag_pref(self, p, attr, value):
-    if self.contains_flag_pref(p, attr):
-      self._delete_flag_pref(p, attr)
-    self._add_flag_pref(p, attr, value)
-
-  def save_flag_prefs(self, p):
-    for field in p.flag_prefs.__dataclass_fields__:
-      val = getattr(p.flag_prefs, field)
-      self.save_flag_pref(p, field, val)
-
-  def load_flag_prefs(self, p):
-    self.execute("SELECT * FROM pref_table_flag WHERE id=:id", {'id': p.id})
-    for line in self.fetchall():
-      p.flag_prefs.set(line[1], line[2])
-
-  def contains_numeric_pref(self, p, attr):
-    self.execute("SELECT * FROM pref_table_numeric WHERE id=:id AND tag=:tag", {
-      'id': p.id,
-      'tag': attr})
-    return len(self.fetchall()) != 0
-
-  def _add_numeric_pref(self, p, attr, value):
-    self.execute("INSERT INTO pref_table_numeric VALUES(:id, :tag, :value)", {
-      'id': p.id,
-      'tag': attr,
-      'value': value})
-
-  def _delete_numeric_pref(self, p, attr):
-    self.execute("DELETE FROM pref_table_numeric WHERE id=:id AND tag=:tag", {
-     'id': p.id,
-     'tag': attr})
-
-  def save_numeric_pref(self, p, attr, value):
-    if self.contains_numeric_pref(p, attr):
-      self._delete_numeric_pref(p, attr)
-    self._add_numeric_pref(p, attr, value)
-
-  def save_numeric_prefs(self, p):
-    for field in p.numeric_prefs.__dataclass_fields__:
-      val = getattr(p.numeric_prefs, field)
-      self.save_numeric_pref(p, field, val)
-
-  def contains_text_pref(self, p, attr):
-    self.execute("SELECT * FROM pref_table_text WHERE id=:id AND tag=:tag", {
-      'id': p.id,
-      'tag': attr})
-    return len(self.fetchall()) != 0
-
-  def _add_text_pref(self, p, attr, value):
-    self.execute("INSERT INTO pref_table_text VALUES(:id, :tag, :value)", {
-      'id': p.id,
-      'tag': attr,
-      'value': value})
-
-  def _delete_text_pref(self, p, attr):
-    self.execute("DELETE FROM pref_table_text WHERE id=:id AND tag=:tag", {
-     'id': p.id,
-     'tag': attr})
-
-  def save_text_pref(self, p, attr, value):
-    if self.contains_text_pref(p, attr):
-      self._delete_text_pref(p, attr)
-    self._add_text_pref(p, attr, value)
-
-  def save_text_prefs(self, p):
-    for field in p.text_prefs.__dataclass_fields__:
-      val = getattr(p.text_prefs, field)
-      self.save_text_pref(p, field, val)
-
-  def save_prefs(self, p):
-    self.save_flag_prefs(p)
-    self.save_numeric_prefs(p)
-    self.save_text_prefs(p)
- 
-  def contains_player(self, p):
-    self.execute("SELECT * FROM p_table WHERE id=:id", {'id':p.id})
-    return len(self.fetchall()) != 0
-
-  def _add_player(self, p):
-    self.execute("INSERT INTO p_table VALUES (:id, :name, :pwd)", {
-      'id':   p.id,
-      'name': p.name,
-      'pwd':  p.pwd})
-
-  def _delete_player(self, p):
-    self.execute("DELETE FROM p_table WHERE id=:id", {'id':p.id})
-
-  def save_player(self, p):
-    if self.contains_player(p):
-      self._delete_player(p)
-    self._add_player(p)
+  def close(self):
+    self._handler.close()
 
   def name_used(self, name):
-    return self.id_by_name(name) != None
-
-  def check_pwd(self, name, pwd):
-    self.execute("SELECT * FROM p_table WHERE name=:name AND password=:pwd", {
-      'name': name,
-      'pwd':  pwd})
-    return len(self.fetchall()) != 0
-
-  def name_by_id(self, id):
-    self.execute("SELECT * FROM p_table WHERE id=:id", {'id': id})
-
-    rows = self.fetchall()
-    if(len(rows)) == 0:
-      return None
-
-    return rows[0][1]
-
-  def id_by_name(self, name):
-    self.execute("SELECT * FROM p_table WHERE name=:name", {'name': name})
-
-    rows = self.fetchall()
-    if(len(rows)) == 0:
-      return None
-
-    return rows[0][0]
+    return self._handler.get_record(database.PLAYER_TABLE,name=name) is not None
 
   def next_unused_pid(self):
     j = 1;
 
-    while self.name_by_id(j) != None:
+    while self.has_player(j):
       j += 1
 
     return j
 
+  def save_exit(self, zone_id, id, exit):
+    if self.has_exit(zone_id, id, exit.direction):
+      self.delete_exit(zone_id, id, exit.direction)
+  
+    self._handler.insert_record(database.EXIT_TABLE,
+      direction=int(exit.direction),
+      o_zone_id=zone_id,
+      o_id=id,
+      d_zone_id=exit.zone_id,
+      d_id=exit.id
+    )
+
+  def has_exit(self, zone_id, id, direction):
+    return self._handler.get_record(database.EXIT_TABLE,
+      direction=int(direction),
+      o_zone_id=zone_id,
+      o_id=id
+    ) is not None
+
+  def delete_exit(self, zone_id, id, direction):
+    if not self.has_exit(zone_id, id, direction):
+      mudlog.error(f"Trying to delete non-existent exit from room {id}@{zone_id} to the {direction.name}.")
+      return
+
+    self._handler.delete_records(database.EXIT_TABLE,
+      direction=int(direction),
+      o_zone_id=zone_id,
+      o_id=id
+    )
+
+  def num_exits(self):
+    return self._handler.num_records(database.EXIT_TABLE)
+
+  def load_preferences(self, pc):
+    self.load_all_prefs_numeric(pc)
+    self.load_all_prefs_text(pc)
+    self.load_all_prefs_flag(pc)
+
+  def save_preferences(self, pc):
+    self.save_all_prefs_numeric(pc)
+    self.save_all_prefs_text(pc)
+    self.save_all_prefs_flag(pc)
+
+  def save_pref_numeric(self, pc, field, value):
+    if self.has_pref_numeric(pc.player_id, field):
+      self.delete_pref_numeric(pc.player_id, field)
+
+    self._handler.insert_record(database.PREF_NUMERIC_TABLE,
+      id=pc.player_id,
+      field=field,
+      value=value
+    )
+
+  def load_all_prefs_numeric(self, pc):
+    self._handler.search_table(database.PREF_NUMERIC_TABLE, id=pc.player_id)
+    for record in self._handler.fetch_all():
+      pc.set_pref(record['field'], record['value'])
+
+  def save_all_prefs_numeric(self, pc):
+    for field in pc.numeric_prefs.fields():
+      self.save_pref_numeric(pc, field, getattr(pc.numeric_prefs, field))
+
+  def has_pref_numeric(self, id, field):
+    return self._handler.get_record(database.PREF_NUMERIC_TABLE,
+      id=id,
+      field=field
+    ) != None
+
+  def delete_pref_numeric(self, id, field):
+    if not self.has_pref_numeric(id, field):
+      mudlog.error(f"Trying to delete non-existent numeric preference {field} for {name}.")
+      return
+
+    self._handler.delete_records(database.PREF_NUMERIC_TABLE,
+      id=id,
+      field=field
+    )
+
+  def delete_all_prefs_numeric(self, id):
+    self._handler.delete_records(database.PREF_NUMERIC_TABLE,
+      id=id
+    )
+
+  def num_prefs_numeric(self):
+    return self._handler.num_records(database.PREF_NUMERIC_TABLE)
+
+  def save_pref_text(self, pc, field, value):
+    if self.has_pref_text(pc.player_id, field):
+      self.delete_pref_text(pc.player_id, field)
+
+    self._handler.insert_record(database.PREF_TEXT_TABLE,
+      id=pc.player_id,
+      field=field,
+      value=value
+    )
+
+  def load_all_prefs_text(self, pc):
+    self._handler.search_table(database.PREF_TEXT_TABLE, id=pc.player_id)
+    for record in self._handler.fetch_all():
+      pc.set_pref(record['field'], record['value'])
+
+  def save_all_prefs_text(self, pc):
+    for field in pc.text_prefs.fields():
+      self.save_pref_text(pc, field, getattr(pc.text_prefs, field))
+
+  def has_pref_text(self, id, field):
+    return self._handler.get_record(database.PREF_TEXT_TABLE,
+      id=id,
+      field=field
+    ) != None
+
+  def delete_pref_text(self, id, field):
+    if not self.has_pref_text(id, field):
+      mudlog.error(f"Trying to delete non-existant text preference {field} for {name}.")
+      return
+
+    self._handler.delete_records(database.PREF_TEXT_TABLE,
+      id=id,
+      field=field
+    )
+
+  def delete_all_prefs_text(self, id):
+    self._handler.delete_records(database.PREF_TEXT_TABLE,
+      id=id
+    )
+
+  def num_prefs_text(self):
+    return self._handler.num_records(database.PREF_TEXT_TABLE)
+
+  def load_all_prefs_flag(self, pc):
+    self._handler.search_table(database.PREF_FLAG_TABLE, id=pc.player_id)
+
+    for record in self._handler.fetch_all():
+      pc.set_pref(record['field'], bool(record['value']))
+
+  def save_pref_flag(self, pc, field, value):
+    if self.has_pref_flag(pc.player_id, field):
+      self.delete_pref_flag(pc.player_id, field)
+
+    self._handler.insert_record(database.PREF_FLAG_TABLE,
+      id=pc.player_id,
+      field=field,
+      value=int(value)
+    )
+
+  def save_all_prefs_flag(self, pc):
+    for field in pc.flag_prefs.fields():
+      self.save_pref_flag(pc, field, getattr(pc.flag_prefs, field))
+
+
+  def has_pref_flag(self, id, field):
+    return self._handler.get_record(database.PREF_FLAG_TABLE,
+      id=id,
+      field=field
+    ) != None
+
+  def delete_pref_flag(self, id, field):
+    if not self.has_pref_flag(id, field):
+      mudlog.error(f"Trying to delete non-existent preference flag {field} for player {id}.")
+
+    self._handler.delete_records(database.PREF_FLAG_TABLE,
+      id=id,
+      field=field
+    )
+
+  def delete_all_prefs_flags(self, id):
+    self._handler.delete_records(database.PREF_FLAG_TABLE,
+      id=id
+    )
+
+  def num_prefs_flag(self):
+    return self._handler.num_records(database.PREF_FLAG_TABLE)
+
+  def save_npc_proto(self, proto):
+    if self.has_npc_proto(proto.zone_id, proto.id):
+      self.delete_npc_proto(proto.zone_id. proto.id)
+
+    self._handler.insert_record(database.NPC_PROTO_TABLE,
+      zone_id=proto.zone_id,
+      id=proto.id,
+      name=proto.name,
+      ldesc=proto.ldesc,
+      desc=proto.ldesc
+    )
+
+    for alias in proto.aliases():
+      self.save_alias(proto.zone_id, proto.id, 'npc', alias)
+
+  def has_npc_proto(self, zone_id, id):
+    return self._handler.get_record(database.NPC_PROTO_TABLE,
+      zone_id=zone_id,
+      id=id
+    ) != None
+
+  def delete_npc_proto(self, zone_id, id):
+    if not self.has_npc_proto(zone_id, id):
+      mudlog.error(f"Trying to delete non-existent npc proto {id}@{zone_id}.")
+      return
+
+    self._handler.delete_records(database.NPC_PROTO_TABLE,
+      zone_id=zone_id,
+      id=id
+    )
+
+    self._handler.delete_records(database.ALIAS_TABLE,
+      zone_id=zone_id,
+      id=id,
+      type='npc'
+    )
+
+  def num_npc_protos(self):
+    return self._handler.num_records(database.NPC_PROTO_TABLE)
+
+  def save_obj_proto(self, proto):
+    if self.has_obj_proto(proto.zone_id, proto.id):
+      self.delete_obj_proto(proto.zone_id, proto.id)
+
+    self._handler.insert_record(database.OBJ_PROTO_TABLE,
+      zone_id=proto.zone_id,
+      id=proto.id,
+      name=proto.name,
+      ldesc=proto.ldesc,
+      desc=proto.ldesc
+    )
+
+    for alias in proto.aliases():
+      self.save_alias(proto.zone_id, proto.id, 'obj', alias)
+
+  def has_obj_proto(self, zone_id, id):
+    return self._handler.get_record(database.OBJ_PROTO_TABLE,
+      zone_id=zone_id,
+      id=id
+    ) != None
+
+  def delete_obj_proto(self, zone_id, id):
+    if not self.has_obj_proto(zone_id, id):
+      mudlog.error(f"Trying to delete non-existent object proto {id}@{zone_id}.")
+      return
+
+    self._handler.delete_records(database.OBJ_PROTO_TABLE,
+      zone_id=zone_id,
+      id=id
+    )
+
+    self._handler.delete_records(database.ALIAS_TABLE,
+      zone_id=zone_id,
+      id=id,
+      type='obj'
+    )
+
+  def num_obj_protos(self):
+    return self._handler.num_records(database.OBJ_PROTO_TABLE)
+
+  def save_room(self, room):
+    if self.has_room(room.zone_id, room.id):
+      self.delete_room(room.zone_id, room.id)
+
+    self._handler.insert_record(database.WORLD_TABLE,
+      zone_id=room.zone_id,
+      id=room.id,
+      name=room.name,
+      desc=room.desc,
+    )
+
+    for ex in room.exits:
+      self.save_exit(room.zone_id, room.id, ex)
+
+  def has_room(self, zone_id, id):
+    return self._handler.get_record(database.WORLD_TABLE,
+      zone_id=zone_id,
+      id=id
+    ) != None
+
+  def delete_room(self, zone_id, id):
+    if not self.has_room(zone_id, id):
+      mudlog.error(f"Trying to delete non-existent room {id}@{zone_id}.")
+      return
+
+    self._handler.delete_records(database.WORLD_TABLE,
+      zone_id=zone_id,
+      id=id
+    )
+
+    self._handler.delete_records(database.EXIT_TABLE,
+      o_zone_id=zone_id,
+      o_id=id
+    )
+
+  def num_rooms(self):
+    return self._handler.num_records(database.WORLD_TABLE)
+
+  def save_player(self, pc):
+    if self.has_player(pc.player_id):
+      self.delete_player(pc.player_id)
+
+    self._handler.insert_record(database.PLAYER_TABLE,
+      id=pc.player_id,
+      name=pc.name,
+      password=pc.password
+    )
+
+  def has_player(self, id):
+    return self._handler.get_record(database.PLAYER_TABLE,
+      id=id
+    ) is not None
+
+  def delete_player(self, id):
+    if not self.has_player(id):
+      mudlog.error(f"Trying to delete non-existent player with id {pc.player_id}.")
+      return
+
+    self._handler.delete_records(database.PLAYER_TABLE,
+      id=id
+    )
+
   def num_players(self):
-    self.execute("SELECT * FROM p_table")
-    return len(self.fetchall())
+    return self._handler.num_records(database.PLAYER_TABLE)
 
-  # this is currently not used, since by the time the player's password is
-  # confirmed, we've already loaded all of this information separately
-  # but it would seem sensible to call this function so for now it stays
-  def load_player(self, name):
-    ret_val = pc.pc()
+  def load_player(self, pc, player_id):
+    record = self._handler.get_record(database.PLAYER_TABLE, id=player_id)
 
-    self.execute("SELECT * FROM p_table WHERE name=:name", {'name': name})
+    pc.name = record['name']
+    pc.password = record['password']
+    pc.player_id = player_id
 
-    row = self.fetchone()
+    self.load_all_prefs_flag(pc)
+    self.load_all_prefs_numeric(pc)
+    self.load_all_prefs_text(pc)
 
-    if row == None:
-      return None
+  def check_password(self, name, password):
+    record = self._handler.get_record(database.PLAYER_TABLE, name=name)
+    return record['password'] == password
 
-    ret_val.id   = row[0]
-    ret_val.name = row[1]
-    ret_val.pwd  = row[2]
+  def player_id_by_name(self, name):
+    record = self._handler.get_record(database.PLAYER_TABLE, name=name)
+    return record['id']
 
-    return ret_val
+  def save_zone(self, zone):
+    if self.has_zone(zone.id):
+      self.delete_zone(zone.id)
 
-  def contains_npc(self, np):
-    self.execute("SELECT * from npc_table WHERE zone_id=:zone_id AND id=:id", {
-      'zone_id' : np.unique_id.zone_id,
-      'id':       np.unique_id.id})
-    return len(self.fetchall()) != 0
+    self._handler.insert_record(database.ZONE_TABLE,
+      id=zone.id,
+      name=zone.name,
+      author=zone.author
+    )
 
-  def _add_npc(self, np):
-    self.execute("INSERT INTO npc_table VALUES (:zone_id, :id, :name, :ldesc, :dscn)", {
-      'zone_id': np.unique_id.zone_id,
-      'id': np.unique_id.id,
-      'name': np.entity.name,
-      'ldesc': np.ldesc,
-      'dscn': np.entity.desc.str()})
+    for id in zone.list_room_ids():
+      self.save_room(zone.room_by_id(id))
 
-  def _delete_npc(self, np):
-    self.execute("DELETE * FROM npc_table WHERE zone_id=:zone_id AND id=:id", {
-      'zone_id': np.unique_id.zone_id,
-      'id':      np.unique_id.id})
+    for id in zone.list_npc_ids():
+      self.save_npc_proto(zone.npc_by_id(id))
 
-  def save_npc(self, np):
-    if self.contains_npc(np):
-      self._delete_npc(np)
-    self._add_npc(np)
-    self.save_npc_aliases(np)
+    for id in zone.list_obj_ids():
+      self.save_obj_proto(zone.obj_by_id(id))
 
-  def contains_room(self, rm):
-    self.execute("SELECT * FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
-      'zone_id': rm.zone_id,
-      'id':      rm.id})
-    return len(self.fetchall()) != 0
+  def has_zone(self, id):
+    return self._handler.get_record(database.ZONE_TABLE,
+      id=id) != None
 
-  def _add_room(self, rm):
-    self.execute("INSERT INTO wld_table VALUES (:zone_id, :id, :name, :dscn)", {
-      'zone_id': rm.zone_id,
-      'id':      rm.id,
-      'name':    rm.name,
-      'dscn':    rm.desc.str()})
+  def delete_zone(self, id):
+    if not self.has_zone(id):
+      mudlog.error(f"Trying to delete non-existent zone with id {zone.id}.")
+      return
 
-  def _delete_room(self, rm):
-    self.execute("DELETE FROM wld_table WHERE zone_id=:zone_id AND id=:id", {
-      'zone_id' : rm.zone_id,
-      'id' : rm.id})
+    self._handler.delete_records(database.ZONE_TABLE,
+      id=id
+    )
 
-  def save_room(self, rm):
-    if self.contains_room(rm):
-      self._delete_room(rm)
-    self._add_room(rm)
+    self._handler.delete_records(database.WORLD_TABLE,
+      zone_id=id
+    )
 
-    for dir in exit.direction:
-      ex = rm.exit(dir)
-      if ex != None:
-        self.save_exit(rm, ex)
+    self._handler.delete_records(database.OBJ_PROTO_TABLE,
+      zone_id=id
+    )
 
-  def contains_alias(self, zone_id, id, typ, alias):
-    self.execute("SELECT * FROM alias_table WHERE zone_id=:zid AND id=:id AND typ=:typ AND alias=:alias", {
-      'zid' : zone_id,
-      'id' : id,
-      'typ' : typ,
-      'alias' : alias})
-    return len(self.fetchall()) != 0
+    self._handler.delete_records(database.NPC_PROTO_TABLE,
+      zone_id=id
+    )
 
-  def _add_alias(self, zone_id, id, typ, alias):
-    self.execute("INSERT INTO alias_table VALUES (:zid, :id, :typ, :alias)", {
-      'zid' : zone_id,
-      'id' : id,
-      'typ' : typ,
-      'alias' : alias})
+  def num_zones(self):
+    return self._handler.num_records(database.ZONE_TABLE)
 
-  def _delete_alias(self, zone_id, id, typ, alias):
-    self.execute("DELETE * FROM alias_table WHERE zid=:zid AND id=:id AND typ=:typ AND alias=:alias", {
-      'zid' : zone_id,
-      'id' : id,
-      'typ' : typ,
-      'alias' : alias})
+  def save_alias(self, zone_id, id, type, alias):
+    if self.has_alias(zone_id, id, type, alias):
+      self.delete_alias(zone_id, id, type, alias)
 
-  def save_alias(self, zone_id, id, typ, alias):
-    if self.contains_alias(zone_id, id, typ, alias):
-      self._delete(zone_id, id, typ, alias)
-    self._add_alias(zone_id, id, typ, alias)
+    self._handler.insert_record(database.ALIAS_TABLE,
+      zone_id=zone_id,
+      id=id,
+      type=type,
+      alias=alias
+    )
 
-  def save_npc_aliases(self, np):
-    for keyword in np.entity.namelist:
-      self.save_alias(np.unique_id.zone_id, np.unique_id.id, 'npc', keyword)
+  def has_alias(self, zone_id, id, type, alias):
+    return self._handler.get_record(database.ALIAS_TABLE,
+      zone_id=zone_id,
+      id=id,
+      type=type,
+      alias=alias
+    ) != None
 
-  def save_obj_aliases(self, op):
-    for keyword in op.entity.namelist:
-      self.save_alias(op.unique_id.zone_id, op.unique_id.id, 'obj', keyword)
+  def delete_alias(self, zone_id, id, type, alias):
+    if not self.has_alias(zone_id, id, type, alias):
+      mudlog.error(f"Trying to delete non-existant alias {alias} from {type} {id}@{zone_id}.")
+      return
 
-  def contains_zone(self, zn):
-    self.execute("SELECT * FROM z_table WHERE id=:id", {'id' : zn.id})
-    return len(self.fetchall()) != 0
+    self._handler.delete_records(database.ALIAS_TABLE,
+      zone_id=zone_id,
+      id=id,
+      type=type,
+      alias=alias
+    )
 
-  def _add_zone(self, zn):
-    self.execute("INSERT INTO z_table VALUES (:id, :name, :auth)", {
-      'id':      zn.id,
-      'name':    zn.name,
-      'auth':    zn.author})
+  def num_aliases(self):
+    return self._handler.num_records(database.ALIAS_TABLE)
 
-  def _delete_zone(self, zn):
-    self.execute("DELETE FROM z_table where id=:id", {'id':zn.id})
+  def show_table(self, name):
+    return self._handler.show_table(name)
 
-  def save_zone(self, zn):
-    if self.contains_zone(zn):
-      self._delete_zone(zn)
-    self._add_zone(zn)
+  def create_tables(self):
+    # TODO: for maintainability, add default values, for example
+    # when mana gets added, none of the currently saved characters
+    # will have any mana.  I could give them all 50 mana by default
+    #
+    #            ("max_mp",    int,     50),
 
-    for rm in zn._world.values():
-      self.save_room(rm)
+    self._handler.verify_columns(database.EXIT_TABLE,
+      ("direction", int),
+      ("o_zone_id", str),
+      ("o_id", str),
+      ("d_zone_id", str),
+      ("d_id", str)
+    )
 
-    for np in zn._npc_proto.values():
-      self.save_npc(np)
+    # also, could add support for primary key indicators here
+    #
+    #                ("id",    int),
+    #                ("field", str),
+    #                ("value", int),
+    #                primary=("id", "field")
 
-    for op in zn._obj_proto.values():
-      self.save_obj(op)      
+    self._handler.verify_columns(database.PREF_NUMERIC_TABLE,
+      ("id", int),
+      ("field", str),
+      ("value", int)
+    )
 
-  def ex_table(self):
-    self.execute("SELECT * FROM ex_table")
-    return self.fetchall()
+    self._handler.verify_columns(database.PREF_TEXT_TABLE,
+      ("id", int),
+      ("field", str),
+      ("value", str)
+    )
 
-  def ex_table_str(self):
-    ret_val = string_handling.proc_color_codes(f"<c6>Direction:   From:                           To:<c0>\r\n")
+    self._handler.verify_columns(database.PREF_FLAG_TABLE,
+      ("id", int),
+      ("field", str),
+      ("value", int)
+    )
 
-    for item in self.ex_table():
-      ret_val += f"{exit.direction(item[0]).name:<12} {item[1]:<15} {item[2]:<15} {item[3]:<15} {item[4]:<15}\r\n"
+    self._handler.verify_columns(database.NPC_PROTO_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("name", str),
+      ("ldesc", str),
+      ("desc", str)
+    )
 
-    return ret_val
+    self._handler.verify_columns(database.OBJ_PROTO_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("name", str),
+      ("ldesc", str),
+      ("desc", str)
+    )
 
-  def alias_table(self):
-    self.execute("SELECT * FROM alias_table")
-    return self.fetchall()
+    self._handler.verify_columns(database.WORLD_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("name", str),
+      ("desc", str)
+    )
+
+    self._handler.verify_columns(database.PLAYER_TABLE,
+      ("id", int),
+      ("name", str),
+      ("password", str)
+    )
+
+    self._handler.verify_columns(database.ZONE_TABLE,
+      ("id", str),
+      ("name", str),
+      ("author", str)
+    )
+
+    self._handler.verify_columns(database.ALIAS_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("type", str),
+      ("alias", str)
+    )
+
+    # copyover_table
+
+  def zone_table(self):
+    self._handler.search_table(database.ZONE_TABLE)
+    return self._handler.fetch_all()
+
+  def world_table(self):
+    self._handler.search_table(database.WORLD_TABLE)
+    return self._handler.fetch_all()
+
+  def exit_table(self):
+    self._handler.search_table(database.EXIT_TABLE)
+    return self._handler.fetch_all()
 
   def npc_table(self):
-    self.execute("SELECT * FROM npc_table")
-    return self.fetchall()
-
-  def npc_table_str(self):
-    ret_val = string_handling.proc_color_codes(f"<c6>Zone:         Id:              Name:                         Desc:<c0>\r\n")
- 
-    for item in self.npc_table():
-      desc_buffer = editor.buffer(item[4])
-      ret_val += f"{item[0]:<14}{item[1]:<17}{item[2]:<30}{desc_buffer.preview(30)}\r\n"
-
-    return ret_val
+    self._handler.search_table(database.NPC_PROTO_TABLE)
+    return self._handler.fetch_all()
 
   def obj_table(self):
-    self.execute("SELECT * FROM obj_table")
-    return self.fetchall()
+    self._handler.search_table(database.OBJ_PROTO_TABLE)
+    return self._handler.fetch_all()
 
-  def obj_table_str(self):
-    ret_val = string_handling.proc_color_codes(f"<c6>Zone:         Id:              Name:                         Desc:<c0>\r\n")
- 
-    for item in self.obj_table():
-      desc_buffer = editor.buffer(item[4])
-      ret_val += f"{item[0]:<14}{item[1]:<17}{item[2]:<30}{desc_buffer.preview(30)}\r\n"
-
-    return ret_val
-
-  def pref_table(self):
-    self.execute("SELECT * FROM pref_table")
-    return self.fetchall()
-
-  def p_table(self):
-    self.execute("SELECT * FROM p_table")
-    return self.fetchall()
-
-  def p_table_str(self):
-    ret_val = string_handling.proc_color_codes(f"<c6>ID:   Name:<c0>\r\n")
- 
-    for item in self.p_table():
-      ret_val += f"{item[0]:<6}{item[1]}\r\n"
-
-    return ret_val
-
-  def wld_table(self):
-    self.execute("""SELECT * FROM wld_table""")
-    return self.fetchall()
-
-  def wld_table_str(self):
-    self.execute("""SELECT * FROM wld_table""")
-
-    ret_val = string_handling.proc_color_codes(f"<c6>{'Zone:':<{config.MAX_ZONE_ID_LENGTH + 2}}Id:       Name:                           Description:<c0>\r\n")
-
-    for item in self.wld_table():
-      desc_buffer = editor.buffer(item[3])
-
-      #todo: this will crash if item[0] == None
-      #insert a try/catch here to prevent that
-      ret_val += f"{item[0]:<{config.MAX_ZONE_ID_LENGTH + 2}}{item[1]:<10}{item[2]:<32}"
-
-      if not desc_buffer.is_empty:
-        ret_val += desc_buffer.preview(30)
- 
-      else:
-        ret_val += "(null)"
-
-      ret_val += "\r\n"
-
-    return ret_val
-
-  def z_table(self):
-    self.execute("""SELECT * FROM z_table""")
-    return self.fetchall()
-
-  def z_table_str(self):
-    ret_val = string_handling.proc_color_codes(f"<c6>{'Id:':<{config.MAX_ZONE_ID_LENGTH + 2}}{'Name:':<{config.MAX_ZONE_NAME_LENGTH + 2}}Author:<c0>\r\n")
-    for item in self.z_table():
-      ret_val += f"{item[0]:<{config.MAX_ZONE_ID_LENGTH + 2}}{item[1]:<{config.MAX_ZONE_NAME_LENGTH + 2}}{item[2]:<20}" + "\r\n"
-
-    return ret_val
-
-  def close(self):
-    self._conn.close()
-
-  def table_list(self):
-    ret_val = list()
-
-    self.execute("""SELECT name FROM sqlite_master WHERE type='table';""")
-
-    for item in self.fetchall():
-      ret_val.append(item[0])
-
-    return ret_val
-
-  def row_count(self, table_name):
-    if table_name not in self.table_list():
-      return 0
-
-    self.execute(f"SELECT * FROM {table_name}")
-    return len(self.fetchall())
-
-  def column_list(self, table_name):
-    ret_val = list()
-
-    if table_name not in self.table_list():
-      return ret_val
-
-    data = self.execute(f"SELECT * FROM {table_name}")
-    for item in data.description:
-      ret_val.append(item[0])
-
-    return ret_val
+  def alias_table(self):
+    self._handler.search_table(database.ALIAS_TABLE)
+    return self._handler.fetch_all()
 
   def load_stock(self):
-    stockville = zone.zone()
+    stockville = zone_data.zone_data()
     stockville.name = "the city of stockville"
-    stockville.folder = "stockville city"
     stockville.id = "stockville"
     stockville.author = "kyle"
 
-    rm = room.room()
+    rm = room_data.room_data()
     rm.name = "The Void"
     rm.zone_id = "stockville"
     rm.id = "void"
-    rm.desc = editor.buffer("<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because it's last known location no longer exists. Head down to return to recall.</p>")
+    rm.desc = "<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because its last known location no longer exists. Head down to return to recall.</p>"
   
-    rm.connect(exit.direction.DOWN, 'recall')
+    rm.connect(exit_data.direction.DOWN, 'stockville', 'recall')
     stockville._world[rm.id] = rm
 
-    rm = room.room()
+    rm = room_data.room_data()
     rm.name = "Stockville Casino"
     rm.zone_id = "stockville"
     rm.id = "casino"
-    rm.desc = editor.buffer("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
-    rm.connect(exit.direction.WEST, 'recall')
+    rm.desc = "<p>The heavy weight of bad decisions hangs thick in the air.</p>"
+    rm.connect(exit_data.direction.WEST, 'stockville', 'recall')
     stockville._world[rm.id] = rm
 
-    rm = room.room()
+    rm = room_data.room_data()
     rm.name = "Stockville Recall"
     rm.zone_id = "stockville"
     rm.id = "recall"
-    rm.desc = editor.buffer("<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>")
-    rm.connect(exit.direction.EAST, 'casino')
-    rm.connect(exit.direction.WEST, 'reading')
+    rm.desc = "<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>"
+    rm.connect(exit_data.direction.EAST, 'stockville', 'casino')
+    rm.connect(exit_data.direction.WEST, 'stockville', 'reading')
     stockville._world[rm.id] = rm
 
-    rm = room.room()
+    rm = room_data.room_data()
     rm.name = "Reading Room"
     rm.zone_id = "stockville"
     rm.id = "reading"
-    rm.desc = editor.buffer("""<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
+    rm.desc = """<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
 
   <c9>HINT HINT<c0>:  Time to make a message board!
   ---------
@@ -704,214 +691,180 @@ class database:
        room and this mini pargraph will not
        be harmed!  <(^_^)7   6(*-*)^
 
-<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>""")
-    rm.connect(exit.direction.EAST, 'recall')
-    rm.connect(exit.direction.NORTH, 'newbie_zone[hallway1]')
-    stockville._world[rm.id] = rm
+<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>"""
+    rm.connect(exit_data.direction.EAST, 'stockville', 'recall')
+    rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway1')
+    stockville.add_room(rm)
 
-    npcp = structs.npc_proto_data()
-    npcp.entity.namelist = ['baccarat', 'dealer']
-    npcp.entity.name = 'the baccarat card dealer'
-    npcp.entity.desc = editor.buffer("<p>He looks like he's straight out of a bluegrass music video.</p>")
+    npcp = npc_proto_data.npc_proto_data()
+    npcp.reset_aliases('baccarat', 'dealer')
+    npcp.name = 'the baccarat card dealer'
+    npcp.desc = "<p>He looks like he's straight out of a bluegrass music video.</p>"
     npcp.ldesc = 'A dealer stands here ready to hand out cards.'
-    npcp.unique_id.zone_id = 'stockville'
-    npcp.unique_id.id = 'baccarat_dealer'
-    stockville._npc_proto[npcp.unique_id.id] = npcp
+    npcp.zone_id = 'stockville'
+    npcp.id = 'baccarat_dealer'
+    stockville.add_npc(npcp)
 
-    npcp = structs.npc_proto_data()
-    npcp.entity.namelist = ['baker', 'fat']
-    npcp.entity.name = 'the baker'
-    npcp.entity.desc = editor.buffer("<p>He's a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>")
-    npcp.ldesc = "A baker is here, but don't give him a bottle."
-    npcp.unique_id.zone_id = 'stockville'
-    npcp.unique_id.id = 'baker'
-    stockville._npc_proto[npcp.unique_id.id] = npcp
+    npcp = npc_proto_data.npc_proto_data()
+    npcp.reset_aliases('baker', 'fat')
+    npcp.name = 'the baker'
+    npcp.desc = "<p>Hes a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>"
+    npcp.ldesc = "A baker is here, but dont give him a bottle."
+    npcp.zone_id = 'stockville'
+    npcp.id = 'baker'
+    stockville.add_npc(npcp)
 
-    op = structs.obj_proto_data()
-    op.entity.namelist = ['baccarat', 'gaming', 'table']
-    op.entity.name = 'a baccarat table'
-    op.entity.desc = editor.buffer("<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>")
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('baccarat', 'gaming', 'table')
+    op.name = 'a baccarat table'
+    op.desc = "<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>"
     op.ldesc = "A gaming table has been set up here."
-    op.unique_id.zone_id = 'stockville'
-    op.unique_id.id = 'baccarat_table'
+    op.zone_id = 'stockville'
+    op.id = 'baccarat_table'
     stockville.add_obj(op)
 
-    op = structs.obj_proto_data()
-    op.entity.namelist = ['red', 'chip']
-    op.entity.name = 'a red chip'
-    op.entity.desc = editor.buffer("<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('red', 'chip')
+    op.name = 'a red chip'
+    op.desc = "<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A red casino chip has been left on the ground."
-    op.unique_id.zone_id = 'stockville'
-    op.unique_id.id = 'red_chip'
+    op.zone_id = 'stockville'
+    op.id = 'red_chip'
     stockville.add_obj(op)
 
-    op = structs.obj_proto_data()
-    op.entity.namelist = ['green', 'chip']
-    op.entity.name = 'a green chip'
-    op.entity.desc = editor.buffer("<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('green', 'chip')
+    op.name = 'a green chip'
+    op.desc = "<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A green casino chip has been left on the ground."
-    op.unique_id.zone_id = 'stockville'
-    op.unique_id.id = 'green_chip'
+    op.zone_id = 'stockville'
+    op.id = 'green_chip'
     stockville.add_obj(op)
 
-    op = structs.obj_proto_data()
-    op.entity.namelist = ['black', 'chip']
-    op.entity.name = 'a black chip'
-    op.entity.desc = editor.buffer("<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('black', 'chip')
+    op.name = 'a black chip'
+    op.desc = "<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A black casino chip has been left on the ground."
-    op.unique_id.zone_id = 'stockville'
-    op.unique_id.id = 'black_chip'
+    op.zone_id = 'stockville'
+    op.id = 'black_chip'
     stockville.add_obj(op)
 
-    op = structs.obj_proto_data()
-    op.entity.namelist = ['purple', 'chip']
-    op.entity.name = 'a purple chip'
-    op.entity.desc = editor.buffer("<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('purple', 'chip')
+    op.name = 'a purple chip'
+    op.desc = "<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A purple casino chip has been left on the ground."
-    op.unique_id.zone_id = 'stockville'
-    op.unique_id.id = 'purple_chip'
+    op.zone_id = 'stockville'
+    op.id = 'purple_chip'
     stockville.add_obj(op)
 
-    op = structs.obj_proto_data()
-    op.entity.namelist = ['bottle']
-    op.entity.name = 'a bottle'
-    op.entity.desc = editor.buffer("<p>It's brown, sticky, and smells like stale beer inside.</p>")
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('bottle')
+    op.name = 'a bottle'
+    op.desc = "<p>It's brown, sticky, and smells like stale beer inside.</p>"
     op.ldesc = 'An empty bottle has been dropped here.'
-    op.unique_id.zone_id = 'stockville'
-    op.unique_id.id = 'bottle'
+    op.zone_id = 'stockville'
+    op.id = 'bottle'
     stockville.add_obj(op)
     self.save_zone(stockville)
 
     # now do the same for the newbie zone
-    newbie_zone = zone.zone()
-
+    newbie_zone = zone_data.zone_data()
     newbie_zone.name = "the newbie zone"
-    newbie_zone.folder = "the newbie zone"
     newbie_zone.id = "newbie_zone"
     newbie_zone.author = "kyle"
 
-    rm = room.room()
+    rm = room_data.room_data()
     rm.name = "The Beginning of a Damp Hallway"
     rm.zone_id = "newbie_zone"
     rm.id = "hallway1"
-    rm.desc = editor.buffer("<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>")
-    rm.connect(exit.direction.NORTH, 'hallway2')
-    rm.connect(exit.direction.SOUTH, 'stockville[reading]')
-    newbie_zone._world[rm.id] = rm
+    rm.desc = "<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>"
+    rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway2')
+    rm.connect(exit_data.direction.SOUTH, 'stockville', 'reading')
+    newbie_zone.add_room(rm)
 
-    rm = room.room()
+    rm = room_data.room_data()
     rm.name = "A Dark Corner in the Hallway"
     rm.zone_id = "newbie_zone"
     rm.id = "hallway2"
-    rm.desc = editor.buffer("""<p>I'll start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
+    rm.desc = """<p>Ill start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
 them. Then I can close the tag whenever I want to, and I will!</p>
 
 <p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
 <c0>awkard spaces between words and tags. Just simply due to the way you enter words through the
 editor, they may come through one at a time. And you may put a period after some spaces and forget to
-capitalize a word.</p>""")
-    rm.connect(exit.direction.SOUTH, 'hallway1')
-    newbie_zone._world[rm.id] = rm
+capitalize a word.</p>"""
+    rm.connect(exit_data.direction.SOUTH, 'newbie_zone', 'hallway1')
+    newbie_zone.add_room(rm)
 
-    npcp = structs.npc_proto_data()
-    npcp.entity.namelist = ['newbie', 'monster']
-    npcp.entity.name = 'the newbie monster'
-    npcp.entity.desc = editor.buffer("<p>He has googly eyes and drools all over the place as he growls.</p>")
+    npcp = npc_proto_data.npc_proto_data()
+    npcp.reset_aliases('newbie', 'monster')
+    npcp.name = 'the newbie monster'
+    npcp.desc = "<p>He has googly eyes and drools all over the place as he growls.</p>"
     npcp.ldesc = 'A newbie monster snarls furiously here.'
-    npcp.unique_id.zone_id = 'newbie_zone'
-    npcp.unique_id.id = 'newbie_monster'
-    newbie_zone._npc_proto[npcp.unique_id.id] = npcp
+    npcp.zone_id = 'newbie_zone'
+    npcp.id = 'newbie_monster'
+    newbie_zone.add_npc(npcp)
 
-    op = structs.obj_proto_data()
-    op.entity.namelist = ['newbie', 'dagger']
-    op.entity.name = 'a newbie dagger'
-    op.entity.desc = editor.buffer("<p>It's so bright and shiny, even you can't lose it.</p>")
-    op.entity.ldesk = 'Some idiot left a newbie dagger here.'
-    op.unique_id.zone_id = 'newbie_zone'
-    op.unique_id.id = 'newbie_dagger'
-    newbie_zone._obj_proto[op.unique_id.id] = op
+    op = obj_proto_data.obj_proto_data()
+    op.reset_aliases('newbie', 'dagger')
+    op.name = 'a newbie dagger'
+    op.desc = "<p>It's so bright and shiny, even you can't lose it.</p>"
+    op.ldesk = 'Some idiot left a newbie dagger here.'
+    op.zone_id = 'newbie_zone'
+    op.id = 'newbie_dagger'
+    newbie_zone.add_obj(op)
 
     self.save_zone(newbie_zone)
 
   def load_world(self, mud):
 
-    for item in self.z_table():
-      new_zone = zone.zone()
-      new_zone.id = item[0]
-      new_zone.name = item[1]
-      zone_author = item[2]
+    for zone in self.zone_table():
+      new_zone = zone_data.zone_data()
+      new_zone.id = zone['id']
+      new_zone.name = zone['name']
+      zone_author = zone['author']
       mud.add_zone(new_zone)
 
-    for item in self.wld_table():
-      new_room = room.room()
-      new_room.zone_id = item[0]
-      new_room.id = item[1]
-      new_room.name = item[2]
-      new_room.desc = editor.buffer(item[3])
+    for room in self.world_table():
+      new_room = room_data.room_data()
+      new_room.zone_id = room['zone_id']
+      new_room.id = room['id']
+      new_room.name = room['name']
+      new_room.desc = room['desc']
       mud.zone_by_id(new_room.zone_id).add_room(new_room)
 
-    for item in self.ex_table():
-      dir = exit.direction(item[0])
-      o_zone = item[1]
-      o_room = item[2]
-      d_zone = item[3]
-      d_room = item[4]
+    for exit in self.exit_table():
+      dir = exit_data.direction(exit['direction'])
+      o_zone_id = exit['o_zone_id']
+      o_id = exit['o_id']
+      d_zone_id = exit['d_zone_id']
+      d_id = exit['d_id']
 
-      if o_zone == d_zone:
-        dest_ref = d_room
-      else:
-        dest_ref = f"{d_zone}[{d_room}]"
+      origin_room = mud.room_by_uid(o_zone_id, o_id)
+      origin_room.connect(dir, d_zone_id, d_id)
 
-      origin = mud.zone_by_id(o_zone).room_by_id(o_room)
-      dest = mud.zone_by_id(d_zone).room_by_id(d_room)
-      new_exit = exit.exit(dest_ref)
+    for npcp in self.npc_table():
+      new_npcp = npc_proto_data.npc_proto_data()
+      new_npcp.zone_id = npcp['zone_id']
+      new_npcp.id = npcp['id']
+      new_npcp.name = npcp['name']
+      new_npcp.ldesc = npcp['ldesc']
+      new_npcp.desc = npcp['desc']
+      mud.zone_by_id(new_npcp.zone_id).add_npc(new_npcp)
 
-      rm = mud.zone_by_id(o_zone).room_by_id(o_room)
-      rm.connect(dir, dest_ref)
+    for objp in self.obj_table():
+      nobjp = obj_proto_data.obj_proto_data()
+      nobjp.zone_id = objp['zone_id']
+      nobjp.id = objp['id']
+      nobjp.name = objp['name']
+      nobjp.ldesc = objp['ldesc']
+      nobjp.desc = objp['desc']
+      mud.zone_by_id(nobjp.zone_id).add_obj(nobjp)
 
-    for item in self.npc_table():
-      new_npcp = structs.npc_proto_data()
-      new_npcp.unique_id.zone_id = item[0]
-      new_npcp.unique_id.id = item[1]
-      new_npcp.entity.name = item[2]
-      new_npcp.ldesc = item[3]
-      new_npcp.entity.desc = editor.buffer(item[4])
-      mud.zone_by_id(new_npcp.unique_id.zone_id).add_npc(new_npcp)
-
-    for item in self.obj_table():
-      new_op = structs.obj_proto_data()
-      new_op.unique_id.zone_id = item[0]
-      new_op.unique_id.id = item[1]
-      new_op.entity.name = item[2]
-      new_op.ldesc = item[3]
-      new_op.entity.desc = editor.buffer(item[4])
-      mud.zone_by_id(new_op.unique_id.zone_id).add_obj(new_op)
-
-    for item in self.alias_table():
-      if item[2] == "npc":
-        mud.zone_by_id(item[0]).npc_by_id(item[1]).entity.namelist.append(item[3])
-      elif item[2] == "obj":
-        mud.zone_by_id(item[0]).obj_by_id(item[1]).entity.namelist.append(item[3])
-
-if __name__ == '__main__':
-  os.system(f"rm test.db")
-  db = database("test.db")
-
-  # print("Zone Table")
-  # print(db.z_table_str() + "\r\n")
-  # print("Room Table")
-  # print(db.wld_table_str() + "\r\n")
-  # print("Player Table")
-  # print(db.p_table_str() + "\r\n")
-  # print("Exit Table")
-  # print(db.ex_table_str() + "\r\n")
-  # print("Zone Table")
-  # print(db.z_table_str() + "\r\n")
-  # print("Object Table")
-  # print(db.obj_table_str() + "\r\n")
-  # print("NPC Table")
-  # print(db.npc_table_str() + "\r\n")
-
-  
-  print(db.table_list())
-  db.close()
+    for alias in self.alias_table():
+      if alias['type'] == "npc":
+        mud.npc_by_uid(alias['zone_id'], alias['id']).add_alias(alias['alias'])
+      elif alias['type'] == "obj":
+        mud.obj_by_uid(alias['zone_id'], alias['id']).add_alias(alias['alias'])

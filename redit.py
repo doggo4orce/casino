@@ -1,11 +1,10 @@
 from color import *
-import descriptor
+import descriptor_data
 import editor
 import enum
-import exit
-import room
+import exit_data
+import room_data
 import string_handling
-import structs
 
 class redit_state(enum.IntEnum):
   REDIT_MAIN_MENU      = 1

@@ -13,6 +13,8 @@ import database
 import descriptor_data
 import mudlog
 import nanny
+import pc_data
+import unique_id_data
 
 class conn(typing.NamedTuple):
   socket: socket.socket
@@ -34,16 +36,10 @@ class server:
     self._disconnects     = list()
     self._just_leaving    = list()
     self._nextid          = 0
-    self._shutdown_cmd    = False
-    self._copyover_cmd    = False
+    self.shutdown_cmd     = False
+    self.copyover_cmd     = False
 
-  @property
-  def shutdown_cmd(self):
-    return self._shutdown_cmd
 
-  @property
-  def copyover_cmd(self):
-    return self._copyover_cmd
 
   @property
   def descriptors(self):\
@@ -82,8 +78,6 @@ class server:
         fd = int(fd)
         typ = int(typ)
 
-        print(fd, typ)
-
         s = socket.socket(socket.AF_INET, typ, 0, fd)
         d = descriptor_data.descriptor_data(s, host)
 
@@ -98,15 +92,21 @@ class server:
         d.has_prompt = True
 
         # this needs to be factored through other code from when players enter the game?
-        d.character = db.load_player(name)
+        d.character = pc_data.pc_data()
+
+        db.load_player(d.character, db.player_id_by_name(name))
         d.character.descriptor = d
 
-        db.load_flag_prefs(d.character)
+        # put them in the start room for now
+        uid = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
 
-        mud.add_char(d.character)
+        room = mud.room_by_uid(uid.zone_id, uid.id)
+        mud.add_character_to_room(d.character, room)
+
+        # add them to the game's list of descriptors
         self.add_descriptor(d)
 
-    logging.info("Removing old Copyover File.")
+    mudlog.info("Removing old Copyover File.")
     os.remove(config.COPYOVER_PATH)
 
   def add_descriptor(self, d):

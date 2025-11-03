@@ -479,8 +479,7 @@ def do_copyover(ch, scmd, argument, server, mud, db):
 
       wf.write(f"{fd} {name} {typ} {host} {ttype} {twidth} {tlength}\n")
 
-  # TODO: this shouldn't be touching a private field, but I also don't think copyover_cmd should be public either.  do I need to write a function to modify this cleanly?
-  server._copyover_cmd = True
+  server.copyover_cmd = True
 
 def do_look(ch, scmd, argument, server, mud, db):
   args = argument.split()

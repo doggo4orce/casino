@@ -43,11 +43,6 @@ class pc_data(character_data.character_data):
   def flag_prefs(self):
     return self.preferences.flags
 
-  # preference setter shortcuts
-  @flag_prefs.setter
-  def flag_prefs(self, new_flag_prefs):
-    self.preferences.flags = new_flag_prefs
-
   # flag prefs properties
   @property
   def active_idle(self):

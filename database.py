@@ -82,7 +82,7 @@ class database:
 
      load_player(pc)                     <- load player from database
      check_password(name, password)      <- check if password is correct
-     id_by_name(name)                    <- lookup player id by name
+     player_id_by_name(name)             <- lookup player id by name
 
      create_tables()                     <- creates all world data tables
      show_table(name)                    <- displays contents of table
@@ -448,7 +448,7 @@ class database:
     record = self._handler.get_record(database.PLAYER_TABLE, name=name)
     return record['password'] == password
 
-  def id_by_name(self, name):
+  def player_id_by_name(self, name):
     record = self._handler.get_record(database.PLAYER_TABLE, name=name)
     return record['id']
 

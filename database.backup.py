@@ -360,7 +360,7 @@ class database:
     self._add_player(p)
 
   def name_used(self, name):
-    return self.id_by_name(name) != None
+    return self.player_id_by_name(name) != None
 
   def check_pwd(self, name, pwd):
     self.execute("SELECT * FROM p_table WHERE name=:name AND password=:pwd", {

@@ -188,8 +188,9 @@ def handle_next_input(d, server, mud, db):
     else:
       # turn localecho back on
       d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
+
       # check if they are logged in already
-      ch = mud.pc_by_id(db.id_by_name(d.login_info.name))
+      ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
 
       # nothing found, log in normally
       if ch == None:
@@ -198,7 +199,7 @@ def handle_next_input(d, server, mud, db):
         # player now knows their own name
         new_player.name = d.login_info.name
 
-        player_id = db.id_by_name(d.login_info.name)
+        player_id = db.player_id_by_name(d.login_info.name)
 
         if player_id is None:
           mudlog.error(f"Error: Trying to load player {d.login_info.name} which is not contained in the database.")
@@ -230,21 +231,21 @@ def handle_next_input(d, server, mud, db):
         d.state = descriptor_data.descriptor_state.GET_CONFIRM_REPLACE
       else:
         mud.reconnect(d, ch)
-        logging.info(f"{ch} recovering lost connection.")
+        mudlog.info(f"{ch} recovering lost connection.")
         mud.echo_around(ch, None, f"{ch} has reconnected.\r\n")
         ch.write("You have reconnected.\r\n")
       d.state = descriptor_data.descriptor_state.CHATTING
 
   elif d.state == descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
     if command != "" and command[0] in ['Y', 'y']:
-      ch = mud.pc_by_id(db.id_by_name(d.login_info.name))
+      ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
       if not ch:
         d.write("The situation has changed.  Please log in again from scratch.\r\n")
         d.disconnected = True
       else:
         ch.d.write("Your connection is being usurped!\r\n")
         mud.reconnect(d, ch)
-        logging.info(f"{ch} usurping existing connection.")
+        mudlog.info(f"{ch} usurping existing connection.")
         mud.echo_around(ch, None, f"{ch} suddenly keels over in pain, surrounded by a white aura...\r\n")
         mud.echo_around(ch, None, f"{ch}'s body has been taken over by a new spirit!\r\n")
         d.write("You take over your own body -- already in use!\r\n")

@@ -5,7 +5,9 @@ import enum
 import exit_data
 import logging
 import redit
+import redit_save_data
 import string_handling
+import unique_id_data
 import zedit
 
 def handle_input(d, input, server, mud, db):
@@ -110,7 +112,7 @@ def do_redit(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
-  redit_save = structs.redit_save_data()
+  redit_save = redit_save_data.redit_save_data()
 
   # in this case it's redit <zone_id> <room_id>
   if num_args == 2:
@@ -144,13 +146,13 @@ def do_redit(ch, scmd, argument, server, mud, db):
   rm = zone.room_by_id(room_id)
   
   # we can copy the id into the redit_save now because it's the same even if we have to create the room
-  redit_save.uid = structs.unique_identifier(zone_id, room_id)
+  redit_save.uid = unique_id_data.unique_id_data(zone_id, room_id)
 
   # TODO: replace this with a function: redit_save.from_room(rm)
   # if a room was found we'll load it's info into redit_save now
   if rm != None:
     redit_save.room_name = rm.name
-    redit_save.room_desc = rm.desc.make_copy()
+    redit_save.room_desc = rm.desc
 
     # make a copy of all the exits as virtual references
     for dir in exit.direction:

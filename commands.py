@@ -40,8 +40,8 @@ def do_colors(ch, scmd, argument, server, mud, db):
   out_str += "Background Colours".ljust(21) + "Special Effects\r\n"
   out_str += "------------------------------------\r\n\r\n"
 
-  out_str += f"{BKGD_BLACK}Background Black{NORMAL}".ljust(30) + f"{UNDERLINE}Underline{NORMAL}\r\n"
-  out_str += f"{BKGD_RED}Background Red{NORMAL}".ljust(30) + f"{FLASH}Flashing{NORMAL}\r\n"
+  out_str += f"{BKGD_BLACK}{'Background Black'.ljust(21)}{NORMAL}{UNDERLINE}Underline{NORMAL}\r\n"
+  out_str += f"{BKGD_RED}{'Background Red'.ljust(21)}{NORMAL}{FLASH}Flashing{NORMAL}\r\n"
   out_str += f"{BKGD_GREEN}Background Green{NORMAL}\r\n"
   out_str += f"{BKGD_YELLOW}Background Yellow{NORMAL}\r\n"
   out_str += f"{BKGD_BLUE}Background Blue{NORMAL}\r\n"
@@ -175,12 +175,12 @@ def do_drop(ch, scmd, argument, server, mud, db):
   mud.echo_around(ch, None, f"{ch} drops {obj}.\r\n")
 
 def do_inventory(ch, scmd, argument, server, mud, db):
-  if len(ch.inventory) == 0:
+  if len(ch.inventory()) == 0:
     ch.write("You aren't carrying anything.\r\n")
     return
 
   out_str = "You are carrying:\r\n"
-  for obj in ch.inventory:
+  for obj in ch.inventory():
     out_str += f"  {obj}\r\n"
 
   ch.write(out_str)

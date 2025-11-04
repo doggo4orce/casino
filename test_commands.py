@@ -43,7 +43,7 @@ class TestCommands(unittest.TestCase):
     commands.do_look(player, None, "object", None, mud, None)
     commands.do_look(player, None, "npc", None, mud, None)
 
-  def test_get_drop(self):
+  def test_get_drop_inventory(self):
     # create tiny test world
     mud, zone, room = test_utilities.create_single_room_test_world()
 
@@ -62,6 +62,8 @@ class TestCommands(unittest.TestCase):
     commands.do_get(ch, None, alias, None, mud, None)
 
     self.assertTrue(ch.has_object(obj))
+
+    commands.do_inventory(ch, None, "", None, mud, None)
 
     # character drops the item
     commands.do_drop(ch, None, alias, None, mud, None)
@@ -146,6 +148,8 @@ class TestCommands(unittest.TestCase):
     player = pc_data.pc_data()
 
     commands.do_prefs(player, None, "", None, mud, None)
+
+  def test_redit(self):
 
 if __name__ == '__main__':
   unittest.main()

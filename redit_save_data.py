@@ -11,6 +11,7 @@ class redit_save_data:
     self.r_attr.desc = "It looks unfinished."
     self.dir_edit = None
 
+  # CHANGE THIS NAME TO attributes
   @property
   def r_attr(self):
     return self._r_attr
@@ -21,6 +22,7 @@ class redit_save_data:
   @r_attr.setter
   def r_attr(self, new_attr):
     self._r_attr = new_attr
+
   @dir_edit.setter
   def dir_edit(self, new_dir):
     self._dir_edit = new_dir

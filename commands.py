@@ -152,7 +152,7 @@ def do_goto(ch, scmd, argument, server, mud, db):
 def do_drop(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
-  rm = mud.room_by_code(ch.room)
+  rm = mud.room_by_uid(ch.room)
 
   if num_args == 0:
     ch.write("Drop what?\r\n")
@@ -162,15 +162,15 @@ def do_drop(ch, scmd, argument, server, mud, db):
     ch.write("Usage: drop <item alias>\r\n")
     return
 
-  obj = ch.inventory.obj_by_alias(args[0])
+  obj = ch.object_by_alias(args[0])
 
   if obj == None:
     ch.write(f"You don't have a {args[0]}.\r\n")
     return
 
   obj.room = ch.room
-  rm.inventory.insert(obj)
-  ch.inventory.remove(obj)
+  rm.add_obj(obj)
+  ch.lose_object(obj)
   ch.write(f"You drop {obj}.\r\n")
   mud.echo_around(ch, None, f"{ch} drops {obj}.\r\n")
 

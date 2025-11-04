@@ -47,7 +47,7 @@ class game_data:
      has_character(ch)               <- check if character is in the game
      num_characters()                <- count the number of characters in the game
      extract_character(ch)           <- extracts character completely from the game
-     room_by_uid(zone_id, id)        <- look up room using uid
+     room_by_uid(zone_id, id)        <- look up room using uid, room_by_uid(uid) also works
      npc_by_uid(zone_id, id)         <- look up npc prototype by code
      obj_by_uid(zone_id, id)         <- look up object prototype by code
      echo_around(ch, hide, msg)      <- sends msg to all in room except ch and those in hide list
@@ -119,12 +119,12 @@ class game_data:
       ch.room = void
 
     # now find the actual room
-    room = self.room_by_uid(ch.room.zone_id, ch.room.id)
+    room = self.room_by_uid(ch.room)
 
     # if the room doesn't exist, again move them to the VOID
     if room == None:
       uid = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
-      room = self.room_by_uid(uid.zone_id, uid.id)
+      room = self.room_by_uid(uid)
 
     # finally we have somewhere to add them!
     room.add_char(ch)
@@ -141,14 +141,18 @@ class game_data:
   def extract_character(self, ch):
     # if they are in a room, remove them from that room
     if ch.room is not None:
-      uid = ch.room
-      self.room_by_uid(uid.zone_id, uid.id).remove_char(ch)
+      self.room_by_uid(ch.room).remove_char(ch)
     # now remove them from the world
     self._characters.remove(ch)
 
-  def room_by_uid(self, zone_id, id):
-    if zone_id == None or id == None:
-      return None
+  def room_by_uid(self, *args):
+    if len(args) == 2:
+      # room_by_uid(zone_id, id)
+      zone_id = args[0]
+      id = args[1]
+    elif len(args) == 1:
+      zone_id = args[0].zone_id
+      id = args[0].id
 
     zone = self.zone_by_id(zone_id)
 
@@ -156,7 +160,7 @@ class game_data:
       return None
     
     return zone.room_by_id(id)
-    
+
   def npc_by_uid(self, zone_id, id):
     if zone_id == None or id == None:
       return None
@@ -204,7 +208,7 @@ class game_data:
       obj.room = void
 
     # now find the actual room
-    room = self.room_by_uid(obj.room.zone_id, obj.room.id)
+    room = self.room_by_uid(obj.room)
 
     if room is not None:
       room.add_obj(obj)
@@ -218,7 +222,7 @@ class game_data:
         ch.inventory.remove(obj)
 
     if obj.room is not None:
-      self.room_by_uid(obj.room.zone_id, obj.room.id).remove_obj(obj)
+      self.room_by_uid(obj.room).remove_object(obj)
 
     self._objects.remove(obj)
 
@@ -317,7 +321,7 @@ class game_data:
     return None
 
   def lose_link(self, ch):
-    self.room_by_uid(ch.room.zone_id, ch.room.id).echo(f"{ch} has lost his link.\r\n")
+    self.room_by_uid(ch.room).echo(f"{ch} has lost his link.\r\n")
     ch.descriptor = None
 
   def reconnect(self, d, ch):

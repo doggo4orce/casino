@@ -253,7 +253,9 @@ class TestGameData(unittest.TestCase):
 
     # look them up
     self.assertEqual(mud.room_by_uid("zone1", "cold_hallway"), rm1)
-    self.assertEqual(mud.room_by_uid("zone2", "warm_hallway"), rm2)
+
+    # try using other syntax for room_by_uid
+    self.assertEqual(mud.room_by_uid(unique_id_data.unique_id_data("zone2", "warm_hallway")), rm2)
 
     # should fire an error
     self.assertIsNone(mud.room_by_uid("zone2", "cold_hallway"))

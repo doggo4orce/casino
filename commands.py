@@ -71,7 +71,7 @@ def do_give(ch, scmd, argument, server, mud, db):
     return
 
   # who to give it to
-  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  rm = mud.room_by_uid(ch.room)
   tch = rm.char_by_alias(args[1])
 
   if tch == None:
@@ -112,7 +112,7 @@ def do_get(ch, scmd, argument, server, mud, db):
     ch.write("Usage: get <item>\r\n")
     return
 
-  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  rm = mud.room_by_uid(ch.room)
   obj = rm.contents.object_by_alias(args[0])
 
   if obj == None:
@@ -385,7 +385,7 @@ def do_gossip(ch, scmd, argument, server, mud, db):
   ch.write(f"{YELLOW}You gossip, '{argument}'{NORMAL}\r\n")
 
 def do_say(ch, scmd, argument, server, mud, db):
-  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  rm = mud.room_by_uid(ch.room)
   rm.echo(f"{ch} says, '{argument}'\r\n", exceptions=[ch])
   ch.write(f"You say, '{argument}'\r\n")
 
@@ -485,7 +485,7 @@ def do_look(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
-  rm = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  rm = mud.room_by_uid(ch.room)
   
   # if no args, then just look at the room
   if num_args == 0:
@@ -561,14 +561,14 @@ def show_obj_to_char(ch, obj):
   ch.write(out_buf)
 
 def do_move(ch, scmd, argument, server, mud, db):
-  starting_room = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  starting_room = mud.room_by_uid(ch.room)
   destination = starting_room.get_destination(scmd)
 
   if not destination:
     ch.write("Alas, you cannot go that way.\r\n")
     return
 
-  ending_room = mud.room_by_uid(destination.zone_id, destination.id)
+  ending_room = mud.room_by_uid(destination)
 
   left_msg = f"{ch} leaves {scmd.name.lower()}.\r\n"
 
@@ -614,7 +614,7 @@ def do_move(ch, scmd, argument, server, mud, db):
 
 def do_quit(ch, scmd, argument, server, mud, db):
   d = ch.descriptor
-  room = mud.room_by_uid(ch.room.zone_id, ch.room.id)
+  room = mud.room_by_uid(ch.room)
   ch.save_char(db)
   mud.extract_character(ch)
 

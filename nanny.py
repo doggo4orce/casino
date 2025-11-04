@@ -74,12 +74,12 @@ def interpret_msg(d, command, argument, server, mud, db):
     return
 
   # fire all prefix procs
-  for mob in mud.room_by_uid(d.character.room.zone_id, d.character.room.id).people:
+  for mob in mud.room_by_uid(d.character.room).people:
     if isinstance(mob, npc_data.npc_data):
       if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == mob.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
         return
 
-  for obj in mud.room_by_uid(d.character.room.zone_id, d.character.room.id).contents:
+  for obj in mud.room_by_uid(d.character.room).contents:
     if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == obj.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
       return
 
@@ -92,7 +92,7 @@ def interpret_msg(d, command, argument, server, mud, db):
     valid_command = True
 
   # fire all suffix procs
-  for mob in mud.room_by_uid(initial_room.zone_id, initial_room.id).people:
+  for mob in mud.room_by_uid(initial_room).people:
     if isinstance(mob, npc_data.npc_data):
       mob.call_suffix_cmd_trigs(mud, d.character, command, argument, db)
 
@@ -173,7 +173,7 @@ def handle_next_input(d, server, mud, db):
 
       d.character = new_player
       d.state = descriptor_data.descriptor_state.CHATTING
-      mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room.zone_id, d.character.room.id))
+      mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room))
       mudlog.info(f"{d.login_info.name} [{d.client.term_host}] new player.")
       d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
       d.write("Welcome!  Have a great time!\r\n")
@@ -220,10 +220,10 @@ def handle_next_input(d, server, mud, db):
         mudlog.info(f"{d.login_info.name} has entered the game.")
 
         # if their room has been deleted, put them in the void
-        if mud.room_by_uid(d.character.room.zone_id, d.character.room.id) == None:
+        if mud.room_by_uid(d.character.room) == None:
           d.character.room = structs.unique_identifier.from_string(config.VOID_ROOM)
 
-        mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room.zone_id, d.character.room.id))
+        mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room))
         mud.echo_around(d.character, None, f"{d.login_info.name} has entered the game.\r\n")
 
       elif ch.descriptor:

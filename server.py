@@ -100,7 +100,7 @@ class server:
         # put them in the start room for now
         uid = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
 
-        room = mud.room_by_uid(uid.zone_id, uid.id)
+        room = mud.room_by_uid(uid)
         mud.add_character_to_room(d.character, room)
 
         # add them to the game's list of descriptors

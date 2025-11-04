@@ -1,3 +1,4 @@
+import buffer_data
 from color import *
 import descriptor_data
 import editor
@@ -16,18 +17,21 @@ class redit_state(enum.IntEnum):
 
 def redit_display_main_menu(d):
   redit_save = d.olc.save_data
+  desc_buffer = buffer_data.buffer_data(redit_save.room_desc)
+
   #todo: make sure zedit_save is structs.redit_save_data
   d.write(f"-- Room ID : [{CYAN}{redit_save.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.uid.zone_id}{NORMAL}]\r\n")
   d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.room_name}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
-  d.write(f"{redit_save.room_desc.display(d.char.screen_width, indent=True, color=True)}{NORMAL}\r\n")
+  d.write(f"{desc_buffer.clean_up().display(d.character.page_width, indent=True, color=True)}{NORMAL}\r\n")
   d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")
 
   # index through the next 4 - 9 as exits
   k = 4
-  for dir in exit.direction:
-    if dir in redit_save.room_exits.keys():
-      d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}{redit_save.room_exits[dir]}{NORMAL}\r\n")
+  for dir in exit_data.direction:
+    destination = redit_save.destination(dir)
+    if destination is not None:
+      d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}{destination}{NORMAL}\r\n")
     else:
       d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}None{NORMAL}\r\n")
     k = k + 1

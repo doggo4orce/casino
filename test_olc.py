@@ -1,4 +1,5 @@
 import config
+import descriptor_data
 import database
 import game_data
 import olc
@@ -19,6 +20,11 @@ class TestOLC(unittest.TestCase):
     # add player to starting room
     player = pc_data.pc_data()
     mud.add_character_to_room(player, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)))
+
+    # give them a descriptor because olc relies on it
+    d = descriptor_data.descriptor_data(None, "localhost")
+    player.descriptor = d
+    d.character = player
 
     # try redit command
     olc.do_redit(player, None, "", None, mud, db)

@@ -63,7 +63,8 @@ class room_attribute_data:
   def desc(self, new_desc):
     self._desc = new_desc
 
-  """connect(dir, zone_id, id) <- creates exit to specified room
+  """connect(dir, zone_id, id) <- creates exit to room with zone_id and id
+     connect(dir, uid)         <- creates exit to room with uid
      disconnect(dir)           <- removes exit in specified dir
      exit_letters              <- shows all exits abbreviated as letters "n s w" 
      display_exits             <- displays all exits in string "[ Exits: n s w ]"
@@ -72,15 +73,24 @@ class room_attribute_data:
      has_exit(dir)             <- checks if the room has an exit leading in direction dir
      destination(dir)          <- returns uid of room dir leads to"""
 
-  def connect(self, direction, zone_id, id):
+  def connect(self, direction, *args):
+    if len(args) == 1:
+      zone_id = args[0].zone_id
+      id = args[0].id
+    elif len(args) == 2:
+      zone_id = args[0]
+      id = args[1]
+    else:
+      mudlog.error(f"Bad arguments {", ".join(args)} passed to method room_attributes.connect")
+
     # cant have an exit without a direction
-    if direction == None:
+    if direction is None:
       warning = f"Trying to connect room {self.zone_id}:{self.id} in non-existant direction."
       mudlog.mudlog(mudlog.mudlog_type.WARNING, warning)
       return
 
-    # zone_id can be null, but not id
-    if id == None:
+    # neither zone_id nor id can be null
+    if id is None or zone_id is None:
       warning = f"Trying to connect {self.zone_id}:{self.id} ({exit_data.direction(direction).name[0]}) to non-existant room."
       mudlog.mudlog(mudlog.mudlog_type.WARNING, warning)
       return
@@ -90,6 +100,25 @@ class room_attribute_data:
 
     # perform the connection
     self._exits.append(exit_data.exit_data(direction, zone_id, id))
+
+  # def connect(self, direction, zone_id, id):
+  #   # cant have an exit without a direction
+  #   if direction == None:
+  #     warning = f"Trying to connect room {self.zone_id}:{self.id} in non-existant direction."
+  #     mudlog.mudlog(mudlog.mudlog_type.WARNING, warning)
+  #     return
+
+  #   # zone_id can be null, but not id
+  #   if id == None:
+  #     warning = f"Trying to connect {self.zone_id}:{self.id} ({exit_data.direction(direction).name[0]}) to non-existant room."
+  #     mudlog.mudlog(mudlog.mudlog_type.WARNING, warning)
+  #     return
+
+  #   # in case we're already connected
+  #   self.disconnect(direction)
+
+  #   # perform the connection
+  #   self._exits.append(exit_data.exit_data(direction, zone_id, id))
 
   def disconnect(self, direction):
     # if we're connected

@@ -18,8 +18,8 @@ class TestPcData(unittest.TestCase):
     pc.set_pref("brief_mode", True)
     pc.set_pref("active_idle", True)
 
-    pc.set_pref("screen_width", 50)
-    pc.set_pref("screen_length", 30)
+    pc.set_pref("page_width", 50)
+    pc.set_pref("page_length", 30)
 
     # anything goes for text prefs
     pc.set_pref("color_mode", "anything goes for now")

@@ -3,7 +3,8 @@ import config
 import descriptor_data
 import enum
 import exit_data
-import logging
+import mudlog
+import olc_data
 import redit
 import redit_save_data
 import string_handling
@@ -114,16 +115,15 @@ def do_redit(ch, scmd, argument, server, mud, db):
 
   redit_save = redit_save_data.redit_save_data()
 
-  # in this case it's redit <zone_id> <room_id>
   if num_args == 2:
+    # both zone and room are specified
     zone_id = args[0]
     room_id = args[1]
-  # in this case it's redit <room_id>
   elif num_args == 1:
+    # only room specified, detault to current zone
     room_id = args[0]
-    # zone_id = ch.room.zone_id  (just copied as reminded, this is default value)
   elif num_args == 0:
-    # zone_id and room_id are already set to appropriate default values
+    # no arguments were passed, default to current room
     pass
   else:
     ch.write(Usage)
@@ -132,12 +132,12 @@ def do_redit(ch, scmd, argument, server, mud, db):
   # either it was specified as an argument, or its the zone we're in
   zone = mud.zone_by_id(zone_id)
 
-  # so the only way this could happen is if it was specified as an argument
   if zone == None:
+    # it must have been specified as an argument
     ch.write("Sorry, that zone was not found, you'll have to create it first with ZEDIT.\r\n")
     return
 
-  # not finished with sanity checks!
+  # one last sanity check
   if not string_handling.valid_id(room_id):
     ch.write("Room ID's may consist of numbers, letters, or underscores.\r\n")
     return
@@ -155,13 +155,21 @@ def do_redit(ch, scmd, argument, server, mud, db):
     redit_save.room_desc = rm.desc
 
     # make a copy of all the exits as virtual references
-    for dir in exit.direction:
-      redit_save.room_exits[dir] = rm.get_destination(dir).vref # some of these will be None!
+    for dir in exit_data.direction:
+      if rm.get_destination(dir) is not None:
+        redit_save.connect(dir, rm.get_destination(dir)) # some of these will be None!
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (redit).\r\n")
-  ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_REDIT, redit.redit_state.REDIT_MAIN_MENU, False, redit_save)
-  ch.d.state = descriptor.descriptor_state.OLC
-  redit.redit_display_main_menu(ch.d)
+
+  # this object gets attached to descriptor and keeps track of what user is doing
+  olc = olc_data.olc_data()
+  olc.mode = olc_data.olc_mode.OLC_MODE_REDIT
+  olc.state = redit.redit_state.REDIT_MAIN_MENU
+  olc.save_data = redit_save
+
+  ch.descriptor.olc = olc
+  ch.descriptor.state = descriptor_data.descriptor_state.OLC
+  redit.redit_display_main_menu(ch.descriptor)
 
 def do_zedit(ch, scmd, argument, server, mud, db):
   Usage = "Usage: zedit [zone_id]\r\n"

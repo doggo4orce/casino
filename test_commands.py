@@ -31,14 +31,18 @@ class TestCommands(unittest.TestCase):
 
     # add an object as well
     obj = object_data.object_data()
+    obj.add_alias("object")
     mud.add_obj_to_room(obj, room)
 
     # and an npc
     npc = npc_data.npc_data()
+    npc.add_alias("npc")
     mud.add_character_to_room(npc, room)
 
     commands.do_look(player, None, "", None, mud, None)
-    
+    commands.do_look(player, None, "object", None, mud, None)
+    commands.do_look(player, None, "npc", None, mud, None)
+
   def test_get(self):
     # create tiny test world
     mud, zone, room = test_utilities.create_single_room_test_world()
@@ -136,7 +140,7 @@ class TestCommands(unittest.TestCase):
     # add a player to the room
     player = pc_data.pc_data()
 
-    commands.do_prefs(player, None, None, None, mud, None)
+    commands.do_prefs(player, None, "", None, mud, None)
 
 if __name__ == '__main__':
   unittest.main()

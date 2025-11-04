@@ -4,6 +4,7 @@ from color import *
 import exit_data
 import inventory_data
 import object_data
+import npc_data
 import pc_data
 import room_attribute_data
 import string_handling
@@ -141,18 +142,18 @@ class room_data:
 
   def pc_by_name(self, name):
     for ch in self._people:
-      if isinstance(ch, pc.pc) and ch.has_alias(name):
+      if isinstance(ch, pc_data.pc_data) and ch.has_alias(name):
         return ch
     return None
 
   def npc_by_alias(self, alias):
     for ch in self.people:
-      if isinstance(ch, pc.npc) and ch.has_alias(alias):
+      if isinstance(ch, npc_data.npc_data) and ch.has_alias(alias):
         return ch
     return None
 
   def obj_by_alias(self, alias):
-    for obj in self.inventory:
+    for obj in self._contents:
       if obj.has_alias(alias):
         return obj
     return None

@@ -27,14 +27,14 @@ def do_colors(ch, scmd, argument, server, mud, db):
   out_str += "Colours".ljust(21) + "Bright Colours\r\n"
   out_str += "-----------------------------------\r\n\r\n"
 
-  out_str += f"{BLACK}Black{NORMAL}".ljust(30) + f"{BRIGHT_BLACK}Bright Black{NORMAL}\r\n"
-  out_str += f"{RED}Red{NORMAL}".ljust(30) + f"{BRIGHT_RED}Bright Red{NORMAL}\r\n"
-  out_str += f"{GREEN}Green{NORMAL}".ljust(30) + f"{BRIGHT_GREEN}Bright Green{NORMAL}\r\n"
-  out_str += f"{YELLOW}Yellow{NORMAL}".ljust(30) + f"{BRIGHT_YELLOW}Bright Yellow{NORMAL}\r\n"
-  out_str += f"{BLUE}Blue{NORMAL}".ljust(30) + f"{BRIGHT_BLUE}Bright Blue{NORMAL}\r\n"
-  out_str += f"{MAGENTA}Magenta{NORMAL}".ljust(30) + f"{BRIGHT_MAGENTA}Bright Magenta{NORMAL}\r\n"
-  out_str += f"{CYAN}Cyan{NORMAL}".ljust(30) + f"{BRIGHT_CYAN}Bright Cyan{NORMAL}\r\n"
-  out_str += f"{WHITE}Dark White{NORMAL}".ljust(30) + f"{BRIGHT_WHITE}Bright White{NORMAL}\r\n\r\n"
+  out_str += f"{BLACK}{'Black'.ljust(21)}{NORMAL}{BRIGHT_BLACK}Bright Black{NORMAL}\r\n"
+  out_str += f"{RED}{'Red'.ljust(21)}{NORMAL}{BRIGHT_RED}Bright Red{NORMAL}\r\n"
+  out_str += f"{GREEN}{'Green'.ljust(21)}{NORMAL}{BRIGHT_GREEN}Bright Green{NORMAL}\r\n"
+  out_str += f"{YELLOW}{'Yellow'.ljust(21)}{NORMAL}{BRIGHT_YELLOW}Bright Yellow{NORMAL}\r\n"
+  out_str += f"{BLUE}{'Blue'.ljust(21)}{NORMAL}{BRIGHT_BLUE}Bright Blue{NORMAL}\r\n"
+  out_str += f"{MAGENTA}{'Magenta'.ljust(21)}{NORMAL}{BRIGHT_MAGENTA}Bright Magenta{NORMAL}\r\n"
+  out_str += f"{CYAN}{'Cyan'.ljust(21)}{NORMAL}{BRIGHT_CYAN}Bright Cyan{NORMAL}\r\n"
+  out_str += f"{WHITE}{'Dark White'.ljust(21)}{NORMAL}{BRIGHT_WHITE}Bright White{NORMAL}\r\n\r\n"
 
   out_str += "------------------------------------\r\n"
   out_str += "Background Colours".ljust(21) + "Special Effects\r\n"
@@ -495,7 +495,7 @@ def do_look(ch, scmd, argument, server, mud, db):
     show_room_to_char(ch, rm)
   elif num_args == 1:
     # first check for objects in inventory
-    target = ch.inventory.obj_by_alias(args[0])
+    target = ch.object_by_alias(args[0])
     if target is not None:
       show_obj_to_char(ch, target)
       return
@@ -538,13 +538,17 @@ def show_room_to_char(ch, rm):
   ch.write(out_buf)
 
 def show_char_to_char(ch, tch):
-  out_buf = tch.entity.desc.display(ch.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
+  target_desc = buffer_data.buffer_data(tch.desc)
+  target_desc = target_desc.clean_up()
+
+  out_buf = target_desc.display(ch.page_width, indent=False, color=True, numbers=False) + "\r\n"
   out_buf += "\r\n"
   out_buf += "You attempt to peek at his inventory:\r\n"
 
-  for obj in tch.inventory:
+  for obj in tch.inventory():
     out_buf += f"  {obj}\r\n"
-  if len(tch.inventory) == 0:
+
+  if len(tch.inventory()) == 0:
     out_buf += "  Nothing.\r\n"
 
   if ch.debug_mode:
@@ -553,7 +557,10 @@ def show_char_to_char(ch, tch):
   ch.write(out_buf)
 
 def show_obj_to_char(ch, obj):
-  out_buf = obj.desc.display(ch.screen_width, format=True, indent=False, numbers=False, color=True) + "\r\n"
+  obj_desc = buffer_data.buffer_data(obj.desc)
+  obj_desc = obj_desc.clean_up()
+
+  out_buf = obj_desc.display(ch.page_width, indent=False, color=True, numbers=False) + "\r\n"
 
   if ch.debug_mode:
     out_buf += f"\r\nDebug Info:\r\n{obj.debug()}"

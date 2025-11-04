@@ -20,6 +20,7 @@ class character_data(entity_data.entity_data):
     self._inventory = inventory_data.inventory_data()
 
   """copy_from(ch)          <- make a copy, ignores inventory
+     object_by_alias(alias) <- check inventory for object with alias
      give_object(obj)       <- add object to inventory
      lose_object(obj)       <- remove object from inventory
      has_object(obj)        <- check if object is in inventory
@@ -32,6 +33,9 @@ class character_data(entity_data.entity_data):
   def copy_from(self, ch):
     super().copy_from(ch)
     # copy character specific fields below
+
+  def object_by_alias(self, alias):
+    return self._inventory.object_by_alias(alias)
 
   def give_object(self, obj):
     if not self.has_object(obj):

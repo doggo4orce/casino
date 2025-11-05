@@ -404,13 +404,14 @@ def do_title(ch, scmd, argument, server, mud, db):
     ch.write("You now have no title.\r\n")
 
 def do_score(ch, scmd, argument, server, mud, db):
-  out_str  = f"{GREEN}Name{NORMAL})      {ch.Name}\r\n"
-  out_str += f"{GREEN}Client{NORMAL})    {ch.descriptor.client.term_type}\r\n"
-  out_str += f"{GREEN}Screen{NORMAL})    {ch.descriptor.client.term_length}x{ch.d.client_info.term_width}\r\n"
+  # out_str  = f"{GREEN}Name{NORMAL})      {ch.Name}\r\n"
+  # out_str += f"{GREEN}Client{NORMAL})    {ch.descriptor.client.term_type}\r\n"
+  # out_str += f"{GREEN}Screen{NORMAL})    {ch.descriptor.client.term_length}x{ch.d.client_info.term_width}\r\n"
 
-  if ch.debug_mode:
-    out_str += f"{GREEN}Room{NORMAL})      {ch.room}\r\n"
+  # if ch.debug_mode:
+  #   out_str += f"{GREEN}Room{NORMAL})      {ch.room}\r\n"
 
+  out_str = ch.descriptor.debug()
   ch.write(out_str)
 
 def do_who(ch, scmd, argument, server, mud, db):
@@ -528,7 +529,7 @@ def show_room_to_char(ch, rm):
   for tch in rm.people:
     if tch != ch:
       out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.page_width, False)}{NORMAL}"
-      if type(tch) == pc_data.pc_data and tch.d != None and tch.d.state == descriptor.descriptor_state.OLC:
+      if type(tch) == pc_data.pc_data and tch.descriptor != None and tch.descriptor.state == descriptor_data.descriptor_state.OLC:
         out_buf += " (olc)"
       out_buf += "\r\n"
 

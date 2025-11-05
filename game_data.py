@@ -316,7 +316,7 @@ class game_data:
 
   def pc_by_id(self, id):
     for ch in self._characters:
-      if type(ch) == pc_data.pc_data and ch.id == id:
+      if type(ch) == pc_data.pc_data and ch.player_id == id:
         return ch
     return None
 

@@ -4,6 +4,7 @@ import select
 import socket
 import telnet
 
+# local modules
 import buffer_data
 from color import *
 import client_data
@@ -70,9 +71,8 @@ class descriptor_data:
        open when that happens, clients cannot be attached to new sockets, and their connections
        will hang indefinitely.  The following ensures that sockets close automatically during copyovers."""
     try:
-      if self._socket is not None:
-        flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
-        fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
+      flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
+      fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
     except Exception as e:
       mudlog.error(e)
 
@@ -163,7 +163,7 @@ class descriptor_data:
         self.send(telnet.sb_ttype_send)
     elif message.cmd == telnet.tel_cmd.SB:
       if message.opt == telnet.tel_opt.TTYPE:
-        if message.payload[0] in telnet.ttype_code and telnet.ttype_code(message.payload[0]) == telnet.ttype_code.IS:
+        if telnet.ttype_code(message.payload[0]) in telnet.ttype_code and telnet.ttype_code(message.payload[0]) == telnet.ttype_code.IS:
           self.client.term_type = message.payload[1:].decode("utf-8")
       elif message.opt == telnet.tel_opt.NAWS:
         self.client.term_width = 256 * int(message.payload[0]) + int(message.payload[1])
@@ -200,7 +200,7 @@ class descriptor_data:
   def debug(self):
     ret_val = f"Fileno: {CYAN}{self.fileno()}{NORMAL}\r\n"
     ret_val += f"ID: {CYAN}{self.id}{NORMAL}\r\n"
-
+    ret_val += f"Type: {CYAN}{self.type}{NORMAL}\r\n"
     if self.client == None:
       ret_val += f"Client: {CYAN}None{NORMAL}\r\n"
     else:

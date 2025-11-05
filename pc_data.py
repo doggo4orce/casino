@@ -30,7 +30,6 @@ class pc_data(character_data.character_data):
     self.preferences = pref_data.preferences_data()
     self.save_data = pc_save_data.pc_save_data()
     self.title = None
-    self.ldesc = None
 
   # preference property shortcuts
   @property

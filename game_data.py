@@ -326,7 +326,7 @@ class game_data:
 
   def reconnect(self, d, ch):
     # they might already have a connection
-    if ch.d:
+    if ch.descriptor:
       # if so, kick it off
       ch.descriptor.disconnected = True
       ch.descriptor.character = None

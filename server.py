@@ -118,7 +118,7 @@ class server:
 
   def remove_descriptor_by_id(self, id):
     d = self.descriptors[id]
-    d.socket.shutdown(socket.SHUT_WR)
+    d.shutdown(socket.SHUT_WR)
     d.close()
     del self.descriptors[id]
 

@@ -81,6 +81,7 @@ class descriptor_data:
     return self._socket.type
 
   """close()                       <- closes socket
+     shutdown(how)                 <- shutdown socket
      detach()                      <- detaches socket
      send(bytes)                   <- calls corresponding socket function send
      recv(size)                    <- calls corresponding socket function recv
@@ -99,6 +100,9 @@ class descriptor_data:
 
   def close(self):
     self._socket.close()
+
+  def shutdown(self, how):
+    self._socket.shutdown(how)
 
   def detach(self):
     self._socket.detach()

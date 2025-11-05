@@ -194,7 +194,7 @@ class server:
       d = self._descriptors[id]
       mudlog.info(f"Closing link to {d.client.term_host}.")
       # if they were already logged in, their char is linkless
-      if d.char:
+      if d.character:
         mud.lose_link(d.char)
       # if they were writing, it's gone
       if d.writing:

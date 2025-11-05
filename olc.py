@@ -12,14 +12,16 @@ import unique_id_data
 import zedit
 
 def handle_input(d, input, server, mud, db):
-  if d.olc.mode == olc_mode.OLC_MODE_ZEDIT:
+  if d.olc.mode == olc_data.olc_mode.OLC_MODE_ZEDIT:
   	zedit.zedit_parse(d, input, server, mud)
-  elif d.olc.mode == olc_mode.OLC_MODE_REDIT:
+  elif d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:
     redit.redit_parse(d, input, server, mud, db)
 
 def olc_writing_follow_up(d):
-  if d.olc.mode == olc_mode.OLC_MODE_REDIT:
-    if d.olc.state == redit.redit_state.REDIT_MAIN_MENU:
+  if d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:
+    if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
+      d.olc.save_data.attributes.desc = str(d.write_buffer)
+      d.olc.state = redit.redit_state.REDIT_MAIN_MENU
       redit.redit_display_main_menu(d)
   else:
     d.write("You shouldn't see this!\r\n")
@@ -151,8 +153,10 @@ def do_redit(ch, scmd, argument, server, mud, db):
   # TODO: replace this with a function: redit_save.from_room(rm)
   # if a room was found we'll load it's info into redit_save now
   if rm != None:
-    redit_save.room_name = rm.name
-    redit_save.room_desc = rm.desc
+    redit_save.attributes.uid.zone_id = rm.zone_id
+    redit_save.attributes.uid.id = rm.id
+    redit_save.attributes.name = rm.name
+    redit_save.attributes.desc = rm.desc
 
     # make a copy of all the exits as virtual references
     for dir in exit_data.direction:

@@ -17,11 +17,11 @@ class redit_state(enum.IntEnum):
 
 def redit_display_main_menu(d):
   redit_save = d.olc.save_data
-  desc_buffer = buffer_data.buffer_data(redit_save.room_desc)
+  desc_buffer = buffer_data.buffer_data(redit_save.attributes.desc)
 
   #todo: make sure zedit_save is structs.redit_save_data
   d.write(f"-- Room ID : [{CYAN}{redit_save.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.uid.zone_id}{NORMAL}]\r\n")
-  d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.room_name}{NORMAL}\r\n")
+  d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.attributes.name}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
   d.write(f"{desc_buffer.clean_up().display(d.character.page_width, indent=True, color=True)}{NORMAL}\r\n")
   d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")
@@ -68,7 +68,8 @@ def redit_parse_main_menu(d, input, server, mud):
   elif response == '2':
     d.write("Instructions: /s to save, /h for more options.")
     redit_save = d.olc.save_data
-    d.start_writing(redit_save.room_desc, redit_save.room_desc)
+    d.olc.state = redit_state.REDIT_EDIT_DESC
+    d.start_writing(redit_save.attributes.desc)
   elif response == '3':
     d.write("Will create duplicate room with new id : ")
     d.olc.state = redit_state.REDIT_EDIT_COPY
@@ -84,9 +85,9 @@ def redit_parse_main_menu(d, input, server, mud):
       d.olc.state = redit_state.REDIT_CONFIRM_SAVE
     else:
       d.write("No changes to save.\r\n")
-      mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
-      d.state = descriptor.descriptor_state.CHATTING
-      d.write_buffer=None
+      mud.echo_around(d.character, None, f"{d.character.Name} stops using OLC.\r\n")
+      d.state = descriptor_data.descriptor_state.CHATTING
+      d.write_buffer = None
       d.olc.save_data = None
       d.olc = None
   else:
@@ -95,7 +96,7 @@ def redit_parse_main_menu(d, input, server, mud):
     d.olc.state = redit_state.REDIT_MAIN_MENU
 
 def redit_parse_edit_name(d, input, server, mud):
-  d.olc.save_data.room_name = input
+  d.olc.save_data.attributes.name = input
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
 
@@ -109,54 +110,53 @@ def redit_parse_edit_copy(d, input, server, mud):
 
 def redit_parse_confirm_save(d, input, server, mud, db):
   redit_save = d.olc.save_data
-  zone_id = redit_save.uid.zone_id
-  room_id = redit_save.uid.id
+  zone_id = redit_save.attributes.uid.zone_id
+  room_id = redit_save.attributes.uid.id
   if input == "" or input[0] not in {'n', 'N', 'y', 'Y'}:
     d.write("Returning to main menu.\r\n")
     d.write("Enter your choice : ")
     d.olc.state = redit_state.REDIT_MAIN_MENU
     return
   elif input[0] in {'y','Y'}:
-    check_room = mud.room_by_code(structs.unique_identifier(zone_id, room_id))
+    check_room = mud.room_by_uid(zone_id, room_id)
 
     if check_room != None:
       # we found an existing room, overwrite it with redit_save
-      check_room.zone_id = redit_save.uid.zone_id
-      check_room.name = redit_save.room_name
+      check_room.zone_id = redit_save.attributes.uid.zone_id
+      check_room.name = redit_save.attributes.name
       check_room.id = redit_save.uid.id
-      check_room.desc = redit_save.room_desc
+      check_room.desc = redit_save.attributes.desc
 
-      for dir in exit.direction:
-        dest = redit_save.room_exits[dir]
-        if dest != None:
-          check_room.connect(dir, dest)
+      for dir in exit_data.direction:
+        dest = redit_save.destination(dir)
+        if dest is not None:
+          check_room.connect(dir, dest.zone_id, dest.id)
         else:
           check_room.disconnect(dir)
     else:
       # ok we're making a brand new room filled from redit save
-      new_room = room.room()
-      new_room.zone_id = redit_save.uid.zone_id
-      new_room.name = redit_save.room_name
-      new_room.id = redit_save.uid.id
-      new_room.desc = redit_save.room_desc
+      new_room = room_data.room_data()
+      new_room.zone_id = redit_save.attributes.uid.zone_id
+      new_room.name = redit_save.attributes.name
+      new_room.id = redit_save.attributes.uid.id
+      new_room.desc = redit_save.attributes.desc
 
-      for dir in exit.direction:
-        if dir in redit_save.room_exits.keys():
-          dest = redit_save.room_exits[dir]
-          if dest != None:
-            new_room.connect(dir, dest)
+      for dir in exit_data.direction:
+        dest = redit_save.destination(dir)
+        if dest is not None:
+          new_room.connect(dir, dest.zone_id, dest.id)
 
       # insert new room into the zone
-      # todo make this a function for zone class (add_room)
-      mud.zone_by_id(zone_id)._world[room_id] = new_room
-    
+      mud.zone_by_id(zone_id).add_room(new_room)
+ 
     # do a reset for the next time.  This is sloppy and needs to be fixed
-    for dir in exit.direction:
-      redit_save.room_exits[dir] = None
+    # nov 4, 25: why is this necessary?  shouldn't we create a new blank RSD next time?
+    # for dir in exit_data.direction:
+    #   redit_save.connect(dir, None, None)
 
     d.write("Saving changes.\r\n")
-    mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
-    d.state = descriptor.descriptor_state.CHATTING
+    mud.echo_around(d.character, None, f"{d.character.Name} stops using OLC.\r\n")
+    d.state = descriptor_data.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None
 
@@ -164,7 +164,7 @@ def redit_parse_confirm_save(d, input, server, mud, db):
 
   elif input[0] in {'n', 'N'}:
     d.write("Discarding changes.\r\n")
-    mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
+    mud.echo_around(d.character, None, f"{d.character.Name} stops using OLC.\r\n")
     d.state = descriptor.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None

@@ -11,10 +11,10 @@ class olc_data:
      changes   = flag to check if changes have been made
      save_data = eg. a redit_save_data or zedit_save_data object"""
   def __init__(self):
-    self.mode       =None
-    self.state      =None
-    self.changes    =False
-    self.save_data  =None
+    self.mode       = None
+    self.state      = None
+    self.changes    = False
+    self.save_data  = None
 
   @property
   def mode(self):

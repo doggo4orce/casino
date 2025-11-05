@@ -30,7 +30,6 @@ mud = game_data.game_data()
 db = database.database(config.DATABASE_FILE)
 db.connect()
 db.create_tables()
-db.load_stock()
 
 # load contents of database
 mud.load_world(db)

@@ -1,6 +1,6 @@
 from color import *
 import exit_data
-from mudlog import mudlog_type, mudlog
+import mudlog
 import unique_id_data
 
 # once this is done, make sure all of this is factored out of room and redit_save_data
@@ -81,7 +81,7 @@ class room_attribute_data:
       zone_id = args[0]
       id = args[1]
     else:
-      mudlog.error(f"Bad arguments {", ".join(args)} passed to method room_attributes.connect")
+      mudlog.error(f"Bad arguments {', '.join(args)} passed to method room_attributes.connect")
 
     # cant have an exit without a direction
     if direction is None:
@@ -92,7 +92,7 @@ class room_attribute_data:
     # neither zone_id nor id can be null
     if id is None or zone_id is None:
       warning = f"Trying to connect {self.zone_id}:{self.id} ({exit_data.direction(direction).name[0]}) to non-existant room."
-      mudlog.mudlog(mudlog.mudlog_type.WARNING, warning)
+      mudlog.warning(warning)
       return
 
     # in case we're already connected

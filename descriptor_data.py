@@ -1,15 +1,18 @@
+# python modules
+import fcntl
+import select
+import socket
+import telnet
+
+import buffer_data
 from color import *
 import client_data
 import collections
 import config
 import dataclasses
 import enum
-import fcntl
 import input_stream_data
 import mudlog
-import select
-import socket
-import telnet
 
 @dataclasses.dataclass
 class login_data:
@@ -46,7 +49,7 @@ class descriptor_data:
       char         = character that this connection is controlling
       olc_state    = used in olc.handle_input to parse input and determine menus
       write_buffer = a buffer to store player editing: descriptions, messages, etc
-      write_target = where the buffer will be saved to upon completion"""
+      writing      = flag used in nanny to determine if editor should handle input"""
     self._socket       = socket
     self.id           = None
     self.out_buf      = ""
@@ -61,23 +64,21 @@ class descriptor_data:
     self.write_buffer = None
     self.write_target = None
     self.input_stream = input_stream_data.input_stream_data()
+    self.writing      = False
 
     """When copyover is called, the mud calls itself as a child process.  If sockets are still
        open when that happens, clients cannot be attached to new sockets, and their connections
        will hang indefinitely.  The following ensures that sockets close automatically during copyovers."""
     try:
-      flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
-      fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
+      if self._socket is not None:
+        flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
+        fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
     except Exception as e:
       mudlog.error(e)
 
   @property
   def type(self):
     return self._socket.type
-
-  @property
-  def writing(self):
-    return self.write_buffer != None
 
   """close()                       <- closes socket
      detach()                      <- detaches socket
@@ -92,8 +93,8 @@ class descriptor_data:
      process_telnet_q()            <- process all telnet commands
      pop_input()                   <- calls input_stream.pop_input()
      pop_telnet()                  <- calls input_stream.pop_telnet()
-     start_writing(source, target) <- start editing source and save to target (when would these be different?)
-     stop_writing(save)            <- save to write_target if save=True
+     start_writing(source)         <- start editing source
+     stop_writing(save)            <- save changes if save=True
      debug()                       <- return string of debugging info"""
 
   def close(self):
@@ -180,16 +181,21 @@ class descriptor_data:
     if self.input_stream.telnet_q:
       return self.input_stream.pop_telnet()
 
-  def start_writing(self, source, target):
-    self.write_buffer = source.make_copy()
-    self.write_target = target
+  def start_writing(self, source):
+    self.write_buffer = buffer_data.buffer_data(source)
+    self.writing = True
 
   def stop_writing(self, save):
-    if save:
-      self.write_target.copy_from(self.write_buffer)
-  
-    self.write_buffer = None
-    self.write_target = None
+    self.writing = False
+    # if save:
+    #   self.write_target.copy_from(self.write_buffer)
+
+    # can't delete this because we need to remember it in olc_writing_follow_up
+    # and save the write_buffer to the appropriate place.  the alternative is
+    # handling that here, but I don't want this class to have to know about all
+    # the different OLC states.....
+ 
+    # self.write_buffer = None
 
   def debug(self):
     ret_val = f"Fileno: {CYAN}{self.fileno()}{NORMAL}\r\n"

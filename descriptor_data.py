@@ -98,7 +98,6 @@ class descriptor_data:
      debug()                       <- return string of debugging info"""
 
   def close(self):
-    self._socket.shutdown(socket.SHUT_WR)
     self._socket.close()
 
   def detach(self):

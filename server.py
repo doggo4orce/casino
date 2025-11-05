@@ -79,6 +79,8 @@ class server:
         typ = int(typ)
 
         s = socket.socket(socket.AF_INET, typ, 0, fd)
+        s.setblocking(False)
+
         d = descriptor_data.descriptor_data(s, host)
 
         d.state = descriptor_data.descriptor_state.CHATTING

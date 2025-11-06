@@ -106,6 +106,7 @@ def do_rlist(ch, scmd, argument, server, mud, db):
     ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
 
 def do_redit(ch, scmd, argument, server, mud, db):
+  mudlog.debug(f"do_redit called by player {ch.Name} with argument {argument}")
   Usage = "Usage: redit [[zone_id ]room_id]"
 
   zone_id = ch.room.zone_id

@@ -1,3 +1,4 @@
+import buffer_data
 from color import *
 import config
 import dataclasses
@@ -35,7 +36,7 @@ def editor_handle_input(d, input):
     return True
   elif input == "/c":
     d.write("Buffer cleared.\r\n")
-    d.write_buffer = buffer.buffer()
+    d.write_buffer = buffer_data.buffer_data()
   elif input[:2] == "/d":
     editor_delete_line(d, input[2:])
   elif input == "/f":
@@ -159,7 +160,7 @@ def editor_find_replace_text(d, replace, replace_all=False):
   found_target = False
   replace_complete = False
   num_replaced = 0
-  new_buffer = buffer.buffer()
+  new_buffer = buffer_data.buffer_data()
   pattern = re.compile(r'\'(.+)\' \'(.+)\'')
   match = re.search(pattern, replace)
 

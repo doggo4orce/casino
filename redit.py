@@ -165,7 +165,7 @@ def redit_parse_confirm_save(d, input, server, mud, db):
   elif input[0] in {'n', 'N'}:
     d.write("Discarding changes.\r\n")
     mud.echo_around(d.character, None, f"{d.character.Name} stops using OLC.\r\n")
-    d.state = descriptor.descriptor_state.CHATTING
+    d.state = descriptor_data.descriptor_state.CHATTING
     d.olc.save_data = None
     d.olc = None
 

@@ -7,6 +7,7 @@ import npc_proto_data
 import obj_proto_data
 import pref_data
 import room_data
+import text_data
 import unittest
 import zone_data
 
@@ -240,7 +241,7 @@ class TestDatabase(unittest.TestCase):
 
     rm1 = room_data.room_data()
     rm1.name = "A Long Dark Hallway"
-    rm1.desc = "<p>It is cold, dark, and damp, and miserable.</p>"
+    rm1.desc = text_data.text_data("<p>It is cold, dark, and damp, and miserable.</p>")
     rm1.id = "cold_hallway"
     rm1.zone_id = "newbie_zone"
     rm1.connect(exit_data.direction.EAST, "newbie_zone", "warm_hallway")
@@ -248,7 +249,7 @@ class TestDatabase(unittest.TestCase):
 
     rm2 = room_data.room_data()
     rm2.name = "A Short Bright Hallway"
-    rm2.desc = "<p>It is warm, bright, and cheerful.</p>"
+    rm2.desc = text_data.text_data("<p>It is warm, bright, and cheerful.</p>")
     rm2.id = "warm_hallway"
     rm2.zone_id = "newbie_zone"
     rm2.connect(exit_data.direction.WEST, "newbie_zone", "cold_hallway")

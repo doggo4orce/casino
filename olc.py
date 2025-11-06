@@ -20,7 +20,6 @@ def handle_input(d, input, server, mud, db):
 def olc_writing_follow_up(d):
   if d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:
     if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
-      d.olc.save_data.attributes.desc = str(d.write_buffer)
       d.olc.state = redit.redit_state.REDIT_MAIN_MENU
       redit.redit_display_main_menu(d)
   else:
@@ -156,7 +155,7 @@ def do_redit(ch, scmd, argument, server, mud, db):
     redit_save.attributes.uid.zone_id = rm.zone_id
     redit_save.attributes.uid.id = rm.id
     redit_save.attributes.name = rm.name
-    redit_save.attributes.desc = rm.desc
+    redit_save.attributes.desc.text = rm.desc.text
 
     # make a copy of all the exits as virtual references
     for dir in exit_data.direction:

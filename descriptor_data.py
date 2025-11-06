@@ -50,6 +50,7 @@ class descriptor_data:
       char         = character that this connection is controlling
       olc_state    = used in olc.handle_input to parse input and determine menus
       write_buffer = a buffer to store player editing: descriptions, messages, etc
+      write_target = keep track of what user is editing, so we know where to save afterwards
       writing      = flag used in nanny to determine if editor should handle input"""
     self._socket       = socket
     self.id           = None
@@ -185,14 +186,16 @@ class descriptor_data:
     if self.input_stream.telnet_q:
       return self.input_stream.pop_telnet()
 
-  def start_writing(self, source):
+  def start_writing(self, source, target):
     self.write_buffer = buffer_data.buffer_data(source)
+    self.write_target = target
     self.writing = True
 
   def stop_writing(self, save):
     self.writing = False
-    # if save:
-    #   self.write_target.copy_from(self.write_buffer)
+
+    if save:
+      self.write_target.text = self.write_buffer.str(numbers=False)
 
     # can't delete this because we need to remember it in olc_writing_follow_up
     # and save the write_buffer to the appropriate place.  the alternative is

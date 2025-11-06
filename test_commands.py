@@ -150,6 +150,7 @@ class TestCommands(unittest.TestCase):
     commands.do_prefs(player, None, "", None, mud, None)
 
   def test_redit(self):
+    pass
 
 if __name__ == '__main__':
   unittest.main()

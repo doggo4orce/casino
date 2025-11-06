@@ -4,6 +4,7 @@ import mudlog
 import npc_proto_data
 import obj_proto_data
 import room_data
+import text_data
 import zone_data
 
 class database:
@@ -376,7 +377,7 @@ class database:
       zone_id=room.zone_id,
       id=room.id,
       name=room.name,
-      desc=room.desc,
+      desc=room.desc.text,
     )
 
     for ex in room.exits:
@@ -654,8 +655,8 @@ class database:
     rm.name = "The Void"
     rm.zone_id = "stockville"
     rm.id = "void"
-    rm.desc = "<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because its last known location no longer exists. Head down to return to recall.</p>"
-  
+    rm.desc = text_data.text_data("<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because its last known location no longer exists. Head down to return to recall.</p>")
+
     rm.connect(exit_data.direction.DOWN, 'stockville', 'recall')
     stockville._world[rm.id] = rm
 
@@ -663,7 +664,7 @@ class database:
     rm.name = "Stockville Casino"
     rm.zone_id = "stockville"
     rm.id = "casino"
-    rm.desc = "<p>The heavy weight of bad decisions hangs thick in the air.</p>"
+    rm.desc = text_data.text_data("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
     rm.connect(exit_data.direction.WEST, 'stockville', 'recall')
     stockville._world[rm.id] = rm
 
@@ -671,7 +672,7 @@ class database:
     rm.name = "Stockville Recall"
     rm.zone_id = "stockville"
     rm.id = "recall"
-    rm.desc = "<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>"
+    rm.desc = text_data.text_data("<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>")
     rm.connect(exit_data.direction.EAST, 'stockville', 'casino')
     rm.connect(exit_data.direction.WEST, 'stockville', 'reading')
     stockville._world[rm.id] = rm
@@ -680,7 +681,7 @@ class database:
     rm.name = "Reading Room"
     rm.zone_id = "stockville"
     rm.id = "reading"
-    rm.desc = """<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
+    rm.desc = text_data.text_data("""<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
 
   <c9>HINT HINT<c0>:  Time to make a message board!
   ---------
@@ -691,7 +692,7 @@ class database:
        room and this mini pargraph will not
        be harmed!  <(^_^)7   6(*-*)^
 
-<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>"""
+<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>""")
     rm.connect(exit_data.direction.EAST, 'stockville', 'recall')
     rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway1')
     stockville.add_room(rm)
@@ -779,7 +780,7 @@ class database:
     rm.name = "The Beginning of a Damp Hallway"
     rm.zone_id = "newbie_zone"
     rm.id = "hallway1"
-    rm.desc = "<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>"
+    rm.desc = text_data.text_data("<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>")
     rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway2')
     rm.connect(exit_data.direction.SOUTH, 'stockville', 'reading')
     newbie_zone.add_room(rm)
@@ -788,13 +789,13 @@ class database:
     rm.name = "A Dark Corner in the Hallway"
     rm.zone_id = "newbie_zone"
     rm.id = "hallway2"
-    rm.desc = """<p>Ill start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
+    rm.desc = text_data.text_data("""<p>Ill start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
 them. Then I can close the tag whenever I want to, and I will!</p>
 
 <p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
 <c0>awkard spaces between words and tags. Just simply due to the way you enter words through the
 editor, they may come through one at a time. And you may put a period after some spaces and forget to
-capitalize a word.</p>"""
+capitalize a word.</p>""")
     rm.connect(exit_data.direction.SOUTH, 'newbie_zone', 'hallway1')
     newbie_zone.add_room(rm)
 
@@ -832,7 +833,7 @@ capitalize a word.</p>"""
       new_room.zone_id = room['zone_id']
       new_room.id = room['id']
       new_room.name = room['name']
-      new_room.desc = room['desc']
+      new_room.desc.text = room['desc']
       mud.zone_by_id(new_room.zone_id).add_room(new_room)
 
     for exit in self.exit_table():

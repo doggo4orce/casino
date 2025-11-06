@@ -1,4 +1,5 @@
 import room_attribute_data
+import text_data
 
 class redit_save_data:
   """There should be a field here for each of the fields in the main menu for redit.  Then the users
@@ -8,7 +9,7 @@ class redit_save_data:
   def __init__(self, zid=None, id=None):
     self.attributes = room_attribute_data.room_attribute_data(zid, id)
     self.attributes.name = "An Unfinished Room"
-    self.attributes.desc = "It looks unfinished."
+    self.attributes.desc = text_data.text_data("It looks unfinished.")
     self.dir_edit = None
 
   @property

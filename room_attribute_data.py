@@ -1,6 +1,7 @@
 from color import *
 import exit_data
 import mudlog
+import text_data
 import unique_id_data
 
 # once this is done, make sure all of this is factored out of room and redit_save_data
@@ -11,12 +12,12 @@ class room_attribute_data:
   """Creates a room_attribute_data object to store static room data.
       uid       = unique identifier of room
       name      = name of the room
-      desc      = description of room, stored as a string
+      desc      = description of room, stored as text_data, mutable version of string
       exits     = cardinal directions leading to other rooms"""
   def __init__(self, zone_id=None, id=None, name=None, desc=None):
     self.uid = unique_id_data.unique_id_data(zone_id, id)
     self.name = name
-    self.desc = desc
+    self.desc = text_data.text_data(desc)
     self._exits = list()
 
   @property
@@ -34,10 +35,6 @@ class room_attribute_data:
   @property
   def name(self):
     return self._name
-
-  @property
-  def desc(self):
-    return self._desc
 
   @property
   def exits(self):
@@ -58,10 +55,6 @@ class room_attribute_data:
   @name.setter
   def name(self, new_name):
     self._name = new_name
-
-  @desc.setter
-  def desc(self, new_desc):
-    self._desc = new_desc
 
   """connect(dir, zone_id, id) <- creates exit to room with zone_id and id
      connect(dir, uid)         <- creates exit to room with uid
@@ -164,7 +157,7 @@ class room_attribute_data:
   def debug(self):
     ret_val = f"UID: {CYAN}{self.uid}{NORMAL}\r\n"
     ret_val += f"Name: {CYAN}{self.name}{NORMAL}\r\n"
-    ret_val += f"Desc: {CYAN}{self.desc}{NORMAL}\r\n"
+    ret_val += f"Desc: {CYAN}{self.desc.text}{NORMAL}\r\n"
 
     for ex in self._exits:
       ret_val += ex.debug()

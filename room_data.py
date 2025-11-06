@@ -8,6 +8,7 @@ import npc_data
 import pc_data
 import room_attribute_data
 import string_handling
+import text_data
 import unique_id_data
 
 class room_data:
@@ -18,7 +19,7 @@ class room_data:
   def __init__(self):
     self._attributes = room_attribute_data.room_attribute_data()
     self.name = "Unfinished Room"
-    self.desc = "<p>This room has no description.  Use the REDIT command while standing inside this room to give it one!</p>"
+    self.desc = text_data.text_data("<p>This room has no description.  Use the REDIT command while standing inside this room to give it one!</p>")
     self._people = list()
     self._contents = inventory_data.inventory_data()
 

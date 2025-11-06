@@ -1,5 +1,6 @@
 import exit_data
 import room_attribute_data
+import text_data
 
 import unittest
 
@@ -8,7 +9,7 @@ class TestRoomAttribute(unittest.TestCase):
     r_att = room_attribute_data.room_attribute_data("zone_id", "id", "name", "description")
 
     self.assertEqual(r_att.name, "name")
-    self.assertEqual(r_att.desc, "description")
+    self.assertEqual(r_att.desc.text, "description")
     self.assertEqual(r_att.id, "id")
     self.assertEqual(r_att.zone_id, "zone_id")
 
@@ -16,12 +17,12 @@ class TestRoomAttribute(unittest.TestCase):
     r_att = room_attribute_data.room_attribute_data()
 
     r_att.name = "name"
-    r_att.desc = "description"
+    r_att.desc = text_data.text_data("description")
     r_att.id = "id"
     r_att.zone_id = "zone_id"
 
     self.assertEqual(r_att.name, "name")
-    self.assertEqual(r_att.desc, "description")
+    self.assertEqual(r_att.desc.text, "description")
     self.assertEqual(r_att.id, "id")
     self.assertEqual(r_att.zone_id, "zone_id")
 
@@ -62,9 +63,9 @@ class TestRoomAttribute(unittest.TestCase):
   def test_exit_letters(self):
     r_att = room_attribute_data.room_attribute_data("name", "description")
 
-    r_att.connect(exit_data.direction.EAST, None, "elevator08")
-    r_att.connect(exit_data.direction.NORTH, None, "elevator07")
-    r_att.connect(exit_data.direction.UP, None, "elevator09")
+    r_att.connect(exit_data.direction.EAST, "elevator", "elevator08")
+    r_att.connect(exit_data.direction.NORTH, "elevator", "elevator07")
+    r_att.connect(exit_data.direction.UP, "elevator", "elevator09")
 
     # test num_exits
     self.assertEqual(r_att.num_exits, 3)

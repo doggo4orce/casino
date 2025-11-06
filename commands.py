@@ -518,7 +518,7 @@ def do_look(ch, scmd, argument, server, mud, db):
 
 def show_room_to_char(ch, rm):
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.page_width, False)}{NORMAL}\r\n'
-  room_desc = buffer_data.buffer_data(rm.desc)
+  room_desc = buffer_data.buffer_data(rm.desc.text)
   room_desc = room_desc.clean_up()
 
   if not ch.brief_mode:

@@ -79,7 +79,7 @@ class room_data:
      add_object(obj)           <- add object to room
      remove_object(obj)        <- remove object from room
      has_object(obj)           <- check if obj is in character's inventory
-     char_by_alias(name)       <- look for char in room with name (prioritizes pc)
+     char_by_alias(name)       <- look for char in room with name (prioritizes pc, then npc, then char)
      pc_by_name(name)          <- look for pc in room with name
      npc_by_alias(alias)       <- looks for npc in room with alias
      obj_by_alias(alias)       <- looks for obj in room with alias
@@ -130,15 +130,18 @@ class room_data:
     return self._has_entity(obj)
 
   def char_by_alias(self, name):
-    # first check for pc
     tch = self.pc_by_name(name)
     if tch != None:
       return tch
-    # if nothing found, then check for npc
+
     tch = self.npc_by_alias(name)
     if tch != None:
       return tch
-    # by now we have nothing
+
+    for tch in self._people:
+      if tch.has_alias(name):
+        return tch
+
     return None
 
   def pc_by_name(self, name):
@@ -195,9 +198,9 @@ class room_data:
     if len(self._people) > 0:
       ret_val += "People:\r\n"
       for ch in self._people:
-        ret_val += f"  {CYAN}{ch}{NORMAL}\r\n"
+        ret_val += f"  {CYAN}{ch}{NORMAL}"
     if len(self._contents) > 0:
-      ret_val += "Contents:\r\n"
+      ret_val += "\r\nContents:\r\n"
       for obj in self._contents:
         ret_val += f"  {CYAN}{obj}{NORMAL}\r\n"
     return ret_val

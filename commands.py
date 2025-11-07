@@ -12,6 +12,7 @@ import event_data
 import nanny
 import olc
 import os
+import npc_data
 import pc_data
 import room_data
 import string_handling
@@ -64,7 +65,7 @@ def do_give(ch, scmd, argument, server, mud, db):
     return
 
   # what to give
-  obj = ch.inventory.obj_by_alias(args[0])
+  obj = ch.object_by_alias(args[0])
 
   if obj == None:
     ch.write(f"You don't seem to have {string_handling.ana(args[0])} {args[0]}.\r\n")
@@ -79,15 +80,15 @@ def do_give(ch, scmd, argument, server, mud, db):
     return
 
   # transfer the object
-  ch.inventory.remove(obj)
-  tch.inventory.insert(obj)
+  ch.lose_object(obj)
+  tch.give_object(obj)
 
   # let everyone know
   ch.write(f"You give {obj} to {tch}.\r\n")
   tch.write(f"{ch} gives you {obj}.\r\n")
   mud.echo_around(ch, [tch], f"{ch} gives {obj} to {tch}.\r\n")
 
-  if type(tch) == pc.npc:
+  if type(tch) == npc_data.npc_data:
     def check_it_out(c, mu, db):
       mu.echo_around(c, None, f"{c} takes a closer look at {obj}.\r\n")
     def decide_no(c, mu, db):
@@ -95,9 +96,9 @@ def do_give(ch, scmd, argument, server, mud, db):
     def drop_it(c, mu, db):
       do_drop(c, None, args[0], None, mu, db)
 
-    mud.add_event(event.event(tch, check_it_out, None, 10))
-    mud.add_event(event.event(tch, decide_no, None, 20))
-    mud.add_event(event.event(tch, drop_it, None, 30))
+    mud.add_event(event_data.event_data(tch, check_it_out, 30))
+    mud.add_event(event_data.event_data(tch, decide_no, 60))
+    mud.add_event(event_data.event_data(tch, drop_it, 90))
 
 
 def do_get(ch, scmd, argument, server, mud, db):
@@ -517,18 +518,25 @@ def do_look(ch, scmd, argument, server, mud, db):
       ch.write(f"You see no {args[0]} here.\r\n")
 
 def show_room_to_char(ch, rm):
-  out_buf = f'{CYAN}{string_handling.paragraph(rm.name, ch.page_width, False)}{NORMAL}\r\n'
+  if isinstance(ch, pc_data.pc_data):
+    page_width = ch.page_width
+    brief_mode = ch.brief_mode
+  else:
+    page_width = 60
+    brief_mode = False
+
+  out_buf = f'{CYAN}{string_handling.paragraph(rm.name, page_width, False)}{NORMAL}\r\n'
   room_desc = buffer_data.buffer_data(rm.desc.text)
   room_desc = room_desc.clean_up()
 
-  if not ch.brief_mode:
-    out_buf += room_desc.display(ch.page_width, indent=True, color=True,numbers=False) + '\r\n'
+  if not brief_mode:
+    out_buf += room_desc.display(page_width, indent=True, color=True,numbers=False) + '\r\n'
 
   out_buf += f'{CYAN}{rm.display_exits()}{NORMAL}\r\n'
 
   for tch in rm.people:
     if tch != ch:
-      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, ch.page_width, False)}{NORMAL}"
+      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, page_width, False)}{NORMAL}"
       if type(tch) == pc_data.pc_data and tch.descriptor != None and tch.descriptor.state == descriptor_data.descriptor_state.OLC:
         out_buf += " (olc)"
       out_buf += "\r\n"

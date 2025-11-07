@@ -46,5 +46,15 @@ class TestRoomData(unittest.TestCase):
     self.assertFalse(rm.has_char(dummy))
     self.assertFalse(rm.has_object(obj))
 
+  def test_char_by_alias(self):
+    rm = room_data.room_data()
+
+    dummy = character_data.character_data()
+    dummy.add_alias("dummy")
+
+    rm.add_char(dummy)
+
+    self.assertIs(rm.char_by_alias("dummy"), dummy)
+    print(rm.debug())
 if __name__ == "__main__":
   unittest.main()

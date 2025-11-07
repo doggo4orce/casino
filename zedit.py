@@ -27,24 +27,24 @@ def zedit_display_main_menu(d):
   d.write(f"{GREEN}Q{NORMAL}) Quit\r\n")
   d.write(f"\r\nEnter your choice : ")
 
-def zedit_parse(d, input, server, mud):
+def zedit_parse(d, input, server, mud, db):
   if d.olc.state == zedit_state.ZEDIT_MAIN_MENU:
-    zedit_parse_main_menu(d, input, server, mud)
+    zedit_parse_main_menu(d, input, server, mud, db)
     return
 
   # we've hit at least one "non-main" menu, so there are unsaved changes
   d.olc.changes = True
 
   if d.olc.state == zedit_state.ZEDIT_EDIT_NAME:
-    zedit_parse_edit_name(d, input, server, mud)
+    zedit_parse_edit_name(d, input, server, mud, db)
   elif d.olc.state == zedit_state.ZEDIT_EDIT_AUTHOR:
-    zedit_parse_edit_author(d, input, server, mud)
+    zedit_parse_edit_author(d, input, server, mud, db)
   elif d.olc.state == zedit_state.ZEDIT_EDIT_COPY:
-    zedit_parse_edit_copy(d, input, server, mud)
+    zedit_parse_edit_copy(d, input, server, mud, db)
   elif d.olc.state == zedit_state.ZEDIT_CONFIRM_SAVE:
-    zedit_parse_confirm_save(d, input, server, mud)
+    zedit_parse_confirm_save(d, input, server, mud, db)
 
-def zedit_parse_main_menu(d, input, server, mud):
+def zedit_parse_main_menu(d, input, server, mud, db):
   # simple way to handle null input for now
   if input == "":
     response = 'q'
@@ -66,7 +66,7 @@ def zedit_parse_main_menu(d, input, server, mud):
       d.olc.state = zedit_state.ZEDIT_CONFIRM_SAVE
     else:
       d.write("No changes to save.\r\n")
-      mud.echo_around(d.char, None, f"{d.char.name} stops using OLC.\r\n")
+      mud.echo_around(d.character, None, f"{d.char.name} stops using OLC.\r\n")
       d.state = descriptor.descriptor_state.CHATTING
       d.olc.save_data = None
       d.olc = None
@@ -75,17 +75,17 @@ def zedit_parse_main_menu(d, input, server, mud):
     d.write(f"\r\nEnter your choice : ")
     d.olc.state = zedit_state.ZEDIT_MAIN_MENU
 
-def zedit_parse_edit_author(d, input, server, mud):
+def zedit_parse_edit_author(d, input, server, mud, db):
   d.olc.save_data.author = input
   d.olc.state = zedit_state.ZEDIT_MAIN_MENU
   zedit_display_main_menu(d)
 
-def zedit_parse_edit_name(d, input, server, mud):
+def zedit_parse_edit_name(d, input, server, mud, db):
   d.olc.save_data.name = input
   d.olc.state = zedit_state.ZEDIT_MAIN_MENU
   zedit_display_main_menu(d)
   
-def zedit_parse_edit_copy(d, input, server, mud):
+def zedit_parse_edit_copy(d, input, server, mud, db):
   args = input.split()
   new_zone_id = args[0]
   old_zone_id = d.olc.save_data.id

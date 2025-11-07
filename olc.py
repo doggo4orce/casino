@@ -14,7 +14,7 @@ import zedit_save_data
 
 def handle_input(d, input, server, mud, db):
   if d.olc.mode == olc_data.olc_mode.OLC_MODE_ZEDIT:
-  	zedit.zedit_parse(d, input, server, mud)
+  	zedit.zedit_parse(d, input, server, mud, db)
   elif d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:
     redit.redit_parse(d, input, server, mud, db)
 

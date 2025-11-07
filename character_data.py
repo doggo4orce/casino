@@ -62,7 +62,7 @@ class character_data(entity_data.entity_data):
     return self._inventory.contents()
 
   def write(self, message):
-    mudlog.warning(f"Character {self.name}'s write function called with \"{message}\"")
+    mudlog.debug(f"Character {self.name}'s write function called with \"{message}\"")
     return
 
   def debug(self):

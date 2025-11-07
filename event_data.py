@@ -42,7 +42,7 @@ class event_data:
     self._targets.remove(target)
 
   def execute(self, mud, db):
-    self.function(self.owner, mud, db, self._targets)
+    self.function(self.owner, mud, db)
 
   def has_targets(self):
     return len(self.targets()) != 0

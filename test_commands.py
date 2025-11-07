@@ -3,6 +3,7 @@ import unittest
 # local modules
 import character_data
 import commands
+import config
 import database
 import exit_data
 import game_data
@@ -149,8 +150,33 @@ class TestCommands(unittest.TestCase):
 
     commands.do_prefs(player, None, "", None, mud, None)
 
-  def test_redit(self):
-    pass
+  def test_give(self):
+    mud, zone, room = test_utilities.create_single_room_test_world()
+
+    # create characters to test the action
+    giver = character_data.character_data()
+    receiver = npc_data.npc_data()
+    giver.add_alias("generous")
+    receiver.add_alias("greedy")
+    mud.add_character_to_room(giver, room)
+    mud.add_character_to_room(receiver, room)
+
+    self.assertIs(room.char_by_alias("greedy"), receiver)
+
+    # giver needs an object to give
+    gift = object_data.object_data()
+    giver.give_object(gift)
+    gift.add_alias("toy")
+
+    # look around
+    commands.do_look(giver, None, "", None, mud, None)
+
+    # perform the give
+    commands.do_give(giver, None, "toy greedy", None, mud, None)
+
+    self.assertFalse(giver.has_object(gift))
+    self.assertTrue(receiver.has_object(gift))
 
 if __name__ == '__main__':
+  config.DEBUG_MODE = True
   unittest.main()

@@ -110,7 +110,10 @@ def writing_follow_up(d):
 def handle_next_input(d, server, mud, db):
   msg = d.input_stream.pop_input()
 
-  mudlog.debug(f"nanny.handle_next_input called on player {d.character.name} with input {msg}")
+  if d.character:
+    mudlog.debug(f"nanny.handle_next_input called on player {d.character.name} with input {msg}")
+  else:
+    mudlog.debug(f"nanny.handle_next_input called by descriptor from {d.client.term_host} with input {msg}")
 
   if msg is None:
     return

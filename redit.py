@@ -6,6 +6,7 @@ import enum
 import exit_data
 import room_data
 import string_handling
+import unique_id_data
 
 class redit_state(enum.IntEnum):
   REDIT_MAIN_MENU      = 1
@@ -76,9 +77,9 @@ def redit_parse_main_menu(d, input, server, mud):
 
   elif response in {'4', '5', '6', '7', '8', '9'}:
     # this is a bit sloppy but it works for now
-    d.write(f"Enter new room to the {exit.direction(int(response) - 4).name.lower()} : ")
+    d.write(f"Enter new room to the {exit_data.direction(int(response) - 4).name.lower()} : ")
     d.olc.state = redit_state.REDIT_CHANGE_EXIT
-    d.olc.save_data.dir_edit = exit.direction(int(response) - 4)
+    d.olc.save_data.dir_edit = exit_data.direction(int(response) - 4)
   elif response in {'q', 'Q'}:
     if d.olc.changes:
       d.write("Save internally? : ")
@@ -179,15 +180,14 @@ def redit_parse_change_exit(d, input, server, mud):
 
     # send them back to main menu
     d.olc.state = redit_state.REDIT_MAIN_MENU
-    d.write("Returning to main menu.\r\n")
-    d.write("Enter your choice : ")
+    redit_display_main_menu(d)
     return
 
   args = input.split()
   num_args = len(args)
 
   # for now let it be the wild west
-  d.olc.save_data.room_exits[dir_edit] = args[0]
+  d.olc.save_data.connect(dir_edit, unique_id_data.unique_id_data.from_string(args[0]))
 
   if args[0] == "none":
     d.olc.save_data.room_exits[dir_edit] = None

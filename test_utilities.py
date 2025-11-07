@@ -36,7 +36,7 @@ def create_test_players(number):
     pc = pc_data.pc_data()
     pc.name = f"player{j}"
     pc.descriptor = d
-    d.char = pc
+    d.character = pc
 
     # append to return value lists
     players.append(pc)

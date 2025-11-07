@@ -147,9 +147,9 @@ def do_redit(ch, scmd, argument, server, mud, db):
 
   # otherwise zone was found and this is safe
   rm = zone.room_by_id(room_id)
-  
+
   # we can copy the id into the redit_save now because it's the same even if we have to create the room
-  redit_save.uid = unique_id_data.unique_id_data(zone_id, room_id)
+  redit_save.attributes.uid = unique_id_data.unique_id_data(zone_id, room_id)
 
   # TODO: replace this with a function: redit_save.from_room(rm)
   # if a room was found we'll load it's info into redit_save now

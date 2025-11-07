@@ -19,8 +19,8 @@ class zone_data:
     npc_proto = dictionary of npc_proto_datas in zone
     obj_proto = dictionary of obj_proto_datas in zone"""
   def __init__(self):
-    self.id = "new_zone"
-    self.name = "a new zone"
+    self.id = None
+    self.name = "A New Zone"
     self.author = "unknown author"
     self._world = dict()
     self._npc_proto = dict()
@@ -44,7 +44,7 @@ class zone_data:
   
   @id.setter
   def id(self, new_id):
-    if not string_handling.valid_id(new_id):
+    if new_id is not None and not string_handling.valid_id(new_id):
       mudlog.error(f"Trying to set invalid zone_id {new_id}.")
       return
     self._id = new_id

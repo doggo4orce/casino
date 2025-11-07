@@ -10,6 +10,7 @@ import redit_save_data
 import string_handling
 import unique_id_data
 import zedit
+import zedit_save_data
 
 def handle_input(d, input, server, mud, db):
   if d.olc.mode == olc_data.olc_mode.OLC_MODE_ZEDIT:
@@ -180,7 +181,7 @@ def do_zedit(ch, scmd, argument, server, mud, db):
   args = argument.split()
   num_args = len(args)
 
-  zedit_save = structs.zedit_save_data()
+  zedit_save = zedit_save_data.zedit_save_data()
 
   # if we make it past this check, correct syntax may be assumed
   if num_args > 2 or (num_args == 2 and args[0] != 'new'):
@@ -201,7 +202,7 @@ def do_zedit(ch, scmd, argument, server, mud, db):
       ch.write(f"That zone already exists.  Type: zedit {zone_id} to edit it instead!\r\n")
       return
 
-  if not structs.string_handling.valid_id(zone_id):
+  if not string_handling.valid_id(zone_id):
     ch.write("That's not a valid zone id!\r\n")
     return
 
@@ -214,21 +215,26 @@ def do_zedit(ch, scmd, argument, server, mud, db):
 
   if zone == None:
     # make OLC data for new zone
-    zedit_save.zone_id = args[0]
-    zedit_save.zone_name = "new zone"
-    zedit_save.zone_folder = "new zone"
-    zedit_save.zone_author = ch.Name
+    zedit_save.id = args[0]
+    zedit_save.name = "A New Zone"
+    zedit_save.author = ch.Name
   else:
     # make OLC data for existing zone
-    zedit_save.zone_id = zone.id
-    zedit_save.zone_name = zone.name
-    zedit_save.zone_folder = zone.folder
-    zedit_save.zone_author = zone.author
+    zedit_save.id = zone.id
+    zedit_save.name = zone.name
+    zedit_save.author = zone.author
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (zedit).\r\n")
-  ch.d.olc = structs.olc_data(olc_mode.OLC_MODE_ZEDIT, zedit.zedit_state.ZEDIT_MAIN_MENU, False, zedit_save)
-  ch.d.state = descriptor.descriptor_state.OLC
-  zedit.zedit_display_main_menu(ch.d)
+
+  olc = olc_data.olc_data()
+  olc.mode = olc_data.olc_mode.OLC_MODE_ZEDIT
+  olc.state = zedit.zedit_state.ZEDIT_MAIN_MENU
+  olc.save_data = zedit_save
+
+  ch.descriptor.olc = olc
+
+  ch.descriptor.state = descriptor_data.descriptor_state.OLC
+  zedit.zedit_display_main_menu(ch.descriptor)
 
 def do_zlist(ch, scmd, argument, server, mud, db):
 

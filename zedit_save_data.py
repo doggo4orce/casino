@@ -4,11 +4,10 @@ class zedit_save_data:
      name   = name of zone
      author = who to credit for the work
      folder = which folder to save the files to"""
-  def __init__(self, id=None, name=None, author=None, folder=None):
+  def __init__(self, id=None, name=None, author=None):
     self.id = id
     self.name = name
     self.author = author
-    self.folder = folder
 
   @property
   def id(self):
@@ -22,10 +21,6 @@ class zedit_save_data:
   def author(self):
     return self._author
 
-  @property
-  def folder(self):
-    return self._folder
-
   @id.setter
   def id(self, new_id):
     self._id = new_id
@@ -37,7 +32,3 @@ class zedit_save_data:
   @author.setter
   def author(self, new_author):
     self._author = new_author
-
-  @folder.setter
-  def folder(self, new_folder):
-    self._folder = new_folder

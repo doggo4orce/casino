@@ -8,12 +8,12 @@ import re
 import string_handling
 
 EDITOR_HELP_STR = """Editor Commands
----------------------------------------------------
+--------------------------------------------------------------------------------
   /c                      - clear current buffer    
   /h                      - bring up this menu      
   /l                      - show unformatted buffer 
   /n                      - /l but with line numbers
-  /f                      - merge multi-line paragraphs
+  /f                      - clean up formatting, each paragraph on its own line
   /p#                     - proofread line (paragraph only)
   /i#                     - insert before line #
   /d#                     - delete line #

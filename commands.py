@@ -12,6 +12,7 @@ import event_data
 import nanny
 import olc
 import os
+import mudlog
 import npc_data
 import pc_data
 import room_data
@@ -88,7 +89,7 @@ def do_give(ch, scmd, argument, server, mud, db):
   tch.write(f"{ch} gives you {obj}.\r\n")
   mud.echo_around(ch, [tch], f"{ch} gives {obj} to {tch}.\r\n")
 
-  if type(tch) == npc_data.npc_data:
+  if isinstance(tch, npc_data.npc_data):
     def check_it_out(c, mu, db):
       mu.echo_around(c, None, f"{c} takes a closer look at {obj}.\r\n")
     def decide_no(c, mu, db):
@@ -129,10 +130,13 @@ def do_get(ch, scmd, argument, server, mud, db):
 def do_goto(ch, scmd, argument, server, mud, db):
   here_id = ch.room.id
   here_zone_id = ch.room.zone_id
-  here = mud.room_by_code(ch.room)
+  here = mud.room_by_uid(ch.room)
 
-  there_zone_id, there_room_id = string_handling.parse_reference(argument)
-  there = mud.room_by_code(structs.unique_identifier(there_zone_id, there_room_id))
+  mudlog.debug(f"goto command used by {ch} with argument '{argument}'")
+
+  there_room_id, there_zone_id = string_handling.parse_reference(argument)
+
+  there = mud.room_by_uid(there_zone_id, there_room_id)
 
   if there == None:
     ch.write("I'm sorry, but that room cannot be found.\r\n")
@@ -140,10 +144,10 @@ def do_goto(ch, scmd, argument, server, mud, db):
 
   # remove them from the old room
   here.remove_char(ch)
-  here.echo(f"{ch.name} disappears in a puff of smoke.\r\n")
+  here.echo(f"{ch} disappears in a puff of smoke.\r\n")
 
   # add them to the new room
-  there.echo(f"{ch.name} appears with an ear-splitting bang.\r\n")
+  there.echo(f"{ch} appears with an ear-splitting bang.\r\n")
   there.add_char(ch)
 
   # show them the new room
@@ -468,13 +472,6 @@ def do_title(ch, scmd, argument, server, mud, db):
     ch.write("You now have no title.\r\n")
 
 def do_score(ch, scmd, argument, server, mud, db):
-  # out_str  = f"{GREEN}Name{NORMAL})      {ch.Name}\r\n"
-  # out_str += f"{GREEN}Client{NORMAL})    {ch.descriptor.client.term_type}\r\n"
-  # out_str += f"{GREEN}Screen{NORMAL})    {ch.descriptor.client.term_length}x{ch.d.client_info.term_width}\r\n"
-
-  # if ch.debug_mode:
-  #   out_str += f"{GREEN}Room{NORMAL})      {ch.room}\r\n"
-
   out_str = ch.descriptor.debug()
   ch.write(out_str)
 

@@ -49,7 +49,7 @@ def do_mlist(ch, scmd, argument, server, mud, db):
   ch.write(f"{(2 + config.MAX_NPC_ID_LENGTH)*'-'} {config.MAX_NPC_NAME_LENGTH*'-'}\r\n")
 
   for id, npc in zone._npc_proto.items():
-    ch.write(f"[{GREEN}{id:>{config.MAX_NPC_ID_LENGTH}}{NORMAL}] {CYAN}{npc.entity.name:<30}{NORMAL}\r\n")
+    ch.write(f"[{GREEN}{id:>{config.MAX_NPC_ID_LENGTH}}{NORMAL}] {CYAN}{npc.name:<30}{NORMAL}\r\n")
 
 def do_olist(ch, scmd, argument, server, mud, db):
   args = argument.split()
@@ -74,7 +74,7 @@ def do_olist(ch, scmd, argument, server, mud, db):
   ch.write(f"{(2 + config.MAX_OBJECT_ID_LENGTH)*'-'} {config.MAX_OBJECT_NAME_LENGTH*'-'}\r\n")
 
   for id, obj in zone._obj_proto.items():
-    ch.write(f"[{GREEN}{id:>{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.entity.name:<30}{NORMAL}\r\n")
+    ch.write(f"[{GREEN}{id:>{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.name:<30}{NORMAL}\r\n")
 
 def do_rlist(ch, scmd, argument, server, mud, db):
   Usage = "Usage: rlist [zone_id]\r\n"

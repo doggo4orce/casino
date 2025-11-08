@@ -834,7 +834,13 @@ capitalize a word.</p>""")
       new_room.id = room['id']
       new_room.name = room['name']
       new_room.desc.text = room['desc']
-      mud.zone_by_id(new_room.zone_id).add_room(new_room)
+      zone = mud.zone_by_id(new_room.zone_id)
+
+      if zone is None:
+        mudlog.warning(f"suppressing room {new_room.id} from zone {new_room.zone_id} which does not exist.")
+        continue
+
+      zone.add_room(new_room)
 
     for exit in self.exit_table():
       dir = exit_data.direction(exit['direction'])
@@ -844,6 +850,11 @@ capitalize a word.</p>""")
       d_id = exit['d_id']
 
       origin_room = mud.room_by_uid(o_zone_id, o_id)
+
+      if origin_room is None:
+        mudlog.warning(f"suppressing exit {o_id}@{o_zone_id} -> {d_id}@{d_zone_id} since origin room does not exist.")
+        continue
+
       origin_room.connect(dir, d_zone_id, d_id)
 
     for npcp in self.npc_table():
@@ -853,7 +864,13 @@ capitalize a word.</p>""")
       new_npcp.name = npcp['name']
       new_npcp.ldesc = npcp['ldesc']
       new_npcp.desc = npcp['desc']
-      mud.zone_by_id(new_npcp.zone_id).add_npc(new_npcp)
+      zone = mud.zone_by_id(new_npcp.zone_id)
+
+      if zone is None:
+        mudlog.warning(f"suppressing npc {new_npcp.id} from zone {new_npcp.zone_id} which does not exist.")
+        continue
+
+      zone.add_npc(new_npcp)
 
     for objp in self.obj_table():
       nobjp = obj_proto_data.obj_proto_data()
@@ -862,10 +879,24 @@ capitalize a word.</p>""")
       nobjp.name = objp['name']
       nobjp.ldesc = objp['ldesc']
       nobjp.desc = objp['desc']
-      mud.zone_by_id(nobjp.zone_id).add_obj(nobjp)
+      zone = mud.zone_by_id(nobjp.zone_id)
+
+      if zone is None:
+        mudlog.warning(f"suppressing npc {new_objp.id} from zone {new_objp.zone_id} which does not exist.")
+        continue
+
+      zone.add_obj(nobjp)
 
     for alias in self.alias_table():
       if alias['type'] == "npc":
-        mud.npc_by_uid(alias['zone_id'], alias['id']).add_alias(alias['alias'])
+        npc = mud.npc_by_uid(alias['zone_id'], alias['id'])
+        if npc is None:
+          mudlog.warning(f"suppressing alias {alias['alias']} for npc proto {alias['id']}@{alias['zone_id']} which does not exist")
+          continue
+        npc.add_alias(alias['alias'])
       elif alias['type'] == "obj":
-        mud.obj_by_uid(alias['zone_id'], alias['id']).add_alias(alias['alias'])
+        obj = mud.obj_by_uid(alias['zone_id'], alias['id'])
+        if npc is None:
+          mudlog.warning(f"suppressing alias {alias['alias']} for obj proto {alias['id']}@{alias['zone_id']} which does not exist")
+          continue
+        obj.add_alias(alias['alias'])

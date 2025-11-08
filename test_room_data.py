@@ -1,6 +1,7 @@
 import character_data
 import object_data
 import exit_data
+import room_attribute_data
 import room_data
 import text_data
 import unittest
@@ -22,6 +23,22 @@ class TestRoomData(unittest.TestCase):
     rm.connect(exit_data.direction.NORTH, "newbie_zone", "cold_hallway2")
 
     print(rm.debug())
+
+  def test_load_attributes(self):
+    rad = room_attribute_data.room_attribute_data()
+
+    rad.name = "a new room"
+    rad.desc = text_data.text_data("this room looks new")
+    rad.id = "new_room"
+    rad.zone_id = "new_zone"
+
+    rm = room_data.room_data()
+    rm.load_attributes(rad)
+
+    self.assertEqual(rm.name, "a new room")
+    self.assertEqual(rm.desc.text, "this room looks new")
+    self.assertEqual(rm.id, "new_room")
+    self.assertEqual(rm.zone_id, "new_zone")
 
   def test_add_remove_chars(self):
     rm = room_data.room_data()

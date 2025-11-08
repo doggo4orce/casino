@@ -83,6 +83,7 @@ class room_data:
      pc_by_name(name)          <- look for pc in room with name
      npc_by_alias(alias)       <- looks for npc in room with alias
      obj_by_alias(alias)       <- looks for obj in room with alias
+     load_attributes(attr)     <- copy fields from room_attribute_data paramter
      connect(dir, zone_id, id) <- creates exit to another room
      disconnect(dir)           <- removes exit
      display_exits()           <- shows exits to be displayed with room description
@@ -161,6 +162,25 @@ class room_data:
       if obj.has_alias(alias):
         return obj
     return None
+
+  def load_attributes(self, attr):
+
+    self.attributes.uid.zone_id = attr.uid.zone_id
+    self.attributes.uid.id = attr.uid.id
+    self.attributes.name = attr.name
+    self.attributes.desc.text = attr.desc.text
+
+    for dir in exit_data.direction:
+
+      if attr.exit(dir) is None:
+        continue
+
+      exit = attr.exit(dir)
+
+      id = exit.destination.id
+      zone_id = exit.destination.zone_id
+
+      self.connect(dir, zone_id, id)
 
   def connect(self, direction, zone_id, room_id):
     self.attributes.connect(direction, zone_id, room_id)

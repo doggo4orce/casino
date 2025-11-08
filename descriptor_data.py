@@ -1,5 +1,4 @@
 # python modules
-import fcntl
 import select
 import socket
 import telnet
@@ -67,15 +66,6 @@ class descriptor_data:
     self.write_target = None
     self.input_stream = input_stream_data.input_stream_data()
     self.writing      = False
-
-    """When copyover is called, the mud calls itself as a child process.  If sockets are still
-       open when that happens, clients cannot be attached to new sockets, and their connections
-       will hang indefinitely.  The following ensures that sockets close automatically during copyovers."""
-    try:
-      flags = fcntl.fcntl(self._socket, fcntl.F_GETFD, 0)
-      fcntl.fcntl(self._socket, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
-    except Exception as e:
-      mudlog.error(e)
 
   @property
   def type(self):
@@ -194,15 +184,12 @@ class descriptor_data:
   def stop_writing(self, save):
     self.writing = False
 
+    # take advantage of the mutability of write_target so that we don't need
+    # to know where we're saving to
     if save:
       self.write_target.text = self.write_buffer.str(numbers=False)
-
-    # can't delete this because we need to remember it in olc_writing_follow_up
-    # and save the write_buffer to the appropriate place.  the alternative is
-    # handling that here, but I don't want this class to have to know about all
-    # the different OLC states.....
  
-    # self.write_buffer = None
+    self.write_buffer = None
 
   def debug(self):
     ret_val = f"Fileno: {CYAN}{self.fileno()}{NORMAL}\r\n"

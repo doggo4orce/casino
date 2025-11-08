@@ -53,12 +53,19 @@ class TestOLC(unittest.TestCase):
     mud.add_character_to_room(player, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)))
 
     # give them a descriptor because olc relies on it
-    d = descriptor_data.descriptor_data(None, "localhost")
+    client, host = socket.socketpair()
+    d = descriptor_data.descriptor_data(host, "localhost")
+    d.state = descriptor_data.descriptor_state.CHATTING
     player.descriptor = d
     d.character = player
 
-    # test redit command
-    olc.handle_input(player.descriptor, 'redit', None, mud, db)
+    # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
+    cmd_dict = dict()
+    nanny.init_commands()
+
+    # have the user enter redit command
+    d.input_stream.input_q.append("redit")
+    nanny.handle_next_input(d, None, mud, db)
 
     self.assertEqual(player.descriptor.olc.mode, olc_data.olc_mode.OLC_MODE_REDIT)
     self.assertEqual(player.descriptor.olc.state, redit.redit_state.REDIT_MAIN_MENU)
@@ -80,6 +87,10 @@ class TestOLC(unittest.TestCase):
 
     # save internally
     olc.handle_input(player.descriptor, 'y', None, mud, db)
+
+    # teardown
+    host.close()
+    client.close()
 
   def test_redit_change_room_desc(self):
     mud = game_data.game_data()
@@ -397,4 +408,5 @@ class TestOLC(unittest.TestCase):
     host.close()
 
 if __name__ == "__main__":
-  unittest.main(defaultTest="TestOLC.test_redit_create_new_room")
+  #unittest.main(defaultTest="TestOLC.test_redit_create_new_room")
+  unittest.main()

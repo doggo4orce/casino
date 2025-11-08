@@ -1,6 +1,7 @@
 from color import *
 
 # python modules
+import fcntl
 import os
 import select
 import socket
@@ -165,6 +166,15 @@ class server:
 
       remote_sock, remote_addr = self.mother.accept()
       remote_sock.setblocking(False)
+
+      """When copyover is called, the mud calls itself as a child process.  If sockets are still
+         open when that happens, clients cannot be attached to new sockets, and their connections
+         will hang indefinitely.  The following ensures that sockets close automatically during copyovers."""
+      try:
+        flags = fcntl.fcntl(remote_sock, fcntl.F_GETFD, 0)
+        fcntl.fcntl(remote_sock, fcntl.F_SETFD, flags & ~fcntl.FD_CLOEXEC)
+      except Exception as e:
+        mudlog.error(e)
 
       addr, _ = remote_addr
       

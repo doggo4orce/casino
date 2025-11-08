@@ -200,9 +200,8 @@ def do_help(ch, scmd, argument, server, mud, db):
   # pad each word with spaces
   cmds = [cmd.ljust(fmt_len) for cmd in cmds]
 
-  # number of columns (subtract leading spaces but add the extra trailing space that isn't needed)
-  n = (ch.screen_width - leading_spaces + min_space)//fmt_len
-
+  # number of columns (subtract leading spaces but add the extra trailing space that isn't needed after the last word)
+  n = (ch.page_width - leading_spaces + min_space)//fmt_len
 
   # r is number of complete columns (unless it is zero then n is)
   r = num_cmds % n
@@ -211,6 +210,7 @@ def do_help(ch, scmd, argument, server, mud, db):
   m = math.ceil(float(num_cmds)/float(n))
 
   out_str = "Available Commands:\r\n"
+
   # build the table
   if r == 0:
     # each row follows the same rule
@@ -234,10 +234,70 @@ def do_help(ch, scmd, argument, server, mud, db):
     # now build the last row
     out_str += leading_spaces * ' '
     for k in range(0, r + 1):
-      out_str += cmds[(m - 1) + m*k]
-    out_str = out_str[:-min_space] + '\r\n'
+      idx = (m - 1) + m * k
+      if idx < len(cmds):
+        out_str += cmds[idx]
+      else:
+        # stop once we run past the end of the list
+        break
+    if out_str.endswith(' ' * min_space):
+      out_str = out_str[:-min_space]
+    out_str += '\r\n'
 
   ch.write(out_str)
+
+# def do_help(ch, scmd, argument, server, mud, db):
+#   cmds = list(nanny.cmd_dict.keys())
+#   num_cmds = len(cmds)
+
+#   # choices for spacing out the commands
+#   leading_spaces = 2
+#   min_space = 1
+
+#   # find out the longest command name to determine column width
+#   fmt_len = max([ len(cmd) for cmd in cmds ]) + min_space
+
+#   # pad each word with spaces
+#   cmds = [cmd.ljust(fmt_len) for cmd in cmds]
+
+#   # number of columns (subtract leading spaces but add the extra trailing space that isn't needed after the last word)
+#   n = (ch.page_width - leading_spaces + min_space)//fmt_len
+
+#   # r is number of complete columns (unless it is zero then n is)
+#   r = num_cmds % n
+
+#   # number of rows (round up)
+#   m = math.ceil(float(num_cmds)/float(n))
+
+#   out_str = "Available Commands:\r\n"
+
+#   # build the table
+#   if r == 0:
+#     # each row follows the same rule
+#     for j in range(0, m):
+#       out_str += leading_spaces * ' '
+#       # count up by m for each column
+#       for k in range(0, n - 1):
+#         out_str += cmds[j + m*k]
+#       out_str = out_str[:-min_space] + '\r\n'
+#   else:
+#     # all but the last row follow the same rule
+#     for j in range(0, m - 1):
+#       out_str += leading_spaces * ' '
+#       # count by m for the first r + 1 columns
+#       for k in range(0, r):
+#         out_str += cmds[j + m*k]
+#       # then by m - 1 for the rest
+#       for k in range(0, n - r):
+#         out_str += cmds[j + m*r + (m - 1)*k]
+#       out_str = out_str[:-min_space] + '\r\n'
+#     # now build the last row
+#     out_str += leading_spaces * ' '
+#     for k in range(0, r + 1):
+#       out_str += cmds[(m - 1) + m*k]
+#     out_str = out_str[:-min_space] + '\r\n'
+
+#   ch.write(out_str)
 
 def do_client(ch, scmd, argument, server, mud, db):
   have_info = False
@@ -346,6 +406,9 @@ def do_prefs(ch, scmd, argument, server, mud, db):
     option = args[1]
     value = args[2]
     if option in ['page_width', 'page_length']:
+      if option == 'page_width' and int(value) < config.MIN_PAGE_WIDTH:
+        ch.write(f"The minimum page width is {config.MIN_PAGE_WIDTH}.\r\n")
+        return
       if not value.isdecimal():
         ch.write(f"{option} must take an integer value.\r\n")
         return

@@ -126,7 +126,7 @@ def redit_parse_confirm_save(d, input, server, mud, db):
       # we found an existing room, overwrite it with redit_save
       check_room.zone_id = redit_save.attributes.uid.zone_id
       check_room.name = redit_save.attributes.name
-      check_room.id = redit_save.uid.id
+      check_room.id = redit_save.attributes.uid.id
       check_room.desc.text = redit_save.attributes.desc.text
 
       for dir in exit_data.direction:
@@ -195,4 +195,3 @@ def redit_parse_change_exit(d, input, server, mud):
 
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
-  

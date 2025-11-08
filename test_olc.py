@@ -58,7 +58,7 @@ class TestOLC(unittest.TestCase):
     d.character = player
 
     # test redit command
-    olc.do_redit(player, None, "", None, mud, db)
+    olc.handle_input(player.descriptor, 'redit', None, mud, db)
 
     self.assertEqual(player.descriptor.olc.mode, olc_data.olc_mode.OLC_MODE_REDIT)
     self.assertEqual(player.descriptor.olc.state, redit.redit_state.REDIT_MAIN_MENU)

@@ -23,6 +23,7 @@ MIN_PASSWORD_LENGTH    = 3
 MAX_PASSWORD_LENGTH    = 20
 PACKET_SIZE            = 256 # max bytes to read from socket each poll
 OMUD_VERSION           = '1.0 alpha'
+MIN_PAGE_WIDTH         = 25
 
 # configurable gameplay constants
 STARTING_ROOM          = 'recall@stockville'

@@ -5,14 +5,17 @@ import character_data
 import commands
 import config
 import database
+import descriptor_data
 import exit_data
 import game_data
+import nanny
 import npc_data
 import object_data
 import pc_data
 import room_data
 import server
 import test_utilities
+import unique_id_data
 import zone_data
 
 class TestCommands(unittest.TestCase):
@@ -140,6 +143,42 @@ class TestCommands(unittest.TestCase):
     commands.do_move(ch, exit_data.direction.DOWN, None, None, mud, None)
     self.assertIn(ch, c_room.people)
     self.assertNotIn(ch, u_room.people)
+
+  def test_help(self):
+    config.DEBUG_MODE = False
+    mud = game_data.game_data()
+    db = database.database(":memory:")
+    db.connect()
+    db.create_tables()
+    db.load_stock() # hard codes content into DB, eventually this won't be here
+    mud.load_world(db)
+    mud.startup()
+
+    # add player to starting room
+    player = pc_data.pc_data()
+    mud.add_character_to_room(player, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)))
+
+    # give them a descriptor because olc relies on it
+    d = descriptor_data.descriptor_data(None, "localhost")
+    d.state = descriptor_data.descriptor_state.CHATTING
+    player.descriptor = d
+    d.character = player
+
+    # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
+    cmd_dict = dict()
+    nanny.init_commands()
+
+    n = 150
+
+    while n > 1:
+      # test redit command with page_width n
+      commands.do_prefs(player, None, f"set page_width {n}", None, mud, None)
+      d.input_stream.input_q.append("help")
+      nanny.handle_next_input(d, None, mud, db)
+      # print(f"{'-'*n}")
+      # print(d.out_buf)
+      # d.out_buf = ""
+      n -= 1
 
   def test_prefs(self):
     # create tiny test world

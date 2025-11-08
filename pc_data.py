@@ -24,6 +24,7 @@ class pc_data(character_data.character_data):
      title       = player's chosen title"""
   def __init__(self):
     super().__init__()
+    self.name = "unfinished player"
     self.descriptor = None
     self.password = None
     self.player_id = None

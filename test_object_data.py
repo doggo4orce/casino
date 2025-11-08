@@ -19,7 +19,7 @@ class TestObjectData(unittest.TestCase):
     obj.add_alias("sharp")
     obj.add_alias("knife")
     
-    obj.assign_spec_proc(ct)
+    obj.assign_proc(ct)
 
     print(obj.debug())
 

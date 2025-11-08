@@ -30,7 +30,7 @@ def init_commands():
 
   cmd_dict["colors"]    = ( commands.do_colors,      0 )
   cmd_dict["copyover"]  = ( commands.do_copyover,    0 )
-  cmd_dict["client"]    = ( commands.do_client,      0 )
+  # cmd_dict["client"]    = ( commands.do_client,      0 )
   # cmd_dict["db"]        = ( commands.do_db,          0 )
   cmd_dict["drop"]      = ( commands.do_drop,        0 )
   cmd_dict["goto"]      = ( commands.do_goto,        0 )

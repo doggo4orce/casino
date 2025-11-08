@@ -1,6 +1,7 @@
 import behaviour_data
 from color import *
 import copy
+import mudlog
 import namelist_data
   
 class entity_data:
@@ -27,6 +28,7 @@ class entity_data:
     else:
       self.name = proto.name
       self._namelist = namelist_data.namelist_data(*proto.aliases())
+      mudlog.debug(f"entity copying description {proto.desc} to self.desc")
       self.ldesc = proto.ldesc
       self.desc = proto.desc
 

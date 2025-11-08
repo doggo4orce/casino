@@ -338,7 +338,7 @@ class database:
       id=proto.id,
       name=proto.name,
       ldesc=proto.ldesc,
-      desc=proto.ldesc
+      desc=proto.desc
     )
 
     for alias in proto.aliases():

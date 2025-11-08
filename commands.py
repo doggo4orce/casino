@@ -299,23 +299,23 @@ def do_help(ch, scmd, argument, server, mud, db):
 
 #   ch.write(out_str)
 
-def do_client(ch, scmd, argument, server, mud, db):
-  have_info = False
+# def do_client(ch, scmd, argument, server, mud, db):
+#   have_info = False
 
-  ci = ch.descriptor.client
+#   ci = ch.descriptor.client
 
-  out_str = "Connection Information:\r\n"
+#   out_str = "Connection Information:\r\n"
   
-  if ci.term_type != None:
-    out_str += f"  term_type      [{ORANGE}{ci.term_type.lower()}{NORMAL}]\r\n"
-  if ci.term_width != None:
-    out_str += f"  term_width     [{ORANGE}{ci.term_width}{NORMAL}]\r\n"
-  if ci.term_length != None:
-    out_str += f"  term_length    [{ORANGE}{ci.term_length}{NORMAL}]\r\n"
-  if ci.term_host != None:
-    out_str += f"  term_host      [{ORANGE}{ci.term_host}{NORMAL}]\r\n"
+#   if ci.term_type != None:
+#     out_str += f"  term_type      [{ORANGE}{ci.term_type.lower()}{NORMAL}]\r\n"
+#   if ci.term_width != None:
+#     out_str += f"  term_width     [{ORANGE}{ci.term_width}{NORMAL}]\r\n"
+#   if ci.term_length != None:
+#     out_str += f"  term_length    [{ORANGE}{ci.term_length}{NORMAL}]\r\n"
+#   if ci.term_host != None:
+#     out_str += f"  term_host      [{ORANGE}{ci.term_host}{NORMAL}]\r\n"
 
-  ch.write(out_str)
+#   ch.write(out_str)
 
 # def do_db(ch, scmd, argument, server, mud, db):
 #   db_help = "Use the following syntax:\r\n"

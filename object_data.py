@@ -27,7 +27,8 @@ class object_data(actor_data.actor_data, entity_data.entity_data):
     # copy object specific fields here
 
   def debug(self):
-    ret_val = super().debug()
+    ret_val = entity_data.entity_data.debug(self) + "\r\n"
+    ret_val += actor_data.actor_data.debug(self)
     return ret_val
 
   def __str__(self):

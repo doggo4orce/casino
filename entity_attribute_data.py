@@ -1,0 +1,1 @@
+class entity_attribute_data:

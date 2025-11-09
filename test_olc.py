@@ -53,8 +53,7 @@ class TestOLC(unittest.TestCase):
     mud.add_character_to_room(player, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)))
 
     # give them a descriptor because olc relies on it
-    client, host = socket.socketpair()
-    d = descriptor_data.descriptor_data(host, "localhost")
+    d = descriptor_data.descriptor_data(None, "localhost")
     d.state = descriptor_data.descriptor_state.CHATTING
     player.descriptor = d
     d.character = player
@@ -88,10 +87,6 @@ class TestOLC(unittest.TestCase):
     # save internally
     olc.handle_input(player.descriptor, 'y', None, mud, db)
 
-    # teardown
-    host.close()
-    client.close()
-
   def test_redit_change_room_desc(self):
     mud = game_data.game_data()
     db = database.database(":memory:")
@@ -109,8 +104,7 @@ class TestOLC(unittest.TestCase):
     room.desc.text = "first line"
 
     # give them a descriptor because olc relies on it
-    client, host = socket.socketpair()
-    d = descriptor_data.descriptor_data(host, "localhost")
+    d = descriptor_data.descriptor_data(None, "localhost")
     d.state = descriptor_data.descriptor_state.CHATTING
     player.descriptor = d
     d.character = player
@@ -181,10 +175,6 @@ class TestOLC(unittest.TestCase):
     self.assertIsNone(d.olc)
     self.assertEqual(d.state, descriptor_data.descriptor_state.CHATTING)
 
-    # teardown
-    host.close()
-    client.close()
-
   def test_redit_create_new_room(self):
     mud = game_data.game_data()
     db = database.database(":memory:")
@@ -204,8 +194,7 @@ class TestOLC(unittest.TestCase):
     zone = mud.zone_by_id('stockville')
 
     # give them a descriptor because olc relies on it
-    client, host = socket.socketpair()
-    d = descriptor_data.descriptor_data(host, "localhost")
+    d = descriptor_data.descriptor_data(None, "localhost")
     d.state = descriptor_data.descriptor_state.CHATTING
     player.descriptor = d
     d.character = player
@@ -253,10 +242,6 @@ class TestOLC(unittest.TestCase):
     self.assertIsNone(d.olc)
     self.assertEqual(d.state, descriptor_data.descriptor_state.CHATTING)
 
-    # teardown
-    host.close()
-    client.close()
-
   def test_zedit_create_new_zone(self):
     mud = game_data.game_data()
     db = database.database(":memory:")
@@ -273,8 +258,7 @@ class TestOLC(unittest.TestCase):
     mud.add_character_to_room(player, room)
 
     # give them a descriptor because olc relies on it
-    client, host = socket.socketpair()
-    d = descriptor_data.descriptor_data(host, "localhost")
+    d = descriptor_data.descriptor_data(None, "localhost")
     d.state = descriptor_data.descriptor_state.CHATTING
     player.descriptor = d
     d.character = player
@@ -329,9 +313,6 @@ class TestOLC(unittest.TestCase):
     self.assertEqual(new_zone.author, "Charles Dickens")
     self.assertEqual(new_zone.name, "The Haunted Castle")
 
-    client.close()
-    host.close()
-
   def test_zedit_edit_existing_zone(self):
     mud = game_data.game_data()
     db = database.database(":memory:")
@@ -348,8 +329,7 @@ class TestOLC(unittest.TestCase):
     mud.add_character_to_room(player, room)
 
     # give them a descriptor because olc relies on it
-    client, host = socket.socketpair()
-    d = descriptor_data.descriptor_data(host, "localhost")
+    d = descriptor_data.descriptor_data(None, "localhost")
     d.state = descriptor_data.descriptor_state.CHATTING
     player.descriptor = d
     d.character = player
@@ -403,9 +383,6 @@ class TestOLC(unittest.TestCase):
     self.assertIsNotNone(new_zone)
     self.assertEqual(new_zone.author, "Charles Dickens")
     self.assertEqual(new_zone.name, "The Haunted Castle")
-
-    client.close()
-    host.close()
 
 if __name__ == "__main__":
   #unittest.main(defaultTest="TestOLC.test_redit_create_new_room")

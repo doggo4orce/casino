@@ -31,7 +31,7 @@ def init_commands():
   cmd_dict["colors"]    = ( commands.do_colors,      0 )
   cmd_dict["copyover"]  = ( commands.do_copyover,    0 )
   # cmd_dict["client"]    = ( commands.do_client,      0 )
-  # cmd_dict["db"]        = ( commands.do_db,          0 )
+  cmd_dict["db"]        = ( commands.do_db,          0 )
   cmd_dict["drop"]      = ( commands.do_drop,        0 )
   cmd_dict["goto"]      = ( commands.do_goto,        0 )
   cmd_dict["help"]      = ( commands.do_help,        0 )
@@ -110,13 +110,13 @@ def writing_follow_up(d):
 def handle_next_input(d, server, mud, db):
   msg = d.input_stream.pop_input()
 
-  if d.character:
-    mudlog.debug(f"nanny.handle_next_input called on player {d.character.name} with input {msg}")
-  else:
-    mudlog.debug(f"nanny.handle_next_input called by descriptor from {d.client.term_host} with input {msg}")
-
   if msg is None:
     return
+
+  if d.character:
+    mudlog.debug(f"nanny.handle_next_input called on player {d.character.name} with input '{msg}'")
+  else:
+    mudlog.debug(f"nanny.handle_next_input called by descriptor from {d.client.term_host} with input '{msg}'")
 
   d.has_prompt = False
   stripped_msg = msg.strip()

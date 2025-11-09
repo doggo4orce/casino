@@ -63,4 +63,4 @@ VOID_ROOM              = "stockville[void]"
 GREETINGS = """                      OurouborosMud\r\n\r\n\r\nBy what name do you wish to be known? """
 
 # turn on mudlog.debug() messages
-DEBUG_MODE             = False
+DEBUG_MODE             = True

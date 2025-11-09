@@ -321,62 +321,65 @@ def do_help(ch, scmd, argument, server, mud, db):
 
 #   ch.write(out_str)
 
-# def do_db(ch, scmd, argument, server, mud, db):
-#   db_help = "Use the following syntax:\r\n"
-#   db_help += f"  db show tables          - list table in database\r\n"
-#   db_help += f"  db rows <table name>    - show rows of a table\r\n"
-#   db_help += f"  db reset confirm        - reset database to stock\r\n"
-#   db_help += f"  db columns <table name> - show columns of a table\r\n"
+def do_db(ch, scmd, argument, server, mud, db):
+  mudlog.debug(f"do_db function called on player {ch} with argument '{argument}'")
 
-#   args = argument.split()
-#   num_args = len(args)
+  db_help = "Use the following syntax:\r\n"
+  db_help += f"  db show tables          - list table in database\r\n"
+  db_help += f"  db records <table name> - show records in table\r\n"
+  db_help += f"  db reset confirm        - reset database to stock\r\n"
+  db_help += f"  db columns <table name> - show columns of table\r\n"
 
-#   if num_args == 0:
-#     ch.write(db_help)
-#     return
-#   if num_args == 2:
-#     if args[0] == "reset" and args[1] == "confirm":
-#       ch.write("Resetting 'data.db' to stock condition.  Perform a copyover to reset the world.")
-#       db.drop_tables()
-#       db.create_tables()
-#       db.load_stock()
-#       return
-#     if args[0] == "show":
-#       if args[1] == "tables":
-#         table_buf = "The following tables exist in the database:\r\n"
-#         for table_name in db.list_tables():
-#           table_buf += f"  {table_name:<{20}} {db.num_records(table_name)} rows loaded\r\n"
-#         ch.write(table_buf)
-#         return
-#     if args[0] == "columns":
-#       table_name = args[1]
+  args = argument.split()
+  num_args = len(args)
 
-#       if table_name not in db.list_tables():
-#         ch.write("That table does not exist.\r\n")
-#         return
-#       else:
-#         table_buf = f"The following columns exist for {args[1]}:\r\n"
-#         for column in db.list_columns(args[1]):
-#           table_buf += f"  {column.name:<{20}} {column.sqlite3_type}\r\n"
-#         ch.write(table_buf)
-#         return
-#     elif args[0] == "rows":
-#       table_name = args[1]
+  if num_args == 0:
+    ch.write(db_help)
+    return
+  if num_args == 2:
+    if args[0] == "reset" and args[1] == "confirm":
+      ch.write("Resetting 'data.db' to stock condition.  Perform a copyover to reset the world.")
+      # db.drop_tables()
+      # db.create_tables()
+      # db.load_stock()
+      return
+    if args[0] == "show":
+      if args[1] == "tables":
+        table_buf = "The following tables exist in the database:\r\n"
+        for table_name in db.admin_show_tables():
+          table_buf += f"  {table_name:<{20}} {db.admin_num_records(table_name)} records\r\n"
+        ch.write(table_buf)
+        return
+    if args[0] == "columns":
+      table_name = args[1]
 
-#       if table_name not in db.list_tables():
-#         ch.write("That table does not exist.\r\n")
-#         return
-#       else:
-#         table_buf = f"The following rows exist for {args[1]}:\r\n"
-#         db.execute(f"SELECT * FROM {args[1]}")
-#         for line in db.fetchall():
-#           line_buf = ""
-#           for col in line:
-#             line_buf += f"{col:.16} ".ljust(16)
-#           line_buf = line_buf[:-1]
-#           table_buf += line_buf + "\r\n"
-#         ch.write(table_buf)
-#         return
+      if table_name not in db.admin_show_tables():
+        ch.write("That table does not exist.\r\n")
+        return
+      else:
+        table_buf = f"The following columns exist for {args[1]}:\r\n"
+        for column in db.admin_show_columns(table_name):
+          table_buf += f"  {column.name:<{20}} {column.sqlite3_type}\r\n"
+        ch.write(table_buf)
+        return
+    elif args[0] == "records":
+      table_name = args[1]
+
+      if table_name not in db.admin_show_tables():
+        ch.write("That table does not exist.\r\n")
+        return
+      else:
+        table_buf = f"The following rows exist for {args[1]}:\r\n"
+        table_buf += str(db.admin_fetch_records(table_name)) + "\r\n"
+
+        # for record in db.admin_show_records(table_name):
+        #   line_buf = ""
+        #   for col in line:
+        #     line_buf += f"{col:.16} ".ljust(16)
+        #   line_buf = line_buf[:-1]
+        #   table_buf += line_buf + "\r\n"
+        ch.write(table_buf)
+        return
         
 
 def do_prefs(ch, scmd, argument, server, mud, db):

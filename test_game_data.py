@@ -326,9 +326,19 @@ class TestGameData(unittest.TestCase):
     mud.startup()
 
   def test_echo_around(self):
-    clients, players, mud, zone, room = test_utilities.create_single_room_test_world_and_players(3)
-    bob, alice, sam = players
-    bob_socket, alice_socket, sam_socket = clients
+    mud, zone, room = test_utilities.create_single_room_test_world()
+    bob = pc_data.pc_data()
+    alice = pc_data.pc_data()
+    sam = pc_data.pc_data()
+
+    # hook them up to descriptors since we'll need to check if they received a message
+    d_bob = descriptor_data.descriptor_data(None, "bob.host")
+    d_alice = descriptor_data.descriptor_data(None, "alice.host")
+    d_sam = descriptor_data.descriptor_data(None, "sam.host")
+
+    d_bob.character, bob.descriptor = bob, d_bob
+    d_alice.character, alice.descriptor = alice, d_alice
+    d_sam.character, sam.descriptor = sam, d_sam
 
     # they'll be in the same room
     mud.add_character_to_room(bob, room)
@@ -338,22 +348,13 @@ class TestGameData(unittest.TestCase):
     # now test the echo_around
     mud.echo_around(sam, list(), "Hello world!")
 
-    # flush the output
-    alice.descriptor.flush_output()
-    bob.descriptor.flush_output()
-
     # make sure it was received
-    self.assertEqual(alice_socket.recv(1024).decode("utf-8"), "Hello world!")
-    self.assertEqual(bob_socket.recv(1024).decode("utf-8"), "Hello world!")
+    self.assertEqual(d_alice.out_buf, "Hello world!")
+    self.assertEqual(d_bob.out_buf, "Hello world!")
 
     # sam should have no data pending
-    rlist, wlist, xlist = select.select([sam_socket], [], [], 1)
-    self.assertNotIn(sam_socket, rlist)
+    self.assertEqual(d_sam.out_buf, "")
 
-    for client in clients:
-      client.close()
-    for player in players:
-      player.descriptor.close()
 
 if __name__ == "__main__":
   unittest.main()

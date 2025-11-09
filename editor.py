@@ -114,14 +114,14 @@ def editor_proofread_line(d, proofread):
   d.write(f"Proofreading line #{line_num}.\r\n")
   line = d.write_buffer[line_num - 1]
 
-  if line[:len(OPEN_PARAGRAPH)] == OPEN_PARAGRAPH and line[(-1)*len(CLOSE_PARAGRAPH):] == CLOSE_PARAGRAPH:
-    line = line[len(OPEN_PARAGRAPH):]
-    line = line[:(-1)*len(CLOSE_PARAGRAPH)]
+  if line[:len(buffer_data.OPEN_PARAGRAPH)] == buffer_data.OPEN_PARAGRAPH and line[(-1)*len(buffer_data.CLOSE_PARAGRAPH):] == buffer_data.CLOSE_PARAGRAPH:
+    line = line[len(buffer_data.OPEN_PARAGRAPH):]
+    line = line[:(-1)*len(buffer_data.CLOSE_PARAGRAPH)]
 
   line = string_handling.tidy_color_tags(line)
   line = string_handling.proofread(line)
 
-  d.write_buffer[line_num - 1] = OPEN_PARAGRAPH + line + CLOSE_PARAGRAPH
+  d.write_buffer[line_num - 1] = buffer_data.OPEN_PARAGRAPH + line + buffer_data.CLOSE_PARAGRAPH
 
 def editor_insert_line(d, insert):
   pattern = re.compile(r'(\d+) (.*)')

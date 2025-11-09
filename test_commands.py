@@ -145,6 +145,7 @@ class TestCommands(unittest.TestCase):
     self.assertNotIn(ch, u_room.people)
 
   def test_help(self):
+    debug_mode = config.DEBUG_MODE
     config.DEBUG_MODE = False
     mud = game_data.game_data()
     db = database.database(":memory:")
@@ -179,6 +180,65 @@ class TestCommands(unittest.TestCase):
       # print(d.out_buf)
       # d.out_buf = ""
       n -= 1
+
+    config.DEBUG_MODE = debug_mode
+
+  def test_db(self):
+    debug_mode = config.DEBUG_MODE
+    config.DEBUG_MODE = True
+
+    # create tiny test world
+    mud = game_data.game_data()
+
+    # load the stock world into a database, we want lots of tables to test
+    db = database.database(":memory:")
+    db.connect()
+    db.create_tables()
+    db.load_stock() # hard codes content into DB, eventually this won't be here
+    mud.load_world(db)
+    mud.startup()
+
+    # add a player to the room
+    player = pc_data.pc_data()
+    mud.add_character_to_room(player, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)))
+
+    # give them a descriptor because we need to see their output
+    d = descriptor_data.descriptor_data(None, "localhost")
+    d.state = descriptor_data.descriptor_state.CHATTING
+    player.descriptor, d.character = d, player
+
+    # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
+    cmd_dict = dict()
+    nanny.init_commands()
+
+    d.input_stream.input_q.append("db show tables")
+    nanny.handle_next_input(d, None, mud, db)
+
+    options = ['columns', 'records']
+
+    tables = [
+      'ex_table',
+      'pref_table_numeric',
+      'pref_table_text',
+      'pref_table_flags',
+      'npc_proto_table',
+      'obj_proto_table',
+      'wld_proto_table',
+      'p_table',
+      'z_table',
+      'alias_table',
+      'wrong_table'           # one table doesn't exist
+    ]
+
+    for opt in options:
+      for table in tables:
+        d.input_stream.input_q.append(f"db {opt} {table}")
+        nanny.handle_next_input(d, None, mud, db)
+
+    print(d.out_buf)
+
+    config.DEBUG_MODE = debug_mode
+
 
   def test_prefs(self):
     # create tiny test world
@@ -217,5 +277,5 @@ class TestCommands(unittest.TestCase):
     self.assertTrue(receiver.has_object(gift))
 
 if __name__ == '__main__':
-  config.DEBUG_MODE = True
+  config.DEBUG_MODE = False
   unittest.main()

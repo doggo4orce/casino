@@ -26,6 +26,16 @@ class database:
   """connect()                           <- connect to self._db_file
      close()                             <- close connection
 
+     ########################################################################
+     ###   Reserved for Administrative Usage -- call these sparingly      ###
+
+     admin_show_tables()                 <- list all tables loaded in db_file
+     admin_show_columns(table)           <- list all columns in table
+     admin_fetch_records(table)          <- view table as result set
+     admin_num_records(table)            <- count records in table
+                                                                          ###
+     ########################################################################
+
      name_used(name)                     <- check if player exists with name
      next_unused_pid()                   <- find smallest unused player ID
 
@@ -104,6 +114,18 @@ class database:
 
   def close(self):
     self._handler.close()
+
+  def admin_show_tables(self):
+    return self._handler.list_tables()
+
+  def admin_show_columns(self, table):
+    return self._handler.list_columns(table)
+
+  def admin_fetch_records(self, table):
+    return self._handler.fetch_records(table)
+
+  def admin_num_records(self, table):
+    return self._handler.num_records(table)
 
   def name_used(self, name):
     return self._handler.get_record(database.PLAYER_TABLE,name=name) is not None

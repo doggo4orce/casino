@@ -141,9 +141,6 @@ def baccarat_dealing(mud, me, db):
   panda_string = "{}P{}a{}n{}d{}a{}!{}".format(CYAN, DARK_GRAY, CYAN, DARK_GRAY, CYAN, DARK_GRAY, NORMAL)
   dragon_string = "{}D{}r{}a{}g{}o{}n{}!{}".format(CYAN, GREEN, CYAN, GREEN, CYAN, GREEN, CYAN, NORMAL)
 
-  mudlog.debug(f"{me}.bac_state is {me.bac_state.name}")
-  # mudlog.debug(f"{me}.bac_paused is {me.bac_paused}")
-
   if me.bac_state == baccarat_dealer_data.baccarat_dealer_state.IDLE:
     return
 

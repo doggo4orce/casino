@@ -4,6 +4,7 @@ import descriptor_data
 import editor
 import enum
 import exit_data
+import mudlog
 import room_data
 import string_handling
 import unique_id_data
@@ -150,6 +151,8 @@ def redit_parse_confirm_save(d, input, server, mud, db):
         dest = redit_save.destination(dir)
         if dest is not None:
           new_room.connect(dir, dest.zone_id, dest.id)
+
+      mudlog.debug(f"Saving room: {new_room.name} to database.")
 
       db.save_room(new_room)
 

@@ -30,6 +30,7 @@ class db_handler:
      num_columns(table)              <- count columns in table
      num_tables()                    <- count tables in database
      num_records(table)              <- count records in a table
+     fetch_records(table)            <- return table as result set
      insert_record(table, **record)  <- insert record to table
      delete_records(table, **record) <- delete records from table
      list_tables()                   <- list all table (names) created
@@ -132,6 +133,7 @@ class db_handler:
       logging.error(f"Trying to list columns of table {table_name}, which does not exist.")
       return None
 
+    # TODO: write pragma function?
     sql = f"PRAGMA table_info({table_name})"
 
     self.execute(sql)
@@ -151,6 +153,10 @@ class db_handler:
   def num_records(self, table):
     self.search_table(table)
     return self.fetch_all().num_results
+
+  def fetch_records(self, table):
+    self.search_table(table)
+    return self.fetch_all()
 
   def num_tables(self):
     return len(self.list_tables())

@@ -8,5 +8,4 @@ test.py
 */*/*/.DS_Store
 .killscript
 */*/.DS_Store
-data.db
 test.db

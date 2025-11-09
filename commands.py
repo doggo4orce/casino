@@ -256,7 +256,6 @@ def do_db(ch, scmd, argument, server, mud, db):
   db_help = "Use the following syntax:\r\n"
   db_help += f"  db tables               - list table in database\r\n"
   db_help += f"  db records <table name> - show records in table\r\n"
-  db_help += f"  db reset confirm        - reset database to stock\r\n"
   db_help += f"  db columns <table name> - show columns of table\r\n"
 
   args = argument.split()
@@ -295,6 +294,10 @@ def do_db(ch, scmd, argument, server, mud, db):
     table_buf = f"The following rows exist for {args[1]}:\r\n"
     table_buf += str(db.admin_search_records(table)) + "\r\n"
     ch.write(table_buf)
+  elif args[0] == "lookup":
+    if num_args != 3:
+      ch.write("Usage: db lookup <table_name> <unique_id>")
+      return
   else:
     ch.write("That syntax is not yet recognized by this command.\r\n")
 

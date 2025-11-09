@@ -2,8 +2,7 @@ class zedit_save_data:
   """Used to store changes until user quits OLC and finalizes.
      id     = unique identifier of zone
      name   = name of zone
-     author = who to credit for the work
-     folder = which folder to save the files to"""
+     author = who to credit for the work"""
   def __init__(self, id=None, name=None, author=None):
     self.id = id
     self.name = name

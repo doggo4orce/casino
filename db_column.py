@@ -9,9 +9,10 @@ class db_column:
      type = datatype for column, e.g. str, int, or bool
      sqlite3_type = returns "text" or "int", etc. """
 
-  def __init__(self, name, type):
+  def __init__(self, name, type, primary=False):
     self._name = name
     self._type = None
+    self._is_primary = primary
 
     if type in [int, str]:
       self._type = type
@@ -27,6 +28,10 @@ class db_column:
   @property
   def type(self):
     return self._type
+
+  @property
+  def is_primary(self):
+    return self._is_primary
   
   @property
   def sqlite3_type(self):
@@ -38,4 +43,8 @@ class db_column:
       return None # throw exception?
 
   def __str__(self):
-    return f"('{self.name}', {self.sqlite3_type})"
+    ret_val = f"('{self.name}', {self.sqlite3_type}"
+    if self.is_primary:
+      ret_val += f", PRIMARY KEY"
+    ret_val += ")"
+    return ret_val

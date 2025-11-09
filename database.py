@@ -503,21 +503,11 @@ class database:
       mudlog.error(f"Trying to delete non-existent zone with id {zone.id}.")
       return
 
-    self._handler.delete_records(database.ZONE_TABLE,
-      id=id
-    )
-
-    self._handler.delete_records(database.WORLD_TABLE,
-      zone_id=id
-    )
-
-    self._handler.delete_records(database.OBJ_PROTO_TABLE,
-      zone_id=id
-    )
-
-    self._handler.delete_records(database.NPC_PROTO_TABLE,
-      zone_id=id
-    )
+    self._handler.delete_records(database.ZONE_TABLE, id=id)
+    self._handler.delete_records(database.WORLD_TABLE, zone_id=id)
+    self._handler.delete_records(database.OBJ_PROTO_TABLE, zone_id=id)
+    self._handler.delete_records(database.NPC_PROTO_TABLE, zone_id=id)
+    self._handler.delete_records(database.EXIT_TABLE, o_zone_id=id)
 
   def num_zones(self):
     return self._handler.num_records(database.ZONE_TABLE)

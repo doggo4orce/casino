@@ -21,6 +21,8 @@ class db_handler:
      commit()                        <- not necessary (due to auto-commit)
      create_table(name, *columns)    <- create new table with given columns
      drop_table(name)                <- delete table
+     create_backup(file)             <- dump all contents into new database file
+     drop_all_tables()               <- back anything up you might be attached to!
      add_column(table, name, type)   <- add new column to table
      drop_column(table, name)        <- delete column from table
      has_column(table, column)       <- check if table has column

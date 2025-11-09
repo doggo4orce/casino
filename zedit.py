@@ -66,8 +66,8 @@ def zedit_parse_main_menu(d, input, server, mud, db):
       d.olc.state = zedit_state.ZEDIT_CONFIRM_SAVE
     else:
       d.write("No changes to save.\r\n")
-      mud.echo_around(d.character, None, f"{d.char.name} stops using OLC.\r\n")
-      d.state = descriptor.descriptor_state.CHATTING
+      mud.echo_around(d.character, None, f"{d.character.name} stops using OLC.\r\n")
+      d.state = descriptor_data.descriptor_state.CHATTING
       d.olc.save_data = None
       d.olc = None
   else:
@@ -157,6 +157,7 @@ def zedit_parse_confirm_save(d, input, server, mud, db):
       check_zone.name = zedit_save.name
       check_zone.id = zone_id
       check_zone.author = zedit_save.author
+      db.save_zone(check_zone)
 
     else:
       # ok we're making a brand new zone filled from zedit save
@@ -167,6 +168,8 @@ def zedit_parse_confirm_save(d, input, server, mud, db):
 
       # insert new zone into the world
       mud._zones[zone_id] = new_zone
+
+      db.save_zone(new_zone)
     
     d.write("Saving changes.\r\n")
     mud.echo_around(d.character, None, f"{d.character.name} stops using OLC.\r\n")

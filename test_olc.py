@@ -344,10 +344,25 @@ class TestOLC(unittest.TestCase):
 
     self.assertEqual(d.olc.state, zedit.zedit_state.ZEDIT_MAIN_MENU)
     
+    # quit without making a change
+    d.input_stream.input_q.append("q")
+    nanny.handle_next_input(d, None, mud, db)
+
+    # olc should be gone
+    self.assertIsNone(d.olc)
+
+    # enter zedit command again
+    d.input_stream.input_q.append("zedit")
+    nanny.handle_next_input(d, None, mud, db)
+
+    # back at the main menu
+    self.assertEqual(d.olc.state, zedit.zedit_state.ZEDIT_MAIN_MENU)
+
     # change the author
     d.input_stream.input_q.append("1")
     nanny.handle_next_input(d, None, mud, db)
 
+    # should be editing the author
     self.assertEqual(d.olc.state, zedit.zedit_state.ZEDIT_EDIT_AUTHOR)
 
     # choose a new author
@@ -360,18 +375,21 @@ class TestOLC(unittest.TestCase):
     d.input_stream.input_q.append("2")
     nanny.handle_next_input(d, None, mud, db)
 
+    # should be editing the name
     self.assertEqual(d.olc.state, zedit.zedit_state.ZEDIT_EDIT_NAME)
 
     # choose a new name
     d.input_stream.input_q.append("The Haunted Castle")
     nanny.handle_next_input(d, None, mud, db)
 
+    # back to main menu
     self.assertEqual(d.olc.state, zedit.zedit_state.ZEDIT_MAIN_MENU)
 
     # quit
     d.input_stream.input_q.append("q")
     nanny.handle_next_input(d, None, mud, db)
 
+    # they are asked if they want to save
     self.assertEqual(d.olc.state, zedit.zedit_state.ZEDIT_CONFIRM_SAVE)
 
     # save internally

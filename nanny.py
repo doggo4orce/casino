@@ -42,6 +42,7 @@ def init_commands():
   cmd_dict["look"]      = ( commands.do_look,        0 )
   # cmd_dict["pindex"]    = ( commands.do_pindex,      0 )
   cmd_dict["prefs"]     = ( commands.do_prefs,       0 )
+  cmd_dict["qui"]       = ( commands.do_lazy_quit,   0 )
   cmd_dict["save"]      = ( commands.do_save,        0 )
   cmd_dict["say"]       = ( commands.do_say,         0 )
   cmd_dict["score"]     = ( commands.do_score,       0 )

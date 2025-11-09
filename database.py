@@ -31,7 +31,8 @@ class database:
 
      admin_show_tables()                 <- list all tables loaded in db_file
      admin_show_columns(table)           <- list all columns in table
-     admin_fetch_records(table)          <- view table as result set
+     admin_search_record(table, **clause) <- fetch
+     admin_search_records(table, **clause)<- view table as result set
      admin_num_records(table)            <- count records in table
                                                                           ###
      ########################################################################

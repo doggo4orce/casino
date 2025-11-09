@@ -38,7 +38,7 @@ class TestDbResult(unittest.TestCase):
     self.assertEqual(r.num_fields, 4)
 
     # results have string representations same as dict()
-    print(r)
+    print(r.debug())
 
     # keys may be updated using a function call
     r.update_field("name", "dylan")

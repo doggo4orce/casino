@@ -1,3 +1,4 @@
+from color import *
 import string_handling
 
 # allow characters and underscores only
@@ -60,6 +61,14 @@ class db_result:
 
   def delete_field(self, field):
     del self._values[field]
+
+  def debug(self):
+    ret_val = ""
+
+    for field in self:
+      ret_val += f"{field.capitalize()}: {CYAN}{self[field]}{NORMAL}\r\n"
+
+    return ret_val
 
   def __iter__(self):
     return result_iterator(self)

@@ -250,77 +250,6 @@ def do_help(ch, scmd, argument, server, mud, db):
 
   ch.write(out_str)
 
-# def do_help(ch, scmd, argument, server, mud, db):
-#   cmds = list(nanny.cmd_dict.keys())
-#   num_cmds = len(cmds)
-
-#   # choices for spacing out the commands
-#   leading_spaces = 2
-#   min_space = 1
-
-#   # find out the longest command name to determine column width
-#   fmt_len = max([ len(cmd) for cmd in cmds ]) + min_space
-
-#   # pad each word with spaces
-#   cmds = [cmd.ljust(fmt_len) for cmd in cmds]
-
-#   # number of columns (subtract leading spaces but add the extra trailing space that isn't needed after the last word)
-#   n = (ch.page_width - leading_spaces + min_space)//fmt_len
-
-#   # r is number of complete columns (unless it is zero then n is)
-#   r = num_cmds % n
-
-#   # number of rows (round up)
-#   m = math.ceil(float(num_cmds)/float(n))
-
-#   out_str = "Available Commands:\r\n"
-
-#   # build the table
-#   if r == 0:
-#     # each row follows the same rule
-#     for j in range(0, m):
-#       out_str += leading_spaces * ' '
-#       # count up by m for each column
-#       for k in range(0, n - 1):
-#         out_str += cmds[j + m*k]
-#       out_str = out_str[:-min_space] + '\r\n'
-#   else:
-#     # all but the last row follow the same rule
-#     for j in range(0, m - 1):
-#       out_str += leading_spaces * ' '
-#       # count by m for the first r + 1 columns
-#       for k in range(0, r):
-#         out_str += cmds[j + m*k]
-#       # then by m - 1 for the rest
-#       for k in range(0, n - r):
-#         out_str += cmds[j + m*r + (m - 1)*k]
-#       out_str = out_str[:-min_space] + '\r\n'
-#     # now build the last row
-#     out_str += leading_spaces * ' '
-#     for k in range(0, r + 1):
-#       out_str += cmds[(m - 1) + m*k]
-#     out_str = out_str[:-min_space] + '\r\n'
-
-#   ch.write(out_str)
-
-# def do_client(ch, scmd, argument, server, mud, db):
-#   have_info = False
-
-#   ci = ch.descriptor.client
-
-#   out_str = "Connection Information:\r\n"
-  
-#   if ci.term_type != None:
-#     out_str += f"  term_type      [{ORANGE}{ci.term_type.lower()}{NORMAL}]\r\n"
-#   if ci.term_width != None:
-#     out_str += f"  term_width     [{ORANGE}{ci.term_width}{NORMAL}]\r\n"
-#   if ci.term_length != None:
-#     out_str += f"  term_length    [{ORANGE}{ci.term_length}{NORMAL}]\r\n"
-#   if ci.term_host != None:
-#     out_str += f"  term_host      [{ORANGE}{ci.term_host}{NORMAL}]\r\n"
-
-#   ch.write(out_str)
-
 def do_db(ch, scmd, argument, server, mud, db):
   mudlog.debug(f"do_db function called on player {ch} with argument '{argument}'")
 
@@ -364,58 +293,10 @@ def do_db(ch, scmd, argument, server, mud, db):
       return
     table = args[1]
     table_buf = f"The following rows exist for {args[1]}:\r\n"
-    table_buf += str(db.admin_fetch_records(table)) + "\r\n"
+    table_buf += str(db.admin_search_records(table)) + "\r\n"
     ch.write(table_buf)
   else:
     ch.write("That syntax is not yet recognized by this command.\r\n")
-    
-  # if num_args == 2:
-  #   if args[0] == "reset" and args[1] == "confirm":
-  #     ch.write("Resetting 'data.db' to stock condition.  Perform a copyover to reset the world.")
-  #     # db.drop_tables()
-  #     # db.create_tables()
-  #     # db.load_stock()
-  #     return
-  #   if args[0] == "show":
-  #     if args[1] == "tables":
-  #       table_buf = "The following tables exist in the database:\r\n"
-  #       for table_name in db.admin_show_tables():
-  #         table_buf += f"  {table_name:<{20}} {db.admin_num_records(table_name)} records\r\n"
-  #       ch.write(table_buf)
-  #       return
-  #   if args[0] == "columns":
-  #     table_name = args[1]
-
-  #     if table_name not in db.admin_show_tables():
-  #       ch.write("That table does not exist.\r\n")
-  #       return
-  #     else:
-  #       table_buf = f"The following columns exist for {args[1]}:\r\n"
-  #       for column in db.admin_show_columns(table_name):
-  #         table_buf += f"  {column.name:<{20}} {column.sqlite3_type}\r\n"
-  #       ch.write(table_buf)
-  #       return
-  #   elif args[0] == "records":
-  #     table_name = args[1]
-
-  #     if table_name not in db.admin_show_tables():
-  #       ch.write("That table does not exist.\r\n")
-  #       return
-  #     else:
-  #       table_buf = f"The following rows exist for {args[1]}:\r\n"
-  #       table_buf += str(db.admin_fetch_records(table_name)) + "\r\n"
-
-  #       # for record in db.admin_show_records(table_name):
-  #       #   line_buf = ""
-  #       #   for col in line:
-  #       #     line_buf += f"{col:.16} ".ljust(16)
-  #       #   line_buf = line_buf[:-1]
-  #       #   table_buf += line_buf + "\r\n"
-  #       ch.write(table_buf)
-  #       return
-  #   else:
-  #     ch.write(db_help)
-        
 
 def do_prefs(ch, scmd, argument, server, mud, db):
   if not isinstance(ch, pc_data.pc_data):
@@ -725,6 +606,9 @@ def do_move(ch, scmd, argument, server, mud, db):
 #     for i in range(0, 16):
 #       line += f"{ansi_color_sequence(10*j + i)}*"
 #     ch.descriptor.write(line + "\r\n" + NORMAL)
+
+def do_lazy_quit(ch, scmd, argument, server, mud, db):
+  ch.write("You must type quit -- no less, to quit!\r\n")
 
 def do_quit(ch, scmd, argument, server, mud, db):
   d = ch.descriptor

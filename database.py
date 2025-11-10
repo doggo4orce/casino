@@ -31,8 +31,8 @@ class database:
 
      admin_show_tables()                 <- list all tables loaded in db_file
      admin_show_columns(table)           <- list all columns in table
-     admin_search_record(table, **clause) <- fetch
-     admin_search_records(table, **clause)<- view table as result set
+     admin_fetch_record(table, **clause) <- fetch
+     admin_fetch_records(table, **clause)<- view table as result set
      admin_num_records(table)            <- count records in table
                                                                           ###
      ########################################################################
@@ -121,6 +121,9 @@ class database:
 
   def admin_show_columns(self, table):
     return self._handler.list_columns(table)
+
+  def admin_fetch_record(self, table):
+    return self._handler.fetch_record(table)
 
   def admin_fetch_records(self, table):
     return self._handler.fetch_records(table)

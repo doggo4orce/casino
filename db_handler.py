@@ -64,6 +64,9 @@ class db_handler:
     self._connection.commit()
 
   def create_table(self, table_name, *columns):
+    has_primary = False
+    has_composite_primary = False
+
     # if table_name is invalid, abort
     if not valid_table_name(table_name):
       mudlog.error(f"Trying to create table with invalid name '{table_name}'.")
@@ -75,20 +78,24 @@ class db_handler:
       return
 
     # all column names must be valid
-    for pair in columns:
-      col = db_column.db_column(pair[0], pair[1])
+    for triple in columns:
+      col = db_column.db_column(triple[0], triple[1], triple[2])
       if not db_column.valid_column_name(col.name):
         mudlog.error(f"Trying to create table '{table_name}' with invalid column name '{col.name}'.")
         return
+      if triple[2] and has_primary:
+        has_composite_primary = True
+      elif triple[2]:
+        has_primary = True
 
     # if table_name has already been used, abort
     if self.table_exists(table_name):
       mudlog.error(f"Trying to create table '{table_name}' which already exists.")
       return
-		
+
     column_string = ""
 
-    # turn ("column1", str), ("column2", int) into "column1 text, column2 int,"
+    # turn ("column1", str, bool), ("column2", int, bool) into "column1 text, column2 int,"
     for pair in columns:
       col = db_column.db_column(pair[0], pair[1])
       column_string += f"{col.name} {col.sqlite3_type},"

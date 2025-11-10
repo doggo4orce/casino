@@ -284,7 +284,10 @@ def do_db(ch, scmd, argument, server, mud, db):
       return
     table_buf = f"The following columns exist for {args[1]}:\r\n"
     for column in db.admin_show_columns(table):
-      table_buf += f"  {column.name:<{20}} {column.sqlite3_type}\r\n"
+      table_buf += f"  {column.name:<{20}} {column.sqlite3_type:<{10}}"
+      if column.is_primary:
+        table_buf += " primary"
+      table_buf += "\r\n"
     ch.write(table_buf)
   elif args[0] == "records":
     if num_args != 2:

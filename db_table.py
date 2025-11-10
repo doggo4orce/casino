@@ -96,8 +96,8 @@ class db_table:
   def drop_column(self, column):
     self._handler.drop_column(self.name, column)
 
-  def has_column(self, column):
-    return self._handler.has_column(self.name, column)
+  def has_column(self, column, type=None, primary=None):
+    return self._handler.has_column(self.name, column, type, primary)
 
   def create(self, *columns):
     query = f"CREATE TABLE {self.name} ("

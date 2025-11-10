@@ -15,34 +15,34 @@ class db_handler:
     self._connection = None
     self._cursor = None
 
-  """connect(db_file)                <- establish connection with database
-     close()                         <- close connection to database
-     execute(query, params)          <- execute raw SQL query
-     commit()                        <- not necessary (due to auto-commit)
-     create_table(name, *columns)    <- create new table with given columns
-     drop_table(name)                <- delete table
-     create_backup(file)             <- dump all contents into new database file
-     drop_all_tables()               <- back anything up you might be attached to!
-     add_column(table, name, type)   <- add new column to table
-     drop_column(table, name)        <- delete column from table
-     has_column(table, column)       <- check if table has column
-     column_type(table, name)        <- check data type of column in field
-     list_columns(table)             <- show actual columns in a table
-     list_column_names(table)        <- show column names in table
-     num_columns(table)              <- count columns in table
-     num_tables()                    <- count tables in database
-     num_records(table)              <- count records in a table
-     fetch_records(table)            <- return table as result set
-     insert_record(table, **record)  <- insert record to table
-     delete_records(table, **record) <- delete records from table
-     list_tables()                   <- list all table (names) created
-     table_exists(name)              <- check if a table has already been created
-     fetch_one()                     <- fetch one result
-     fetch_all()                     <- fetch all results
-     show_table(name)                <- display table as a string
-     search_table(table, **clause)   <- search table for records using clause
-     get_record(table, **key)        <- get_
-     verify_columns(table, *columns) <- add columns to table if missing"""
+  """connect(db_file)                       <- establish connection with database
+     close()                                <- close connection to database
+     execute(query, params)                 <- execute raw SQL query
+     commit()                               <- not necessary (due to auto-commit)
+     create_table(name, *columns)           <- create new table with given columns
+     drop_table(name)                       <- delete table
+     create_backup(file)                    <- dump all contents into new database file
+     drop_all_tables()                      <- back anything up you might be attached to!
+     add_column(table, name, type)          <- add new column to table
+     drop_column(table, name)               <- delete column from table
+     has_column(table, name, type, primary) <- check if table has column (type and primary optional)
+     column_type(table, name)               <- check data type of column in field
+     list_columns(table)                    <- show actual columns in a table
+     list_column_names(table)               <- show column names in table
+     num_columns(table)                     <- count columns in table
+     num_tables()                           <- count tables in database
+     num_records(table)                     <- count records in a table
+     fetch_records(table)                   <- return table as result set
+     insert_record(table, **record)         <- insert record to table
+     delete_records(table, **record)        <- delete records from table
+     list_tables()                          <- list all table (names) created
+     table_exists(name)                     <- check if a table has already been created
+     fetch_one()                            <- fetch one result
+     fetch_all()                            <- fetch all results
+     show_table(name)                       <- display table as a string
+     search_table(table, **clause)          <- search table for records using clause
+     get_record(table, **key)               <- 
+     verify_columns(table, *columns)        <- add columns to table if missing"""
 
   def close(self):
     self._connection.close()
@@ -119,10 +119,20 @@ class db_handler:
     sql = f"ALTER TABLE {table} DROP COLUMN {name}"
     self.execute(sql)
 
-  def has_column(self, table, name, type):
+  def has_column(self, table, name, type=None, primary=None):
     for column in self.list_columns(table):
-      if column.name == name and column.type == type:
-        return True
+      if primary is not None and column.is_primary != primary:
+        continue
+
+      if type is not None and column.type != type:
+        continue
+
+      if column.name != name:
+        continue
+
+      # if we made it this far we found a match
+      return True
+
     return False
 
   def column_type(self, table, name):

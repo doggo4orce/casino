@@ -13,16 +13,16 @@ class TestDbHandler(unittest.TestCase):
     self.assertEqual(handler.num_tables(), 0)
 
     handler.create_table("players",
-      ("name", str),
-      ("age", int),
-      ("drink", str),
-      ("food", str),
-      ("job", str)
+      ("name", str, False),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
     )
 
     handler.create_table("wizards",
-      ("name", str),
-      ("position", str)
+      ("name", str, False),
+      ("position", str, False)
     )
 
     # make sure the tables exists
@@ -35,7 +35,7 @@ class TestDbHandler(unittest.TestCase):
     self.assertEqual(handler.num_columns("players"), 5)
 
     # this should cause an error
-    handler.create_table("players", ("field_one", str), ("field_two", int))
+    handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
 
     # manually use SQL syntax to add a row
     handler.insert_record("players",
@@ -81,8 +81,8 @@ class TestDbHandler(unittest.TestCase):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
 
-    handler.create_table("test_table1", ("f_one", int), ("f_two", str))
-    handler.create_table("test_table2", ("g_one", int), ("g_two", str))
+    handler.create_table("test_table1", ("f_one", int, False), ("f_two", str, False))
+    handler.create_table("test_table2", ("g_one", int, False), ("g_two", str, False))
 
     self.assertTrue(handler.table_exists("test_table1"))
     self.assertTrue(handler.table_exists("test_table2"))
@@ -98,11 +98,11 @@ class TestDbHandler(unittest.TestCase):
     handler.connect(":memory:")
 
     handler.create_table("players",
-      ("name", str),
-      ("age", int),
-      ("drink", str),
-      ("food", str),
-      ("job", str)
+      ("name", str, False),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
     )
 
     self.assertEqual(handler.num_columns("players"), 5)
@@ -136,11 +136,11 @@ class TestDbHandler(unittest.TestCase):
     handler.connect(":memory:")
 
     handler.create_table("players",
-      ("name", str),
-      ("age", int),
-      ("drink", str),
-      ("food", str),
-      ("job", str)
+      ("name", str, False),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
     )
 
     self.assertTrue(handler.has_column("players", "name", str))
@@ -158,12 +158,12 @@ class TestDbHandler(unittest.TestCase):
     handler.connect(":memory:")
 
     handler.create_table("players",
-      ("name", str),
-      ("age", int)
+      ("name", str, False),
+      ("age", int, False)
     )
 
-    handler.verify_columns("players", ("drink", str), ("height", int))
-    handler.verify_columns("mobs", ("hp", int), ("experience", int))
+    handler.verify_columns("players", ("drink", str, False), ("height", int, False))
+    handler.verify_columns("mobs", ("hp", int, False), ("experience", int, False))
     self.assertTrue(handler.has_column("players", "drink", str))
     self.assertTrue(handler.has_column("players", "height", int))
 
@@ -174,11 +174,11 @@ class TestDbHandler(unittest.TestCase):
     handler.connect(":memory:")
 
     handler.create_table("players",
-      ("name", str),
-      ("age", int),
-      ("drink", str),
-      ("food", str),
-      ("job", str)
+      ("name", str, False),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
     )
 
     self.assertEqual(handler.num_records("players"), 0)
@@ -222,11 +222,11 @@ class TestDbHandler(unittest.TestCase):
     handler.connect(":memory:")
 
     handler.create_table("players",
-      ("name", str),
-      ("age", int),
-      ("drink", str),
-      ("food", str),
-      ("job", str)
+      ("name", str, False),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
     )
 
     handler.insert_record("players",
@@ -260,33 +260,11 @@ class TestDbHandler(unittest.TestCase):
   def test_apostrophe(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
-<<<<<<< Updated upstream
 
     handler.create_table("npcs",
-      ("name", str),
-      ("age", int),
-      ("desc", str)
-    )
-
-    handler.insert_record("npcs",
-      name="the baker",
-      age=52,
-      desc="He's got an apostrophe in his description."  
-    )
-
-    baker = handler.get_record("npcs", name="the baker")
-
-    self.assertEqual(baker["name"], "the baker")
-    self.assertEqual(baker["age"], 52)
-    self.assertEqual(baker["desc"], "He's got an apostrophe in his description.")
-
-=======
->>>>>>> Stashed changes
-
-    handler.create_table("npcs",
-      ("name", str),
-      ("age", int),
-      ("desc", str)
+      ("name", str, False),
+      ("age", int, False),
+      ("desc", str, False)
     )
 
     handler.insert_record("npcs",

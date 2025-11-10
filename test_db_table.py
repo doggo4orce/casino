@@ -71,7 +71,7 @@ class test_db_table(unittest.TestCase):
 
     # cannot drop a column which acts as primary key
     with self.assertRaises(sqlite3.OperationalError):
-      table.drop("first_name")
+      table.drop_column("first_name")
 
 if __name__ == "__main__":
   unittest.main()

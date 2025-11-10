@@ -5,6 +5,10 @@ import string_handling
 
 class db_table:
   def __init__(self, handler, name):
+    """Creates a database table object.
+       name             = name of the table
+       _handler         = shared (live) db_handler object which tells us what we need to know
+       _pending_columns = used internally to detect composite key before creation"""
     self._handler = handler
     self.name = name
     self._pending_columns = list()
@@ -31,11 +35,13 @@ class db_table:
         has_primary = True
     return False
 
-  def _has_pending_columns(self):
-    return self._pending_columns is not None
-
-  def list_columns(self):
-    return self._handler.list_columns(self.name)
+  """create(*columns)                  <- create table with columns as arguments
+     exists()                          <- ask handler if this table has been created
+     drop()                            <- CAUTION: does what it says, drop the table
+     list_columns()                    <- ask handler to list columns of this table
+     add_column(column, type)          <- adds new column to table
+     drop_column(column)               <- drops a column from the table
+     has_column(name, type, primary)   <- check if column exists"""
 
   def create(self, *columns):
     query = f"CREATE TABLE {self.name} ("
@@ -73,11 +79,66 @@ class db_table:
 
     query += "\r\n);"
 
-    print(query)
     self._handler.execute(query)
 
-  def add_column(self, column):
+  def exists(self):
+    return self.name in self._handler.list_tables()
+
+  def drop(self):
+    self._handler.drop_table(self.name)
+
+  def list_columns(self):
+    return self._handler.list_columns(self.name)
+
+  def add_column(self, field, type):
     self._handler.add_column(column)
+
+  def drop_column(self, column):
+    self._handler.drop_column(self.name, column)
+
+  def has_column(self, column):
+    return self._handler.has_column(self.name, column)
+
+  def create(self, *columns):
+    query = f"CREATE TABLE {self.name} ("
+    table_columns = list()
+
+    if len(columns) == 0:
+      return None
+
+    # column is a tuple passed as argument to create()
+    for column in columns:
+      self._pending_columns.append(db_column.db_column(*column))
+
+    if self.has_composite_key:
+      primary_key_fields = []
+
+      # column is a db_column object
+      for column in self._pending_columns:
+        query += f"\r\n  {column.name} {column.sqlite3_type},"
+
+        if column.is_primary:
+          primary_key_fields.append(column.name)
+
+      query += f"\r\n  PRIMARY KEY ({', '.join(primary_key_fields)})"
+    
+    else:
+      for column in self._pending_columns:
+        query += f"\r\n  {column.name} {column.sqlite3_type}"
+
+        if column.is_primary:
+          query += " PRIMARY KEY"
+
+        query += ","
+
+      query = query[:-1]
+
+    query += "\r\n);"
+
+    self._handler.execute(query)
+
+  def _has_pending_columns(self):
+    return self._pending_columns is not None
 
   def debug(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"

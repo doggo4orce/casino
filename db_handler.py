@@ -41,7 +41,7 @@ class db_handler:
      fetch_all()                     <- fetch all results
      show_table(name)                <- display table as a string
      search_table(table, **clause)   <- search table for records using clause
-     get_record(table, **key)        <- 
+     get_record(table, **key)        <- get_
      verify_columns(table, *columns) <- add columns to table if missing"""
 
   def close(self):
@@ -119,9 +119,9 @@ class db_handler:
     sql = f"ALTER TABLE {table} DROP COLUMN {name}"
     self.execute(sql)
 
-  def has_column(self, table, field, type):
+  def has_column(self, table, name, type):
     for column in self.list_columns(table):
-      if column.name == field and column.type == type:
+      if column.name == name and column.type == type:
         return True
     return False
 

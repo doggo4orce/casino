@@ -1,11 +1,42 @@
 import db_column
 import db_handler
 import db_result
-import db_table
 
 import unittest
 
-class TestDbHandler(unittest.TestCase):
+class TestDBHandler(unittest.TestCase):
+  def test_num_records(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table("players",
+      ("name", str, False),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    # self.assertEqual(handler.num_records("players"), 0)
+
+    handler.insert_record("players",
+      name="kyle",
+      age=41,
+      drink= "coffee",
+      food="pizza",
+      job="professor"
+    )
+
+    handler.insert_record("players",
+      name="bob",
+      age=21,
+      drink= "beer",
+      food="macaroni",
+      job="programmer"
+    )
+
+    self.assertEqual(handler.num_records("players"), 2)
+
   def test_db(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
@@ -13,55 +44,48 @@ class TestDbHandler(unittest.TestCase):
     # should have zero tables at first
     self.assertEqual(handler.num_tables(), 0)
 
-    p_table = db_table.db_table(handler, "players")
-    p_table.create(
-      ("name", str, True),
+    handler.create_table("players",
+      ("name", str, False),
       ("age", int, False),
       ("drink", str, False),
       ("food", str, False),
       ("job", str, False)
     )
 
-    wizard_table = db_table.db_table(handler, "wizards")
-    wizard_table.create(
+    handler.create_table("wizards",
       ("name", str, False),
       ("position", str, False)
     )
 
     # make sure the tables exists
+    self.assertEqual(len(handler.list_tables()), 2)
     self.assertTrue(handler.table_exists("players"))
     self.assertTrue(handler.table_exists("wizards"))
-
-    # but nothing else does
-    self.assertEqual(handler.num_tables(), 2)
-    self.assertFalse(handler.table_exists("wizerds"))
 
     # and has the right columns
     self.assertEqual(handler.list_column_names("players"), ["name", "age", "drink", "food", "job"])
     self.assertEqual(handler.num_columns("players"), 5)
 
     # this should cause an error
-    p_table.create(
-      ("field_one", str, False),
-      ("field_two", int, False)
-    )
+    handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
 
-    p_table.insert(
+    # manually use SQL syntax to add a row
+    handler.insert_record("players",
       name='roobiki',
-      age=41, #ugh
+      age=40, #ugh
       drink="beer",
       food='nachos',
       job='comedian'
     )
 
-    p_table.insert(
+    handler.insert_record("players",
       name='deglo',
       age=33,
       drink="coffee",
       food="nachos"
     )
 
-    p_table.insert(
+    handler.insert_record("players",
       name='bob',
       age=21,
       drink="coffee",
@@ -69,12 +93,8 @@ class TestDbHandler(unittest.TestCase):
       job="janitor"
     )
 
-    p_table.select(drink="coffee", food="nachos"
-)
     # search table for entries satisfying multiple clauses
-    handler.search_table("players", )
-
-    rs = handler.fetch_all()
+    rs = handler.search_table("players", drink="coffee", food="nachos")
 
     # should have found two matches, deglo and bob
     self.assertEqual(rs.num_results, 2)
@@ -99,8 +119,8 @@ class TestDbHandler(unittest.TestCase):
 
     handler.drop_table("test_table1")
 
-    self.assertNotIn("test_table1", handler.list_tables())
-    self.assertIn("test_table2", handler.list_tables())
+    self.assertNotIn("test_table1", handler.list_table_names())
+    self.assertIn("test_table2", handler.list_table_names())
     self.assertEqual(handler.num_tables(), 1)
 
   def test_add_drop_columns(self):
@@ -222,8 +242,9 @@ class TestDbHandler(unittest.TestCase):
 
     self.assertEqual(handler.num_records("players"), 1)
 
-    handler.search_table("players", name="roobiki")
-    self.assertTrue(handler.fetch_one() != None)
+    rs = handler.search_table("players", name="roobiki")
+    
+    self.assertEqual(rs.num_results, 1)
 
     handler.close()
 
@@ -291,3 +312,4 @@ class TestDbHandler(unittest.TestCase):
     
 if __name__ == "__main__":
   unittest.main()
+  # unittest.main(defaultTest="TestDBHandler.test_num_records")

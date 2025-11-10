@@ -6,7 +6,7 @@ import unittest
 import db_handler
 import db_table
 
-class test_db_table(unittest.TestCase):
+class TestDBTable(unittest.TestCase):
   def test_create_drop(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
@@ -22,6 +22,48 @@ class test_db_table(unittest.TestCase):
     )
 
     self.assertTrue(table.exists())
+
+  def test_num_records(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should have zero tables at first
+    self.assertEqual(handler.num_tables(), 0)
+
+    p_table = db_table.db_table(handler, "players")
+    p_table.create(
+      ("name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    p_table.insert(
+      name='roobiki',
+      age=41, #ugh
+      drink="beer",
+      food='nachos',
+      job='comedian'
+    )
+
+    p_table.insert(
+      name='deglo',
+      age=33,
+      drink="coffee",
+      food="nachos"
+    )
+
+    p_table.insert(
+      name='bob',
+      age=21,
+      drink="coffee",
+      food="nachos",
+      job="janitor"
+    )
+
+    # should have three records
+    self.assertEqual(p_table.num_records(), 3)
 
   def test_composite_key(self):
     handler = db_handler.db_handler()
@@ -49,6 +91,8 @@ class test_db_table(unittest.TestCase):
     # table is initialized
     handler = db_handler.db_handler()
     handler.connect(":memory:")
+
+    # make player table
     table = db_table.db_table(handler, "p_table")
 
     # table is created
@@ -73,5 +117,87 @@ class test_db_table(unittest.TestCase):
     with self.assertRaises(sqlite3.OperationalError):
       table.drop_column("first_name")
 
+  def test_insert_delete_search(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should have zero tables at first
+    self.assertEqual(handler.num_tables(), 0)
+
+    p_table = db_table.db_table(handler, "players")
+    p_table.create(
+      ("name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    wizard_table = db_table.db_table(handler, "wizards")
+    wizard_table.create(
+      ("name", str, False),
+      ("position", str, False)
+    )
+
+    # make sure the tables exists
+    self.assertTrue(p_table.exists())
+    self.assertTrue(wizard_table.exists())
+
+    # but nothing else does
+    self.assertEqual(handler.num_tables(), 2)
+    self.assertFalse(handler.table_exists("wizerds"))
+
+    # and has the right columns
+    self.assertEqual(handler.list_column_names("players"), ["name", "age", "drink", "food", "job"])
+    self.assertEqual(handler.num_columns("players"), 5)
+
+    with self.assertRaises(sqlite3.OperationalError):
+      # this should cause an error
+      p_table.create(
+        ("field_one", str, False),
+        ("field_two", int, False)
+      )
+
+    p_table.insert(
+      name='roobiki',
+      age=41, #ugh
+      drink="beer",
+      food='nachos',
+      job='comedian'
+    )
+
+    p_table.insert(
+      name='deglo',
+      age=33,
+      drink="coffee",
+      food="nachos"
+    )
+
+    p_table.insert(
+      name='bob',
+      age=21,
+      drink="coffee",
+      food="nachos",
+      job="janitor"
+    )
+
+    # should have three records
+    self.assertEqual(p_table.num_records(), 3)
+
+    # should match with deglo and bob
+    rs = p_table.search(drink="coffee", food="nachos")
+
+    # which means two matches
+    self.assertEqual(rs.num_results, 2)
+
+    # this will delete bob
+    p_table.delete(drink="coffee", food="nachos", age=21)
+
+    # only roobiki and deglo remain
+    self.assertEqual(p_table.num_records(), 2)
+
+    # close handler object for good measure
+    handler.close()
 if __name__ == "__main__":
-  unittest.main()
+  # unittest.main()
+  unittest.main(defaultTest="TestDBTable.test_num_records")

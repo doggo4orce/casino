@@ -37,7 +37,9 @@ class db_table:
 
   """create(*columns)                  <- create table with columns as arguments
      insert(**record)                  <- insert record into table
+     delete(**clause)                  <- delete records from table satisfying clause
      search(**clause)                  <- look up records from table, return as result set
+     num_records()                     <- count the number of records in table
      get_primary()                     <- ?????? return primary key
      get_composite()                   <- ?????? return composite key
      load()                            <- ask handler to load table from database
@@ -89,11 +91,17 @@ class db_table:
   def insert(self, **record):
     self._handler.insert_record(self.name, **record)
 
+  def delete(self, **clause):
+    self._handler.delete_records(self.name, **clause)
+
   def search(self, **clause):
     return self._handler.search_table(self.name, **clause)
 
+  def num_records(self):
+    return self._handler.num_records(self.name)
+
   def exists(self):
-    return self.name in self._handler.list_tables()
+    return self._handler.table_exists(self.name)
 
   def drop(self):
     self._handler.drop_table(self.name)

@@ -36,7 +36,8 @@ class db_handler:
      fetch_records(table)                   <- return table as result set
      insert_record(table, **record)         <- insert record to table
      delete_records(table, **record)        <- delete records from table
-     list_tables()                          <- list all table (names) created
+     list_tables()                          <- returns list of tables created
+     list_table_names()                     <- returns list of names of tables created
      table_by_name(name)                    <- look up table in database by its name
      table_exists(name)                     <- check if a table has already been created
      fetch_one()                            <- fetch one result
@@ -172,8 +173,7 @@ class db_handler:
     return len(self.list_columns(table))
 
   def num_records(self, table):
-    self.search_table(table)
-    return self.fetch_all().num_results
+    return self.search_table(table).num_results
 
   def num_tables(self):
     return len(self.list_tables())
@@ -237,8 +237,11 @@ class db_handler:
 
     return ret_val
 
+  def list_table_names(self):
+    return [table.name for table in self.list_tables()]
+
   def table_by_name(self, table_name):
-    if table_name not in self.list_tables():
+    if table_name not in self.list_table_names():
       return None
 
     return db_table.db_table(self, table_name)
@@ -260,7 +263,7 @@ class db_handler:
     result = self.fetch_one()
 
     # returns empty result set
-    if result == None:
+    if result is None:
       return ret_val
 
     # otherwise base result set upon fields of first result
@@ -303,8 +306,7 @@ class db_handler:
     return self.fetch_all()
 
   def get_record(self, table, **primary):
-    self.search_table(table, **primary)
-    rs = self.fetch_all()
+    rs = self.search_table(table, **primary)
     if rs.num_results > 1:
       mudlog.error(f"Trying to access record with non-unique identifiers {str(primary)}.")
     elif rs.num_results == 0:

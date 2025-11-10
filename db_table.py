@@ -118,44 +118,6 @@ class db_table:
   def has_column(self, column, type=None, primary=None):
     return self._handler.has_column(self.name, column, type, primary)
 
-  def create(self, *columns):
-    query = f"CREATE TABLE {self.name} ("
-    table_columns = list()
-
-    if len(columns) == 0:
-      return None
-
-    # column is a tuple passed as argument to create()
-    for column in columns:
-      self._pending_columns.append(db_column.db_column(*column))
-
-    if self.has_composite_key:
-      primary_key_fields = []
-
-      # column is a db_column object
-      for column in self._pending_columns:
-        query += f"\r\n  {column.name} {column.sqlite3_type},"
-
-        if column.is_primary:
-          primary_key_fields.append(column.name)
-
-      query += f"\r\n  PRIMARY KEY ({', '.join(primary_key_fields)})"
-    
-    else:
-      for column in self._pending_columns:
-        query += f"\r\n  {column.name} {column.sqlite3_type}"
-
-        if column.is_primary:
-          query += " PRIMARY KEY"
-
-        query += ","
-
-      query = query[:-1]
-
-    query += "\r\n);"
-
-    self._handler.execute(query)
-
   def _has_pending_columns(self):
     return self._pending_columns is not None
 

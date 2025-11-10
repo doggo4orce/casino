@@ -295,7 +295,7 @@ def do_db(ch, scmd, argument, server, mud, db):
       return
     table = args[1]
     table_buf = f"The following rows exist for {args[1]}:\r\n"
-    table_buf += str(db.admin_search_records(table)) + "\r\n"
+    table_buf += str(db.admin_fetch_records(table)) + "\r\n"
     ch.write(table_buf)
   elif args[0] == "lookup":
     if num_args != 3:

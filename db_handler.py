@@ -149,7 +149,7 @@ class db_handler:
     self.commit()
 
     for result in self.fetch_all():
-      ret_val.append(db_column.db_column(result["name"], result["type"]))
+      ret_val.append(db_column.db_column(result["name"], result["type"], result["pk"]))
 
     return ret_val
 

@@ -1,36 +1,32 @@
+import db_handler
 import db_table
 import unittest
 
 class test_db_table(unittest.TestCase):
-  def test_init(self):
-    table1 = db_table.db_table("p_table",
-     ("id", int, True),
-     ("name", str, False)
+  def test_table_creation(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    table1 = db_table.db_table(handler, "p_table")
+    table2 = db_table.db_table(handler, "q_table")
+
+    table1.create(
+      ("first_name", str, True),
+      ("last_name", str, True),
+      ("height", int, False)
     )
 
-    table2 = db_table.db_table("p_table",
-     ("name", str, False),
-     ("weight", int, False),
-     ("height", int, False)
+    table2.create(
+      ("first_name", str, True),
+      ("last_name", str, False),
+      ("height", int, False)
     )
 
-    self.assertTrue(table1.has_primary_key)
-    self.assertFalse(table2.has_primary_key)
-    self.assertFalse(table1.has_composite_key)
+    print("\r\n".join([str(column) for column in table1.list_columns()]))
+    print("\r\n".join([str(column) for column in table2.list_columns()]))
 
-    print(table1.debug() + "\r\n")
-    print(table2.debug())
+    self.assertTrue(table1.has_composite_key)
+    self.assertFalse(table2.has_composite_key)
 
-  def test_creation_syntax(self):
-    table = db_table.db_table("p_table",
-     ("first_name", str, True),
-     ("last_name", str, True),
-     ("height", int, False)
-    )
-
-    self.assertTrue(table.has_composite_key)
-
-    print(table.creation_syntax())
-   
 if __name__ == "__main__":
   unittest.main()

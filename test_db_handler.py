@@ -1,6 +1,7 @@
 import db_column
 import db_handler
 import db_result
+import db_table
 
 import unittest
 
@@ -12,48 +13,55 @@ class TestDbHandler(unittest.TestCase):
     # should have zero tables at first
     self.assertEqual(handler.num_tables(), 0)
 
-    handler.create_table("players",
-      ("name", str, False),
+    p_table = db_table.db_table(handler, "players")
+    p_table.create(
+      ("name", str, True),
       ("age", int, False),
       ("drink", str, False),
       ("food", str, False),
       ("job", str, False)
     )
 
-    handler.create_table("wizards",
+    wizard_table = db_table.db_table(handler, "wizards")
+    wizard_table.create(
       ("name", str, False),
       ("position", str, False)
     )
 
     # make sure the tables exists
-    self.assertEqual(len(handler.list_tables()), 2)
     self.assertTrue(handler.table_exists("players"))
     self.assertTrue(handler.table_exists("wizards"))
+
+    # but nothing else does
+    self.assertEqual(handler.num_tables(), 2)
+    self.assertFalse(handler.table_exists("wizerds"))
 
     # and has the right columns
     self.assertEqual(handler.list_column_names("players"), ["name", "age", "drink", "food", "job"])
     self.assertEqual(handler.num_columns("players"), 5)
 
     # this should cause an error
-    handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
+    p_table.create(
+      ("field_one", str, False),
+      ("field_two", int, False)
+    )
 
-    # manually use SQL syntax to add a row
-    handler.insert_record("players",
+    p_table.insert(
       name='roobiki',
-      age=40, #ugh
+      age=41, #ugh
       drink="beer",
       food='nachos',
       job='comedian'
     )
 
-    handler.insert_record("players",
+    p_table.insert(
       name='deglo',
       age=33,
       drink="coffee",
       food="nachos"
     )
 
-    handler.insert_record("players",
+    p_table.insert(
       name='bob',
       age=21,
       drink="coffee",
@@ -61,8 +69,10 @@ class TestDbHandler(unittest.TestCase):
       job="janitor"
     )
 
+    p_table.select(drink="coffee", food="nachos"
+)
     # search table for entries satisfying multiple clauses
-    handler.search_table("players", drink="coffee", food="nachos")
+    handler.search_table("players", )
 
     rs = handler.fetch_all()
 

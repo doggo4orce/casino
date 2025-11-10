@@ -1,5 +1,4 @@
 import db_handler
-import db_table
 import exit_data
 import mudlog
 import npc_proto_data
@@ -30,7 +29,6 @@ class database:
      ########################################################################
      ###   Reserved for Administrative Usage -- call these sparingly      ###
 
-     admin_table_by_name(table_name)     <- look up table by name
      admin_show_tables()                 <- list all tables loaded in db_file
      admin_show_columns(table)           <- list all columns in table
      admin_fetch_record(table, **clause) <- fetch
@@ -117,9 +115,6 @@ class database:
 
   def close(self):
     self._handler.close()
-
-  def admin_table_by_name(self, table_name):
-    return self._handler.table_by_name(table_name)
 
   def admin_show_tables(self):
     return self._handler.list_tables()
@@ -559,86 +554,87 @@ class database:
     return self._handler.show_table(name)
 
   def create_tables(self):
+    # TODO: for maintainability, add default values, for example
+    # when mana gets added, none of the currently saved characters
+    # will have any mana.  I could give them all 50 mana by default
+    #
+    #            ("max_mp",    int,     50),
 
-    exit_table = db_table.db_table(self._handler, database.EXIT_TABLE)
-    pref_numeric_table = db_table.db_table(self._handler, database.PREF_NUMERIC_TABLE)
-    pref_text_table = db_table.db_table(self._handler, database.PREF_TEXT_TABLE)
-    pref_flag_table = db_table.db_table(self._handler, database.PREF_FLAG_TABLE)
-    npc_proto_table = db_table.db_table(self._handler, database.NPC_PROTO_TABLE)
-    obj_proto_table = db_table.db_table(self._handler, database.OBJ_PROTO_TABLE)
-    npc_proto_table = db_table.db_table(self._handler, database.NPC_PROTO_TABLE)
-    wld_table = db_table.db_table(self._handler, database.WORLD_TABLE)
-    p_table = db_table.db_table(self._handler, database.PLAYER_TABLE)
-    z_table = db_table.db_table(self._handler, database.ZONE_TABLE)
-    alias_table = db_table.db_table(self._handler, database.ALIAS_TABLE)
-
-    exit_table.create(
-      ("direction", int, True),
-      ("o_zone_id", str, True),
-      ("o_id", str, False),
-      ("d_zone_id", str, False),
-      ("d_id", str, False)
+    self._handler.verify_columns(database.EXIT_TABLE,
+      ("direction", int),
+      ("o_zone_id", str),
+      ("o_id", str),
+      ("d_zone_id", str),
+      ("d_id", str)
     )
 
-    pref_numeric_table.create(
-      ("id", int, True),
-      ("field", str, True),
-      ("value", int, False)
+    # also, could add support for primary key indicators here
+    #
+    #                ("id",    int),
+    #                ("field", str),
+    #                ("value", int),
+
+    self._handler.verify_columns(database.PREF_NUMERIC_TABLE,
+      ("id", int),
+      ("field", str),
+      ("value", int)
     )
 
-    pref_text_table.create(
-      ("id", int, True),
-      ("field", str, True),
-      ("value", str, False)
+    self._handler.verify_columns(database.PREF_TEXT_TABLE,
+      ("id", int),
+      ("field", str),
+      ("value", str)
     )
 
-    pref_flag_table.create(
-      ("id", int, True),
-      ("field", str, True),
-      ("value", int, False)
+    self._handler.verify_columns(database.PREF_FLAG_TABLE,
+      ("id", int),
+      ("field", str),
+      ("value", int)
     )
 
-    obj_proto_table.create(
-      ("zone_id", str, True),
-      ("id", str, True),
-      ("name", str, False),
-      ("ldesc", str, False),
-      ("desc", str, False)
+    self._handler.verify_columns(database.NPC_PROTO_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("name", str),
+      ("ldesc", str),
+      ("desc", str)
     )
 
-    npc_proto_table.create(
-      ("zone_id", str, True),
-      ("id", str, True),
-      ("name", str, False),
-      ("ldesc", str, False),
-      ("desc", str, False)
+    self._handler.verify_columns(database.OBJ_PROTO_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("name", str),
+      ("ldesc", str),
+      ("desc", str)
     )
 
-    wld_table.create(
-      ("zone_id", str, True),
-      ("id", str, True),
-      ("name", str, False),
-      ("desc", str, False)
+    self._handler.verify_columns(database.WORLD_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("name", str),
+      ("desc", str)
     )
 
-    p_table.create(
-      ("id", int, True),
-      ("name", str, False),
-      ("password", str, False)
+    self._handler.verify_columns(database.PLAYER_TABLE,
+      ("id", int),
+      ("name", str),
+      ("password", str)
     )
 
-    z_table.create(
-      ("id", str, True),
-      ("name", str, False),
-      ("author", str, False)
+    self._handler.verify_columns(database.ZONE_TABLE,
+      ("id", str),
+      ("name", str),
+      ("author", str)
     )
 
-    alias_table.create(
-      ("zone_id", str, True),
-      ("id", str, True),
-      ("type", str, False),
-      ("alias", str, False)
+    self._handler.verify_columns(database.ALIAS_TABLE,
+      ("zone_id", str),
+      ("id", str),
+      ("type", str),
+      ("alias", str)
     )
+
+    # copyover_table
 
   def zone_table(self):
     self._handler.search_table(database.ZONE_TABLE)

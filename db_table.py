@@ -36,6 +36,11 @@ class db_table:
     return False
 
   """create(*columns)                  <- create table with columns as arguments
+     insert(**record)                  <- insert record into table
+     search(**clause)                  <- look up records from table, return as result set
+     get_primary()                     <- ?????? return primary key
+     get_composite()                   <- ?????? return composite key
+     load()                            <- ask handler to load table from database
      exists()                          <- ask handler if this table has been created
      drop()                            <- CAUTION: does what it says, drop the table
      list_columns()                    <- ask handler to list columns of this table
@@ -80,6 +85,12 @@ class db_table:
     query += "\r\n);"
 
     self._handler.execute(query)
+
+  def insert(self, **record):
+    self._handler.insert_record(self.name, **record)
+
+  def search(self, **clause):
+    return self._handler.search_table(self.name, **clause)
 
   def exists(self):
     return self.name in self._handler.list_tables()

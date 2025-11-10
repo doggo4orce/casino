@@ -1,6 +1,7 @@
 import db_column
 import db_result
 import db_result_set
+import db_table
 import mudlog
 import string_handling
 
@@ -36,11 +37,12 @@ class db_handler:
      insert_record(table, **record)         <- insert record to table
      delete_records(table, **record)        <- delete records from table
      list_tables()                          <- list all table (names) created
+     table_by_name(name)                    <- look up table in database by its name
      table_exists(name)                     <- check if a table has already been created
      fetch_one()                            <- fetch one result
      fetch_all()                            <- fetch all results
      show_table(name)                       <- display table as a string
-     search_table(table, **clause)          <- search table for records using clause
+     search_table(table, **clause)          <- search table for records, returns result set
      get_record(table, **key)               <- 
      verify_columns(table, *columns)        <- add columns to table if missing"""
 
@@ -149,7 +151,7 @@ class db_handler:
     # make sure table actually exists
 
     if not self.table_exists(table_name):
-      logging.error(f"Trying to list columns of table {table_name}, which does not exist.")
+      mudlog.error(f"Trying to list columns of table {table_name}, which does not exist.")
       return None
 
     # TODO: write pragma function?
@@ -172,10 +174,6 @@ class db_handler:
   def num_records(self, table):
     self.search_table(table)
     return self.fetch_all().num_results
-
-  def fetch_records(self, table):
-    self.search_table(table)
-    return self.fetch_all()
 
   def num_tables(self):
     return len(self.list_tables())
@@ -234,15 +232,19 @@ class db_handler:
   def list_tables(self):
     ret_val = list()
 
-    self.search_table("sqlite_master", type='table')
-
-    for result in self.fetch_all():
-      ret_val.append(result['name'])
+    for result in self.search_table("sqlite_master", type='table'):
+      ret_val.append(db_table.db_table(self, result['name']))
 
     return ret_val
 
+  def table_by_name(self, table_name):
+    if table_name not in self.list_tables():
+      return None
+
+    return db_table.db_table(self, table_name)
+
   def table_exists(self, table_name):
-    return table_name in self.list_tables()
+    return self.table_by_name(table_name) is not None
 
   def fetch_one(self):
     fetch = self._cursor.fetchone()
@@ -279,9 +281,7 @@ class db_handler:
     return ret_val
 
   def show_table(self, name):
-    self.search_table(name)
-    rs = self.fetch_all()
-    return str(rs)
+    return str(self.search_table(name))
 
   def search_table(self, table, **clause):
     sql = f"SELECT * FROM {table}"
@@ -300,6 +300,7 @@ class db_handler:
       sql += f" WHERE {filter_str}"
 
     self.execute(sql)
+    return self.fetch_all()
 
   def get_record(self, table, **primary):
     self.search_table(table, **primary)

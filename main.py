@@ -27,9 +27,10 @@ network = server.server()
 mud = game_data.game_data()
 
 # fire up database
+# os.system("rm data.db") # for now while we debug
 db = database.database(config.DATABASE_FILE)
 db.connect()
-db.create_tables()
+# db.create_tables()
 # db.load_stock()
 
 # load contents of database

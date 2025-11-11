@@ -27,18 +27,13 @@ class database:
   """connect()                           <- connect to self._db_file
      close()                             <- close connection
 
-     ########################################################################
-     ###   Reserved for Administrative Usage -- call these sparingly      ###
-
-     admin_table_by_name(table_name)     <- look up table by name
-     admin_table_exists(table_name)      <- check if table exists
-     admin_show_tables()                 <- list all tables loaded in db_file
-     admin_show_columns(table)           <- list all columns in table
-     admin_fetch_record(table, **clause) <- fetch
-     admin_fetch_records(table, **clause)<- view table as result set
-     admin_num_records(table)            <- count records in table
-                                                                          ###
-     ########################################################################
+     table_by_name(table_name)           <- look up table by name
+     table_exists(table_name)            <- check if table exists
+     list_tables()                       <- list all tables loaded in db_file
+     list_columns(table)                 <- list all columns in table
+     fetch_record(table, **clause)       <- fetch
+     fetch_records(table, **clause)      <- view table as result set
+     num_records(table)                  <- count records in table
 
      name_used(name)                     <- check if player exists with name
      next_unused_pid()                   <- find smallest unused player ID
@@ -119,24 +114,22 @@ class database:
   def close(self):
     self._handler.close()
 
-  def admin_table_by_name(self, table_name):
+  def table_by_name(self, table_name):
     return self._handler.table_by_name(table_name)
 
-  def admin_table_exists(self, table_name):
+  def table_exists(self, table_name):
     return self._handler.table_exists(table_name)
-  def admin_show_tables(self):
+
+  def list_tables(self):
     return self._handler.list_tables()
 
-  def admin_show_columns(self, table):
+  def list_columns(self, table):
     return self._handler.list_columns(table)
 
-  def admin_fetch_record(self, table):
-    return self._handler.fetch_record(table)
+  def list_records(self, table):
+    return self._handler.list_records(table)
 
-  def admin_fetch_records(self, table):
-    return self._handler.fetch_records(table)
-
-  def admin_num_records(self, table):
+  def num_records(self, table):
     return self._handler.num_records(table)
 
   def name_used(self, name):
@@ -154,7 +147,8 @@ class database:
     if self.has_exit(zone_id, id, exit.direction):
       self.delete_exit(zone_id, id, exit.direction)
   
-    self._handler.insert_record(database.EXIT_TABLE,
+    ex_table = self.table_by_name(database.EXIT_TABLE)
+    ex_table.insert(
       direction=int(exit.direction),
       o_zone_id=zone_id,
       o_id=id,
@@ -163,22 +157,16 @@ class database:
     )
 
   def has_exit(self, zone_id, id, direction):
-    return self._handler.get_record(database.EXIT_TABLE,
-      direction=int(direction),
-      o_zone_id=zone_id,
-      o_id=id
-    ) is not None
+    ex_table = self.table_by_name(database.EXIT_TABLE)
+    return ex_table.get_by_pk(direction=int(direction), o_zone_id=zone_id, o_id=id) is not None
 
   def delete_exit(self, zone_id, id, direction):
     if not self.has_exit(zone_id, id, direction):
       mudlog.error(f"Trying to delete non-existent exit from room {id}@{zone_id} to the {direction.name}.")
       return
 
-    self._handler.delete_records(database.EXIT_TABLE,
-      direction=int(direction),
-      o_zone_id=zone_id,
-      o_id=id
-    )
+    ex_table = self.table_by_name(database.EXIT_TABLE)
+    ex_table.delete(direction=int(direction), o_zone_id=zone_id, o_id=id)
 
   def num_exits(self):
     return self._handler.num_records(database.EXIT_TABLE)
@@ -197,15 +185,10 @@ class database:
     if self.has_pref_numeric(pc.player_id, field):
       self.delete_pref_numeric(pc.player_id, field)
 
-    self._handler.insert_record(database.PREF_NUMERIC_TABLE,
-      id=pc.player_id,
-      field=field,
-      value=value
-    )
+    self.table_by_name(database.PREF_NUMERIC_TABLE).insert(id=pc.player_id, field=field, value=value)
 
   def load_all_prefs_numeric(self, pc):
-    self._handler.search_table(database.PREF_NUMERIC_TABLE, id=pc.player_id)
-    for record in self._handler.fetch_all():
+    for record in self.table_by_name(database.PREF_NUMERIC_TABLE).search(id=pc.player_id):
       pc.set_pref(record['field'], record['value'])
 
   def save_all_prefs_numeric(self, pc):
@@ -213,42 +196,29 @@ class database:
       self.save_pref_numeric(pc, field, getattr(pc.numeric_prefs, field))
 
   def has_pref_numeric(self, id, field):
-    return self._handler.get_record(database.PREF_NUMERIC_TABLE,
-      id=id,
-      field=field
-    ) != None
+    return self.table_by_name(database.PREF_NUMERIC_TABLE).get_by_pk(id=id, field=field) is not None
 
   def delete_pref_numeric(self, id, field):
     if not self.has_pref_numeric(id, field):
       mudlog.error(f"Trying to delete non-existent numeric preference {field} for {name}.")
       return
 
-    self._handler.delete_records(database.PREF_NUMERIC_TABLE,
-      id=id,
-      field=field
-    )
+    self.table_by_name(database.PREF_NUMERIC_TABLE).delete(id=id, field=field)
 
   def delete_all_prefs_numeric(self, id):
-    self._handler.delete_records(database.PREF_NUMERIC_TABLE,
-      id=id
-    )
+    self.table_by_name(database.PREF_NUMERIC_TABLE).delete(id=id)
 
   def num_prefs_numeric(self):
-    return self._handler.num_records(database.PREF_NUMERIC_TABLE)
+    return self.table_by_name(database.PREF_NUMERIC_TABLE).num_records()
 
   def save_pref_text(self, pc, field, value):
     if self.has_pref_text(pc.player_id, field):
       self.delete_pref_text(pc.player_id, field)
 
-    self._handler.insert_record(database.PREF_TEXT_TABLE,
-      id=pc.player_id,
-      field=field,
-      value=value
-    )
+    self.table_by_name(database.PREF_TEXT_TABLE).insert(id=pc.player_id, field=field, value=value)
 
   def load_all_prefs_text(self, pc):
-    self._handler.search_table(database.PREF_TEXT_TABLE, id=pc.player_id)
-    for record in self._handler.fetch_all():
+    for record in self.table_by_name(database.PREF_TEXT_TABLE).search(id=pc.player_id):
       pc.set_pref(record['field'], record['value'])
 
   def save_all_prefs_text(self, pc):
@@ -256,69 +226,46 @@ class database:
       self.save_pref_text(pc, field, getattr(pc.text_prefs, field))
 
   def has_pref_text(self, id, field):
-    return self._handler.get_record(database.PREF_TEXT_TABLE,
-      id=id,
-      field=field
-    ) != None
+    return self.table_by_name(database.PREF_TEXT_TABLE).get_by_pk(id=id, field=field) is not None
 
   def delete_pref_text(self, id, field):
     if not self.has_pref_text(id, field):
       mudlog.error(f"Trying to delete non-existant text preference {field} for {name}.")
       return
 
-    self._handler.delete_records(database.PREF_TEXT_TABLE,
-      id=id,
-      field=field
-    )
+    self.table_by_name(database.PREF_TEXT_TABLE).delete(id=id, field=field)
 
   def delete_all_prefs_text(self, id):
-    self._handler.delete_records(database.PREF_TEXT_TABLE,
-      id=id
-    )
+    self.table_by_name(database.PREF_TEXT_TABLE).delete(id=id)
 
   def num_prefs_text(self):
-    return self._handler.num_records(database.PREF_TEXT_TABLE)
+    return self.table_by_name(database.PREF_TEXT_TABLE).num_records()
 
   def load_all_prefs_flag(self, pc):
-    self._handler.search_table(database.PREF_FLAG_TABLE, id=pc.player_id)
-
-    for record in self._handler.fetch_all():
+    for record in self.table_by_name(database.PREF_FLAG_TABLE).search(id=pc.player_id):
       pc.set_pref(record['field'], bool(record['value']))
 
   def save_pref_flag(self, pc, field, value):
     if self.has_pref_flag(pc.player_id, field):
       self.delete_pref_flag(pc.player_id, field)
 
-    self._handler.insert_record(database.PREF_FLAG_TABLE,
-      id=pc.player_id,
-      field=field,
-      value=int(value)
-    )
+    self.table_by_name(database.PREF_FLAG_TABLE).insert(id=pc.player_id, field=field, value=int(value))
 
   def save_all_prefs_flag(self, pc):
     for field in pc.flag_prefs.fields():
       self.save_pref_flag(pc, field, getattr(pc.flag_prefs, field))
 
-
   def has_pref_flag(self, id, field):
-    return self._handler.get_record(database.PREF_FLAG_TABLE,
-      id=id,
-      field=field
-    ) != None
+    return self.table_by_name(database.PREF_FLAG_TABLE).get_by_pk(id=id, field=field) is not None
 
   def delete_pref_flag(self, id, field):
     if not self.has_pref_flag(id, field):
       mudlog.error(f"Trying to delete non-existent preference flag {field} for player {id}.")
 
-    self._handler.delete_records(database.PREF_FLAG_TABLE,
-      id=id,
-      field=field
-    )
+    self.table_by_name(database.PREF_FLAG_TABLE).delete(id=id,field=field)
 
   def delete_all_prefs_flags(self, id):
-    self._handler.delete_records(database.PREF_FLAG_TABLE,
-      id=id
-    )
+    self.table_by_name(database.PREF_FLAG_TABLE).delete(id=id)
 
   def num_prefs_flag(self):
     return self._handler.num_records(database.PREF_FLAG_TABLE)
@@ -327,7 +274,7 @@ class database:
     if self.has_npc_proto(proto.zone_id, proto.id):
       self.delete_npc_proto(proto.zone_id. proto.id)
 
-    self._handler.insert_record(database.NPC_PROTO_TABLE,
+    self.table_by_name(database.NPC_PROTO_TABLE).insert(
       zone_id=proto.zone_id,
       id=proto.id,
       name=proto.name,
@@ -339,26 +286,15 @@ class database:
       self.save_alias(proto.zone_id, proto.id, 'npc', alias)
 
   def has_npc_proto(self, zone_id, id):
-    return self._handler.get_record(database.NPC_PROTO_TABLE,
-      zone_id=zone_id,
-      id=id
-    ) != None
+    return self.table_by_name(database.NPC_PROTO_TABLE).get_by_pk(zone_id=zone_id, id=id) is not None
 
   def delete_npc_proto(self, zone_id, id):
     if not self.has_npc_proto(zone_id, id):
       mudlog.error(f"Trying to delete non-existent npc proto {id}@{zone_id}.")
       return
 
-    self._handler.delete_records(database.NPC_PROTO_TABLE,
-      zone_id=zone_id,
-      id=id
-    )
-
-    self._handler.delete_records(database.ALIAS_TABLE,
-      zone_id=zone_id,
-      id=id,
-      type='npc'
-    )
+    self.table_by_name(database.NPC_PROTO_TABLE).delete(zone_id=zone_id, id=id)
+    self.table_by_name(database.ALIAS_TABLE).delete(zone_id=zone_id, id=id, type='npc')
 
   def num_npc_protos(self):
     return self._handler.num_records(database.NPC_PROTO_TABLE)
@@ -367,7 +303,7 @@ class database:
     if self.has_obj_proto(proto.zone_id, proto.id):
       self.delete_obj_proto(proto.zone_id, proto.id)
 
-    self._handler.insert_record(database.OBJ_PROTO_TABLE,
+    self.table_by_name(database.OBJ_PROTO_TABLE).insert(
       zone_id=proto.zone_id,
       id=proto.id,
       name=proto.name,
@@ -379,35 +315,30 @@ class database:
       self.save_alias(proto.zone_id, proto.id, 'obj', alias)
 
   def has_obj_proto(self, zone_id, id):
-    return self._handler.get_record(database.OBJ_PROTO_TABLE,
-      zone_id=zone_id,
-      id=id
-    ) != None
+    obj_proto_table = self.table_by_name(database.OBJ_PROTO_TABLE)
+    return obj_proto_table.get_by_pk(zone_id=zone_id, id=id) is not None
 
   def delete_obj_proto(self, zone_id, id):
     if not self.has_obj_proto(zone_id, id):
       mudlog.error(f"Trying to delete non-existent object proto {id}@{zone_id}.")
       return
 
-    self._handler.delete_records(database.OBJ_PROTO_TABLE,
-      zone_id=zone_id,
-      id=id
-    )
+    obj_proto_table = self.table_by_name(database.OBJ_PROTO_TABLE)
+    obj_proto_table.delete(zone_id=zone_id, id=id)
 
-    self._handler.delete_records(database.ALIAS_TABLE,
-      zone_id=zone_id,
-      id=id,
-      type='obj'
-    )
+    alias_table = self.table_by_name(database.ALIAS_TABLE)
+    alias_table.delete(zone_id=zone_id, id=id, type='obj')
 
   def num_obj_protos(self):
-    return self._handler.num_records(database.OBJ_PROTO_TABLE)
+    obj_proto_table = self.table_by_name(database.OBJ_PROTO_TABLE)
+    return obj_proto_table.num_records()
 
   def save_room(self, room):
     if self.has_room(room.zone_id, room.id):
       self.delete_room(room.zone_id, room.id)
-    
-    self.admin_table_by_name(database.WORLD_TABLE).insert(
+
+    wld_table = self.table_by_name(database.WORLD_TABLE)
+    wld_table.insert(
       zone_id=room.zone_id,
       id=room.id,
       name=room.name,
@@ -418,44 +349,44 @@ class database:
       self.save_exit(room.zone_id, room.id, ex)
 
   def has_room(self, zone_id, id):
-    return self.admin_table_by_name(database.WORLD_TABLE).search(zone_id=zone_id, id=id) != None
+    return self.table_by_name(database.WORLD_TABLE).get_by_pk(zone_id=zone_id, id=id) != None
 
   def delete_room(self, zone_id, id):
     if not self.has_room(zone_id, id):
       mudlog.error(f"Trying to delete non-existent room {id}@{zone_id}.")
       return
 
-    self.admin_table_by_name(database.WORLD_TABLE).delete(zone_id=zone_id, id=id)
-    self.admin_table_by_name(database.EXIT_TABLE).delete(o_zone_id=zone_id, o_id=id)
+    wld_table = self.table_by_name(database.WORLD_TABLE)
+    wld_table.delete(zone_id=zone_id, id=id)
+
+    ex_table = self.table_by_name(database.EXIT_TABLE)
+    ex_table.delete(o_zone_id=zone_id, o_id=id)
 
   def num_rooms(self):
-    return self.admin_table_by_name(database.WORLD_TABLE).num_records()
+    return self.table_by_name(database.WORLD_TABLE).num_records()
 
   def save_player(self, pc):
     if self.has_player(pc.player_id):
       self.delete_player(pc.player_id)
 
-    self.admin_table_by_name(database.PLAYER_TABLE).insert(
-      id=pc.player_id,
-      name=pc.name,
-      password=pc.password
-    )
+    p_table = self.table_by_name(database.PLAYER_TABLE)
+    p_table.insert(id=pc.player_id, name=pc.name, password=pc.password)
 
   def has_player(self, id):
-    return self.admin_table_by_name(database.PLAYER_TABLE).search(id=id) is not None
+    return self.table_by_name(database.PLAYER_TABLE).get_by_pk(id=id) is not None
 
   def delete_player(self, id):
     if not self.has_player(id):
       mudlog.error(f"Trying to delete non-existent player with id {pc.player_id}.")
       return
 
-    self.admin_table_by_name(database.PLAYER_TABLE).delete(id=id)
+    self.table_by_name(database.PLAYER_TABLE).delete(id=id)
 
   def num_players(self):
-    return self.admin_table_by_name(database.PLAYER_TABLE).num_records()
+    return self.table_by_name(database.PLAYER_TABLE).num_records()
 
   def load_player(self, pc, player_id):
-    record = self.admin_table_by_name(database.PLAYER_TABLE).search(id=player_id)
+    record = self.table_by_name(database.PLAYER_TABLE).get_by_pk(id=player_id)
 
     pc.name = record['name']
     pc.password = record['password']
@@ -466,22 +397,29 @@ class database:
     self.load_all_prefs_text(pc)
 
   def check_password(self, name, password):
-    record = self.admin_table_by_name(database.PLAYER_TABLE).search(name=name)
+    rs = self.table_by_name(database.PLAYER_TABLE).search(name=name)
+    record = rs[0]
     return record['password'] == password
 
   def player_id_by_name(self, name):
-    record = self._handler.admin_table_by_name(database.PLAYER_TABLE).search(name=name)
-    return record['id']
+    rs = self.table_by_name(database.PLAYER_TABLE).search(name=name)
+
+    if rs.num_results == 0:
+      return None
+
+    record = rs[0]
+    player_id = record['id']
+
+    if rs.num_results > 1:
+      mudlog.error(f"found two players named {name} when looking up player_id.  Returning {player_id}")
+
+    return player_id
 
   def save_zone(self, zone):
     if self.has_zone(zone.id):
       self.delete_zone(zone.id)
 
-    self.admin_table_by_name(database.ZONE_TABLE).insert(
-      id=zone.id,
-      name=zone.name,
-      author=zone.author
-    )
+    self.table_by_name(database.ZONE_TABLE).insert(id=zone.id, name=zone.name, author=zone.author)
 
     for id in zone.list_room_ids():
       self.save_room(zone.room_by_id(id))
@@ -493,58 +431,46 @@ class database:
       self.save_obj_proto(zone.obj_by_id(id))
 
   def has_zone(self, id):
-    return self.admin_table_by_name(database.ZONE_TABLE).search(id=id) != None
+    z_table = self.table_by_name(database.ZONE_TABLE)
+    return z_table.get_by_pk(id=id) is not None
 
   def delete_zone(self, id):
     if not self.has_zone(id):
       mudlog.error(f"Trying to delete non-existent zone with id {zone.id}.")
       return
 
-    self.admin_table_by_name(database.ZONE_TABLE).delete(id=id)
-    self.admin_table_by_name(database.WORLD_TABLE).delete(zone_id=id)
-    self.admin_table_by_name(database.OBJ_PROTO_TABLE).delete(zone_id=id)
-    self.admin_table_by_name(database.NPC_PROTO_TABLE).delete(zone_id=id)
-    self.admin_table_by_name(database.EXIT_TABLE).delete(o_zone_id=id)
+    self.table_by_name(database.ZONE_TABLE).delete(id=id)
+    self.table_by_name(database.WORLD_TABLE).delete(zone_id=id)
+    self.table_by_name(database.OBJ_PROTO_TABLE).delete(zone_id=id)
+    self.table_by_name(database.NPC_PROTO_TABLE).delete(zone_id=id)
+    self.table_by_name(database.EXIT_TABLE).delete(o_zone_id=id)
 
   def num_zones(self):
-    return self.admin_table_by_name(database.ZONE_TABLE).num_records()
+    return self.table_by_name(database.ZONE_TABLE).num_records()
 
   def save_alias(self, zone_id, id, type, alias):
     if self.has_alias(zone_id, id, type, alias):
       self.delete_alias(zone_id, id, type, alias)
 
-    self.admin_table_by_name(database.ALIAS_TABLE).insert(
-      zone_id=zone_id,
-      id=id,
-      type=type,
-      alias=alias
-    )
+    self.table_by_name(database.ALIAS_TABLE).insert(zone_id=zone_id, id=id, type=type, alias=alias)
 
   def has_alias(self, zone_id, id, type, alias):
-    return self.admin_table_by_name(database.ALIAS_TABLE).search(
-      zone_id=zone_id,
-      id=id,
-      type=type,
-      alias=alias
-    ) != None
+    alias_table = self.table_by_name(database.ALIAS_TABLE)
+    return alias_table.get_by_pk(zone_id=zone_id, id=id, type=type, alias=alias) is not None
 
   def delete_alias(self, zone_id, id, type, alias):
     if not self.has_alias(zone_id, id, type, alias):
       mudlog.error(f"Trying to delete non-existant alias {alias} from {type} {id}@{zone_id}.")
       return
 
-    self.admin_table_by_name(database.ALIAS_TABLE).delete(
-      zone_id=zone_id,
-      id=id,
-      type=type,
-      alias=alias
-    )
+    alias_table = self.table_by_name(database.ALIAS_TABLE)
+    alias_table.delete(zone_id=zone_id, id=id, type=type, alias=alias)
 
   def num_aliases(self):
-    return self.admin_table_by_name(database.ALIAS_TABLE).num_records()
+    return self.table_by_name(database.ALIAS_TABLE).num_records()
 
   def show_table(self, name):
-    return self.admin_table_by_name(name).show()
+    return self.table_by_name(name).search()
 
   def create_tables(self):
 
@@ -629,22 +555,28 @@ class database:
     )
 
   def zone_table(self):
-    return self._handler.search_table(database.ZONE_TABLE)
+    z_table = self.table_by_name(database.ZONE_TABLE)
+    return z_table.search()
     
   def world_table(self):
-    return self._handler.search_table(database.WORLD_TABLE)
+    wld_table = self.table_by_name(database.WORLD_TABLE)
+    return wld_table.search()
     
   def exit_table(self):
-    return self._handler.search_table(database.EXIT_TABLE)
+    ex_table = self.table_by_name(database.EXIT_TABLE)
+    return ex_table.search()
     
   def npc_table(self):
-    return self._handler.search_table(database.NPC_PROTO_TABLE)
+    npc_proto_table = self.table_by_name(database.NPC_PROTO_TABLE)
+    return npc_proto_table.search()
     
   def obj_table(self):
-    return self._handler.search_table(database.OBJ_PROTO_TABLE)
+    obj_proto_table = self.table_by_name(database.OBJ_PROTO_TABLE)
+    return obj_proto_table.search()
     
   def alias_table(self):
-    return self._handler.search_table(database.ALIAS_TABLE)
+    alias_table = self.table_by_name(database.ALIAS_TABLE)
+    return alias_table.search()
     
   def load_stock(self):
     stockville = zone_data.zone_data()

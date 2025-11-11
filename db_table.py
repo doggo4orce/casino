@@ -1,6 +1,7 @@
 from color import *
 
 import db_column
+import mudlog
 import string_handling
 
 class db_table:
@@ -11,7 +12,7 @@ class db_table:
        _pending_columns = used internally to detect composite key before creation"""
     self._handler = handler
     self.name = name
-    self._pending_columns = list()
+    self._pending_columns = None
 
   @property
   def has_primary_key(self):
@@ -38,10 +39,10 @@ class db_table:
   """create(*columns)                  <- create table with columns as arguments
      insert(**record)                  <- insert record into table
      delete(**clause)                  <- delete records from table satisfying clause
+     primary_fields()                  <- returns (possibly singleton) list
      search(**clause)                  <- look up records from table, return as result set
+     get_by_pk(**primary)              <- look up single result primary key
      num_records()                     <- count the number of records in table
-     get_primary()                     <- ?????? return primary key
-     get_composite()                   <- ?????? return composite key
      load()                            <- ask handler to load table from database
      exists()                          <- ask handler if this table has been created
      drop()                            <- CAUTION: does what it says, drop the table
@@ -51,15 +52,26 @@ class db_table:
      has_column(name, type, primary)   <- check if column exists"""
 
   def create(self, *columns):
-    query = f"CREATE TABLE {self.name} ("
+    if self.exists():
+      mudlog.error(f"tried to create table {self.name} which already exists")
+      raise RuntimeError
+
     table_columns = list()
 
     if len(columns) == 0:
-      return None
+      mudlog.error(f"tried to create table {self.name} with no columns")
+      raise RuntimeError
+
+    # we keep track of pending columns because has_composite_key will need to check
+    # them before creating the table.  this needs to be set to None immediately
+    # afte the table is created 
+    self._pending_columns = list()
 
     # column is a tuple passed as argument to create()
     for column in columns:
       self._pending_columns.append(db_column.db_column(*column))
+
+    query = f"CREATE TABLE {self.name} ("
 
     if self.has_composite_key:
       primary_key_fields = []
@@ -86,6 +98,7 @@ class db_table:
 
     query += "\r\n);"
 
+    self._pending_columns = None
     self._handler.execute(query)
 
   def insert(self, **record):
@@ -94,8 +107,34 @@ class db_table:
   def delete(self, **clause):
     self._handler.delete_records(self.name, **clause)
 
+  def primary_fields(self):
+    if self._has_pending_columns():
+      columns = self._pending_columns
+    else:
+      columns = self.list_columns()
+
+    ret_val = list()
+
+    for column in columns:
+      if column.is_primary:
+        ret_val.append(column.name)
+
+    return ret_val
+
   def search(self, **clause):
     return self._handler.search_table(self.name, **clause)
+
+  def get_by_pk(self, **primary):
+    if list(primary.keys()) != self.primary_fields():
+      mudlog.error(f"searching table {self.name} with non-primary fields {', '.join(primary.keys())}\r\nactual primary fields are {', '.join(self.primary_fields())}")
+      return None
+
+    rs = self.search(**primary)
+
+    if rs.num_results == 0:
+      return None
+
+    return rs[0]
 
   def num_records(self):
     return self._handler.num_records(self.name)

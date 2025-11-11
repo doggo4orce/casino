@@ -33,7 +33,7 @@ class db_handler:
      num_columns(table)                     <- count columns in table
      num_tables()                           <- count tables in database
      num_records(table)                     <- count records in a table
-     fetch_records(table)                   <- return table as result set
+     list_records(table)                    <- return table as result set
      insert_record(table, **record)         <- insert record to table
      delete_records(table, **record)        <- delete records from table
      list_tables()                          <- returns list of tables created

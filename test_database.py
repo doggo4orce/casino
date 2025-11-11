@@ -30,34 +30,31 @@ class TestDatabase(unittest.TestCase):
     db.create_tables()
 
     # make sure all the game tables exist
-    self.assertTrue(db.admin_table_exists(database.database.ALIAS_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.EXIT_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.PREF_NUMERIC_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.PREF_TEXT_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.PREF_FLAG_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.NPC_PROTO_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.OBJ_PROTO_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.WORLD_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.PLAYER_TABLE))
-    self.assertTrue(db.admin_table_exists(database.database.ZONE_TABLE))
+    self.assertTrue(db.table_exists(database.database.ALIAS_TABLE))
+    self.assertTrue(db.table_exists(database.database.EXIT_TABLE))
+    self.assertTrue(db.table_exists(database.database.PREF_NUMERIC_TABLE))
+    self.assertTrue(db.table_exists(database.database.PREF_TEXT_TABLE))
+    self.assertTrue(db.table_exists(database.database.PREF_FLAG_TABLE))
+    self.assertTrue(db.table_exists(database.database.NPC_PROTO_TABLE))
+    self.assertTrue(db.table_exists(database.database.OBJ_PROTO_TABLE))
+    self.assertTrue(db.table_exists(database.database.WORLD_TABLE))
+    self.assertTrue(db.table_exists(database.database.PLAYER_TABLE))
+    self.assertTrue(db.table_exists(database.database.ZONE_TABLE))
 
     # but others don't
-    self.assertFalse(db.admin_table_exists("some_other_table"))
+    self.assertFalse(db.table_exists("some_other_table"))
 
     # load the tables as table objects
-    alias_table = db.admin_table_by_name(database.database.ALIAS_TABLE)
-    ex_table = db.admin_table_by_name(database.database.EXIT_TABLE)
-    pref_numeric_table = db.admin_table_by_name(database.database.PREF_NUMERIC_TABLE)
-    pref_text_table = db.admin_table_by_name(database.database.PREF_TEXT_TABLE)
-    pref_flag_table = db.admin_table_by_name(database.database.PREF_FLAG_TABLE)
-    npc_proto_table = db.admin_table_by_name(database.database.NPC_PROTO_TABLE)
-    obj_proto_table = db.admin_table_by_name(database.database.OBJ_PROTO_TABLE)
-    wld_table = db.admin_table_by_name(database.database.WORLD_TABLE)
-    p_table = db.admin_table_by_name(database.database.PLAYER_TABLE)
-    z_table = db.admin_table_by_name(database.database.ZONE_TABLE)
-
-    for column in pref_flag_table.list_columns():
-      print(str(column))
+    alias_table = db.table_by_name(database.database.ALIAS_TABLE)
+    ex_table = db.table_by_name(database.database.EXIT_TABLE)
+    pref_numeric_table = db.table_by_name(database.database.PREF_NUMERIC_TABLE)
+    pref_text_table = db.table_by_name(database.database.PREF_TEXT_TABLE)
+    pref_flag_table = db.table_by_name(database.database.PREF_FLAG_TABLE)
+    npc_proto_table = db.table_by_name(database.database.NPC_PROTO_TABLE)
+    obj_proto_table = db.table_by_name(database.database.OBJ_PROTO_TABLE)
+    wld_table = db.table_by_name(database.database.WORLD_TABLE)
+    p_table = db.table_by_name(database.database.PLAYER_TABLE)
+    z_table = db.table_by_name(database.database.ZONE_TABLE)
 
     # alias_table has correct columns
     self.assertTrue(alias_table.has_column("zone_id", str, True))
@@ -127,17 +124,69 @@ class TestDatabase(unittest.TestCase):
     self.assertTrue(z_table.has_column("author", str, False))
     self.assertEqual(z_table.num_columns(), 3)
 
+    # teardown
+    db.close()
+
   def test_aliases(self):
+    # setup
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
 
-    db.save_alias(zone_id="castle_black", id="jon_snow", type="npc", alias="jon")
-    db.save_alias(zone_id="castle_black", id="jon_snow", type="npc", alias="snow")
-    db.save_alias(zone_id="castle_black", id="jon_snow", type="npc", alias="crow")
+    # add a few aliases
+    db.save_alias("castle_black", "jon_snow", "npc", "jon")
+    db.save_alias("winterfell", "eddard_stark", "npc", "ned")
+    db.save_alias("kings_landing", "the_hound", "npc", "hound")
+    db.save_alias("sapphire_isles", "brienne_of_fucking_tarth", "npc", "brienne")
+    db.save_alias("winterfell", "two_handed_sword", "obj", "ice")
+
+    alias_table = db.table_by_name(database.database.ALIAS_TABLE)
+
+    # test to make sure one is there
+    self.assertTrue(db.has_alias("castle_black", "jon_snow", "npc", "jon")) # assertion failing
+
+    # make sure table count is correct
+    self.assertEqual(db.table_by_name(database.database.ALIAS_TABLE).num_records(), 5)
+
+    # delete jon snow alias
+    db.delete_alias("castle_black", "jon_snow", "npc", "jon")
+
+    # make sure it's not there
+    self.assertFalse(db.has_alias("castle_black", "jon_snow", "npc", "jon"))
+
+    # only one remains
+    self.assertEqual(db.table_by_name(database.database.ALIAS_TABLE).num_records(), 4)
+
+    # teardown
+    db.close()
 
   def test_exits(self):
-    pass
+    db = database.database(":memory:")
+    db.connect()
+    db.create_tables()
+
+    # add a few exits
+    db.save_exit("stockville", "recall", exit_data.exit_data(exit_data.direction.NORTH, "castle_black", "ice_wall01"))
+    db.save_exit("castle_black", "ice_wall01", exit_data.exit_data(exit_data.direction.SOUTH, "stockville", "recall"))
+    db.save_exit("stockville", "recall", exit_data.exit_data(exit_data.direction.EAST, "stockville", "casino"))
+    db.save_exit("stockville", "casino", exit_data.exit_data(exit_data.direction.WEST, "stockville", "recall"))
+
+    # test to make sure one is there
+    self.assertTrue(db.has_exit("stockville", "recall", exit_data.direction.NORTH))
+
+    # make sure table count is correct
+    self.assertEqual(db.table_by_name(database.database.EXIT_TABLE).num_records(), 4)
+
+    # delete the castle black ones
+    db.delete_exit("stockville", "recall", exit_data.direction.NORTH)
+    db.delete_exit("castle_black", "ice_wall01", exit_data.direction.SOUTH)
+
+    # make sure they aren't there
+    self.assertFalse(db.has_exit("stockville", "recall", exit_data.direction.NORTH))
+    self.assertFalse(db.has_exit("castle_black", "ice_wall01", exit_data.direction.SOUTH))
+
+    # only two left
+    self.assertEqual(db.table_by_name(database.database.EXIT_TABLE).num_records(), 2)
 
   def test_numeric_preferences(self):
     pass

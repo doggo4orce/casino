@@ -12,7 +12,7 @@ class db_column:
   def __init__(self, name, type, primary=False):
     self._name = name
     self._type = None
-    self._is_primary = primary
+    self._is_primary = bool(primary)
 
     if type in [int, str]:
       self._type = type

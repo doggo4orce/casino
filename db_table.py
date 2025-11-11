@@ -109,6 +109,9 @@ class db_table:
   def list_columns(self):
     return self._handler.list_columns(self.name)
 
+  def num_columns(self):
+    return self._handler.num_columns(self.name)
+
   def add_column(self, field, type):
     self._handler.add_column(column)
 
@@ -124,9 +127,10 @@ class db_table:
   def debug(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += "Columns:"
-    if len(self.columns) == 0:
+    columns = self.list_columns()
+    if len(columns) == 0:
       ret_val += f"\r\n{CYAN}None{NORMAL}"
     else:
-      for col in self.columns:
+      for col in columns:
         ret_val += f"{CYAN}\r\n{str(col)}{NORMAL}"
     return ret_val

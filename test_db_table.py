@@ -103,9 +103,9 @@ class TestDBTable(unittest.TestCase):
     )
 
     # check the columns
-    self.assertTrue(table.has_column("first_name", str))
-    self.assertTrue(table.has_column("last_name", str))
-    self.assertTrue(table.has_column("height", int))
+    self.assertTrue(table.has_column("first_name", str, True))
+    self.assertTrue(table.has_column("last_name", str, False))
+    self.assertTrue(table.has_column("height", int, False))
 
     # drop one of the columns
     table.drop_column("height")
@@ -199,5 +199,5 @@ class TestDBTable(unittest.TestCase):
     # close handler object for good measure
     handler.close()
 if __name__ == "__main__":
-  # unittest.main()
-  unittest.main(defaultTest="TestDBTable.test_num_records")
+  unittest.main()
+  # unittest.main(defaultTest="TestDBTable.test_num_records")

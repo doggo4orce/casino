@@ -67,7 +67,9 @@ class TestDBHandler(unittest.TestCase):
     self.assertEqual(handler.num_columns("players"), 5)
 
     # this should cause an error
+    print("expecting error between here")
     handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
+    print("and here")
 
     # manually use SQL syntax to add a row
     handler.insert_record("players",

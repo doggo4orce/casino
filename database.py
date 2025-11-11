@@ -31,6 +31,7 @@ class database:
      ###   Reserved for Administrative Usage -- call these sparingly      ###
 
      admin_table_by_name(table_name)     <- look up table by name
+     admin_table_exists(table_name)      <- check if table exists
      admin_show_tables()                 <- list all tables loaded in db_file
      admin_show_columns(table)           <- list all columns in table
      admin_fetch_record(table, **clause) <- fetch
@@ -121,6 +122,8 @@ class database:
   def admin_table_by_name(self, table_name):
     return self._handler.table_by_name(table_name)
 
+  def admin_table_exists(self, table_name):
+    return self._handler.table_exists(table_name)
   def admin_show_tables(self):
     return self._handler.list_tables()
 
@@ -403,8 +406,8 @@ class database:
   def save_room(self, room):
     if self.has_room(room.zone_id, room.id):
       self.delete_room(room.zone_id, room.id)
-
-    self._handler.insert_record(database.WORLD_TABLE,
+    
+    self.admin_table_by_name(database.WORLD_TABLE).insert(
       zone_id=room.zone_id,
       id=room.id,
       name=room.name,
@@ -415,58 +418,44 @@ class database:
       self.save_exit(room.zone_id, room.id, ex)
 
   def has_room(self, zone_id, id):
-    return self._handler.get_record(database.WORLD_TABLE,
-      zone_id=zone_id,
-      id=id
-    ) != None
+    return self.admin_table_by_name(database.WORLD_TABLE).search(zone_id=zone_id, id=id) != None
 
   def delete_room(self, zone_id, id):
     if not self.has_room(zone_id, id):
       mudlog.error(f"Trying to delete non-existent room {id}@{zone_id}.")
       return
 
-    self._handler.delete_records(database.WORLD_TABLE,
-      zone_id=zone_id,
-      id=id
-    )
-
-    self._handler.delete_records(database.EXIT_TABLE,
-      o_zone_id=zone_id,
-      o_id=id
-    )
+    self.admin_table_by_name(database.WORLD_TABLE).delete(zone_id=zone_id, id=id)
+    self.admin_table_by_name(database.EXIT_TABLE).delete(o_zone_id=zone_id, o_id=id)
 
   def num_rooms(self):
-    return self._handler.num_records(database.WORLD_TABLE)
+    return self.admin_table_by_name(database.WORLD_TABLE).num_records()
 
   def save_player(self, pc):
     if self.has_player(pc.player_id):
       self.delete_player(pc.player_id)
 
-    self._handler.insert_record(database.PLAYER_TABLE,
+    self.admin_table_by_name(database.PLAYER_TABLE).insert(
       id=pc.player_id,
       name=pc.name,
       password=pc.password
     )
 
   def has_player(self, id):
-    return self._handler.get_record(database.PLAYER_TABLE,
-      id=id
-    ) is not None
+    return self.admin_table_by_name(database.PLAYER_TABLE).search(id=id) is not None
 
   def delete_player(self, id):
     if not self.has_player(id):
       mudlog.error(f"Trying to delete non-existent player with id {pc.player_id}.")
       return
 
-    self._handler.delete_records(database.PLAYER_TABLE,
-      id=id
-    )
+    self.admin_table_by_name(database.PLAYER_TABLE).delete(id=id)
 
   def num_players(self):
-    return self._handler.num_records(database.PLAYER_TABLE)
+    return self.admin_table_by_name(database.PLAYER_TABLE).num_records()
 
   def load_player(self, pc, player_id):
-    record = self._handler.get_record(database.PLAYER_TABLE, id=player_id)
+    record = self.admin_table_by_name(database.PLAYER_TABLE).search(id=player_id)
 
     pc.name = record['name']
     pc.password = record['password']
@@ -477,18 +466,18 @@ class database:
     self.load_all_prefs_text(pc)
 
   def check_password(self, name, password):
-    record = self._handler.get_record(database.PLAYER_TABLE, name=name)
+    record = self.admin_table_by_name(database.PLAYER_TABLE).search(name=name)
     return record['password'] == password
 
   def player_id_by_name(self, name):
-    record = self._handler.get_record(database.PLAYER_TABLE, name=name)
+    record = self._handler.admin_table_by_name(database.PLAYER_TABLE).search(name=name)
     return record['id']
 
   def save_zone(self, zone):
     if self.has_zone(zone.id):
       self.delete_zone(zone.id)
 
-    self._handler.insert_record(database.ZONE_TABLE,
+    self.admin_table_by_name(database.ZONE_TABLE).insert(
       id=zone.id,
       name=zone.name,
       author=zone.author
@@ -504,28 +493,27 @@ class database:
       self.save_obj_proto(zone.obj_by_id(id))
 
   def has_zone(self, id):
-    return self._handler.get_record(database.ZONE_TABLE,
-      id=id) != None
+    return self.admin_table_by_name(database.ZONE_TABLE).search(id=id) != None
 
   def delete_zone(self, id):
     if not self.has_zone(id):
       mudlog.error(f"Trying to delete non-existent zone with id {zone.id}.")
       return
 
-    self._handler.delete_records(database.ZONE_TABLE, id=id)
-    self._handler.delete_records(database.WORLD_TABLE, zone_id=id)
-    self._handler.delete_records(database.OBJ_PROTO_TABLE, zone_id=id)
-    self._handler.delete_records(database.NPC_PROTO_TABLE, zone_id=id)
-    self._handler.delete_records(database.EXIT_TABLE, o_zone_id=id)
+    self.admin_table_by_name(database.ZONE_TABLE).delete(id=id)
+    self.admin_table_by_name(database.WORLD_TABLE).delete(zone_id=id)
+    self.admin_table_by_name(database.OBJ_PROTO_TABLE).delete(zone_id=id)
+    self.admin_table_by_name(database.NPC_PROTO_TABLE).delete(zone_id=id)
+    self.admin_table_by_name(database.EXIT_TABLE).delete(o_zone_id=id)
 
   def num_zones(self):
-    return self._handler.num_records(database.ZONE_TABLE)
+    return self.admin_table_by_name(database.ZONE_TABLE).num_records()
 
   def save_alias(self, zone_id, id, type, alias):
     if self.has_alias(zone_id, id, type, alias):
       self.delete_alias(zone_id, id, type, alias)
 
-    self._handler.insert_record(database.ALIAS_TABLE,
+    self.admin_table_by_name(database.ALIAS_TABLE).insert(
       zone_id=zone_id,
       id=id,
       type=type,
@@ -533,7 +521,7 @@ class database:
     )
 
   def has_alias(self, zone_id, id, type, alias):
-    return self._handler.get_record(database.ALIAS_TABLE,
+    return self.admin_table_by_name(database.ALIAS_TABLE).search(
       zone_id=zone_id,
       id=id,
       type=type,
@@ -545,7 +533,7 @@ class database:
       mudlog.error(f"Trying to delete non-existant alias {alias} from {type} {id}@{zone_id}.")
       return
 
-    self._handler.delete_records(database.ALIAS_TABLE,
+    self.admin_table_by_name(database.ALIAS_TABLE).delete(
       zone_id=zone_id,
       id=id,
       type=type,
@@ -553,10 +541,10 @@ class database:
     )
 
   def num_aliases(self):
-    return self._handler.num_records(database.ALIAS_TABLE)
+    return self.admin_table_by_name(database.ALIAS_TABLE).num_records()
 
   def show_table(self, name):
-    return self._handler.show_table(name)
+    return self.admin_table_by_name(name).show()
 
   def create_tables(self):
 
@@ -575,7 +563,7 @@ class database:
     exit_table.create(
       ("direction", int, True),
       ("o_zone_id", str, True),
-      ("o_id", str, False),
+      ("o_id", str, True),
       ("d_zone_id", str, False),
       ("d_id", str, False)
     )
@@ -636,34 +624,28 @@ class database:
     alias_table.create(
       ("zone_id", str, True),
       ("id", str, True),
-      ("type", str, False),
-      ("alias", str, False)
+      ("type", str, True),
+      ("alias", str, True)
     )
 
   def zone_table(self):
-    self._handler.search_table(database.ZONE_TABLE)
-    return self._handler.fetch_all()
-
+    return self._handler.search_table(database.ZONE_TABLE)
+    
   def world_table(self):
-    self._handler.search_table(database.WORLD_TABLE)
-    return self._handler.fetch_all()
-
+    return self._handler.search_table(database.WORLD_TABLE)
+    
   def exit_table(self):
-    self._handler.search_table(database.EXIT_TABLE)
-    return self._handler.fetch_all()
-
+    return self._handler.search_table(database.EXIT_TABLE)
+    
   def npc_table(self):
-    self._handler.search_table(database.NPC_PROTO_TABLE)
-    return self._handler.fetch_all()
-
+    return self._handler.search_table(database.NPC_PROTO_TABLE)
+    
   def obj_table(self):
-    self._handler.search_table(database.OBJ_PROTO_TABLE)
-    return self._handler.fetch_all()
-
+    return self._handler.search_table(database.OBJ_PROTO_TABLE)
+    
   def alias_table(self):
-    self._handler.search_table(database.ALIAS_TABLE)
-    return self._handler.fetch_all()
-
+    return self._handler.search_table(database.ALIAS_TABLE)
+    
   def load_stock(self):
     stockville = zone_data.zone_data()
     stockville.name = "the city of stockville"

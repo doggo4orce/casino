@@ -270,20 +270,21 @@ def do_db(ch, scmd, argument, server, mud, db):
       ch.write("Usage: db tables]\r\n")
       return
     table_buf = "The following tables exist in the database:\r\n"
-    for table in db.admin_show_tables():
-      table_buf += f"  {table:<{20}} {db.admin_num_records(table)} records\r\n"
+    for table in db.list_tables():
+      table_buf += f"  {table.name:<{20}} {table.num_records()} records\r\n"
     ch.write(table_buf)
     return
   elif args[0] == "columns":
     if num_args != 2:
       ch.write("Usage: db columns <table name>\r\n")
       return
-    table = args[1]
-    if table not in db.admin_show_tables():
+    table_name = args[1]
+    table = db.table_by_name(table_name)
+    if table is None:
       ch.write("That table does not exist.\r\n")
       return
-    table_buf = f"The following columns exist for {args[1]}:\r\n"
-    for column in db.admin_show_columns(table):
+    table_buf = f"The following columns exist for {table.name}:\r\n"
+    for column in table.list_columns():
       table_buf += f"  {column.name:<{20}} {column.sqlite3_type:<{10}}"
       if column.is_primary:
         table_buf += " primary"
@@ -293,10 +294,48 @@ def do_db(ch, scmd, argument, server, mud, db):
     if num_args != 2:
       ch.write("Usage: db records <table name>\r\n")
       return
-    table = args[1]
-    table_buf = f"The following rows exist for {args[1]}:\r\n"
-    table_buf += str(db.admin_fetch_records(table)) + "\r\n"
+    table_name = args[1]
+    table = db.table_by_name(table_name)
+
+    if table is None:
+      ch.write("That table does not exist.\r\n")
+      return
+
+    ch.write(f"The following records exist in {table_name} -- only private keys are shown.\r\n\r\n")
+    header_buf = ""
+    table_buf = ""
+    hrule_buf = ""
+    field_widths = dict()
+
+    primary_fields = table.primary_fields()
+    records = table.search()
+
+    for field in primary_fields:
+      field_widths[field] = 0
+      if len(field) > field_widths[field]:
+        field_widths[field] = len(field)
+      for record in records:
+        if len(str(record[field])) > field_widths[field]:
+          field_widths[field] = len(str(record[field]))
+
+    for field in primary_fields:
+      header_buf += f"{field:<{field_widths[field]}}  "
+      hrule_buf += '-'*(field_widths[field] + 2)
+
+    header_buf += "\r\n"
+    hrule_buf = hrule_buf[:-2] + "\r\n"
+
+    for record in records:
+      line = ""
+      for field in primary_fields:
+        line += f"{record[field]:<{field_widths[field]}}  "
+
+      table_buf += line[:-2] + "\r\n"
+
+    ch.write(header_buf)
+    ch.write(hrule_buf)
     ch.write(table_buf)
+
   elif args[0] == "lookup":
     if num_args != 3:
       ch.write("Usage: db lookup <table_name> <unique_id>")

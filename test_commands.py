@@ -239,6 +239,9 @@ class TestCommands(unittest.TestCase):
 
     config.DEBUG_MODE = debug_mode
 
+    # teardown
+    db.close()
+
 
   def test_prefs(self):
     # create tiny test world

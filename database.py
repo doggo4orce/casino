@@ -30,6 +30,7 @@ class database:
      table_by_name(table_name)           <- look up table by name
      table_exists(table_name)            <- check if table exists
      list_tables()                       <- list all tables loaded in db_file
+     list_table_names()                  <- list names of all tables loaded in db_file
      list_columns(table)                 <- list all columns in table
      fetch_record(table, **clause)       <- fetch
      fetch_records(table, **clause)      <- view table as result set
@@ -122,6 +123,9 @@ class database:
 
   def list_tables(self):
     return self._handler.list_tables()
+
+  def list_table_names(self):
+    return self._handler.list_table_names()
 
   def list_columns(self, table):
     return self._handler.list_columns(table)

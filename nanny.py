@@ -179,7 +179,13 @@ def handle_next_input(d, server, mud, db):
 
       d.character = new_player
       d.state = descriptor_data.descriptor_state.CHATTING
-      mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room))
+      load_room = mud.room_by_uid(d.character.room)
+
+      if load_room is None:
+        mud.add_character_to_room(d.character, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.VOID_ROOM)))
+      else:
+        mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
+
       mudlog.info(f"{d.login_info.name} [{d.client.term_host}] new player.")
       d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
       d.write("Welcome!  Have a great time!\r\n")
@@ -227,7 +233,7 @@ def handle_next_input(d, server, mud, db):
 
         # if their room has been deleted, put them in the void
         if mud.room_by_uid(d.character.room) == None:
-          d.character.room = structs.unique_identifier.from_string(config.VOID_ROOM)
+          d.character.room = unique_id_data.unique_id.from_string(config.VOID_ROOM)
 
         mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room))
         mud.echo_around(d.character, None, f"{d.login_info.name} has entered the game.\r\n")

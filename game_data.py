@@ -4,6 +4,7 @@ import baccarat_procs
 import card_data
 import card_dealer_data
 import cmd_trig_data
+from color import *
 import config
 import hbeat_proc_data
 import enum
@@ -57,6 +58,7 @@ class game_data:
      extract_obj(obj)                <- except for objects instead
      assign_spec_procs()             <- assign special procedures to elements of npc_proto
      load_world(db)                  <- load world from database
+     mini_mode()                     <- create single room world if db fails verification
      startup()                       <- populate world and call assign_spec_procs()
      load_npc(zone_id, id)           <- instantiate npc from prototype
      load_obj(zone_id, id)           <- instantiate obj from prototype
@@ -272,6 +274,23 @@ class game_data:
   def load_world(self, db):
     db.load_world(self)
 
+  def mini_mode(self):
+    void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
+
+    zone = zone_data.zone_data()
+    zone.id = void.zone_id
+    zone.name = "Empty World"
+    zone.author = "N/A"
+
+    room = room_data.room_data()
+    room.id = void.id
+    room.zone_id = "stockville"
+    room.name = "Empty Room"
+    room.desc.text = """You are in this room because the database did not load correctly.\r\n\r\n  <c9>Coming Soon:<c0> more database tools which you can use here to diagnose/fix the problem"""
+
+    zone.add_room(room)
+    self.add_zone(zone)
+
   def startup(self):
     self.assign_spec_procs()
 
@@ -341,6 +360,12 @@ class game_data:
     for mob in self._characters:
       if isinstance(mob, npc_data.npc_data):
         mob.call_hbeat_procs(self, db)
+
+  def debug(self):
+    ret_val = f"Zones: {CYAN}{', '.join([zone.id for zone in self.list_zones()])}{NORMAL}\r\n"
+    for zone in self.list_zones():
+      ret_val += f"{zone.id}: {CYAN}{', '.join(zone.list_room_ids())}{NORMAL}\r\n"
+    return ret_val
 
 if __name__ == '__main__':
   pass

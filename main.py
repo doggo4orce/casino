@@ -27,17 +27,22 @@ network = server.server()
 mud = game_data.game_data()
 
 # fire up database
-# os.system("rm data.db") # for now while we debug
+#os.system("rm data.db") # for now while we debug
 db = database.database(config.DATABASE_FILE)
 db.connect()
-# db.create_tables()
-# db.load_stock()
 
-# load contents of database
-mud.load_world(db)
+mudlog.info("Verifying table integrity.")
 
-# populate world with npcs/objs and assign spec procs
-mud.startup()
+if False: # db.verify_tables():
+  mudlog.info("Verification passed.")
+  mud.load_world(db) # load contents of database
+  mud.startup()      # populate world with npcs/objs and assign spec procs
+else:
+  db = database.database(":memory:")
+  db.connect()
+  db.create_tables()
+  mud.mini_mode()
+  mudlog.info("Verification failed.  Booting in mini mode.")
 
 mudlog.info(f"Running game on port {cl_dict['port']}.")
 network.boot("0.0.0.0", cl_dict['port'])

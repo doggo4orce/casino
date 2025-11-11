@@ -302,9 +302,11 @@ def do_db(ch, scmd, argument, server, mud, db):
       return
 
     ch.write(f"The following records exist in {table_name} -- only private keys are shown.\r\n\r\n")
+
     header_buf = ""
     table_buf = ""
     hrule_buf = ""
+
     field_widths = dict()
 
     primary_fields = table.primary_fields()
@@ -337,8 +339,8 @@ def do_db(ch, scmd, argument, server, mud, db):
     ch.write(table_buf)
 
   elif args[0] == "lookup":
-    if num_args != 3:
-      ch.write("Usage: db lookup <table_name> <unique_id>")
+    if num_args == 0:
+      ch.write("Lookup record from which table?\r\n")
       return
   else:
     ch.write("That syntax is not yet recognized by this command.\r\n")

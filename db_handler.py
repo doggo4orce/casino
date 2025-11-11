@@ -162,7 +162,9 @@ class db_handler:
     self.commit()
 
     for result in self.fetch_all():
-      ret_val.append(db_column.db_column(result["name"], result["type"], result["pk"]))
+      new_column = db_column.db_column(result["name"], result["type"], result["pk"])
+      ret_val.append(new_column)
+      mudlog.debug(f"Found column {new_column} in table {table_name}.")
 
     return ret_val
 

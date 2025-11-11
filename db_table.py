@@ -125,7 +125,7 @@ class db_table:
     return self._handler.search_table(self.name, **clause)
 
   def get_by_pk(self, **primary):
-    if list(primary.keys()) != self.primary_fields():
+    if set(primary.keys()) != set(self.primary_fields()):
       mudlog.error(f"searching table {self.name} with non-primary fields {', '.join(primary.keys())}\r\nactual primary fields are {', '.join(self.primary_fields())}")
       return None
 

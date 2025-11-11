@@ -1,3 +1,4 @@
+import db_column
 import db_handler
 import db_table
 import exit_data
@@ -476,8 +477,92 @@ class database:
   def show_table(self, name):
     return self.table_by_name(name).search()
 
+  @property
+  def schemas(self):
+    tables = {
+      database.ALIAS_TABLE: {
+        ("zone_id", str, True),
+        ("id", str, True),
+        ("type", str, True),
+        ("alias", str, True)
+      },
+      database.EXIT_TABLE: {
+        ("o_zone_id", str, True),
+        ("o_id", str, True),
+        ("direction", int, True),
+        ("d_zone_id", str, False),
+        ("d_id", str, False)
+      },
+      database.PREF_NUMERIC_TABLE: {
+        ("id", int, True),
+        ("field", str, True),
+        ("value", int, False)
+      },
+      database.PREF_TEXT_TABLE: {
+        ("id", int, True),
+        ("field", str, True),
+        ("value", str, False)
+      },
+      database.PREF_FLAG_TABLE: {
+        ("id", int, True),
+        ("field", str, True),
+        ("value", int, False)
+      },
+      database.NPC_PROTO_TABLE: {
+        ("zone_id", str, True),
+        ("id", str, True),
+        ("name", str, False),
+        ("ldesc", str, False),
+        ("desc", str, False)
+      },
+      database.OBJ_PROTO_TABLE: {
+        ("zone_id", str, True),
+        ("id", str, True),
+        ("name", str, False),
+        ("ldesc", str, False),
+        ("desc", str, False)
+      },
+      database.WORLD_TABLE: {
+        ("zone_id", str, True),
+        ("id", str, True),
+        ("name", str, False),
+        ("desc", str, False)
+      },
+      database.ZONE_TABLE: {
+        ("id", str, True),
+        ("name", str, False),
+        ("author", str, False)
+      }
+    }
+
+    return tables
+
+  def verify_tables(self):
+    for table_name in self.schemas.keys():
+      table = self.table_by_name(table_name)
+
+      # make sure the table is there
+      if table is None:
+        mudlog.error(f"Missing table {table_name}.")
+        return False
+
+      # make sure we have the right number of columns
+      if table.num_columns() != len(self.schemas[table_name]):
+        mudlog.error(f"Table {table_name} has {table.num_columns()} columns but {len(self.schemas[table_name])} were expected.")
+        return False
+
+      # and that we have each column from the schema
+      for column in self.schemas[table_name]:
+        if not table.has_column(column[0], column[1], column[2]):
+          mudlog.error(f"Table {table_name} has missing or incompatible column {actual_column}.");
+          return False
+
+    # if we made it this far we are good
+    return True
+
   def create_tables(self):
 
+    alias_table = db_table.db_table(self._handler, database.ALIAS_TABLE)
     exit_table = db_table.db_table(self._handler, database.EXIT_TABLE)
     pref_numeric_table = db_table.db_table(self._handler, database.PREF_NUMERIC_TABLE)
     pref_text_table = db_table.db_table(self._handler, database.PREF_TEXT_TABLE)
@@ -488,12 +573,18 @@ class database:
     wld_table = db_table.db_table(self._handler, database.WORLD_TABLE)
     p_table = db_table.db_table(self._handler, database.PLAYER_TABLE)
     z_table = db_table.db_table(self._handler, database.ZONE_TABLE)
-    alias_table = db_table.db_table(self._handler, database.ALIAS_TABLE)
+
+    alias_table.create(
+      ("zone_id", str, True),
+      ("id", str, True),
+      ("type", str, True),
+      ("alias", str, True)
+    )
 
     exit_table.create(
-      ("direction", int, True),
       ("o_zone_id", str, True),
       ("o_id", str, True),
+      ("direction", int, True),
       ("d_zone_id", str, False),
       ("d_id", str, False)
     )
@@ -516,7 +607,7 @@ class database:
       ("value", int, False)
     )
 
-    obj_proto_table.create(
+    npc_proto_table.create(
       ("zone_id", str, True),
       ("id", str, True),
       ("name", str, False),
@@ -524,7 +615,7 @@ class database:
       ("desc", str, False)
     )
 
-    npc_proto_table.create(
+    obj_proto_table.create(
       ("zone_id", str, True),
       ("id", str, True),
       ("name", str, False),
@@ -551,12 +642,7 @@ class database:
       ("author", str, False)
     )
 
-    alias_table.create(
-      ("zone_id", str, True),
-      ("id", str, True),
-      ("type", str, True),
-      ("alias", str, True)
-    )
+
 
   def zone_table(self):
     z_table = self.table_by_name(database.ZONE_TABLE)

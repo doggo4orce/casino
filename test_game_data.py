@@ -355,6 +355,11 @@ class TestGameData(unittest.TestCase):
     # sam should have no data pending
     self.assertEqual(d_sam.out_buf, "")
 
+  def test_mini_mode(self):
+    mud = game_data.game_data()
+    mud.mini_mode()
+
+    print(mud.debug())
 
 if __name__ == "__main__":
-  unittest.main()
+  unittest.main(defaultTest="TestGameData.test_mini_mode")

@@ -139,7 +139,14 @@ def handle_next_input(d, server, mud, db):
       return
     command = command.lower()
     d.login_info.name = command
-    if db.name_used(command):
+
+    try:
+      name_used = db.name_used(command)
+    except:
+      d.write("Failed to lookup name in database -- assuming new character.\r\n")
+      name_used = False
+
+    if name_used:
       mudlog.info(f"{command.capitalize()} is logging in.")
       d.state = descriptor_data.descriptor_state.GET_PASSWORD
       d.send(bytes(telnet.will_echo))
@@ -173,11 +180,17 @@ def handle_next_input(d, server, mud, db):
       new_player.name = d.login_info.name
       new_player.password = d.login_info.password
       new_player.descriptor = d
-      new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
-      new_player.player_id = db.next_unused_pid()
-      db.save_player(new_player)
-
       d.character = new_player
+      new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+
+      try:
+        new_player.player_id = db.next_unused_pid()
+      except:
+        d.write("Failed to lookup next unused player_id -- assigning 0.\r\n")
+        new_player.player_id = 0
+      else:
+        db.save_player(new_player)
+
       d.state = descriptor_data.descriptor_state.CHATTING
       load_room = mud.room_by_uid(d.character.room)
 

@@ -38,10 +38,7 @@ if False: # db.verify_tables():
   mud.load_world(db) # load contents of database
   mud.startup()      # populate world with npcs/objs and assign spec procs
 else:
-  db = database.database(":memory:")
-  db.connect()
-  db.create_tables()
-  mud.mini_mode()
+  mud.mini_boot()
   mudlog.info("Verification failed.  Booting in mini mode.")
 
 mudlog.info(f"Running game on port {cl_dict['port']}.")

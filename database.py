@@ -642,8 +642,6 @@ class database:
       ("author", str, False)
     )
 
-
-
   def zone_table(self):
     z_table = self.table_by_name(database.ZONE_TABLE)
     return z_table.search()

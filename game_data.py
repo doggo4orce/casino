@@ -27,11 +27,13 @@ class game_data:
        zones     = list of zone folders which have been loaded from WORLD_FOLDER
        chars     = list of characters (including NPCS and PCs) in the game
        objects   = list of objects which are in the game
-       events    = handles all events to take place in the future"""
+       events    = handles all events to take place in the future
+       mini_mode = MUD will not boot from DB"""
     self._zones      = dict()
     self._characters = list()
     self._objects    = list()
     self._events     = event_table_data.event_table_data()
+    self._mini_mode  = False
 
   """add_event(event)                <- add event to table
      list_events()                   <- returns list of events in table
@@ -58,7 +60,7 @@ class game_data:
      extract_obj(obj)                <- except for objects instead
      assign_spec_procs()             <- assign special procedures to elements of npc_proto
      load_world(db)                  <- load world from database
-     mini_mode()                     <- create single room world if db fails verification
+     mini_boot()                     <- create single room world if db fails verification
      startup()                       <- populate world and call assign_spec_procs()
      load_npc(zone_id, id)           <- instantiate npc from prototype
      load_obj(zone_id, id)           <- instantiate obj from prototype
@@ -274,7 +276,9 @@ class game_data:
   def load_world(self, db):
     db.load_world(self)
 
-  def mini_mode(self):
+  def mini_boot(self):
+    self._mini_mode = True
+
     void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
 
     zone = zone_data.zone_data()

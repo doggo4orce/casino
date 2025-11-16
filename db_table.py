@@ -43,7 +43,6 @@ class db_table:
      search(**clause)                  <- look up records from table, return as result set
      get_by_pk(**primary)              <- look up single result primary key
      num_records()                     <- count the number of records in table
-     load()                            <- ask handler to load table from database
      exists()                          <- ask handler if this table has been created
      drop()                            <- CAUTION: does what it says, drop the table
      list_columns()                    <- ask handler to list columns of this table

@@ -1,10 +1,10 @@
 import buffer_data
+import command_interpreter
 import config
 import descriptor_data
 import database
 import editor
 import game_data
-import nanny
 import olc
 import olc_data
 import pc_data
@@ -17,6 +17,9 @@ import zedit
 class TestOLC(unittest.TestCase):
   def test_redit_quit(self):
     mud = game_data.game_data()
+    nanny = command_interpreter.command_interpreter(mud)
+    nanny.load_commands()
+
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
@@ -32,12 +35,20 @@ class TestOLC(unittest.TestCase):
     d = descriptor_data.descriptor_data(None, "localhost")
     player.descriptor = d
     d.character = player
+    d.state = descriptor_data.descriptor_state.CHATTING
 
     # test redit command
-    olc.do_redit(player, None, "", None, mud, db)
+    d.input_stream.input_q.append("redit")
+    nanny.handle_next_input(d, None, None)
 
     # immediately quit
-    olc.handle_input(player.descriptor, 'q', None, mud, db)
+    d.input_stream.input_q.append("q")
+    nanny.handle_next_input(d, None, None)
+ 
+    print(d.out_buf)
+
+
+
 
   def test_redit_change_room_name(self):
     mud = game_data.game_data()
@@ -60,7 +71,8 @@ class TestOLC(unittest.TestCase):
 
     # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
     cmd_dict = dict()
-    nanny.init_commands()
+    nanny = command_interpreter.command_interpreter()
+    nanny.load_commands()
 
     # have the user enter redit command
     d.input_stream.input_q.append("redit")
@@ -111,7 +123,8 @@ class TestOLC(unittest.TestCase):
 
     # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
     cmd_dict = dict()
-    nanny.init_commands()
+    nanny = command_interpreter.command_interpreter()
+    nanny.load_commands()
 
     # have the user enter redit command
     d.input_stream.input_q.append("redit")
@@ -200,8 +213,8 @@ class TestOLC(unittest.TestCase):
     d.character = player
 
     # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
-    cmd_dict = dict()
-    nanny.init_commands()
+    nanny = command_interpreter.command_interpreter()
+    nanny.load_commands()
 
     # have the user enter redit command
     d.input_stream.input_q.append("redit new_room123")
@@ -247,7 +260,7 @@ class TestOLC(unittest.TestCase):
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
-    db.load_stock() # hard codes content into DB, eventually this won't be here
+    db.load_stock() #  hard codes content into DB, eventually this won't be here
     mud.load_world(db)
     mud.startup()
 
@@ -264,8 +277,8 @@ class TestOLC(unittest.TestCase):
     d.character = player
 
     # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
-    cmd_dict = dict()
-    nanny.init_commands()
+    nanny = command_interpreter.command_interpreter()
+    nanny.load_commands()
 
     # enter zedit command
     d.input_stream.input_q.append("zedit haunted_castle")
@@ -336,7 +349,8 @@ class TestOLC(unittest.TestCase):
 
     # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
     cmd_dict = dict()
-    nanny.init_commands()
+    nanny = command_interpreter.command_interpreter()
+    nanny.load_commands()
 
     # enter zedit command
     d.input_stream.input_q.append("zedit")
@@ -403,5 +417,6 @@ class TestOLC(unittest.TestCase):
     self.assertEqual(new_zone.name, "The Haunted Castle")
 
 if __name__ == "__main__":
-  #unittest.main(defaultTest="TestOLC.test_redit_create_new_room")
-  unittest.main()
+  unittest.main(defaultTest="TestOLC.test_redit_quit")
+  config.DEBUG_MODE = True
+  #unittest.main()

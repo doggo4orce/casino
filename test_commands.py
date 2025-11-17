@@ -3,12 +3,12 @@ import unittest
 # local modules
 import character_data
 import commands
+import command_interpreter
 import config
 import database
 import descriptor_data
 import exit_data
 import game_data
-import nanny
 import npc_data
 import object_data
 import pc_data
@@ -155,6 +155,10 @@ class TestCommands(unittest.TestCase):
     mud.load_world(db)
     mud.startup()
 
+    # load command interpreter
+    nanny = command_interpreter.command_interpreter(mud)
+    nanny.load_commands()
+
     # add player to starting room
     player = pc_data.pc_data()
     mud.add_character_to_room(player, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)))
@@ -165,17 +169,13 @@ class TestCommands(unittest.TestCase):
     player.descriptor = d
     d.character = player
 
-    # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
-    cmd_dict = dict()
-    nanny.init_commands()
-
     n = 150
 
     while n > 1:
       # test redit command with page_width n
       commands.do_prefs(player, None, f"set page_width {n}", None, mud, None)
       d.input_stream.input_q.append("help")
-      nanny.handle_next_input(d, None, mud, db)
+      nanny.handle_next_input(d, None, db)
       # print(f"{'-'*n}")
       # print(d.out_buf)
       # d.out_buf = ""
@@ -198,6 +198,10 @@ class TestCommands(unittest.TestCase):
     mud.load_world(db)
     mud.startup()
 
+    # load command interpreter
+    nanny = command_interpreter.command_interpreter(mud)
+    nanny.load_commands()
+
     # add a player to the room
     player = pc_data.pc_data()
     mud.add_character_to_room(player, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)))
@@ -207,12 +211,8 @@ class TestCommands(unittest.TestCase):
     d.state = descriptor_data.descriptor_state.CHATTING
     player.descriptor, d.character = d, player
 
-    # initiate nanny.  I'm basically initiating global variables here.  nanny should be a class to avoid this
-    cmd_dict = dict()
-    nanny.init_commands()
-
     d.input_stream.input_q.append("db show tables")
-    nanny.handle_next_input(d, None, mud, db)
+    nanny.handle_next_input(d, None, db)
 
     options = ['columns', 'records']
 
@@ -233,7 +233,7 @@ class TestCommands(unittest.TestCase):
     for opt in options:
       for table in tables:
         d.input_stream.input_q.append(f"db {opt} {table}")
-        nanny.handle_next_input(d, None, mud, db)
+        nanny.handle_next_input(d, None, db)
 
     print(d.out_buf)
 

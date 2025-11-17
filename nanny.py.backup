@@ -20,6 +20,94 @@ import unique_id_data
 
 cmd_dict = dict()
 
+def init_commands():
+  cmd_dict["north"]     = ( commands.do_move,        exit_data.direction.NORTH  )
+  cmd_dict["east"]      = ( commands.do_move,        exit_data.direction.EAST   )
+  cmd_dict["south"]     = ( commands.do_move,        exit_data.direction.SOUTH  )
+  cmd_dict["west"]      = ( commands.do_move,        exit_data.direction.WEST   )
+  cmd_dict["up"]        = ( commands.do_move,        exit_data.direction.UP     )
+  cmd_dict["down"]      = ( commands.do_move,        exit_data.direction.DOWN   )
+
+  cmd_dict["colors"]    = ( commands.do_colors,      0 )
+  cmd_dict["copyover"]  = ( commands.do_copyover,    0 )
+  # cmd_dict["client"]    = ( commands.do_client,      0 )
+  cmd_dict["db"]        = ( commands.do_db,          0 )
+  cmd_dict["drop"]      = ( commands.do_drop,        0 )
+  cmd_dict["goto"]      = ( commands.do_goto,        0 )
+  cmd_dict["help"]      = ( commands.do_help,        0 )
+  cmd_dict["inventory"] = ( commands.do_inventory,   0 )
+  cmd_dict["get"]       = ( commands.do_get,         0 )
+  cmd_dict["give"]      = ( commands.do_give,        0 )
+  cmd_dict["gossip"]    = ( commands.do_gossip,      0 )
+  cmd_dict["look"]      = ( commands.do_look,        0 )
+  # cmd_dict["pindex"]    = ( commands.do_pindex,      0 )
+  cmd_dict["prefs"]     = ( commands.do_prefs,       0 )
+  cmd_dict["qui"]       = ( commands.do_lazy_quit,   0 )
+  cmd_dict["save"]      = ( commands.do_save,        0 )
+  cmd_dict["say"]       = ( commands.do_say,         0 )
+  cmd_dict["score"]     = ( commands.do_score,       0 )
+  cmd_dict["shutdown"]  = ( commands.do_shutdown,    0 )
+  cmd_dict["title"]     = ( commands.do_title,       0 )
+  cmd_dict["quit"]      = ( commands.do_quit,        0 )
+  cmd_dict["who"]       = ( commands.do_who,         0 )
+
+  # OLC commands (separated purely for organization)
+  cmd_dict["mlist"]     = ( olc.do_mlist,            0 )
+  cmd_dict["olist"]     = ( olc.do_olist,            0 )
+  cmd_dict["redit"]     = ( olc.do_redit,            0 )
+  cmd_dict["rlist"]     = ( olc.do_rlist,            0 )
+  cmd_dict["zedit"]     = ( olc.do_zedit,            0 )
+  cmd_dict["zlist"]     = ( olc.do_zlist,            0 )
+
+def look_up_command(command):
+  for cmd_key in cmd_dict:
+    if cmd_key.startswith(command):
+      return cmd_key
+  return None
+
+def interpret_msg(d, command, argument, server, mud, db):
+  valid_command = False
+  initial_room = d.character.room
+
+  # they might just be hitting enter to see an updated prompt
+  if command == "":
+    d.has_prompt = False
+    return
+
+  # fire all prefix procs
+  for mob in mud.room_by_uid(d.character.room).people:
+    if isinstance(mob, npc_data.npc_data):
+      if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == mob.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
+        return
+
+  for obj in mud.room_by_uid(d.character.room).contents:
+    if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == obj.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
+      return
+
+  cmd_key = look_up_command(command)
+
+  if cmd_key != None:
+    cmd_value = cmd_dict[cmd_key]
+    cmd_value[0](d.character, cmd_value[1], argument, server, mud, db)
+    d.has_prompt = False
+    valid_command = True
+
+  # fire all suffix procs
+  for mob in mud.room_by_uid(initial_room).people:
+    if isinstance(mob, npc_data.npc_data):
+      mob.call_suffix_cmd_trigs(mud, d.character, command, argument, db)
+
+  if not valid_command:
+    d.write("Huh!?!\r\n")
+    d.has_prompt = False
+
+# what should they see when they finish writing? menu? etc.
+def writing_follow_up(d):
+  if d.state == descriptor_data.descriptor_state.OLC:
+    olc.olc_writing_follow_up(d)
+  # other possibilities:
+  #   reporting_bug, mailing letter, scribing scroll, etc.
+
 def handle_next_input(d, server, mud, db):
   msg = d.input_stream.pop_input()
 

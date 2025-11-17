@@ -1,9 +1,13 @@
 from color import *
+import cmd_trig_data
 import command_data
 import commands
 import config
 import descriptor_data
+import editor
+import exit_data
 import mudlog
+import npc_data
 import olc
 import pc_data
 import unique_id_data
@@ -11,29 +15,33 @@ import unique_id_data
 class command_interpreter:
   """Creates a command interpreter object to parse input from players
      and handle the game's response.
-     commands = a list of commands which have been loaded"""
-  def __init__(self, game):
-    self.commands = list()
+     commands = a list of commands which have been loaded
+     game     = the game object that commands are interpreted within"""
+  def __init__(self, game=None):
+    self.cmd_dict = dict()
+    self.game = game
 
   """enable(command, function, subcmd)                    <- add new command to list
      disable(command)                                     <- remove command from list
-     hand_input(d, server, mud, db)                       <- universal input handler
-     interpret_msg(d, command, argument, server, mud, db) <- normal in-game command interpreter
+     handle_next_input(d, server, db)                     <- universal input handler
+     look_up_command(name)                                <- look up command based on name
+     interpret_msg(d, command, argument, server, db)      <- normal in-game command interpreter
      load_commands()                                      <- load all commands into the game
      writing_follow_up(d)                                 <- save edit buffer appropriately"""
 
   def enable(self, command, function, subcmd):
-    self.commands.append(command_data.command_data(command, function, subcmd))
+    self.cmd_dict[command] = command_data.command_data(command, function, subcmd)
 
   def disable(self, command):
     for cmd_object in self.commands:
       if cmd_object.command == commmand:
-        self.commands.pop(cmd_object)
+        del self.cmd_dict[command]
 
   # Server object passed because the mud doesn't know about it, and some administrative
   # commands might like to inspect the server (e.g. to look up states of all descriptors)
-  def handle_input(d, server, mud, db):
+  def handle_next_input(self, d, server, db):
     msg = d.input_stream.pop_input()
+    mud = self.game
 
     if msg is None:
       return
@@ -49,9 +57,9 @@ class command_interpreter:
     if d.writing:
       done_writing = editor.editor_handle_input(d, msg)
       if done_writing:
-        writing_follow_up(d)
+        self.writing_follow_up(d)
     elif d.state == descriptor_data.descriptor_state.CHATTING:
-      interpret_msg(d, command, argument, server, mud, db)
+      self.interpret_msg(d, command, argument, server, db)
     elif d.state == descriptor_data.descriptor_state.OLC:
       olc.handle_input(d, stripped_msg, server, mud, db)
     elif d.state == descriptor_data.descriptor_state.GET_NAME:
@@ -200,7 +208,57 @@ class command_interpreter:
           d.write("You take over your own body -- already in use!\r\n")
           d.state = descriptor_data.descriptor_state.CHATTING
 
-  def load_commands():
+  def look_up_command(self, command):
+    for key in self.cmd_dict.keys():
+      if self.cmd_dict[key].command.startswith(command):
+        return self.cmd_dict[key].command
+    return None
+
+  def interpret_msg(self, d, command, argument, server, db):
+    valid_command = False
+    initial_room = d.character.room
+    mud = self.game
+
+    # they might just be hitting enter to see an updated prompt
+    if command == "":
+      d.has_prompt = False
+      return
+
+    # fire all prefix procs
+    for mob in mud.room_by_uid(d.character.room).people:
+      if isinstance(mob, npc_data.npc_data):
+        if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == mob.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
+          return
+
+    for obj in mud.room_by_uid(d.character.room).contents:
+      if cmd_trig_data.prefix_cmd_trig_messages.BLOCK_INTERPRETER == obj.call_prefix_cmd_trigs(mud, d.character, command, argument, db):
+        return
+
+    cmd_key = self.look_up_command(command)
+
+    if cmd_key != None:
+      cmd_obj = self.cmd_dict[cmd_key]
+      cmd_obj.function(d.character, cmd_key, argument, server, mud, db)
+      d.has_prompt = False
+      valid_command = True
+
+    # fire all suffix procs
+    for mob in mud.room_by_uid(initial_room).people:
+      if isinstance(mob, npc_data.npc_data):
+        mob.call_suffix_cmd_trigs(mud, d.character, command, argument, db)
+
+    if not valid_command:
+      d.write("Huh!?!\r\n")
+      d.has_prompt = False
+
+  # what should they see when they finish writing? menu? etc.
+  def writing_follow_up(self, d):
+    if d.state == descriptor_data.descriptor_state.OLC:
+      olc.olc_writing_follow_up(d)
+    # other possibilities:
+    #   reporting_bug, mailing letter, scribing scroll, etc.
+
+  def load_commands(self):
     self.enable("north", commands.do_move, exit_data.direction.NORTH)
     self.enable("east", commands.do_move, exit_data.direction.EAST)
     self.enable("south", commands.do_move, exit_data.direction.SOUTH)
@@ -231,7 +289,7 @@ class command_interpreter:
 
     self.enable("mlist", olc.do_mlist, None)
     self.enable("olist", olc.do_olist, None)
-    self.enable("rlist", old.do_rlist, None)
-    self.enable("zlist", old.do_zlist, None)
-    self.enable("redit", old.do_redit, None)
-    self.enable("zedit", old.do_zedit, None)
+    self.enable("rlist", olc.do_rlist, None)
+    self.enable("zlist", olc.do_zlist, None)
+    self.enable("redit", olc.do_redit, None)
+    self.enable("zedit", olc.do_zedit, None)

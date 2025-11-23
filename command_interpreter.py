@@ -10,22 +10,21 @@ import mudlog
 import npc_data
 import olc
 import pc_data
+import telnet
 import unique_id_data
 
 class command_interpreter:
   """Creates a command interpreter object to parse input from players
      and handle the game's response.
-     commands = a list of commands which have been loaded
-     game     = the game object that commands are interpreted within"""
+     commands = a list of commands which have been loaded"""
   def __init__(self, game=None):
     self.cmd_dict = dict()
-    self.game = game
 
   """enable(command, function, subcmd)                    <- add new command to list
      disable(command)                                     <- remove command from list
      handle_next_input(d, server, db)                     <- universal input handler
      look_up_command(name)                                <- look up command based on name
-     interpret_msg(d, command, argument, server, db)      <- normal in-game command interpreter
+     interpret_msg(d, command, argument, mud, server, db) <- normal in-game command interpreter
      load_commands()                                      <- load all commands into the game
      writing_follow_up(d)                                 <- save edit buffer appropriately"""
 
@@ -39,9 +38,8 @@ class command_interpreter:
 
   # Server object passed because the mud doesn't know about it, and some administrative
   # commands might like to inspect the server (e.g. to look up states of all descriptors)
-  def handle_next_input(self, d, server, db):
+  def handle_next_input(self, d, mud, server, db):
     msg = d.input_stream.pop_input()
-    mud = self.game
 
     if msg is None:
       return
@@ -59,7 +57,7 @@ class command_interpreter:
       if done_writing:
         self.writing_follow_up(d)
     elif d.state == descriptor_data.descriptor_state.CHATTING:
-      self.interpret_msg(d, command, argument, server, db)
+      self.interpret_msg(d, command, argument, mud, server, db)
     elif d.state == descriptor_data.descriptor_state.OLC:
       olc.handle_input(d, stripped_msg, server, mud, db)
     elif d.state == descriptor_data.descriptor_state.GET_NAME:
@@ -87,9 +85,7 @@ class command_interpreter:
         d.state = descriptor_data.descriptor_state.CONFIRM_NAME
         d.write(f"Did I get that right, {d.login_info.name} (Y/N)? ")
     elif d.state == descriptor_data.descriptor_state.CONFIRM_NAME:
-      if command == "":
-        d.disconnected = True
-      elif command[0] in ['y', 'Y']:
+      if command[0] in ['y', 'Y']:
         d.state = descriptor_data.descriptor_state.GET_NEW_PASS
         d.send(bytes(telnet.will_echo))
         d.write(f"Give me a password for {d.login_info.name}: ")
@@ -139,6 +135,9 @@ class command_interpreter:
         d.state = descriptor_data.descriptor_state.GET_NEW_PASS
         d.write("\r\nPasswords don't match... start over.\r\nPassword: ")
     elif d.state == descriptor_data.descriptor_state.GET_PASSWORD:
+      if msg == "":
+        d.disconnected = True
+      
       # and here too for the same reason as above
       if not db.check_password(d.login_info.name, msg):
         d.write("\r\nWrong password.\r\nPassword: ")
@@ -214,10 +213,9 @@ class command_interpreter:
         return self.cmd_dict[key].command
     return None
 
-  def interpret_msg(self, d, command, argument, server, db):
+  def interpret_msg(self, d, command, argument, mud, server, db):
     valid_command = False
     initial_room = d.character.room
-    mud = self.game
 
     # they might just be hitting enter to see an updated prompt
     if command == "":
@@ -238,7 +236,7 @@ class command_interpreter:
 
     if cmd_key != None:
       cmd_obj = self.cmd_dict[cmd_key]
-      cmd_obj.function(d.character, cmd_key, argument, server, mud, db)
+      cmd_obj.function(d.character, cmd_key, argument, server, mud, db, self)
       d.has_prompt = False
       valid_command = True
 

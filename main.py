@@ -5,10 +5,10 @@ import os
 import time
 
 # Local Modules
+import command_interpreter
 import config
 import database
 import game_data
-import nanny
 import server
 
 # command line argument handling
@@ -25,6 +25,9 @@ network = server.server()
 
 # create world
 mud = game_data.game_data()
+
+# create command interpreter
+nanny = command_interpreter.command_interpreter()
 
 # fire up database
 #os.system("rm data.db") # for now while we debug
@@ -45,7 +48,7 @@ mudlog.info(f"Running game on port {cl_dict['port']}.")
 network.boot("0.0.0.0", cl_dict['port'])
 
 # loading commands
-nanny.init_commands()
+nanny.load_commands()
 
 if cl_dict['c'] != None:
   network.copyover_recover(mud, cl_dict['c'], db)
@@ -55,7 +58,7 @@ try:
   time_per_loop = float(1)/float(loops_per_second)
 
   while not network.shutdown_cmd and not network.copyover_cmd:
-    network.loop(mud, db)
+    network.loop(mud, db, nanny)
     time.sleep(time_per_loop)
     mud.heartbeat(db)
     mud.call_hbeat_procs(db)

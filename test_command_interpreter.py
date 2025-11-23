@@ -25,13 +25,13 @@ class TestCommandInterpreter(unittest.TestCase):
     mud.add_character_to_room(d.character, room)
 
     d.input_stream.input_q.append("look")
-    nanny.handle_next_input(d, None, mud, None)
+    nanny.handle_next_input(d, mud, None, None)
 
     d.input_stream.input_q.append("redit")
-    nanny.handle_next_input(d, None, mud, None)
+    nanny.handle_next_input(d, mud, None, None)
 
     d.input_stream.input_q.append("q")
-    nanny.handle_next_input(d, None, mud, None)
+    nanny.handle_next_input(d, mud, None, None)
     print(d.out_buf)
 
    

@@ -13,7 +13,6 @@ import config
 import database
 import descriptor_data
 import mudlog
-import nanny
 import pc_data
 import unique_id_data
 
@@ -46,28 +45,28 @@ class server:
   def descriptors(self):\
     return self._descriptors
 
-  """copyover_recover(mud,file,db) <- pause all connections, reboot game, and restore them
-     add_descriptor(d)             <- add new client to descriptors and assign it's ID
-     remove_descriptor_by_id(id)   <- delete descriptor from descriptors
-     greet_descriptor(d)           <- send GREETINGS (config.py)
-     shutdown()                    <- prepare for shutdown or copyover
-     prepare_for_copyover()        <- detach all sockets in self.descriptors
-     prepare_for_shutdown()        <- detach all sockets in self.descriptors
-     boot(domain, port)            <- bind mother to (domain,port) and listen
-     check_new_connections()       <- accepts pending connections, adds to new_connections
-     handle_new_connections()      <- transfers from new_connections to descriptors and greets
-     check_for_disconnects()       <- appends anyone with disconnected flag to disconnects
-     handle_disconnects()          <- calls lose_link and removes disconnected descriptors
-     quit(d)                       <- adds d.id to self._just_leaving
-     handle_quits()                <- removes anyone self._just_leaving from descriptors
-     poll_for_input(timeout)       <- call's each descriptor's poll_for_input function
-     flush_output()                <- flush every descriptor's output
-     write_prompts()               <- write prompts to descriptors who have processed output
-     process_inputs(mud, db)       <- process input from all descriptors
-     write_all(msg,exceptions)     <- write message to all descriptors
-     send_all(bytes)               <- send bytes to all descriptors (bypasses out_buffer)
-     process_telnet_qs()           <- process parsed telnet commands from each descriptor
-     loop(mud,db)                  <- run through game loop (frequency determined in main.py)"""
+  """copyover_recover(mud,file,db)  <- pause all connections, reboot game, and restore them
+     add_descriptor(d)              <- add new client to descriptors and assign it's ID
+     remove_descriptor_by_id(id)    <- delete descriptor from descriptors
+     greet_descriptor(d)            <- send GREETINGS (config.py)
+     shutdown()                     <- prepare for shutdown or copyover
+     prepare_for_copyover()         <- detach all sockets in self.descriptors
+     prepare_for_shutdown()         <- detach all sockets in self.descriptors
+     boot(domain, port)             <- bind mother to (domain,port) and listen
+     check_new_connections()        <- accepts pending connections, adds to new_connections
+     handle_new_connections()       <- transfers from new_connections to descriptors and greets
+     check_for_disconnects()        <- appends anyone with disconnected flag to disconnects
+     handle_disconnects()           <- calls lose_link and removes disconnected descriptors
+     quit(d)                        <- adds d.id to self._just_leaving
+     handle_quits()                 <- removes anyone self._just_leaving from descriptors
+     poll_for_input(timeout)        <- call's each descriptor's poll_for_input function
+     flush_output()                 <- flush every descriptor's output
+     write_prompts()                <- write prompts to descriptors who have processed output
+     process_inputs(mud, db, nanny) <- process input from all descriptors
+     write_all(msg,exceptions)      <- write message to all descriptors
+     send_all(bytes)                <- send bytes to all descriptors (bypasses out_buffer)
+     process_telnet_qs()            <- process parsed telnet commands from each descriptor
+     loop(mud,db)                   <- run through game loop (frequency determined in main.py)"""
 
   def copyover_recover(self, mud, file, db):
     mudlog.info("Recovering from Copyover.")
@@ -249,9 +248,9 @@ class server:
       if not d.has_prompt:
         d.write_prompt()
 
-  def process_inputs(self, mud, db):
+  def process_inputs(self, mud, db, nanny):
     for d in self._descriptors.values():
-      nanny.handle_next_input(d, self, mud, db)
+      nanny.handle_next_input(d, mud, self, db)
 
   def write_all(self, msg, exceptions=None):
     if exceptions is None:
@@ -269,7 +268,7 @@ class server:
     for d in self._descriptors.values():
       d.process_telnet_q()
 
-  def loop(self, mud, db):
+  def loop(self, mud, db, nanny):
     # handle any new conections
     self.check_new_connections()
     self.handle_new_connections()
@@ -278,7 +277,7 @@ class server:
     self.poll_for_input()
 #    self.parse_input()
     self.process_telnet_qs()
-    self.process_inputs(mud, db)
+    self.process_inputs(mud, db, nanny)
 
     # flush output with prompts if necessary
     self.write_prompts()

@@ -35,6 +35,10 @@ class game_data:
     self._events     = event_table_data.event_table_data()
     self._mini_mode  = False
 
+  @property
+  def mini_mode(self):
+    return self._mini_mode
+
   """add_event(event)                <- add event to table
      list_events()                   <- returns list of events in table
      scheduled(event)                <- check if event is scheduled

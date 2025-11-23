@@ -357,7 +357,7 @@ class TestGameData(unittest.TestCase):
 
   def test_mini_mode(self):
     mud = game_data.game_data()
-    mud.mini_mode()
+    mud.mini_boot()
 
     print(mud.debug())
 

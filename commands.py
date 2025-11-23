@@ -253,6 +253,7 @@ def do_db(ch, scmd, argument, server, mud, db, nanny):
   mudlog.debug(f"do_db function called on player {ch} with argument '{argument}'")
 
   db_help = "Use the following syntax:\r\n"
+  db_help += f"  db files                - list all db files in {config.DATABASE_FOLDER}/\r\n"
   db_help += f"  db tables               - list table in database\r\n"
   db_help += f"  db records <table name> - show records in table\r\n"
   db_help += f"  db columns <table name> - show columns of table\r\n"
@@ -266,13 +267,21 @@ def do_db(ch, scmd, argument, server, mud, db, nanny):
 
   if args[0] == "tables":
     if num_args > 1:
-      ch.write("Usage: db tables]\r\n")
+      ch.write("Usage: db tables\r\n")
       return
     table_buf = "The following tables exist in the database:\r\n"
     for table in db.list_tables():
       table_buf += f"  {table.name:<{20}} {table.num_records()} records\r\n"
     ch.write(table_buf)
-    return
+  elif args[0] == "files":
+    if num_args > 1:
+      ch.write("Usage: db files\r\n")
+      return
+    file_buf = f"Database files in {config.DATABASE_FOLDER}\r\n"
+    for file in os.listdir(config.DATABASE_FOLDER):
+      if os.path.isfile(config.DATABASE_FOLDER + "/" + file) and file.endswith(".db"):
+        file_buf += f"  {file}\r\n"
+    ch.write(file_buf)
   elif args[0] == "columns":
     if num_args != 2:
       ch.write("Usage: db columns <table name>\r\n")

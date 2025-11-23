@@ -26,7 +26,7 @@ def olc_writing_follow_up(d):
   else:
     d.write("You shouldn't see this!\r\n")
     
-def do_mlist(ch, scmd, argument, server, mud, db):
+def do_mlist(ch, scmd, argument, server, mud, db, nanny):
   args = argument.split()
   num_args = len(args)
 
@@ -51,7 +51,7 @@ def do_mlist(ch, scmd, argument, server, mud, db):
   for id, npc in zone._npc_proto.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_NPC_ID_LENGTH}}{NORMAL}] {CYAN}{npc.name:<30}{NORMAL}\r\n")
 
-def do_olist(ch, scmd, argument, server, mud, db):
+def do_olist(ch, scmd, argument, server, mud, db, nanny):
   args = argument.split()
   num_args = len(args)
 
@@ -76,7 +76,7 @@ def do_olist(ch, scmd, argument, server, mud, db):
   for id, obj in zone._obj_proto.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.name:<30}{NORMAL}\r\n")
 
-def do_rlist(ch, scmd, argument, server, mud, db):
+def do_rlist(ch, scmd, argument, server, mud, db, nanny):
   Usage = "Usage: rlist [zone_id]\r\n"
   args = argument.split()
   num_args = len(args)
@@ -106,7 +106,7 @@ def do_rlist(ch, scmd, argument, server, mud, db):
   for id, room in zone._world.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
 
-def do_redit(ch, scmd, argument, server, mud, db):
+def do_redit(ch, scmd, argument, server, mud, db, nanny):
   mudlog.debug(f"do_redit called by player {ch.Name} with argument {argument}")
   Usage = "Usage: redit [[zone_id ]room_id]"
 
@@ -176,7 +176,7 @@ def do_redit(ch, scmd, argument, server, mud, db):
   ch.descriptor.state = descriptor_data.descriptor_state.OLC
   redit.redit_display_main_menu(ch.descriptor)
 
-def do_zedit(ch, scmd, argument, server, mud, db):
+def do_zedit(ch, scmd, argument, server, mud, db, nanny):
   Usage = "Usage: zedit [zone_id]\r\n"
   args = argument.split()
   num_args = len(args)
@@ -236,7 +236,7 @@ def do_zedit(ch, scmd, argument, server, mud, db):
   ch.descriptor.state = descriptor_data.descriptor_state.OLC
   zedit.zedit_display_main_menu(ch.descriptor)
 
-def do_zlist(ch, scmd, argument, server, mud, db):
+def do_zlist(ch, scmd, argument, server, mud, db, nanny):
 
   ch.write(f"ID{(1 + config.MAX_ZONE_ID_LENGTH)*' '}Zone Name{(config.MAX_ZONE_NAME_LENGTH - 8)*' '}Author\r\n")
 

@@ -75,7 +75,7 @@ class game_data:
      heartbeat()                     <- calls the event handlers heart_beat() function
      call_hbeat_procs(db)            <- calls all pulsing special procedures for npcs"""
 
-  def new_player(self, name, room):
+  def create_new_player(self, name, room):
     new_player = pc_data.pc_data()
     new_player.name = name
 

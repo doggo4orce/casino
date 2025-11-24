@@ -39,26 +39,44 @@ class command_interpreter:
   # Server object passed because the mud doesn't know about it, and some administrative
   # commands might like to inspect the server (e.g. to look up states of all descriptors)
   def handle_next_input(self, d, mud, server, db):
+    # grab the next input from their input queue
     msg = d.input_stream.pop_input()
 
+    # if they had no message, take no action
     if msg is None:
       return
 
+    # debugging logs
     if d.character:
       mudlog.debug(f"handle_next_input called on player {d.character.name} with input '{msg}'")
     else:
       mudlog.debug(f"handle_next_input called by descriptor from {d.client.term_host} with input '{msg}'")
 
+    # if we got this far, they at least hit enter, and need their prompt drawn again
     d.has_prompt = False
+
+    # strip leading or trailing whitespaces
     stripped_msg = msg.strip()
+
+    # argument contains everything after the first space
     command, argument = (stripped_msg.split(" ", 1) + ["", ""])[:2]
+
+    # if user is writing, let the editor handle the input
     if d.writing:
+
+      # editor handler lets us know if user finished writing or not
       done_writing = editor.editor_handle_input(d, msg)
+
+      # if so, send appropriate follow-up, based on what they were doing before
       if done_writing:
         self.writing_follow_up(d)
-    elif d.state == descriptor_data.descriptor_state.CHATTING:
+
+    # if user is in game, look up their command and handle it normally
+    if d.state == descriptor_data.descriptor_state.CHATTING:
       self.interpret_msg(d, command, argument, mud, server, db)
-    elif d.state == descriptor_data.descriptor_state.OLC:
+      return
+
+    if d.state == descriptor_data.descriptor_state.OLC:
       olc.handle_input(d, stripped_msg, server, mud, db)
     elif d.state == descriptor_data.descriptor_state.GET_NAME:
       if command == "":

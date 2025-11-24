@@ -28,6 +28,7 @@ class TestDatabase(unittest.TestCase):
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
+    db._state = database.database_state.VERIFIED
 
     # make sure all the game tables exist
     self.assertTrue(db.table_exists(database.database.ALIAS_TABLE))
@@ -132,6 +133,7 @@ class TestDatabase(unittest.TestCase):
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
+    db._state = database.database_state.VERIFIED
 
     # add a few aliases
     db.save_alias("castle_black", "jon_snow", "npc", "jon")
@@ -164,6 +166,7 @@ class TestDatabase(unittest.TestCase):
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
+    db._state = database.database_state.VERIFIED
 
     # add a few exits
     db.save_exit("stockville", "recall", exit_data.exit_data(exit_data.direction.NORTH, "castle_black", "ice_wall01"))

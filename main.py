@@ -36,13 +36,13 @@ db.connect()
 
 mudlog.info("Verifying table integrity.")
 
-if False: # db.verify_tables():
-  mudlog.info("Verification passed.")
+if db.verify_tables():
+  mudlog.info("Verification successful -- loading world.")
   mud.load_world(db) # load contents of database
   mud.startup()      # populate world with npcs/objs and assign spec procs
 else:
-  mud.mini_boot()
   mudlog.info("Verification failed.  Booting in mini mode.")
+  mud.mini_boot()
 
 mudlog.info(f"Running game on port {cl_dict['port']}.")
 network.boot("0.0.0.0", cl_dict['port'])

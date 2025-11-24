@@ -70,13 +70,29 @@ class command_interpreter:
       command = command.lower()
       d.login_info.name = command
 
-      try:
-        name_used = db.name_used(command)
-      except:
-        d.write("Failed to lookup name in database -- assuming new character.\r\n")
-        name_used = False
+      # TODO: some of this code needs to be factored into a function as it is repeated elsewhere
+      # maybe something like: mud.new_character(name, room)?
+      if mud.mini_mode:
+        new_player = pc_data.pc_data()
+        new_player.name = d.login_info.name
+        new_player.password = d.login_info.password
+        new_player.descriptor = d
+        d.character = new_player
+        d.character.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+        load_room = mud.room_by_uid(d.character.room)
 
-      if name_used:
+        if load_room is None:
+          mud.add_character_to_room(d.character, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.VOID_ROOM)))
+        else:
+          mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
+
+        mudlog.info(f"{d.login_info.name} [{d.client.term_host}] has logged in.")
+        d.write("\r\nThe database was not loaded correctly.\r\n")
+        mudlog.info(f"{d.login_info.name} has entered the game.")
+
+        d.state = descriptor_data.descriptor_state.CHATTING
+
+      elif db.name_used(command):
         mudlog.info(f"{command.capitalize()} is logging in.")
         d.state = descriptor_data.descriptor_state.GET_PASSWORD
         d.send(bytes(telnet.will_echo))
@@ -110,14 +126,8 @@ class command_interpreter:
         new_player.descriptor = d
         d.character = new_player
         new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
-  
-        try:
-          new_player.player_id = db.next_unused_pid()
-        except:
-          d.write("Failed to lookup next unused player_id -- assigning 0.\r\n")
-          new_player.player_id = 0
-        else:
-          db.save_player(new_player)
+        new_player.player_id = db.next_unused_pid()
+        db.save_player(new_player)
   
         d.state = descriptor_data.descriptor_state.CHATTING
         load_room = mud.room_by_uid(d.character.room)

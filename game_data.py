@@ -39,7 +39,8 @@ class game_data:
   def mini_mode(self):
     return self._mini_mode
 
-  """add_event(event)                <- add event to table
+  """new_player(name, room)          <- create new player with given name in given room
+     add_event(event)                <- add event to table
      list_events()                   <- returns list of events in table
      scheduled(event)                <- check if event is scheduled
      num_events()                    <- counts number of events in table
@@ -73,6 +74,13 @@ class game_data:
      reconnect(d, ch)                <- reconnects player to their d (seen by players)
      heartbeat()                     <- calls the event handlers heart_beat() function
      call_hbeat_procs(db)            <- calls all pulsing special procedures for npcs"""
+
+  def new_player(self, name, room):
+    new_player = pc_data.pc_data()
+    new_player.name = name
+
+    self.add_character_to_room(new_player)
+
 
   def add_event(self, event):
     self._events.add_event(event)
@@ -294,7 +302,7 @@ class game_data:
     room.id = void.id
     room.zone_id = "stockville"
     room.name = "Empty Room"
-    room.desc.text = """You are in this room because the database did not load correctly.\r\n\r\n  <c9>Coming Soon:<c0> more database tools which you can use here to diagnose/fix the problem"""
+    room.desc.text = "You are in this room because the database did not load correctly."
 
     zone.add_room(room)
     self.add_zone(zone)

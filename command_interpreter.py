@@ -71,14 +71,77 @@ class command_interpreter:
       if done_writing:
         self.writing_follow_up(d)
 
-    # if user is in game, look up their command and handle it normally
+    # basic command parser for players in normal gameplay mode
     if d.state == descriptor_data.descriptor_state.CHATTING:
       self.interpret_msg(d, command, argument, mud, server, db)
       return
 
+    # olc has its own input handler
     if d.state == descriptor_data.descriptor_state.OLC:
       olc.handle_input(d, stripped_msg, server, mud, db)
-    elif d.state == descriptor_data.descriptor_state.GET_NAME:
+      return
+
+    match d.state:
+      case descriptor_data.descriptor_state.GET_NAME:
+        # drop anyone who gives a carriage return instead of a name
+        if command == "":
+          d.disconnected = True
+          return
+
+        # don't allow names with less than 2 characters, or spaces in name
+        if len(command) < 2 or argument != "":
+          d.write("Invalid name, please try another.\r\nName: ")
+          return
+
+        # we don't care about capitalization
+        command = command.lower()
+
+        # keep track of their login name
+        d.login_info.name = command
+
+
+        # the database is unavailable, don't load anything just let them in
+        if mud.mini_mode:
+
+          # create a player with the login name
+          new_player = pc_data.pc_data()
+          new_player.name = d.login_info.name
+
+          # hook them up to a descriptor
+          new_player.descriptor = d
+          d.character = new_player
+
+          # put them in the emergency room
+          emergency_room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+          load_room = mud.room_by_uid(emergency_room)
+          mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
+
+          # let the user know we are an emergency mode
+          d.write("\r\nThe database was not loaded correctly.\r\n")
+
+          # send them in to normal gameplay
+          d.state = descriptor_data.descriptor_state.CHATTING
+          mudlog.info(f"{d.login_info.name} [{d.client.term_host}] has logged in.")
+          return
+
+        # check if the name is unused
+        if not db.named_used(command):
+
+          # it's a new player
+          d.write(f"Did I get that right, {d.login_info.name} (Y/N)? ")
+          d.state = descriptor_data.descriptor_state.CONFIRM_NAME
+          return
+
+        # ask existing player for password
+        d.send(bytes(telnet.will_echo))
+        d.write("Password: ")
+
+        d.state = descriptor_data.descriptor_state.GET_PASSWORD
+        mudlog.info(f"{command.capitalize()} is logging in.")
+
+#####################################
+
+    if d.state == descriptor_data.descriptor_state.GET_NAME:
       if command == "":
         d.disconnected = True
         return

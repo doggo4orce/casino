@@ -523,7 +523,7 @@ class database:
     player_id = record['id']
 
     if rs.num_results > 1:
-      mudlog.error(f"found two players named {name} when looking up player_id.  Returning {player_id}")
+      mudlog.error(f"found multiple players named {name} when looking up player_id.  Returning id: {player_id}")
 
     return player_id
 

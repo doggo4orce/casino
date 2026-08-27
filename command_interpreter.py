@@ -16,25 +16,25 @@ import unique_id_data
 class command_interpreter:
   """Creates a command interpreter object to parse input from players
      and handle the game's response.
-     commands = a list of commands which have been loaded"""
+     cmd_dict = commands which have been loaded"""
   def __init__(self, game=None):
-    self.cmd_dict = dict()
+    self._cmd_dict = dict()
 
-  """enable(command, function, subcmd)                    <- add new command to list
-     disable(command)                                     <- remove command from list
-     handle_next_input(d, server, db)                     <- universal input handler
+  """enable(command, function, subcmd)                    <- add new command object to list based on parameters
+     disable(command)                                     <- remove command from list by name
+     handle_next_input(d, mud, server, db)                <- handle next input from descriptor
      look_up_command(name)                                <- look up command based on name
      interpret_msg(d, command, argument, mud, server, db) <- normal in-game command interpreter
      load_commands()                                      <- load all commands into the game
      writing_follow_up(d)                                 <- save edit buffer appropriately"""
 
   def enable(self, command, function, subcmd):
-    self.cmd_dict[command] = command_data.command_data(command, function, subcmd)
+    self._cmd_dict[command] = command_data.command_data(command, function, subcmd)
 
   def disable(self, command):
     for cmd_object in self.commands:
       if cmd_object.command == commmand:
-        del self.cmd_dict[command]
+        del self._cmd_dict[command]
 
   # Server object passed because the mud doesn't know about it, and some administrative
   # commands might like to inspect the server (e.g. to look up states of all descriptors)
@@ -71,6 +71,8 @@ class command_interpreter:
       if done_writing:
         self.writing_follow_up(d)
 
+      return
+
     # basic command parser for players in normal gameplay mode
     if d.state == descriptor_data.descriptor_state.CHATTING:
       self.interpret_msg(d, command, argument, mud, server, db)
@@ -81,223 +83,9 @@ class command_interpreter:
       olc.handle_input(d, stripped_msg, server, mud, db)
       return
 
-    match d.state:
-      case descriptor_data.descriptor_state.GET_NAME:
-        # drop anyone who gives a carriage return instead of a name
-        if command == "":
-          d.disconnected = True
-          return
-
-        # don't allow names with less than 2 characters, or spaces in name
-        if len(command) < 2 or argument != "":
-          d.write("Invalid name, please try another.\r\nName: ")
-          return
-
-        # we don't care about capitalization
-        command = command.lower()
-
-        # keep track of their login name
-        d.login_info.name = command
-
-
-        # the database is unavailable, don't load anything just let them in
-        if mud.mini_mode:
-
-          # create a player with the login name
-          new_player = pc_data.pc_data()
-          new_player.name = d.login_info.name
-
-          # hook them up to a descriptor
-          new_player.descriptor = d
-          d.character = new_player
-
-          # put them in the emergency room
-          emergency_room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
-          load_room = mud.room_by_uid(emergency_room)
-          mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
-
-          # let the user know we are an emergency mode
-          d.write("\r\nThe database was not loaded correctly.\r\n")
-
-          # send them in to normal gameplay
-          d.state = descriptor_data.descriptor_state.CHATTING
-          mudlog.info(f"{d.login_info.name} [{d.client.term_host}] has logged in.")
-          return
-
-        # check if the name is unused
-        if not db.named_used(command):
-
-          # it's a new player
-          d.write(f"Did I get that right, {d.login_info.name} (Y/N)? ")
-          d.state = descriptor_data.descriptor_state.CONFIRM_NAME
-          return
-
-        # ask existing player for password
-        d.send(bytes(telnet.will_echo))
-        d.write("Password: ")
-
-        d.state = descriptor_data.descriptor_state.GET_PASSWORD
-        mudlog.info(f"{command.capitalize()} is logging in.")
-
-#####################################
-
-    if d.state == descriptor_data.descriptor_state.GET_NAME:
-      if command == "":
-        d.disconnected = True
-        return
-      if len(command) < 2 or argument != "":
-        d.write("Invalid name, please try another.\r\nName: ")
-        return
-      command = command.lower()
-      d.login_info.name = command
-
-      # TODO: some of this code needs to be factored into a function as it is repeated elsewhere
-      # maybe something like: mud.new_character(name, room)?
-      if mud.mini_mode:
-        new_player = pc_data.pc_data()
-        new_player.name = d.login_info.name
-        new_player.password = d.login_info.password
-        new_player.descriptor = d
-        d.character = new_player
-        d.character.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
-        load_room = mud.room_by_uid(d.character.room)
-
-        if load_room is None:
-          mud.add_character_to_room(d.character, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.VOID_ROOM)))
-        else:
-          mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
-
-        mudlog.info(f"{d.login_info.name} [{d.client.term_host}] has logged in.")
-        d.write("\r\nThe database was not loaded correctly.\r\n")
-        mudlog.info(f"{d.login_info.name} has entered the game.")
-
-        d.state = descriptor_data.descriptor_state.CHATTING
-
-      elif db.name_used(command):
-        mudlog.info(f"{command.capitalize()} is logging in.")
-        d.state = descriptor_data.descriptor_state.GET_PASSWORD
-        d.send(bytes(telnet.will_echo))
-        d.write("Password: ")
-      else:
-        d.state = descriptor_data.descriptor_state.CONFIRM_NAME
-        d.write(f"Did I get that right, {d.login_info.name} (Y/N)? ")
-    elif d.state == descriptor_data.descriptor_state.CONFIRM_NAME:
-      if command[0] in ['y', 'Y']:
-        d.state = descriptor_data.descriptor_state.GET_NEW_PASS
-        d.send(bytes(telnet.will_echo))
-        d.write(f"Give me a password for {d.login_info.name}: ")
-      elif command[0] in ['n', 'N']:
-        d.state = descriptor_data.descriptor_state.GET_NAME
-        d.write("Okay, what IS it, then? ")
-      else:
-        d.write("Please type Yes or No: ")
-    elif d.state == descriptor_data.descriptor_state.GET_NEW_PASS:
-      # use msg instead of command so as to allow for spaces in passwords
-      if len(msg) not in range(config.MIN_PASSWORD_LENGTH, config.MAX_PASSWORD_LENGTH - 1) or not msg.isprintable():
-        d.write("Illegal password.\r\nPassword: ")
-      else:
-        d.login_info.password = msg
-        d.state = descriptor_data.descriptor_state.CONFIRM_PASS
-        d.write("\r\nPlease retype password: ")
-    elif d.state == descriptor_data.descriptor_state.CONFIRM_PASS:
-      if msg == d.login_info.password:
-        new_player = pc_data.pc_data()
-        new_player.name = d.login_info.name
-        new_player.password = d.login_info.password
-        new_player.descriptor = d
-        d.character = new_player
-        new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
-        new_player.player_id = db.next_unused_pid()
-        db.save_player(new_player)
-  
-        d.state = descriptor_data.descriptor_state.CHATTING
-        load_room = mud.room_by_uid(d.character.room)
-  
-        if load_room is None:
-          mud.add_character_to_room(d.character, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.VOID_ROOM)))
-        else:
-          mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
-
-        mudlog.info(f"{d.login_info.name} [{d.client.term_host}] new player.")
-        d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
-        d.write("Welcome!  Have a great time!\r\n")
-        mudlog.info(f"{d.login_info.name} has entered the game.")
-      else:
-        d.state = descriptor_data.descriptor_state.GET_NEW_PASS
-        d.write("\r\nPasswords don't match... start over.\r\nPassword: ")
-    elif d.state == descriptor_data.descriptor_state.GET_PASSWORD:
-      if msg == "":
-        d.disconnected = True
-      
-      # and here too for the same reason as above
-      if not db.check_password(d.login_info.name, msg):
-        d.write("\r\nWrong password.\r\nPassword: ")
-      else:
-        # turn localecho back on
-        d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
-
-        # check if they are logged in already
-        ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
-
-        # nothing found, log in normally
-        if ch == None:
-          new_player = pc_data.pc_data()
-
-          # player now knows their own name
-          new_player.name = d.login_info.name
-
-          player_id = db.player_id_by_name(d.login_info.name)
-
-          if player_id is None:
-            mudlog.error(f"Error: Trying to load player {d.login_info.name} which is not contained in the database.")
-            d.disconnected = True
-            return
-
-          # set up some default data in case load fails
-          new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
-          new_player.title = config.DEFAULT_TITLE
-
-          # load the player from the database
-          db.load_player(new_player, player_id)
-
-          d.character = new_player
-          d.character.descriptor = d
-          d.write("Welcome!  Have a great time!\r\n")
-          d.state = descriptor_data.descriptor_state.CHATTING
-          mudlog.info(f"{d.login_info.name} has entered the game.")
-
-          # if their room has been deleted, put them in the void
-          if mud.room_by_uid(d.character.room) == None:
-            d.character.room = unique_id_data.unique_id.from_string(config.VOID_ROOM)
-
-          mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room))
-          mud.echo_around(d.character, None, f"{d.login_info.name} has entered the game.\r\n")
-
-        elif ch.descriptor:
-          d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
-          d.state = descriptor_data.descriptor_state.GET_CONFIRM_REPLACE
-        else:
-          mud.reconnect(d, ch)
-          mudlog.info(f"{ch} recovering lost connection.")
-          mud.echo_around(ch, None, f"{ch} has reconnected.\r\n")
-          ch.write("You have reconnected.\r\n")
-        d.state = descriptor_data.descriptor_state.CHATTING
-
-    elif d.state == descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
-      if command != "" and command[0] in ['Y', 'y']:
-        ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
-        if not ch:
-          d.write("The situation has changed.  Please log in again from scratch.\r\n")
-          d.disconnected = True
-        else:
-          ch.d.write("Your connection is being usurped!\r\n")
-          mud.reconnect(d, ch)
-          mudlog.info(f"{ch} usurping existing connection.")
-          mud.echo_around(ch, None, f"{ch} suddenly keels over in pain, surrounded by a white aura...\r\n")
-          mud.echo_around(ch, None, f"{ch}'s body has been taken over by a new spirit!\r\n")
-          d.write("You take over your own body -- already in use!\r\n")
-          d.state = descriptor_data.descriptor_state.CHATTING
-
+    # if we made it here, pass the input to nanny
+    nanny.nanny(d, mud, server, db, command, msg)
+        
   def look_up_command(self, command):
     for key in self.cmd_dict.keys():
       if self.cmd_dict[key].command.startswith(command):

@@ -24,7 +24,7 @@ class login_data:
 
 class descriptor_state(enum.IntEnum):
   """Different states a descriptor can take, encoded as integers."""
-  HANDSHAKE           = 0 # resolving connection
+  HANDSHAKE           = 0 # resolving connection (currently unused)
   CHATTING            = 1 # input processed by interpreter
   GET_NAME            = 2 # entering name at login
   CONFIRM_NAME        = 3 # confirming name upon character creation

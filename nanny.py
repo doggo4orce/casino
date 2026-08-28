@@ -1,78 +1,81 @@
 import config
+import descriptor_data
+import mudlog
 import pc_data
+import telnet
 
-def nanny(d, mud, server, db, first_arg, input):
+def nanny(d, mud, server, db, command, argument, msg):
   match d.state:
     case descriptor_data.descriptor_state.GET_NAME:
-      nanny_parse_get_name(d, mud, db, first_arg)
+      nanny_parse_get_name(d, mud, db, command, argument)
     case descriptor_data.descriptor_state.CONFIRM_NAME:
-      nanny_parse_confirm_name(d, first_arg)
+      nanny_parse_confirm_name(d, command)
     case descriptor_data.descriptor_state.GET_NEW_PASS:
       nanny_parse_get_new_pass(d, input)
     case descriptor_data.descriptor_state.CONFIRM_PASS:
       nanny_parse_confirm_pass(d, mud, db, input)
-    match descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
-      nanny_parse_confirm_replace(d, mud, first_arg)
+    case descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
+      nanny_parse_confirm_replace(d, mud, command)
       
-def nanny_parse_get_name(d, mud, db, first_arg)
+def nanny_parse_get_name(d, mud, db, command, argument):
   # drop anyone who gives a carriage return instead of a name
-  if first_arg == "":
+  if command == "":
     d.disconnected = True
     return
 
-    # don't allow names with less than 2 characters, or spaces in name
-    if len(first_arg) < 2 or argument != "":
-      d.write("Invalid name, please try another.\r\nName: ")
-      return
+  # don't allow names with less than 2 characters, or spaces in name
+  if len(command) < 2 or argument != "":
+    d.write("Invalid name, please try another.\r\nName: ")
+    return
 
-    # we don't care about capitalization
-    first_arg = first_arg.lower()
+  # we don't care about capitalization
+  command = command.lower()
 
-    # keep track of their login name
-    d.login_info.name = first_arg
+  # keep track of their login name
+  d.login_info.name = command
 
-    # the database is unavailable, don't load anything just let them in
-    if mud.mini_mode:
+  # the database is unavailable, don't load anything just let them in
+  if mud.mini_mode:
 
-      # create a player with the login name
-      new_player = pc_data.pc_data()
-      new_player.name = d.login_info.name
+    # create a player with the login name
+    new_player = pc_data.pc_data()
+    new_player.name = d.login_info.name
 
-      # hook them up to a descriptor
-      new_player.descriptor = d
-      d.character = new_player
+    # hook them up to the descriptor
+    new_player.descriptor = d
+    d.character = new_player
 
-      # put them in the emergency room
-      emergency_room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
-      load_room = mud.room_by_uid(emergency_room)
-      mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
+    # put them in the emergency room
+    emergency_room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+    load_room = mud.room_by_uid(emergency_room)
+    mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
 
-      # let the user know we are an emergency mode
-      d.write("\r\nThe database was not loaded correctly.\r\n")
+    # let the user know we are an emergency mode
+    d.write("\r\nThe database was not loaded correctly.\r\n")
 
-      # send them in to normal gameplay
-      d.state = descriptor_data.descriptor_state.CHATTING
-      mudlog.info(f"{d.login_info.name} [{d.client.term_host}] has logged in.")
-      return
+    # send them in to normal gameplay
+    d.state = descriptor_data.descriptor_state.CHATTING
+    mudlog.info(f"{d.login_info.name} [{d.client.term_host}] has logged in.")
+    return
 
-    # check if new player
-    if not db.named_used(first_arg):
-      d.write(f"Did I get that right, {d.login_info.name} (Y/N)? ")
-      d.state = descriptor_data.descriptor_state.CONFIRM_NAME
-      return
+  # check if new player
+  if not db.name_used(command):
+    d.write(f"Did I get that right, {d.login_info.name} (Y/N)? ")
+    d.state = descriptor_data.descriptor_state.CONFIRM_NAME
+    return
 
-    # turn off local echo and check their password
-    d.send(bytes(telnet.will_echo))
-    d.state = descriptor_data.descriptor_state.GET_PASSWORD
-    d.write("Password: ")
-    mudlog.info(f"{first_arg.capitalize()} is logging in.")
+  # turn off local echo and check their password
+  d.send(bytes(telnet.will_echo))
+  d.state = descriptor_data.descriptor_state.GET_PASSWORD
+  d.write("Password: ")
+  mudlog.info(f"{command.capitalize()} is logging in.")
 
-def nanny_parse_confirm_name(d, first_arg):
-  if first_arg[0] in ['y', 'Y']:
+def nanny_parse_confirm_name(d, command):
+  if command[0] in ['y', 'Y']:
     d.state = descriptor_data.descriptor_state.GET_NEW_PASS
     d.send(bytes(telnet.will_echo))
     d.write(f"Give me a password for {d.login_info.name}: ")
-  elif input[0] in ['n', 'N']:
+  elif command[0] in ['n', 'N']:
     d.state = descriptor_data.descriptor_state.GET_NAME
     d.write("Okay, what IS it, then? ")
   else:

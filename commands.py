@@ -19,7 +19,7 @@ import string_handling
 import zedit
 import zone_data
 
-def do_colors(ch, scmd, argument, server, mud, db, nanny):
+def do_colors(ch, scmd, argument, server, mud, db, command_interpreter):
   out_str = ""
   
   out_str += "For Reference, this is normal text.\r\n\r\n"
@@ -52,7 +52,7 @@ def do_colors(ch, scmd, argument, server, mud, db, nanny):
 
   ch.write(out_str)
 
-def do_give(ch, scmd, argument, server, mud, db, nanny):
+def do_give(ch, scmd, argument, server, mud, db, command_interpreter):
   args = argument.split()
   num_args = len(args)
 
@@ -101,7 +101,7 @@ def do_give(ch, scmd, argument, server, mud, db, nanny):
     mud.add_event(event_data.event_data(tch, drop_it, 90))
 
 
-def do_get(ch, scmd, argument, server, mud, db, nanny):
+def do_get(ch, scmd, argument, server, mud, db, command_interpreter):
   args = argument.split()
   num_args = len(args)
 
@@ -126,7 +126,7 @@ def do_get(ch, scmd, argument, server, mud, db, nanny):
   ch.write(f"You get {obj}.\r\n")
   mud.echo_around(ch, None, f"{ch} gets {obj}.\r\n")
 
-def do_goto(ch, scmd, argument, server, mud, db, nanny):
+def do_goto(ch, scmd, argument, server, mud, db, command_interpreter):
   here_id = ch.room.id
   here_zone_id = ch.room.zone_id
   here = mud.room_by_uid(ch.room)
@@ -153,7 +153,7 @@ def do_goto(ch, scmd, argument, server, mud, db, nanny):
   show_room_to_char(ch, there)
 
 
-def do_drop(ch, scmd, argument, server, mud, db, nanny):
+def do_drop(ch, scmd, argument, server, mud, db, command_interpreter):
   args = argument.split()
   num_args = len(args)
   rm = mud.room_by_uid(ch.room)
@@ -178,7 +178,7 @@ def do_drop(ch, scmd, argument, server, mud, db, nanny):
   ch.write(f"You drop {obj}.\r\n")
   mud.echo_around(ch, None, f"{ch} drops {obj}.\r\n")
 
-def do_inventory(ch, scmd, argument, server, mud, db, nanny):
+def do_inventory(ch, scmd, argument, server, mud, db, command_interpreter):
   if len(ch.inventory()) == 0:
     ch.write("You aren't carrying anything.\r\n")
     return
@@ -189,8 +189,8 @@ def do_inventory(ch, scmd, argument, server, mud, db, nanny):
 
   ch.write(out_str)
 
-def do_help(ch, scmd, argument, server, mud, db, nanny):
-  cmds = list(nanny.cmd_dict.keys())
+def do_help(ch, scmd, argument, server, mud, db, command_interpreter):
+  cmds = command_interpreter.list_commands()
   num_cmds = len(cmds)
 
   # choices for spacing out the commands
@@ -249,7 +249,7 @@ def do_help(ch, scmd, argument, server, mud, db, nanny):
 
   ch.write(out_str)
 
-def do_db(ch, scmd, argument, server, mud, db, nanny):
+def do_db(ch, scmd, argument, server, mud, db, command_interpreter):
   mudlog.debug(f"do_db function called on player {ch} with argument '{argument}'")
 
   db_help = "Use the following syntax:\r\n"
@@ -353,7 +353,7 @@ def do_db(ch, scmd, argument, server, mud, db, nanny):
   else:
     ch.write("That syntax is not yet recognized by this command.\r\n")
 
-def do_prefs(ch, scmd, argument, server, mud, db, nanny):
+def do_prefs(ch, scmd, argument, server, mud, db, command_interpreter):
   if not isinstance(ch, pc_data.pc_data):
     return
 
@@ -416,22 +416,22 @@ def do_prefs(ch, scmd, argument, server, mud, db, nanny):
     ch.write(prefs_help)
     return
 
-def do_pindex(ch, scmd, argument, server, mud, db, nanny):
+def do_pindex(ch, scmd, argument, server, mud, db, command_interpreter):
   out_str = ''.join(f"{p['id']} {p['name']}\r\n" for p in pbase.ptable)
   ch.write(out_str)
 
-def do_gossip(ch, scmd, argument, server, mud, db, nanny): 
+def do_gossip(ch, scmd, argument, server, mud, db, command_interpreter): 
   # TODO: change this function to write to all characters in the game so that we can work towards
   # not interacting with descriptors directly
   server.write_all(f"{YELLOW}{ch} gossips, '{argument}'{NORMAL}\r\n", exceptions=[ch.descriptor])
   ch.write(f"{YELLOW}You gossip, '{argument}'{NORMAL}\r\n")
 
-def do_say(ch, scmd, argument, server, mud, db, nanny):
+def do_say(ch, scmd, argument, server, mud, db, command_interpreter):
   rm = mud.room_by_uid(ch.room)
   rm.echo(f"{ch} says, '{argument}'\r\n", exceptions=[ch])
   ch.write(f"You say, '{argument}'\r\n")
 
-def do_save(ch, scmd, argument, server, mud, db, nanny):
+def do_save(ch, scmd, argument, server, mud, db, command_interpreter):
   if mud.mini_mode:
     ch.write("Players cannot save in mini mode.")
     return
@@ -439,7 +439,7 @@ def do_save(ch, scmd, argument, server, mud, db, nanny):
   db.save_player(ch)
   db.save_preferences(ch)
 
-def do_title(ch, scmd, argument, server, mud, db, nanny):
+def do_title(ch, scmd, argument, server, mud, db, command_interpreter):
   ch.title = argument
 
   if argument:
@@ -447,11 +447,11 @@ def do_title(ch, scmd, argument, server, mud, db, nanny):
   else:
     ch.write("You now have no title.\r\n")
 
-def do_score(ch, scmd, argument, server, mud, db, nanny):
+def do_score(ch, scmd, argument, server, mud, db, command_interpreter):
   out_str = ch.descriptor.debug()
   ch.write(out_str)
 
-def do_who(ch, scmd, argument, server, mud, db, nanny):
+def do_who(ch, scmd, argument, server, mud, db, command_interpreter):
   d_dict = server.descriptors
   num_online = 0
   out_str =  "Players\r\n"
@@ -472,7 +472,7 @@ def do_who(ch, scmd, argument, server, mud, db, nanny):
 
   ch.write(out_str)
 
-def do_shutdown(ch, scmd, argument, server, mud, db, nanny):
+def do_shutdown(ch, scmd, argument, server, mud, db, command_interpreter):
   USAGE = "Usage: 'shutdown die' or 'shutdown reboot'\r\n"
 
   first_arg, remaining_args = (argument.split(" ", 1) + ["", ""])[:2]
@@ -492,7 +492,7 @@ def do_shutdown(ch, scmd, argument, server, mud, db, nanny):
   logging.info(f"Shutdown {first_arg} by {ch}.")
   server.shutdown_cmd = True
 
-def do_copyover(ch, scmd, argument, server, mud, db, nanny):
+def do_copyover(ch, scmd, argument, server, mud, db, command_interpreter):
   out_msg_others = f"\r\n{RED}Time stops for a moment as {ch} folds space and time.{NORMAL}\r\n"
   out_msg_self = f"\r\n{RED}Time stops for a moment as you fold space and time.{NORMAL}\r\n"
 
@@ -519,7 +519,7 @@ def do_copyover(ch, scmd, argument, server, mud, db, nanny):
 
   server.copyover_cmd = True
 
-def do_look(ch, scmd, argument, server, mud, db, nanny):
+def do_look(ch, scmd, argument, server, mud, db, command_interpreter):
   args = argument.split()
   num_args = len(args)
 
@@ -612,7 +612,7 @@ def show_obj_to_char(ch, obj):
 
   ch.write(out_buf)
 
-def do_move(ch, scmd, argument, server, mud, db, nanny):
+def do_move(ch, scmd, argument, server, mud, db, command_interpreter):
   starting_room = mud.room_by_uid(ch.room)
   destination = starting_room.get_destination(scmd)
 
@@ -653,10 +653,10 @@ def do_move(ch, scmd, argument, server, mud, db, nanny):
   if isinstance(ch, pc_data.pc_data):
     show_room_to_char(ch, ending_room)
 
-def do_lazy_quit(ch, scmd, argument, server, mud, db, nanny):
+def do_lazy_quit(ch, scmd, argument, server, mud, db, command_interpreter):
   ch.write("You must type quit -- no less, to quit!\r\n")
 
-def do_quit(ch, scmd, argument, server, mud, db, nanny):
+def do_quit(ch, scmd, argument, server, mud, db, command_interpreter):
   d = ch.descriptor
   room = mud.room_by_uid(ch.room)
 

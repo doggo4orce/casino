@@ -7,13 +7,14 @@ import descriptor_data
 import editor
 import exit_data
 import mudlog
+import nanny
 import npc_data
 import olc
 import pc_data
 import telnet
 import unique_id_data
 
-class command_interpreter:
+class command_interpreter_data:
   """Creates a command interpreter object to parse input from players
      and handle the game's response.
      cmd_dict = commands which have been loaded"""
@@ -22,6 +23,7 @@ class command_interpreter:
 
   """enable(command, function, subcmd)                    <- add new command object to list based on parameters
      disable(command)                                     <- remove command from list by name
+     list_commands()                                      <- return list of command (strings)
      handle_next_input(d, mud, server, db)                <- handle next input from descriptor
      look_up_command(name)                                <- look up command based on name
      interpret_msg(d, command, argument, mud, server, db) <- normal in-game command interpreter
@@ -35,6 +37,9 @@ class command_interpreter:
     for cmd_object in self.commands:
       if cmd_object.command == commmand:
         del self._cmd_dict[command]
+
+  def list_commands(self):
+    return self._cmd_dict.keys()
 
   # Server object passed because the mud doesn't know about it, and some administrative
   # commands might like to inspect the server (e.g. to look up states of all descriptors)
@@ -84,12 +89,13 @@ class command_interpreter:
       return
 
     # if we made it here, pass the input to nanny
+    # TODO: consider adding a 'login_handler' class to replace nanny
     nanny.input_handler_generic(d, mud, server, db, command, argument, msg)
         
   def look_up_command(self, command):
-    for key in self.cmd_dict.keys():
-      if self.cmd_dict[key].command.startswith(command):
-        return self.cmd_dict[key].command
+    for key in self._cmd_dict.keys():
+      if self._cmd_dict[key].command.startswith(command):
+        return self._cmd_dict[key].command
     return None
 
   def interpret_msg(self, d, command, argument, mud, server, db):
@@ -114,7 +120,7 @@ class command_interpreter:
     cmd_key = self.look_up_command(command)
 
     if cmd_key != None:
-      cmd_obj = self.cmd_dict[cmd_key]
+      cmd_obj = self._cmd_dict[cmd_key]
       cmd_obj.function(d.character, cmd_key, argument, server, mud, db, self)
       d.has_prompt = False
       valid_command = True

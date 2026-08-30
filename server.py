@@ -248,9 +248,9 @@ class server:
       if not d.has_prompt:
         d.write_prompt()
 
-  def process_inputs(self, mud, db, nanny):
+  def process_inputs(self, mud, db, command_interpreter):
     for d in self._descriptors.values():
-      nanny.handle_next_input(d, mud, self, db)
+      command_interpreter.handle_next_input(d, mud, self, db)
 
   def write_all(self, msg, exceptions=None):
     if exceptions is None:
@@ -268,16 +268,15 @@ class server:
     for d in self._descriptors.values():
       d.process_telnet_q()
 
-  def loop(self, mud, db, nanny):
+  def loop(self, mud, db, command_interpreter):
     # handle any new conections
     self.check_new_connections()
     self.handle_new_connections()
 
     # handle input
     self.poll_for_input()
-#    self.parse_input()
     self.process_telnet_qs()
-    self.process_inputs(mud, db, nanny)
+    self.process_inputs(mud, db, command_interpreter)
 
     # flush output with prompts if necessary
     self.write_prompts()

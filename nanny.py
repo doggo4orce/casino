@@ -8,33 +8,18 @@ import unique_id_data
 
 def input_handler_generic(d, mud, server, db, command, argument, input):
 
-  # useful debugging logs
-  if d.character:
-    mudlog.debug(f"nanny.handle_next_input called on player {d.character.name} with input '{input}'")
-  else:
-    mudlog.debug(f"nanny.handle_next_input called by descriptor from {d.client.term_host} with input '{input}'")
-
-  # in case they have output, the prompt gets appended afterwards
-  d.has_prompt = False
-
-
   # route to case-specific handler if character is in login process
   match d.state:
     case descriptor_data.descriptor_state.GET_NAME:
       input_handler_parse_get_name(d, mud, db, command, argument)
-      return
     case descriptor_data.descriptor_state.CONFIRM_NAME:
       input_handler_parse_confirm_name(d, command)
-      return
     case descriptor_data.descriptor_state.GET_NEW_PASS:
       input_handler_parse_get_new_pass(d, input)
-      return
     case descriptor_data.descriptor_state.CONFIRM_PASS:
       input_handler_parse_confirm_pass(d, mud, db, input)
-      return
     case descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
       input_handler_parse_confirm_replace(d, mud, command)
-      return
       
 def input_handler_parse_get_name(d, mud, db, command, argument):
   # drop anyone who gives a carriage return instead of a name
@@ -65,8 +50,11 @@ def input_handler_parse_get_name(d, mud, db, command, argument):
     d.character = new_player
 
     # put them in the emergency room
-    emergency_room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+    emergency_room = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
     load_room = mud.room_by_uid(emergency_room)
+    
+    print(load_room)
+
     mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
 
     # let the user know we are an emergency mode

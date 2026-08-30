@@ -14,13 +14,15 @@ def input_handler_generic(d, mud, server, db, command, argument, input):
       input_handler_parse_get_name(d, mud, db, command, argument)
     case descriptor_data.descriptor_state.CONFIRM_NAME:
       input_handler_parse_confirm_name(d, command)
+    case descriptor_data.descriptor_state.GET_PASSWORD:
+      input_handler_parse_get_password(d, mud, db, input)
     case descriptor_data.descriptor_state.GET_NEW_PASS:
       input_handler_parse_get_new_pass(d, input)
     case descriptor_data.descriptor_state.CONFIRM_PASS:
       input_handler_parse_confirm_pass(d, mud, db, input)
     case descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
       input_handler_parse_confirm_replace(d, mud, command)
-      
+
 def input_handler_parse_get_name(d, mud, db, command, argument):
   # drop anyone who gives a carriage return instead of a name
   if command == "":
@@ -87,6 +89,75 @@ def input_handler_parse_confirm_name(d, command):
     d.write("Okay, what IS it, then? ")
   else:
     d.write("Please type Yes or No: ")
+
+def input_handler_parse_get_password(d, mud, db, input):
+  # if they enter nothing at all, kick them out
+  if input == "":
+    d.disconnected = True
+    return
+
+  # if they entered the wrong password, leave them in same state
+  if not db.check_password(d.login_info.name, input):
+    d.write("\r\nWrong password.\r\nPassword: ")
+    return
+
+  # otherwise, password was correct, turn localecho back on
+  d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
+
+  # check if they are logged in already
+  ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
+
+  # they are logged in with live connection
+  if ch and ch.descriptor:
+    d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
+    d.state = descriptor_data.descriptor_state.GET_CONFIRM_REPLACE
+    return
+
+  # they are logged in with a dead connection
+  elif ch:
+    mud.reconnect(d, ch)
+    mudlog.info(f"{ch} recovering lost connection.")
+    mud.echo_around(ch, None, f"{ch} has reconnected.\r\n")
+    ch.write("You have reconnected.\r\n")
+    d.state = descriptor_data.descriptor_state.CHATTING
+    return
+
+  # they are not logged in already
+  new_player = pc_data.pc_data()
+
+  new_player.name = d.login_info.name
+
+  player_id = db.player_id_by_name(d.login_info.name)
+
+  if player_id is None:
+    d.write("Something went wrong, sorry.\r\n")
+    mudlog.error(f"Error: Trying to load player {d.login_info.name} which is not contained in the database.")
+    d.disconnected = True
+    return
+
+  # set up some default data in case load partially fails
+  new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
+  new_player.title = config.DEFAULT_TITLE
+
+  # load the player from the database
+  db.load_player(new_player, player_id)
+
+  # hook it up to the descriptor
+  d.character = new_player
+  d.character.descriptor = d
+
+  # if their room has been deleted, put them in the void
+  if mud.room_by_uid(d.character.room) == None:
+    d.character.room = unique_id_data.unique_id.from_string(config.VOID_ROOM)
+
+  # put them in the game
+  mudlog.info(f"{d.login_info.name} has entered the game.")
+  mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room))
+  mud.echo_around(d.character, None, f"{d.login_info.name} has entered the game.\r\n")
+
+  # they're good to go
+  d.write("Welcome!  Have a great time!\r\n")
+  d.state = descriptor_data.descriptor_state.CHATTING
 
 def input_handler_parse_get_new_pass(d, input):
   # refer to full user input, passwords may contain spaces

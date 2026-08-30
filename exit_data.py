@@ -59,4 +59,4 @@ class exit_data:
     if self._direction == None:
       return None
 
-    return f"{direction(self.direction).name.lower().capitalize()}: {CYAN}{str(self.destination)}{NORMAL}"
+    return f"{direction(self.direction).name.lower().capitalize()}: {CYAN}{str(self.destination)}{NORMAL}\r\n"

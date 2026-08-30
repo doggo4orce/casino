@@ -92,9 +92,9 @@ def do_give(ch, scmd, argument, server, mud, db, command_interpreter):
     def check_it_out(c, mu, db):
       mu.echo_around(c, None, f"{c} takes a closer look at {obj}.\r\n")
     def decide_no(c, mu, db):
-      do_say(c, None, "I don't want this junk!", None, mu, db)
+      do_say(c, None, "I don't want this junk!", None, mu, db, command_interpreter)
     def drop_it(c, mu, db):
-      do_drop(c, None, args[0], None, mu, db)
+      do_drop(c, None, args[0], None, mu, db, command_interpreter)
 
     mud.add_event(event_data.event_data(tch, check_it_out, 30))
     mud.add_event(event_data.event_data(tch, decide_no, 60))

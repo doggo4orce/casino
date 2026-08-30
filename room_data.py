@@ -218,7 +218,7 @@ class room_data:
     if len(self._people) > 0:
       ret_val += "People:\r\n"
       for ch in self._people:
-        ret_val += f"  {CYAN}{ch}{NORMAL}"
+        ret_val += f"  {CYAN}{ch}{NORMAL}\r\n"
     if len(self._contents) > 0:
       ret_val += "\r\nContents:\r\n"
       for obj in self._contents:

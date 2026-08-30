@@ -121,7 +121,7 @@ class command_interpreter_data:
 
     if cmd_key != None:
       cmd_obj = self._cmd_dict[cmd_key]
-      cmd_obj.function(d.character, cmd_key, argument, server, mud, db, self)
+      cmd_obj.function(d.character, cmd_obj.subcmd, argument, server, mud, db, self)
       d.has_prompt = False
       valid_command = True
 

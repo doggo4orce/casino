@@ -72,6 +72,7 @@ class database:
     self._db_file = db_file
     self._handler = db_handler.db_handler()
     self._state = database_state.INITIALIZED
+    self.error_messages = list()
 
   @property
   def verified(self):
@@ -164,7 +165,7 @@ class database:
 
   def connect(self):
     if self._db_file == None:
-      mudlog.error("Trying to connect to non-existent database file.")
+      mudlog.error("No database file specified -- failed to connect.")
       return
 
     if self._db_file != ":memory:" and not os.path.exists(self._db_file):
@@ -653,24 +654,33 @@ class database:
     return tables
 
   def verify_tables(self):
+    self.error_messages = []
+
     for table_name in self.schemas.keys():
       table = self.table_by_name(table_name)
 
       # make sure the table is there
       if table is None:
-        mudlog.error(f"Missing table {table_name}.")
-        return False
+        message = f"Missing table {table_name}."
+        mudlog.error(message)
+        self.error_messages.append(message)
+        continue
 
       # make sure we have the right number of columns
       if table.num_columns() != len(self.schemas[table_name]):
-        mudlog.error(f"Table {table_name} has {table.num_columns()} columns but {len(self.schemas[table_name])} were expected.")
-        return False
+        message = f"Table {table_name} has {table.num_columns()} columns but {len(self.schemas[table_name])} were expected."
+        mudlog.error(message)
+        self.error_messages.append(message)
 
       # and that we have each column from the schema
       for column in self.schemas[table_name]:
         if not table.has_column(column[0], column[1], column[2]):
-          mudlog.error(f"Table {table_name} has missing or incompatible column {actual_column}.");
-          return False
+          message = f"Table {table_name} has missing column {column}."
+          mudlog.error(message);
+          self.error_messages.append(message)
+
+    if len(self.error_messages) > 0:
+      return False
 
     # if we made it this far we are good
     self._verified = True

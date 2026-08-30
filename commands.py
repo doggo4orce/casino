@@ -558,6 +558,7 @@ def show_room_to_char(ch, rm):
     page_width = ch.page_width
     brief_mode = ch.brief_mode
   else:
+    # we're really just showing the room to an NPC in this situation...
     page_width = 60
     brief_mode = False
 
@@ -572,7 +573,11 @@ def show_room_to_char(ch, rm):
 
   for tch in rm.people:
     if tch != ch:
-      out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, page_width, False)}{NORMAL}"
+      if isinstance(tch, pc_data.pc_data):
+        # override ldesc for PCs simply for now, until I can decide on how exactly they can be edited
+        out_buf += f"{BRIGHT_YELLOW}{tch.Name} is standing here.{NORMAL}"
+      else:
+        out_buf += f"{YELLOW}{string_handling.paragraph(tch.ldesc, page_width, False)}{NORMAL}"
       if type(tch) == pc_data.pc_data and tch.descriptor != None and tch.descriptor.state == descriptor_data.descriptor_state.OLC:
         out_buf += " (olc)"
       out_buf += "\r\n"

@@ -42,7 +42,7 @@ if db.verify_tables():
   mud.startup()      # populate world with npcs/objs and assign spec procs
 else:
   mudlog.info("Verification failed.  Booting in mini mode.")
-  mud.mini_boot()
+  mud.mini_boot(db.error_messages)
 
 mudlog.info(f"Running game on port {cl_dict['port']}.")
 network.boot("0.0.0.0", cl_dict['port'])

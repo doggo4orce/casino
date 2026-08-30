@@ -288,7 +288,7 @@ class game_data:
   def load_world(self, db):
     db.load_world(self)
 
-  def mini_boot(self):
+  def mini_boot(self, error_messages):
     self._mini_mode = True
 
     void = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
@@ -302,7 +302,13 @@ class game_data:
     room.id = void.id
     room.zone_id = "stockville"
     room.name = "Empty Room"
-    room.desc.text = "You are in this room because the database did not load correctly."
+
+    room.desc.text = "You are in this room because the database did not load correctly.\r\n"
+
+    for error in error_messages:
+      room.desc.text += f"*  {error}\r\n"
+
+    room.desc.text += "Use the database tools to resolve these issues, then reboot the MUD."    
 
     zone.add_room(room)
     self.add_zone(zone)

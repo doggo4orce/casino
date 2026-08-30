@@ -200,7 +200,7 @@ class descriptor_data:
     else:
       ret_val += self.client.debug()
 
-    ret_val += f"State: {CYAN}{self.state}{NORMAL}\r\n"
+    ret_val += f"State: {CYAN}{self.state.name.upper()}{NORMAL}\r\n"
 
     ret_val += f"OutBuf: {CYAN}{self.out_buf}{NORMAL}\r\n"
 

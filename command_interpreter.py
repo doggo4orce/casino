@@ -84,7 +84,7 @@ class command_interpreter:
       return
 
     # if we made it here, pass the input to nanny
-    nanny.nanny(d, mud, server, db, command, argument, msg)
+    nanny.input_handler_generic(d, mud, server, db, command, argument, msg)
         
   def look_up_command(self, command):
     for key in self.cmd_dict.keys():

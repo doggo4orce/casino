@@ -1,23 +1,42 @@
 import config
 import descriptor_data
+import game_data
 import mudlog
 import pc_data
 import telnet
+import unique_id_data
 
-def nanny(d, mud, server, db, command, argument, msg):
+def input_handler_generic(d, mud, server, db, command, argument, input):
+
+  # useful debugging logs
+  if d.character:
+    mudlog.debug(f"nanny.handle_next_input called on player {d.character.name} with input '{input}'")
+  else:
+    mudlog.debug(f"nanny.handle_next_input called by descriptor from {d.client.term_host} with input '{input}'")
+
+  # in case they have output, the prompt gets appended afterwards
+  d.has_prompt = False
+
+
+  # route to case-specific handler if character is in login process
   match d.state:
     case descriptor_data.descriptor_state.GET_NAME:
-      nanny_parse_get_name(d, mud, db, command, argument)
+      input_handler_parse_get_name(d, mud, db, command, argument)
+      return
     case descriptor_data.descriptor_state.CONFIRM_NAME:
-      nanny_parse_confirm_name(d, command)
+      input_handler_parse_confirm_name(d, command)
+      return
     case descriptor_data.descriptor_state.GET_NEW_PASS:
-      nanny_parse_get_new_pass(d, input)
+      input_handler_parse_get_new_pass(d, input)
+      return
     case descriptor_data.descriptor_state.CONFIRM_PASS:
-      nanny_parse_confirm_pass(d, mud, db, input)
+      input_handler_parse_confirm_pass(d, mud, db, input)
+      return
     case descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
-      nanny_parse_confirm_replace(d, mud, command)
+      input_handler_parse_confirm_replace(d, mud, command)
+      return
       
-def nanny_parse_get_name(d, mud, db, command, argument):
+def input_handler_parse_get_name(d, mud, db, command, argument):
   # drop anyone who gives a carriage return instead of a name
   if command == "":
     d.disconnected = True
@@ -70,7 +89,7 @@ def nanny_parse_get_name(d, mud, db, command, argument):
   d.write("Password: ")
   mudlog.info(f"{command.capitalize()} is logging in.")
 
-def nanny_parse_confirm_name(d, command):
+def input_handler_parse_confirm_name(d, command):
   if command[0] in ['y', 'Y']:
     d.state = descriptor_data.descriptor_state.GET_NEW_PASS
     d.send(bytes(telnet.will_echo))
@@ -81,7 +100,7 @@ def nanny_parse_confirm_name(d, command):
   else:
     d.write("Please type Yes or No: ")
 
-def nanny_parse_get_new_pass(d, input):
+def input_handler_parse_get_new_pass(d, input):
   # refer to full user input, passwords may contain spaces
   if len(input) < config.MIN_PASSWORD_LENGTH:
   	d.write(f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters.\r\nPassword: ")
@@ -99,9 +118,9 @@ def nanny_parse_get_new_pass(d, input):
   d.state = descriptor_data.descriptor_state.CONFIRM_PASS
   d.write("\r\nPlease retype password: ")
 
-def nanny_parse_confirm_pass(d, mud, db, input):
+def input_handler_parse_confirm_pass(d, mud, db, input):
 
-  if msg != d.d.login_info.password:
+  if input != d.login_info.password:
     d.state = descriptor_data.descriptor_state.GET_NEW_PASS
     d.write("\r\nPasswords don't match... start over.\r\nPassword: ")
     return
@@ -132,7 +151,7 @@ def nanny_parse_confirm_pass(d, mud, db, input):
   d.state = descriptor_data.descriptor_state.CHATTING
   mudlog.info(f"{d.login_info.name} has entered the game.")
 
-def nanny_parse_confirm_replace(d):
+def input_handler_parse_confirm_replace(d):
   if first_arg != "" and first_arg[0] in ['Y', 'y']:
     ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
     if not ch:

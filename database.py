@@ -409,6 +409,7 @@ class database:
     pc.name = record['name']
     pc.password = record['password']
     pc.player_id = player_id
+    pc.title = record['title']
 
     self.load_all_prefs_flag(pc)
     self.load_all_prefs_numeric(pc)

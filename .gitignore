@@ -9,4 +9,5 @@ test.py
 .killscript
 */*/.DS_Store
 test.db
-.gitignore
+data.db
+autorun.sh

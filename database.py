@@ -16,16 +16,7 @@ class database:
   def __init__(self, db_file=None):
     self._db_file = db_file
     self._handler = db_handler.db_handler()
-    self._state = database_state.INITIALIZED
     self.error_messages = list()
-
-  @property
-  def verified(self):
-    return self._verified
-
-  @property
-  def state(self):
-    return self._state
 
   """connect()                           <- connect to self._db_file
      close()                             <- close connection
@@ -116,15 +107,12 @@ class database:
 
     if self._db_file != ":memory:" and not os.path.exists(self._db_file):
       mudlog.warning(f"{self._db_file} not found -- failed to connect.")
-      self._state = database_state.MISSING_FILE
       return
 
     self._handler.connect(self._db_file)
-    self._state = database_state.UNVERIFIED
 
   def close(self):
     self._handler.close()
-    self._state = database_state.CLOSED
 
   def has_table(self, table_name):
     return self.table_by_name(table_name) != None

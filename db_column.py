@@ -10,28 +10,17 @@ class db_column:
      sqlite3_type = returns "text" or "int", etc. """
 
   def __init__(self, name, type, primary=False):
-    self._name = name
-    self._type = None
-    self._is_primary = bool(primary)
+    self.name = name
+    self.type = None
+    self.is_primary = bool(primary)
 
     if type in [int, str]:
-      self._type = type
+      self.type = type
     elif type.lower() == 'int':
-      self._type = int
+      self.type = int
     elif type.lower() == 'text':
-      self._type = str
+      self.type = str
 
-  @property
-  def name(self):
-    return self._name
-
-  @property
-  def type(self):
-    return self._type
-
-  @property
-  def is_primary(self):
-    return self._is_primary
   
   @property
   def sqlite3_type(self):

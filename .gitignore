@@ -10,4 +10,5 @@ test.py
 */*/.DS_Store
 test.db
 data.db
+data.backup.db
 autorun.sh

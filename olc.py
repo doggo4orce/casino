@@ -1,5 +1,6 @@
 from color import *
 import config
+import db_handler          # for tedit
 import descriptor_data
 import enum
 import exit_data
@@ -8,15 +9,20 @@ import olc_data
 import redit
 import redit_save_data
 import string_handling
+import tedit
+import tedit_save_data
 import unique_id_data
 import zedit
 import zedit_save_data
 
 def handle_input(d, input, server, mud, db):
-  if d.olc.mode == olc_data.olc_mode.OLC_MODE_ZEDIT:
-  	zedit.zedit_parse(d, input, server, mud, db)
-  elif d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:
-    redit.redit_parse(d, input, server, mud, db)
+  match d.olc.mode:
+    case olc_data.olc_mode.OLC_MODE_ZEDIT:
+  	  zedit.zedit_parse(d, input, server, mud, db)
+    case olc_data.olc_mode.OLC_MODE_REDIT:
+      redit.redit_parse(d, input, server, mud, db)
+    case olc_data.olc_mode.OLC_MODE_TEDIT:
+      tedit.tedit_parse(d, input, server, mud, db)
 
 def olc_writing_follow_up(d):
   if d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:
@@ -25,86 +31,44 @@ def olc_writing_follow_up(d):
       redit.redit_display_main_menu(d)
   else:
     d.write("You shouldn't see this!\r\n")
-    
-def do_mlist(ch, scmd, argument, server, mud, db, nanny):
+
+def do_tedit(ch, scmd, argument, server, mud, db, nanny):
+  mudlog.debug(f"do_tedit called by player {ch.Name} with argument {argument}")
+  Usage = "Usage: tedit [table_name]"
+
   args = argument.split()
   num_args = len(args)
 
-  if num_args == 0:
-    zone_id = ch.room.zone_id
-    zone = mud.zone_by_id(zone_id)
-  elif num_args == 1:
-    if args[0] not in mud._zones.keys():
-      ch.write("Sorry, that zone wasn't found.\r\n")
+  tedit_save = tedit_save_data.tedit_save_data()
+
+  if num_args == 1:
+    if db.has_table(args[0]):
+      table = db.table_by_name(args[0])
+      tedit_save.original_name = args[0]
+      tedit_save.name = args[0]
+      tedit_save.columns = table.list_columns()
+    elif not db_handler.valid_table_name(args[0]):
+      ch.write("Table names may consist of numbers, letters, or underscores.\r\n")
       return
-    zone = mud.zone_by_id(args[0])
-
-  num_npcs = len(zone._npc_proto.items())
-
-  if num_npcs == 0:
-    ch.write("This zone has no npcs!\r\n")
-    return
-
-  ch.write(f"ID{(1 + config.MAX_NPC_ID_LENGTH)*' '}Room Name{(config.MAX_NPC_NAME_LENGTH)*' '}\r\n")
-  ch.write(f"{(2 + config.MAX_NPC_ID_LENGTH)*'-'} {config.MAX_NPC_NAME_LENGTH*'-'}\r\n")
-
-  for id, npc in zone._npc_proto.items():
-    ch.write(f"[{GREEN}{id:>{config.MAX_NPC_ID_LENGTH}}{NORMAL}] {CYAN}{npc.name:<30}{NORMAL}\r\n")
-
-def do_olist(ch, scmd, argument, server, mud, db, nanny):
-  args = argument.split()
-  num_args = len(args)
-
-  if num_args == 0:
-    zone_id = ch.room.zone_id
-    zone = mud.zone_by_id(zone_id)
-  elif num_args == 1:
-    if args[0] not in mud._zones.keys():
-      ch.write("Sorry, that zone wasn't found.\r\n")
-      return
-    zone = mud.zone_by_id(args[0])
-
-  num_objs = len(zone._obj_proto.items())
-
-  if num_objs == 0:
-    ch.write("This zone has no objects!\r\n")
-    return
-
-  ch.write(f"ID{(1 + config.MAX_OBJECT_ID_LENGTH)*' '}Room Name{(config.MAX_OBJECT_NAME_LENGTH)*' '}\r\n")
-  ch.write(f"{(2 + config.MAX_OBJECT_ID_LENGTH)*'-'} {config.MAX_OBJECT_NAME_LENGTH*'-'}\r\n")
-
-  for id, obj in zone._obj_proto.items():
-    ch.write(f"[{GREEN}{id:>{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.name:<30}{NORMAL}\r\n")
-
-def do_rlist(ch, scmd, argument, server, mud, db, nanny):
-  Usage = "Usage: rlist [zone_id]\r\n"
-  args = argument.split()
-  num_args = len(args)
-
-
-  if num_args == 0:
-    zone_id = ch.room.zone_id
-    zone = mud.zone_by_id(zone_id)
-  elif num_args == 1:
-    if args[0] not in mud._zones.keys():
-      ch.write("Sorry, that zone wasn't found.\r\n")
-      return
-    zone = mud.zone_by_id(args[0])
+    else:
+      tedit_save.name = args[0]
+      tedit_save.original_name = args[0]
   else:
     ch.write(Usage)
     return
 
-  num_rooms = len(zone._world)
+  mud.echo_around(ch, None, f"{ch.name} starts using OLC (tedit).\r\n")
 
-  if num_rooms == 0:
-    ch.write("This zone has no rooms!\r\n")
-    return
+  # this object gets attached to descriptor and keeps track of what user is doing
+  olc = olc_data.olc_data()
+  olc.mode = olc_data.olc_mode.OLC_MODE_TEDIT
+  olc.state = tedit.tedit_state.TEDIT_MAIN_MENU
+  olc.save_data = tedit_save
 
-  ch.write(f"ID{(1 + config.MAX_ROOM_ID_LENGTH)*' '}Room Name{(config.MAX_ROOM_NAME_LENGTH - 8)*' '}Exit\r\n")
-  ch.write(f"{(2 + config.MAX_ROOM_ID_LENGTH)*'-'} {config.MAX_ROOM_NAME_LENGTH*'-'} {(2 + config.MAX_ZONE_ID_LENGTH)*'-'}\r\n")
+  ch.descriptor.olc = olc
+  ch.descriptor.state = descriptor_data.descriptor_state.OLC
 
-  for id, room in zone._world.items():
-    ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
+  tedit.tedit_display_main_menu(ch.descriptor)
 
 def do_redit(ch, scmd, argument, server, mud, db, nanny):
   mudlog.debug(f"do_redit called by player {ch.Name} with argument {argument}")
@@ -236,6 +200,94 @@ def do_zedit(ch, scmd, argument, server, mud, db, nanny):
   ch.descriptor.state = descriptor_data.descriptor_state.OLC
   zedit.zedit_display_main_menu(ch.descriptor)
 
+def do_tlist(ch, scmd, argument, server, mud, db, nanny):
+  out_str = "Name                   Columns Records\r\n"
+  out_str += "---------------------- ------- -------\r\n"
+  for table in db.list_tables():
+    out_str += f"[{GREEN}{table.name:<20}{NORMAL}] {table.num_columns():>7} {table.num_records():>7}\r\n"
+
+  ch.write(out_str)
+
+def do_mlist(ch, scmd, argument, server, mud, db, nanny):
+  args = argument.split()
+  num_args = len(args)
+
+  if num_args == 0:
+    zone_id = ch.room.zone_id
+    zone = mud.zone_by_id(zone_id)
+  elif num_args == 1:
+    if args[0] not in mud._zones.keys():
+      ch.write("Sorry, that zone wasn't found.\r\n")
+      return
+    zone = mud.zone_by_id(args[0])
+
+  num_npcs = len(zone._npc_proto.items())
+
+  if num_npcs == 0:
+    ch.write("This zone has no npcs!\r\n")
+    return
+
+  ch.write(f"ID{(1 + config.MAX_NPC_ID_LENGTH)*' '}Room Name{(config.MAX_NPC_NAME_LENGTH)*' '}\r\n")
+  ch.write(f"{(2 + config.MAX_NPC_ID_LENGTH)*'-'} {config.MAX_NPC_NAME_LENGTH*'-'}\r\n")
+
+  for id, npc in zone._npc_proto.items():
+    ch.write(f"[{GREEN}{id:<{config.MAX_NPC_ID_LENGTH}}{NORMAL}] {CYAN}{npc.name:<30}{NORMAL}\r\n")
+
+def do_olist(ch, scmd, argument, server, mud, db, nanny):
+  args = argument.split()
+  num_args = len(args)
+
+  if num_args == 0:
+    zone_id = ch.room.zone_id
+    zone = mud.zone_by_id(zone_id)
+  elif num_args == 1:
+    if args[0] not in mud._zones.keys():
+      ch.write("Sorry, that zone wasn't found.\r\n")
+      return
+    zone = mud.zone_by_id(args[0])
+
+  num_objs = len(zone._obj_proto.items())
+
+  if num_objs == 0:
+    ch.write("This zone has no objects!\r\n")
+    return
+
+  ch.write(f"ID{(1 + config.MAX_OBJECT_ID_LENGTH)*' '}Room Name{(config.MAX_OBJECT_NAME_LENGTH)*' '}\r\n")
+  ch.write(f"{(2 + config.MAX_OBJECT_ID_LENGTH)*'-'} {config.MAX_OBJECT_NAME_LENGTH*'-'}\r\n")
+
+  for id, obj in zone._obj_proto.items():
+    ch.write(f"[{GREEN}{id:<{config.MAX_OBJECT_ID_LENGTH}}{NORMAL}] {CYAN}{obj.name:<30}{NORMAL}\r\n")
+
+def do_rlist(ch, scmd, argument, server, mud, db, nanny):
+  Usage = "Usage: rlist [zone_id]\r\n"
+  args = argument.split()
+  num_args = len(args)
+
+
+  if num_args == 0:
+    zone_id = ch.room.zone_id
+    zone = mud.zone_by_id(zone_id)
+  elif num_args == 1:
+    if args[0] not in mud._zones.keys():
+      ch.write("Sorry, that zone wasn't found.\r\n")
+      return
+    zone = mud.zone_by_id(args[0])
+  else:
+    ch.write(Usage)
+    return
+
+  num_rooms = len(zone._world)
+
+  if num_rooms == 0:
+    ch.write("This zone has no rooms!\r\n")
+    return
+
+  ch.write(f"ID{(1 + config.MAX_ROOM_ID_LENGTH)*' '}Room Name{(config.MAX_ROOM_NAME_LENGTH - 8)*' '}Exit\r\n")
+  ch.write(f"{(2 + config.MAX_ROOM_ID_LENGTH)*'-'} {config.MAX_ROOM_NAME_LENGTH*'-'} {(2 + config.MAX_ZONE_ID_LENGTH)*'-'}\r\n")
+
+  for id, room in zone._world.items():
+    ch.write(f"[{GREEN}{id:<{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
+
 def do_zlist(ch, scmd, argument, server, mud, db, nanny):
 
   ch.write(f"ID{(1 + config.MAX_ZONE_ID_LENGTH)*' '}Zone Name{(config.MAX_ZONE_NAME_LENGTH - 8)*' '}Author\r\n")
@@ -243,6 +295,6 @@ def do_zlist(ch, scmd, argument, server, mud, db, nanny):
   ch.write(f"{(2 + config.MAX_ZONE_ID_LENGTH)*'-'} {config.MAX_ZONE_NAME_LENGTH*'-'} {config.MAX_PLAYER_NAME_LENGTH*'-'}\r\n")
 
   for zn in mud._zones.values():
-    ch.write(f"[{GREEN}{zn.id:>{config.MAX_ZONE_ID_LENGTH}}{NORMAL}] {CYAN}{zn.name:<{config.MAX_ZONE_NAME_LENGTH}}{NORMAL} {YELLOW}{zn.author.capitalize():<{config.MAX_PLAYER_NAME_LENGTH}}{NORMAL}\r\n")
+    ch.write(f"[{GREEN}{zn.id:<{config.MAX_ZONE_ID_LENGTH}}{NORMAL}] {CYAN}{zn.name:<{config.MAX_ZONE_NAME_LENGTH}}{NORMAL} {YELLOW}{zn.author.capitalize():<{config.MAX_PLAYER_NAME_LENGTH}}{NORMAL}\r\n")
 
   ch.write(f"\r\nThere are a total of {len(mud._zones)} zones loaded into memory.\r\n")

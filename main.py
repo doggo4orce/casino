@@ -30,7 +30,6 @@ mud = game_data.game_data()
 command_interpreter = command_interpreter_data.command_interpreter_data()
 
 # fire up database
-#os.system("rm data.db") # for now while we debug
 db = database.database(config.DATABASE_FILE)
 db.connect()
 
@@ -48,7 +47,7 @@ mudlog.info(f"Running game on port {cl_dict['port']}.")
 network.boot("0.0.0.0", cl_dict['port'])
 
 # loading commands
-command_interpreter.load_commands()
+command_interpreter.load_commands(mud.mini_mode)
 
 if cl_dict['c'] != None:
   network.copyover_recover(mud, cl_dict['c'], db)

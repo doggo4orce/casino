@@ -85,6 +85,7 @@ class database:
   """connect()                           <- connect to self._db_file
      close()                             <- close connection
 
+     has_table(table_name)               <- check whether table exists
      table_by_name(table_name)           <- look up table by name
      table_exists(table_name)            <- check if table exists
      list_tables()                       <- list all tables loaded in db_file
@@ -180,6 +181,9 @@ class database:
     self._handler.close()
     self._state = database_state.CLOSED
 
+  def has_table(self, table_name):
+    return self.table_by_name(table_name) != None
+    
   def table_by_name(self, table_name):
     return self._handler.table_by_name(table_name)
 

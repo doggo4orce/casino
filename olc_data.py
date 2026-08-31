@@ -3,6 +3,7 @@ import enum
 class olc_mode(enum.IntEnum):
   OLC_MODE_ZEDIT = 0
   OLC_MODE_REDIT = 1
+  OLC_MODE_TEDIT = 2
 
 class olc_data:
   """Interface for descriptor to work with their OLC data

@@ -95,6 +95,7 @@ class server:
 
         # this needs to be factored through other code from when players enter the game?
         d.character = pc_data.pc_data()
+        d.character.name = name
 
         db.load_player(d.character, db.player_id_by_name(name))
         d.character.descriptor = d
@@ -109,7 +110,7 @@ class server:
         self.add_descriptor(d)
 
     mudlog.info("Removing old Copyover File.")
-    os.remove(config.COPYOVER_PATH)
+    #os.remove(config.COPYOVER_PATH)
 
   def add_descriptor(self, d):
     self._descriptors[self._nextid] = d

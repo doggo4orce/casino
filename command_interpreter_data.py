@@ -18,7 +18,7 @@ class command_interpreter_data:
   """Creates a command interpreter object to parse input from players
      and handle the game's response.
      cmd_dict = commands which have been loaded"""
-  def __init__(self, game=None):
+  def __init__(self):
     self._cmd_dict = dict()
 
   """enable(command, function, subcmd)                    <- add new command object to list based on parameters
@@ -141,38 +141,53 @@ class command_interpreter_data:
     # other possibilities:
     #   reporting_bug, mailing letter, scribing scroll, etc.
 
-  def load_commands(self):
-    self.enable("north", commands.do_move, exit_data.direction.NORTH)
-    self.enable("east", commands.do_move, exit_data.direction.EAST)
-    self.enable("south", commands.do_move, exit_data.direction.SOUTH)
-    self.enable("west", commands.do_move, exit_data.direction.WEST)
-    self.enable("up", commands.do_move, exit_data.direction.UP)
-    self.enable("down", commands.do_move, exit_data.direction.DOWN)
+  def load_commands(self, mini_mode):
+    # these should be loaded first so they get priority
+    if not mini_mode:
+      self.enable("north", commands.do_move, exit_data.direction.NORTH)
+      self.enable("east", commands.do_move, exit_data.direction.EAST)
+      self.enable("south", commands.do_move, exit_data.direction.SOUTH)
+      self.enable("west", commands.do_move, exit_data.direction.WEST)
+      self.enable("up", commands.do_move, exit_data.direction.UP)
+      self.enable("down", commands.do_move, exit_data.direction.DOWN)
+
+    self.enable("db", commands.do_db, None)
+    self.enable("gossip", commands.do_gossip, None)
+    self.enable("help", commands.do_help, None)
+    self.enable("look", commands.do_look, None)
+    self.enable("say", commands.do_say, None)
+    self.enable("shutdown", commands.do_shutdown, None)
+    self.enable("tedit", olc.do_tedit, None)
+    self.enable("who", commands.do_who, None)
+
+    if mini_mode:
+      return
+
+
 
     self.enable("colors", commands.do_colors, None)
     self.enable("copyover", commands.do_copyover, None)
-    self.enable("db", commands.do_db, None)
+
     self.enable("drop", commands.do_drop, None)
     self.enable("get", commands.do_get, None)
     self.enable("give", commands.do_give, None)
-    self.enable("gossip", commands.do_gossip, None)
+    
     self.enable("goto", commands.do_goto, None)
-    self.enable("help", commands.do_help, None)
+    
     self.enable("inventory", commands.do_inventory, None)
-    self.enable("look", commands.do_look, None)
+    
     self.enable("pindex", commands.do_pindex, None)
     self.enable("prefs", commands.do_prefs, None)
     self.enable("quit", commands.do_quit, None)
     self.enable("save", commands.do_save, None)
-    self.enable("say", commands.do_say, None)
+    
     self.enable("score", commands.do_score, None)
-    self.enable("shutdown", commands.do_shutdown, None)
     self.enable("title", commands.do_title, None)
-    self.enable("who", commands.do_who, None)
 
     self.enable("mlist", olc.do_mlist, None)
     self.enable("olist", olc.do_olist, None)
     self.enable("rlist", olc.do_rlist, None)
     self.enable("zlist", olc.do_zlist, None)
     self.enable("redit", olc.do_redit, None)
+    self.enable("tlist", olc.do_tlist, None)
     self.enable("zedit", olc.do_zedit, None)

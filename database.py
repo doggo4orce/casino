@@ -578,7 +578,7 @@ class database:
       # and that we have each column from the schema
       for column in self.schemas[table_name]:
         if not table.has_column(column[0], column[1], column[2]):
-          message = f"Table {table_name} has missing column {column}."
+          message = f"Table {table_name} has missing column {str(db_column.db_column(column[0], column[1], column[2]))}."
           mudlog.error(message);
           self.error_messages.append(message)
 

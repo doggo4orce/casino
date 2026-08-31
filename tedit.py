@@ -15,6 +15,7 @@ class tedit_state(enum.IntEnum):
   TEDIT_EDIT_COLUMN = 4
   TEDIT_EDIT_COLUMN_NAME = 5
   TEDIT_EDIT_COLUMN_TYPE = 6
+  TEDIT_CONFIRM_SAVE_COLUMN = 7
 
 def tedit_display_main_menu(d):
   tedit_save = d.olc.save_data
@@ -44,6 +45,8 @@ def tedit_parse(d, input, db):
       tedit_parse_edit_column_name(d, input)
     case tedit_state.TEDIT_EDIT_COLUMN_TYPE:
       tedit_parse_edit_column_type(d, input)
+    case tedit_state.TEDIT_CONFIRM_SAVE_COLUMN:
+      tedit_parse_confirm_save_column(d, input)
 
 def tedit_parse_main_menu(d, input, db):
   if input == "":
@@ -96,7 +99,7 @@ def tedit_parse_edit_schema(d, input):
     case '3':
       d.olc.state = tedit_state.TEDIT_MAIN_MENU
       tedit_display_main_menu(d)
-    case '4':
+    case 'Q':
       d.olc.state = tedit_state.TEDIT_MAIN_MENU
       tedit_display_main_menu(d)
 
@@ -108,6 +111,7 @@ def tedit_parse_edit_column(d, input):
   response = input[0].upper()
 
   tedit_save = d.olc.save_data
+  col = tedit_save.column
 
   match response:
     case '1':
@@ -117,7 +121,6 @@ def tedit_parse_edit_column(d, input):
       d.olc.state = tedit_state.TEDIT_EDIT_COLUMN_TYPE
       tedit_display_column_type_menu(d)
     case '3':
-      col = tedit_save.column
       col.is_primary = not col.is_primary # toggle
       tedit_display_column_menu(d)
     case 'X':
@@ -126,7 +129,38 @@ def tedit_parse_edit_column(d, input):
       d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
       tedit_display_schema_menu(d)
     case 'Q':
+      if col.name == None:
+        d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+        tedit_display_schema_menu(d)
+        return
+
+      d.olc.state = tedit_state.TEDIT_CONFIRM_SAVE_COLUMN
+      d.write("Save changes -- are you sure? : ")
+
+def tedit_parse_confirm_save_column(d, input):
+  if input == "":
+    d.write("Enter yes or no (Y/N) : ")
+    return
+
+  response = input[0].upper()
+
+  tedit_save = d.olc.save_data
+
+  match response:
+    case 'Y':
+      # add the column to the table if it's new
+      if tedit_save.create_column:
+        tedit_save.columns.append(tedit_save.column)
+      # TODO: otherwise update the version in the table
+    case 'N':
       pass
+    case '_':
+      d.write("Enter yes or no (Y/N) : ")
+      return
+
+  tedit_save.col = None
+  d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+  tedit_display_schema_menu(d)
 
 def tedit_parse_edit_column_name(d, input):
   if input == "":
@@ -141,6 +175,13 @@ def tedit_parse_edit_column_name(d, input):
     return
 
   tedit_save = d.olc.save_data
+
+  if input in [col.name for col in tedit_save.columns]:
+    d.write("That column already exists!\r\n")
+    d.olc.state = tedit_state.TEDIT_EDIT_COLUMN
+    tedit_display_column_menu(d)
+    return
+
   col = tedit_save.column
   col.name = input
   tedit_display_column_menu(d)
@@ -189,7 +230,7 @@ def tedit_display_schema_menu(d):
   out_str += f"\r\n{GREEN}1{NORMAL}) Add Column\r\n"
   out_str += f"{GREEN}2{NORMAL}) Drop Column\r\n"
   out_str += f"{GREEN}3{NORMAL}) Rename Column\r\n"
-  out_str += f"{GREEN}4{NORMAL}) Main Menu\r\n"
+  out_str += f"{GREEN}Q{NORMAL}) Main Menu\r\n"
   out_str += "Enter choice : "
 
   d.write(out_str)

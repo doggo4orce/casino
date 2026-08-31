@@ -22,7 +22,7 @@ def handle_input(d, input, server, mud, db):
     case olc_data.olc_mode.OLC_MODE_REDIT:
       redit.redit_parse(d, input, server, mud, db)
     case olc_data.olc_mode.OLC_MODE_TEDIT:
-      tedit.tedit_parse(d, input, server, mud, db)
+      tedit.tedit_parse(d, input, db)
 
 def olc_writing_follow_up(d):
   if d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:

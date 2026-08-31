@@ -42,6 +42,7 @@ def redit_display_main_menu(d):
   d.write(f"{GREEN}Q{NORMAL}) Quit\r\n")
   d.write(f"\r\nEnter your choice : ")
 
+# do these functions really need the server object?
 def redit_parse(d, input, server, mud, db):
   if d.olc.state == redit_state.REDIT_MAIN_MENU:
     redit_parse_main_menu(d, input, server, mud) 

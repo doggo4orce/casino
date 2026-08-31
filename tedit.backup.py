@@ -6,13 +6,13 @@ from color import *
 import db_column
 import db_handler
 import descriptor_data
-import string_handling
 
 class tedit_state(enum.IntEnum):
   TEDIT_MAIN_MENU = 1
   TEDIT_EDIT_NAME = 2
   TEDIT_EDIT_SCHEMA = 3
   TEDIT_EDIT_COLUMN = 4
+  TEDIT_EDIT_COLUMN_NAME = 5
 
 def tedit_display_main_menu(d):
   tedit_save = d.olc.save_data
@@ -26,18 +26,21 @@ def tedit_display_main_menu(d):
   out_str += "Enter choice : "
   d.write(out_str)
 
-
-# do these functions really need the server object?
+# TODO: do these functions really need the server object?
 def tedit_parse(d, input, db):
   match d.olc.state:
     case tedit_state.TEDIT_MAIN_MENU:
-      tedit_parse_main_menu(d, input, db)
+      tedit_parse_main_menu(d, input)
     case tedit_state.TEDIT_EDIT_NAME:
       tedit_parse_edit_name(d, input)
     case tedit_state.TEDIT_EDIT_SCHEMA:
       tedit_parse_edit_schema(d, input)
+    case tedit_state.TEDIT_EDIT_COLUMN:
+      tedit_parse_edit_column(d, input)
+    case tedit_state.TEDIT_EDIT_COLUMN_NAME:
+      tedit_parse_edit_column_name(d, input)
 
-def tedit_parse_main_menu(d, input, db):
+def tedit_parse_main_menu(d, input):
   if input == "":
     d.write("Enter choice : ")
     return
@@ -58,7 +61,6 @@ def tedit_parse_main_menu(d, input, db):
     case 'X':
       d.write("Not available yet.\r\nEnter choice : ")
     case 'Q':
-      # here is where the saving will take place
       d.olc = None
       d.state = descriptor_data.descriptor_state.CHATTING
 
@@ -68,33 +70,9 @@ def tedit_parse_edit_name(d, input):
     d.olc.state = tedit_state.TEDIT_MAIN_MENU
     tedit_display_main_menu(d)
 
-def tedit_parse_edit_schema(d, input):
-  if input == "":
-    d.olc.state = tedit_state.TEDIT_MAIN_MENU
-    tedit_display_main_menu(d)
-    return
-
-  response = input[0]
-
-  match response:
-    case '1':
-      d.olc.save_data.column = db_column.db_column(None, int, False)
-      d.olc.save_data.create_column = True
-      d.olc.state = tedit_state.TEDIT_EDIT_COLUMN
-      tedit_display_column_menu(d)
-    case '2':
-      d.olc.state = tedit_state.TEDIT_MAIN_MENU
-      tedit_display_main_menu(d)
-    case '3':
-      d.olc.state = tedit_state.TEDIT_MAIN_MENU
-      tedit_display_main_menu(d)
-    case '4':
-      d.olc.state = tedit_state.TEDIT_MAIN_MENU
-      tedit_display_main_menu(d)
-
 def tedit_display_schema_menu(d):
   tedit_save = d.olc.save_data
-  name_width = 1
+  name_width = -1
   
   for col in tedit_save.columns:
     name_width = max(name_width, len(col.name))
@@ -108,25 +86,62 @@ def tedit_display_schema_menu(d):
 
   out_str += f"\r\n{GREEN}1{NORMAL}) Add Column\r\n"
   out_str += f"{GREEN}2{NORMAL}) Drop Column\r\n"
-  out_str += f"{GREEN}3{NORMAL}) Rename Column\r\n"
+  out_str += f"{GREEN}3{NORMAL}) Edit Column\r\n"
   out_str += f"{GREEN}4{NORMAL}) Main Menu\r\n"
   out_str += "Enter choice : "
-
   d.write(out_str)
 
-def tedit_display_column_menu(d):
-  col = d.olc.save_data.column
+def tedit_display_edit_column_menu(d):
+  new_column = d.olc.save_data.new_column
 
-  out_str = f"{GREEN}1{NORMAL}) Name    : "
-
-  if col.name == None:
-    out_str += f"{YELLOW}<NONE>"
+  out_str = f"{GREEN}1{NORMAL}) Name    : {CYAN}"
+  if new_column.name == None:
+    out_str += f"(none)"
   else:
-    out_str += f"{CYAN}{col.name}"
-
-  out_str += f"{NORMAL}\r\n"
-  out_str += f"{GREEN}2{NORMAL}) Type    : {CYAN}{col.sqlite3_type}{NORMAL}\r\n"
-  out_str += f"{GREEN}3{NORMAL}) Primary : {CYAN}{string_handling.yesno(col.is_primary)}{NORMAL}\r\n"
-  out_str += "Enter choice : "
-
+    out_str += f"{new_column.name}"
+  out_str += f"{NORMAL}\r\n{GREEN}2{NORMAL}) Type    : {CYAN}{new_column.sqlite3_type}{NORMAL}\r\n"
+  out_str += f"\r\n{GREEN}3{NORMAL}) Primary : {CYAN}{string_handling.yesno(new_column.is_primary)}{NORMAL}\r\n"
   d.write(out_str)
+
+def tedit_parse_edit_schema(d, input):
+  if input == "":
+    d.write("Enter choice : ")
+    return
+
+  response = input[0]
+
+  match response:
+    case '1':
+      d.olc.save_data.new_column = db_column(None, int, False)
+      d.olc.state = tedit_state.TEDIT_EDIT_COLUMN
+      tedit_display_new_column_menu(d)
+    case '2':
+      d.olc.state = tedit_state.TEDIT_MAIN_MENU
+      tedit_display_main_menu(d)
+    case '3':
+      d.olc.state = tedit_state.TEDIT_MAIN_MENU
+      tedit_display_main_menu(d)
+    case '4':
+      d.olc.state = tedit_state.TEDIT_MAIN_MENU
+      tedit_display_main_menu(d)
+
+def tedit_parse_edit_column(d, input):
+  pass
+
+def tedit_parse_column_name(d, input):
+  if input == "":
+    d.olc.state = tedit_state.TEDIT_MAIN_MENU
+    tedit_display_main_menu(d)
+    return
+
+  if not string_handling.valid_column_name(input):
+    d.write("Column names may only contain alpha-numeric characters and underscores.\r\n")
+    tedit_display_main_menu(d)
+    return
+
+  tedit_save = d.olc.save_data
+  tedit_save.column_name = input
+  tedit_display_schema_type_menu(d)
+  d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA_TYPE
+
+

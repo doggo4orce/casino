@@ -1,5 +1,5 @@
-PORT=1234
-PYTHON=python3
+PORT=8052
+PYTHON=python3.12
 PAUSE=60
 
 cyan="$(tput setaf 6)"
@@ -18,7 +18,7 @@ while true; do
   if [ -r .pausescript ]; then
   	echo "${cyan}Reboot requested.  Waiting a full minute before rebooting.$nrm"
     rm .pausescript
-    sleep $(($PAUSE - 5))
+    sleep $(($PAUSE))
     continue
   fi
 

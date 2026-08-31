@@ -306,7 +306,7 @@ class game_data:
     room.desc.text = "You are in this room because the database did not load correctly.\r\n\r\n"
 
     for error in error_messages:
-      room.desc.text += f"*  {error}\r\n"
+      room.desc.text += f"{RED}*{NORMAL}  {error}\r\n"
 
     room.desc.text += "\r\nUse the database tools to resolve these issues, then reboot the MUD."    
 

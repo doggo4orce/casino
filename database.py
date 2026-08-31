@@ -13,6 +13,18 @@ import text_data
 import zone_data
 
 class database:
+  
+  ALIAS_TABLE        = "alias_table"
+  EXIT_TABLE         = "ex_table"
+  PREF_NUMERIC_TABLE = "pref_table_numeric"
+  PREF_TEXT_TABLE    = "pref_table_text"
+  PREF_FLAG_TABLE    = "pref_table_flags"
+  NPC_PROTO_TABLE    = "npc_proto_table"
+  OBJ_PROTO_TABLE    = "obj_proto_table"
+  WORLD_TABLE        = "wld_table"
+  PLAYER_TABLE       = "p_table"
+  ZONE_TABLE         = "z_table"
+
   def __init__(self, db_file=None):
     self._db_file = db_file
     self._handler = db_handler.db_handler()
@@ -376,7 +388,7 @@ class database:
       self.delete_player(pc.player_id)
 
     p_table = self.table_by_name(database.PLAYER_TABLE)
-    p_table.insert(id=pc.player_id, name=pc.name, password=pc.password)
+    p_table.insert(id=pc.player_id, name=pc.name, title=pc.title, password=pc.password)
 
   def has_player(self, id):
     return self.table_by_name(database.PLAYER_TABLE).get_by_pk(id=id) is not None
@@ -529,6 +541,12 @@ class database:
         ("name", str, False),
         ("desc", str, False)
       },
+      database.PLAYER_TABLE: {
+        ("id", int, True),
+        ("name", str, False),
+        ("password", str, False),
+        ("title", str, False)
+      },
       database.ZONE_TABLE: {
         ("id", str, True),
         ("name", str, False),
@@ -643,7 +661,8 @@ class database:
     p_table.create(
       ("id", int, True),
       ("name", str, False),
-      ("password", str, False)
+      ("password", str, False),
+      ("title", str, False)
     )
 
     z_table.create(
@@ -931,14 +950,3 @@ capitalize a word.</p>""")
           mudlog.warning(f"suppressing alias {alias['alias']} for obj proto {alias['id']}@{alias['zone_id']} which does not exist")
           continue
         obj.add_alias(alias['alias'])
-
-  ALIAS_TABLE        = "alias_table"
-  EXIT_TABLE         = "ex_table"
-  PREF_NUMERIC_TABLE = "pref_table_numeric"
-  PREF_TEXT_TABLE    = "pref_table_text"
-  PREF_FLAG_TABLE    = "pref_table_flags"
-  NPC_PROTO_TABLE    = "npc_proto_table"
-  OBJ_PROTO_TABLE    = "obj_proto_table"
-  WORLD_TABLE        = "wld_table"
-  PLAYER_TABLE       = "p_table"
-  ZONE_TABLE         = "z_table"

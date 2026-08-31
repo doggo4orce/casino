@@ -47,7 +47,10 @@ mudlog.info(f"Running game on port {cl_dict['port']}.")
 network.boot("0.0.0.0", cl_dict['port'])
 
 # loading commands
-command_interpreter.load_commands(mud.mini_mode)
+if mud.mini_mode:
+  command_interpreter.mini_load_commands()
+else:
+  command_interpreter.load_commands()
 
 if cl_dict['c'] != None:
   network.copyover_recover(mud, cl_dict['c'], db)

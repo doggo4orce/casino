@@ -190,7 +190,7 @@ class command_interpreter_data:
     self.enable("score", commands.do_score, None)
     self.enable("shutdown", commands.do_shutdown, None)
 
-    #self.enable("tedit", olc.do_tedit, None)
+    self.enable("tedit", olc.do_tedit, None)
     self.enable("title", commands.do_title, None)
     self.enable("tlist", olc.do_tlist, None)
 

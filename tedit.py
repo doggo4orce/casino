@@ -16,6 +16,9 @@ class tedit_state(enum.IntEnum):
   TEDIT_EDIT_COLUMN_NAME = 5
   TEDIT_EDIT_COLUMN_TYPE = 6
   TEDIT_CONFIRM_SAVE_COLUMN = 7
+  TEDIT_RENAME_COLUMN_SELECT = 8
+  TEDIT_RENAME_COLUMN_GET_NAME = 9
+  TEDIT_DROP_COLUMN = 10
 
 def tedit_display_main_menu(d):
   tedit_save = d.olc.save_data
@@ -47,6 +50,12 @@ def tedit_parse(d, input, db):
       tedit_parse_edit_column_type(d, input)
     case tedit_state.TEDIT_CONFIRM_SAVE_COLUMN:
       tedit_parse_confirm_save_column(d, input)
+    case tedit_state.TEDIT_RENAME_COLUMN_SELECT:
+      tedit_parse_rename_column_select(d, input)
+    case tedit_state.TEDIT_RENAME_COLUMN_GET_NAME:
+      tedit_parse_rename_column_get_name(d, input)
+    case tedit_state.TEDIT_DROP_COLUMN:
+      tedit_parse_drop_column(d, input)
 
 def tedit_parse_main_menu(d, input, db):
   if input == "":
@@ -85,7 +94,7 @@ def tedit_parse_edit_schema(d, input):
     tedit_display_main_menu(d)
     return
 
-  response = input[0]
+  response = input[0].upper()
 
   match response:
     case '1':
@@ -94,15 +103,91 @@ def tedit_parse_edit_schema(d, input):
       d.olc.state = tedit_state.TEDIT_EDIT_COLUMN
       tedit_display_column_menu(d)
     case '2':
-      d.olc.state = tedit_state.TEDIT_MAIN_MENU
-      tedit_display_main_menu(d)
+      column_list = d.olc.save_data.columns
+
+      if len(column_list) == 0:
+        d.write("There are no columns to drop!\r\n")
+        d.write("Enter choice : ")
+        return
+
+      d.olc.state = tedit_state.TEDIT_DROP_COLUMN
+      d.write("Select column to drop : ")
     case '3':
-      d.olc.state = tedit_state.TEDIT_MAIN_MENU
-      tedit_display_main_menu(d)
+      column_list = d.olc.save_data.columns
+
+      if len(column_list) == 0:
+        d.write("There are no columns to rename!\r\n")
+        d.write("Enter choice : ")
+        return
+
+      d.olc.state = tedit_state.TEDIT_RENAME_COLUMN_SELECT
+      d.write("Select column to rename : ")
     case 'Q':
       d.olc.state = tedit_state.TEDIT_MAIN_MENU
       tedit_display_main_menu(d)
 
+def tedit_parse_rename_column_select(d, input):
+  if input == "":
+    d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+    tedit_display_schema_menu(d)
+    return
+
+  column_list = d.olc.save_data.columns
+
+  if input not in [ col.name for col in column_list ]:
+    d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+    d.write("Column not found.\r\n")
+    tedit_display_schema_menu(d)
+    return
+
+  d.olc.save_data.old_name = input
+  d.olc.state = tedit_state.TEDIT_RENAME_COLUMN_GET_NAME
+  d.write("Enter new name : ")
+
+def tedit_parse_rename_column_get_name(d, input):
+  if input == "":
+    d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+    tedit_display_schema_menu(d)
+    return
+
+  if not db_column.valid_column_name(input):
+    d.write("Column names may only contain letters and underscores.\r\n")
+    d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+    tedit_display_schema_menu(d)
+    return
+
+  column_list = d.olc.save_data.columns
+
+  for col in column_list:
+    if col.name == d.olc.save_data.old_name:
+      col.name = input
+      break
+
+  d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+  tedit_display_schema_menu(d)
+
+def tedit_parse_drop_column(d, input):
+  if input == "":
+    d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+    tedit_display_schema_menu(d)
+    return
+
+  column_list = d.olc.save_data.columns
+
+  if input not in [ col.name for col in column_list ]:
+    d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+    d.write("Column not found.\r\n")
+    tedit_display_schema_menu(d)
+    return
+
+  for col in column_list:
+    if col.name == input:
+      column_list.remove(col)
+      break
+
+  d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
+  tedit_display_schema_menu(d)
+  
 def tedit_parse_edit_column(d, input):
   if input == "":
     d.write("Enter choice : ")
@@ -220,7 +305,11 @@ def tedit_display_schema_menu(d):
   for col in tedit_save.columns:
     name_width = max(name_width, len(col.name))
 
-  out_str = f"-- Table Schema : [{CYAN}{tedit_save.original_name}{NORMAL}]\r\n\r\n"
+  out_str = f"-- Table Schema : [{CYAN}{tedit_save.original_name}{NORMAL}]\r\n"
+
+  if len(tedit_save.columns) > 0:
+    out_str += "\r\n"
+
   for col in tedit_save.columns:
     out_str += f"{col.name:<{name_width}} {col.sqlite3_type:<5}"
     if col.is_primary:

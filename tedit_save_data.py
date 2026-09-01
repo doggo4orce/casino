@@ -3,12 +3,14 @@ from color import *
 class tedit_save_data:
   """original_name <- the name of the table before any edits
      name          <- new name, if name has been changed
+     old_name      <- old name if we are changing the name of a column
      column        <- temporary storage for editing column
      columns       <- list of columns in the table
      create_column <- check if column is edited or new"""
   def __init__(self):
     self.original_name = None
     self.name = None
+    self.old_name = None
     self.column = None
     self.columns = list()
     self.create_column = False

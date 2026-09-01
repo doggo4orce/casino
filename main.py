@@ -74,6 +74,6 @@ else:
   db.close()
 
   if network.copyover_cmd:
-    os.system(f"python3.12 main.py -c {config.COPYOVER_PATH} {cl_dict['port']}")
+    os.system(f"python3 main.py -c {config.COPYOVER_PATH} {cl_dict['port']}")
   else:
     mudlog.info("Done.")

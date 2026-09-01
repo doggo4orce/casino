@@ -203,9 +203,13 @@ def do_zedit(ch, scmd, argument, server, mud, db, nanny):
 def do_tlist(ch, scmd, argument, server, mud, db, nanny):
   out_str = "Name                   Columns Records\r\n"
   out_str += "---------------------- ------- -------\r\n"
-  for table in db.list_tables():
+
+  table_list = db.list_tables()
+
+  for table in table_list:
     out_str += f"[{GREEN}{table.name:<20}{NORMAL}] {table.num_columns():>7} {table.num_records():>7}\r\n"
 
+  out_str += f"\r\nThere are a total of {len(table_list)} tables loaded into memory.\r\n"
   ch.write(out_str)
 
 def do_mlist(ch, scmd, argument, server, mud, db, nanny):

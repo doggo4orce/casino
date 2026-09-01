@@ -19,6 +19,7 @@ class tedit_state(enum.IntEnum):
   TEDIT_RENAME_COLUMN_SELECT = 8
   TEDIT_RENAME_COLUMN_GET_NAME = 9
   TEDIT_DROP_COLUMN = 10
+  TEDIT_CONFIRM_SAVE = 11
 
 def tedit_display_main_menu(d):
   tedit_save = d.olc.save_data
@@ -56,6 +57,8 @@ def tedit_parse(d, input, db):
       tedit_parse_rename_column_get_name(d, input)
     case tedit_state.TEDIT_DROP_COLUMN:
       tedit_parse_drop_column(d, input)
+    case tedit_state.TEDIT_CONFIRM_SAVE:
+      tedit_parse_confirm_save_table(d, input)
 
 def tedit_parse_main_menu(d, input, db):
   if input == "":
@@ -78,9 +81,14 @@ def tedit_parse_main_menu(d, input, db):
     case 'X':
       d.write("Not available yet.\r\nEnter choice : ")
     case 'Q':
-      # here is where the saving will take place
-      d.olc = None
-      d.state = descriptor_data.descriptor_state.CHATTING
+      # check if there is nothing to save
+      if not d.olc.changes:
+        d.olc = None
+        d.state = descriptor_data.descriptor_state.CHATTING
+        return
+
+      d.olc.state = tedit_state.TEDIT_CONFIRM_SAVE
+      d.write("Save changes? : ")
 
 def tedit_parse_edit_name(d, input):
   if db_handler.valid_table_name(input):
@@ -156,10 +164,12 @@ def tedit_parse_rename_column_get_name(d, input):
     tedit_display_schema_menu(d)
     return
 
-  column_list = d.olc.save_data.columns
+  tedit_save = d.olc.save_data
+  column_list = tedit_save.columns
 
   for col in column_list:
-    if col.name == d.olc.save_data.old_name:
+    if col.name == tedit_save.old_name:
+      tedit_save.renamed_columns[col.name] = input
       col.name = input
       break
 
@@ -222,6 +232,30 @@ def tedit_parse_edit_column(d, input):
       d.olc.state = tedit_state.TEDIT_CONFIRM_SAVE_COLUMN
       d.write("Save changes -- are you sure? : ")
 
+def tedit_parse_confirm_save_table(d, input):
+  if input == "":
+    d.write("Enter yes or no (Y/N) : ")
+    return
+
+  response = input[0].upper()
+
+  tedit_save = d.olc.save_data
+
+  match response:
+    case 'Y':
+      # save changes to the table
+      d.write("Table saved to database.\r\n")
+      pass
+    case 'N':
+      d.olc = None
+      
+    case _:
+      d.write("Enter yes or no (Y/N) : ")
+      return
+
+  d.state = descriptor_data.descriptor_state.CHATTING
+  return
+
 def tedit_parse_confirm_save_column(d, input):
   if input == "":
     d.write("Enter yes or no (Y/N) : ")
@@ -239,7 +273,7 @@ def tedit_parse_confirm_save_column(d, input):
       # TODO: otherwise update the version in the table
     case 'N':
       pass
-    case '_':
+    case _:
       d.write("Enter yes or no (Y/N) : ")
       return
 

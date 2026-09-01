@@ -70,6 +70,7 @@ class game_data:
      load_npc(zone_id, id)           <- instantiate npc from prototype
      load_obj(zone_id, id)           <- instantiate obj from prototype
      pc_by_id(id)                    <- look up pc in game with id
+     pc_by_name(name)                <- look up pc in game with name
      lose_link(ch)                   <- disconnects player from their d (seen by players)
      reconnect(d, ch)                <- reconnects player to their d (seen by players)
      heartbeat()                     <- calls the event handlers heart_beat() function
@@ -361,6 +362,12 @@ class game_data:
         return ch
     return None
 
+  def pc_by_name(self, name):
+    for ch in self._characters:
+      if isinstance(ch, pc_data.pc_data) and ch.name == name:
+        return ch
+    return None
+    
   def lose_link(self, ch):
     self.room_by_uid(ch.room).echo(f"{ch} has lost his link.\r\n")
     ch.descriptor = None

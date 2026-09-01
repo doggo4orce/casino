@@ -13,6 +13,7 @@ class tedit_save_data:
     self.old_name = None
     self.column = None
     self.columns = list()
+    self.renamed_columns = dict()
     self.create_column = False
 
   def debug(self):

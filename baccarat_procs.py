@@ -60,7 +60,7 @@ def baccarat_dealer_intro(mud, me, ch, command, argument, db):
     logging.warning(f"Attempting to call inappropriate spec proc 'baccarat_dealer_intro' on npc {me}.")
     return
   if command == "say" and argument.lower() == "hi":
-    commands.do_say(me, None, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, mud, db)
+    commands.do_say(me, None, "Hey, wanna play some Baccarat?  Type 'baccarat' for more information.", None, mud, db, None)
     return
 
 def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
@@ -96,10 +96,10 @@ def baccarat_dealer_syntax_parser(mud, me, ch, command, argument, db):
   elif command == "baccarat":
     if argument.lower() == "playing":
       if len(me.players) == 0:
-        commands.do_say(me, None, f"Right now, we have nobody playing!", None, mud, db)
+        commands.do_say(me, None, f"Right now, we have nobody playing!", None, mud, db, None)
       else:
         names = [name.capitalize() for name in me.players]
-        commands.do_say(me, None, f"Right now, we have {string_handling.oxford_comma(names)} playing.", None, mud, db)
+        commands.do_say(me, None, f"Right now, we have {string_handling.oxford_comma(names)} playing.", None, mud, db, None)
     elif argument.lower() == "stop":
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.IDLE
     elif argument.lower() in ["start", "simulate"]:
@@ -176,7 +176,7 @@ def baccarat_dealing(mud, me, db):
     me.bac_state = baccarat_dealer_data.baccarat_dealer_state.LAST_CALL_BETS
     pause = 30
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.LAST_CALL_BETS:
-    commands.do_say(me, None, f"Last call, any more bets?", None, mud, db)
+    commands.do_say(me, None, f"Last call, any more bets?", None, mud, db, None)
     me.bac_state = baccarat_dealer_data.baccarat_dealer_state.NO_MORE_BETS
     pause = 120
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.NO_MORE_BETS:
@@ -185,7 +185,7 @@ def baccarat_dealing(mud, me, db):
     pause = 30
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.PLAYER_FIRST:
     if me.shoe_length() < 6:
-      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud, db)
+      commands.do_say(me, None, "Ladies and gentlemen, that was our final hand.  Thanks for playing!", None, mud, db, None)
       mud.echo_around(me, None, "Player wins: {}{}{} (including pandas)\r\nBanker wins: {}{}{}\r\nTies: {}{}{}\r\nPandas: {}{}{}\r\nDragons: {}{}{}\r\n".format(
         BLUE, me.count_reports(baccarat_history_data.history_entry.PLAYER_WIN) + me.count_reports(baccarat_history_data.history_entry.PANDA), NORMAL,
         RED, me.count_reports(baccarat_history_data.history_entry.BANKER_WIN), NORMAL,
@@ -228,16 +228,16 @@ def baccarat_dealing(mud, me, db):
     pause = 10
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.SHOW_INITIAL:
     #mud.echo_around(me, None, me.hand.display() + "\n\n")
-    commands.do_say(me, None, f"Player shows {me.player_score()}. Banker shows {me.banker_score()}.", None, mud, db)
+    commands.do_say(me, None, f"Player shows {me.player_score()}. Banker shows {me.banker_score()}.", None, mud, db, None)
     me.bac_state = baccarat_dealer_data.baccarat_dealer_state.CHECK_NATURAL
     pause = 60
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.CHECK_NATURAL:
     if me.player_natural():
-      commands.do_say(me, None, f"Player shows natural {me.player_score()}.  No more draws.", None, mud, db)
+      commands.do_say(me, None, f"Player shows natural {me.player_score()}.  No more draws.", None, mud, db, None)
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.REPORT_WINNER
       pause = 30
     elif me.banker_natural():
-      commands.do_say(me, None, f"Banker shows natural {me.banker_score()}.  No more draws.", None, mud, db)
+      commands.do_say(me, None, f"Banker shows natural {me.banker_score()}.  No more draws.", None, mud, db, None)
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.REPORT_WINNER
       pause = 30
     else:
@@ -245,10 +245,10 @@ def baccarat_dealing(mud, me, db):
       pause = 30
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.CHECK_PLAYER:
     if me.player_third():
-      commands.do_say(me, None, "Card for player.", None, mud, db)
+      commands.do_say(me, None, "Card for player.", None, mud, db, None)
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.DEAL_PLAYER_THIRD
     else:
-      commands.do_say(me, None, "Player stands.", None, mud, db)
+      commands.do_say(me, None, "Player stands.", None, mud, db, None)
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.CHECK_BANKER
     pause = 10
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.DEAL_PLAYER_THIRD:
@@ -264,11 +264,11 @@ def baccarat_dealing(mud, me, db):
     pause = 60
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.CHECK_BANKER:
     if me.banker_third():
-      commands.do_say(me, None, "Card for banker.", None, mud, db)
+      commands.do_say(me, None, "Card for banker.", None, mud, db, None)
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.DEAL_BANKER_THIRD
       pause = 10
     else:
-      commands.do_say(me, None, "Banker stands.", None, mud, db)
+      commands.do_say(me, None, "Banker stands.", None, mud, db, None)
       me.bac_state = baccarat_dealer_data.baccarat_dealer_state.REPORT_WINNER
       pause = 30
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.DEAL_BANKER_THIRD:
@@ -284,19 +284,19 @@ def baccarat_dealing(mud, me, db):
     pause = 60
   elif me.bac_state == baccarat_dealer_data.baccarat_dealer_state.REPORT_WINNER:
     if me.panda():
-      commands.do_say(me, None, panda_string, None, mud, db)
+      commands.do_say(me, None, panda_string, None, mud, db, None)
       me.report_history(baccarat_history_data.history_entry.PANDA)
     elif me.dragon():
-      commands.do_say(me, None, dragon_string, None, mud, db)
+      commands.do_say(me, None, dragon_string, None, mud, db, None)
       me.report_history(baccarat_history_data.history_entry.DRAGON)
     elif me.player_score() > me.banker_score():
-      commands.do_say(me, None, f"Player wins {me.player_score()} over {me.banker_score()}.", None, mud, db)
+      commands.do_say(me, None, f"Player wins {me.player_score()} over {me.banker_score()}.", None, mud, db, None)
       me.report_history(baccarat_history_data.history_entry.PLAYER_WIN)
     elif me.player_score() < me.banker_score():
-      commands.do_say(me, None, f"Banker wins {me.banker_score()} over {me.player_score()}.", None, mud, db)
+      commands.do_say(me, None, f"Banker wins {me.banker_score()} over {me.player_score()}.", None, mud, db, None)
       me.report_history(baccarat_history_data.history_entry.BANKER_WIN)
     else:
-      commands.do_say(me, None, f"Player and banker tie!", None, mud, db)
+      commands.do_say(me, None, f"Player and banker tie!", None, mud, db, None)
       me.report_history(baccarat_history_data.history_entry.TIE)
     # Check Michael's Side Bets
     if me.three_card_9_8():

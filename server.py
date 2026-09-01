@@ -206,7 +206,7 @@ class server:
       # if they were already logged in, their char is linkless
       if d.character:
         mud.lose_link(d.character)
-      # if they were writing, it's gone
+      # if they were writing, it's gone (is this necessary?)
       if d.writing:
         d.write_buffer = None
       self.remove_descriptor_by_id(id)

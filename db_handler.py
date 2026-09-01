@@ -22,10 +22,12 @@ class db_handler:
      commit()                               <- not necessary (due to auto-commit)
      create_table(name, *columns)           <- create new table with given columns
      drop_table(name)                       <- delete table
+     rename_table(table, name)              <- rename a table
      create_backup(file)                    <- dump all contents into new database file
      drop_all_tables()                      <- back anything up you might be attached to!
      add_column(table, name, type)          <- add new column to table
      drop_column(table, name)               <- delete column from table
+     rename_column(table, old, new)         <- rename column in a table
      has_column(table, name, type, primary) <- check if table has column (type and primary optional)
      column_type(table, name)               <- check data type of column in field
      list_columns(table)                    <- show actual columns in a table
@@ -66,7 +68,14 @@ class db_handler:
   def commit(self):
     self._connection.commit()
 
+  # TODO, re-write this so the db_table function calls THIS one, and just check for composite-key during creation manually,
+  # no need to call the property has_composite_key, that just forces the need for the ugly pending columns which are confusing
   def create_table(self, table_name, *columns):
+    table = db_table.db_table(self, table_name)
+
+    table.create(*columns)
+
+  def create_table2(self, table_name, *columns):
     has_primary = False
     has_composite_primary = False
 
@@ -107,19 +116,36 @@ class db_handler:
     column_string = column_string[:-1]
 
     sql = f"CREATE TABLE {table_name}({column_string})"
+    print(sql)
     self.execute(sql)
 
   def drop_table(self, table_name):
     sql = f"DROP TABLE {table_name}"
     self.execute(sql)
 
+  def rename_table(self, old, new):
+    if not valid_table_name(new):
+      mudlog.error(f"Passing invalid new='{new}' to handler.rename_table function.")
+      return
+
+    query = f"ALTER TABLE '" + old + "' RENAME TO '" + new + "';"
+    self.execute(query)
+
   def add_column(self, table, name, type):
     column = db_column.db_column(name, type)
-    sql = f"ALTER TABLE {table} ADD {column.name} {column.sqlite3_type}"
+    sql = f"ALTER TABLE {table} ADD {column.name} {column.sqlite3_type};"
     self.execute(sql)
 
   def drop_column(self, table, name):
     sql = f"ALTER TABLE {table} DROP COLUMN {name}"
+    self.execute(sql)
+
+  def rename_column(self, table, old, new):
+    if not db_column.valid_column_name(new):
+      mudlog.error(f"Trying to rename column '{old}' in table '{self.name}' to invalid name '{new}'.")
+      return
+
+    sql = f"ALTER TABLE {table} RENAME COLUMN {old} TO {new};"
     self.execute(sql)
 
   def has_column(self, table, name, type=None, primary=None):

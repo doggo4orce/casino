@@ -5,6 +5,7 @@ import enum
 from color import *
 import db_column
 import db_handler
+import db_table
 import descriptor_data
 import string_handling
 
@@ -58,7 +59,7 @@ def tedit_parse(d, input, db):
     case tedit_state.TEDIT_DROP_COLUMN:
       tedit_parse_drop_column(d, input)
     case tedit_state.TEDIT_CONFIRM_SAVE:
-      tedit_parse_confirm_save_table(d, input)
+      tedit_parse_confirm_save_table(d, input, db)
 
 def tedit_parse_main_menu(d, input, db):
   if input == "":
@@ -230,9 +231,9 @@ def tedit_parse_edit_column(d, input):
         return
 
       d.olc.state = tedit_state.TEDIT_CONFIRM_SAVE_COLUMN
-      d.write("Save changes -- are you sure? : ")
+      d.write("Save column, are you sure? : ")
 
-def tedit_parse_confirm_save_table(d, input):
+def tedit_parse_confirm_save_table(d, input, db):
   if input == "":
     d.write("Enter yes or no (Y/N) : ")
     return
@@ -242,13 +243,46 @@ def tedit_parse_confirm_save_table(d, input):
   tedit_save = d.olc.save_data
 
   match response:
-    case 'Y':
-      # save changes to the table
+    case 'Y':  # we save changes
+      tedit_save = d.olc.save_data
+
+      # if table doesn't exist, then create it
+      if not db.has_table(tedit_save.name):
+        db.create_table(tedit_save.name, tedit_save.columns)
+        d.olc = None
+        d.state = descriptor_data.descriptor_state.CHATTING
+        d.write("Table saved to database.\r\n")
+        return
+
+      # otherwise we're editing an existing table
+      table = db.table_by_name(tedit_save.original_name)
+
+      # if name has changed, update it
+      if tedit_save.original_name != tedit_save.name:
+        table.rename(tedit_save.name)
+
+      # drop/rename any columns that have been dropped/renamed
+      for name in [col.name for col in table.list_columns()]:
+        if name not in [kol.name for kol in tedit_save.columns]:
+          if name not in tedit_save.renamed_columns.keys():
+            table.drop_column(name)
+          else:
+            table.rename_column(name, tedit_save.renamed_columns[name])
+
+      # add any new columns
+      for col in tedit_save.columns:
+        if col.name not in [kol.name for kol in table.list_columns()]:
+          table.add_column(col.name, col.type) # ignoring col.is_primary for now
+
+      d.olc = None
+      d.state = descriptor_data.descriptor_state.CHATTING
       d.write("Table saved to database.\r\n")
-      pass
+
     case 'N':
       d.olc = None
-      
+      d.state = descriptor_data.descriptor_state.CHATTING
+      d.write("Changes discarded.\r\n")
+
     case _:
       d.write("Enter yes or no (Y/N) : ")
       return
@@ -270,6 +304,7 @@ def tedit_parse_confirm_save_column(d, input):
       # add the column to the table if it's new
       if tedit_save.create_column:
         tedit_save.columns.append(tedit_save.column)
+
       # TODO: otherwise update the version in the table
     case 'N':
       pass
@@ -373,7 +408,7 @@ def tedit_display_column_menu(d):
   out_str += f"{GREEN}2{NORMAL}) Type    : {CYAN}{col.sqlite3_type}{NORMAL}\r\n"
   out_str += f"{GREEN}3{NORMAL}) Primary : {CYAN}{string_handling.yesno(col.is_primary)}{NORMAL}\r\n"
   out_str += f"{GREEN}X{NORMAL}) Abort\r\n"
-  out_str += f"{GREEN}Q{NORMAL}) Save Changes\r\n"
+  out_str += f"{GREEN}Q{NORMAL}) Save Column\r\n"
   out_str += "Enter choice : "
 
   d.write(out_str)

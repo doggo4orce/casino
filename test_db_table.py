@@ -161,6 +161,52 @@ class TestDBTable(unittest.TestCase):
     # close handler object for good measure
     handler.close()
 
+  def test_rename(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should have zero tables at first
+    self.assertEqual(handler.num_tables(), 0)
+
+    table = db_table.db_table(handler, "players")
+    table.create(
+      ("name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    # make sure the tables exists
+    self.assertTrue(table.exists())
+
+    table.insert(name='roobiki', age=41, drink="beer", food='nachos', job='comedian')
+    table.insert(name='deglo', age=33, drink="coffee", food="nachos")
+    table.insert(name='bob',age=21, drink="coffee", food="nachos", job="janitor")
+
+    # change it's name
+    table.rename("wizards")
+
+    # make sure it exists with the correct new name
+    self.assertFalse(handler.table_exists("players"))
+    self.assertTrue(handler.table_exists("wizards"))
+
+    # and has the right columns
+    self.assertEqual(handler.list_column_names("wizards"), ["name", "age", "drink", "food", "job"])
+    self.assertEqual(handler.num_columns("wizards"), 5)
+
+    # with the correct records
+    self.assertEqual(table.num_records(), 3)
+
+    # should match with deglo and bob
+    rs = handler.search_table("wizards", drink="coffee", food="nachos")
+
+    # which means two matches
+    self.assertEqual(rs.num_results, 2)
+
+    # close handler object for good measure
+    handler.close()
+
   def test_primary_fields(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")

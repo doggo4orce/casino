@@ -51,6 +51,7 @@ def do_tedit(ch, scmd, argument, server, mud, db, nanny):
       ch.write("Table names may consist of numbers, letters, or underscores.\r\n")
       return
     else:
+      tedit_save.create_table = True
       tedit_save.name = args[0]
       tedit_save.original_name = args[0]
   else:

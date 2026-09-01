@@ -1,6 +1,7 @@
 from color import *
 
 import db_column
+import db_handler
 import mudlog
 import string_handling
 
@@ -39,6 +40,7 @@ class db_table:
   """create(*columns)                  <- create table with columns as arguments
      insert(**record)                  <- insert record into table
      delete(**clause)                  <- delete records from table satisfying clause
+     rename(new_name)                  <- change only name of table
      primary_fields()                  <- returns (possibly singleton) list
      search(**clause)                  <- look up records from table, return as result set
      get_by_pk(**primary)              <- look up single result primary key
@@ -48,6 +50,7 @@ class db_table:
      list_columns()                    <- ask handler to list columns of this table
      add_column(column, type)          <- adds new column to table
      drop_column(column)               <- drops a column from the table
+     rename_column(old_name, new_name) <- rename a column in the table
      has_column(name, type, primary)   <- check if column exists"""
 
   def create(self, *columns):
@@ -106,6 +109,14 @@ class db_table:
   def delete(self, **clause):
     self._handler.delete_records(self.name, **clause)
 
+  def rename(self, new_name):
+    if not db_handler.valid_table_name(new_name):
+      mudlog.error(f"Passing invalid new_name='{new_name}' to table.rename function.")
+      return
+
+    self._handler.rename_table(self.name, new_name)
+    self.name = new_name
+
   def primary_fields(self):
     if self._has_pending_columns():
       columns = self._pending_columns
@@ -150,11 +161,18 @@ class db_table:
   def num_columns(self):
     return self._handler.num_columns(self.name)
 
-  def add_column(self, field, type):
-    self._handler.add_column(column)
+  def add_column(self, name, type):
+    if not db_handler.valid_column_name(name):
+      mudlog.error(f"Attempting to add column to table {self.name} with invalid name '{name}'.")
+      return
+
+    self._handler.add_column(self.name, name, type)
 
   def drop_column(self, column):
     self._handler.drop_column(self.name, column)
+
+  def rename_column(self, old_name, new_name):
+    self._handler.rename_column(self.name, old_name, new_name)
 
   def has_column(self, column, type=None, primary=None):
     return self._handler.has_column(self.name, column, type, primary)

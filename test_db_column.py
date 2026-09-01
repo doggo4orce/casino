@@ -28,5 +28,13 @@ class TestDbColumn(unittest.TestCase):
 
     print(c)
 
+  def test_tuple(self):
+    c = db_column.db_column("drink", str, False)
+
+    t = c.tuple()
+    self.assertEqual(t[0], "drink")
+    self.assertEqual(t[1], str)
+    self.assertFalse(t[2])
+
 if __name__ == "__main__":
   unittest.main()

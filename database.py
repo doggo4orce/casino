@@ -34,6 +34,7 @@ class database:
      close()                             <- close connection
 
      has_table(table_name)               <- check whether table exists
+     create_table(name, columns)         <- create table with given columns
      table_by_name(table_name)           <- look up table by name
      table_exists(table_name)            <- check if table exists
      list_tables()                       <- list all tables loaded in db_file
@@ -128,6 +129,9 @@ class database:
 
   def has_table(self, table_name):
     return self.table_by_name(table_name) != None
+
+  def create_table(self, name, columns):
+    self._handler.create_table(name, *[col.tuple() for col in columns])
     
   def table_by_name(self, table_name):
     return self._handler.table_by_name(table_name)

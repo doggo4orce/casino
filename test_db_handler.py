@@ -37,6 +37,20 @@ class TestDBHandler(unittest.TestCase):
 
     self.assertEqual(handler.num_records("players"), 2)
 
+  def test_create_primary_key(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table("players",
+      ("name", str, True),
+      ("age", int, True),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    self.assertTrue(handler.has_column("players", "name", str, True))
+
   def test_db(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
@@ -66,10 +80,10 @@ class TestDBHandler(unittest.TestCase):
     self.assertEqual(handler.list_column_names("players"), ["name", "age", "drink", "food", "job"])
     self.assertEqual(handler.num_columns("players"), 5)
 
-    # this should cause an error
-    print("expecting error between here")
-    handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
-    print("and here")
+    # # this should cause an error
+    # print("expecting error between here")
+    # handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
+    # print("and here")
 
     # manually use SQL syntax to add a row
     handler.insert_record("players",

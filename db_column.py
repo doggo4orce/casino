@@ -31,6 +31,11 @@ class db_column:
     else:
       return None # throw exception?
 
+  # TODO : this was quick and dirty, make it so columns can accept
+  # subscripts like col[0], col[1], col[2] so this function isn't needed
+  def tuple(self):
+    return (self.name, self.type, self.is_primary)
+    
   def __str__(self):
     ret_val = f"('{self.name}', {self.sqlite3_type}"
     if self.is_primary:

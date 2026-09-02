@@ -139,13 +139,6 @@ class db_handler:
 
     self.execute(query)
     
-  # TODO, re-write this so the db_table function calls THIS one, and just check for composite-key during creation manually,
-  # no need to call the property has_composite_key, that just forces the need for the ugly pending columns which are confusing
-  # def create_table(self, table_name, *columns):
-  #   table = db_table.db_table(self, table_name)
-
-  #   table.create(*columns)
-
   def drop_table(self, table_name):
     sql = f"DROP TABLE {table_name}"
     self.execute(sql)

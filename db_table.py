@@ -9,11 +9,9 @@ class db_table:
   def __init__(self, handler, name):
     """Creates a database table object.
        name             = name of the table
-       _handler         = shared (live) db_handler object which tells us what we need to know
-       _pending_columns = used internally to detect composite key before creation"""
+       _handler         = shared (live) db_handler object which tells us what we need to know"""
     self._handler = handler
     self.name = name
-    self._pending_columns = None
 
   @property
   def has_primary_key(self):
@@ -25,12 +23,8 @@ class db_table:
   @property
   def has_composite_key(self):
     has_primary = False
-    if self._has_pending_columns():
-      columns = self._pending_columns
-    else:
-      columns = self.list_columns()
 
-    for column in columns:
+    for column in self.list_columns():
       if column.is_primary and has_primary:
         return True
       elif column.is_primary:
@@ -56,56 +50,6 @@ class db_table:
   def create(self, *columns):
     self._handler.create_table(self.name, *columns)
 
-  def create_old(self, *columns):
-    if self.exists():
-      mudlog.error(f"tried to create table {self.name} which already exists")
-      raise RuntimeError
-
-    table_columns = list()
-
-    if len(columns) == 0:
-      mudlog.error(f"tried to create table {self.name} with no columns")
-      raise RuntimeError
-
-    # we keep track of pending columns because has_composite_key will need to check
-    # them before creating the table.  this needs to be set to None immediately
-    # afte the table is created 
-    self._pending_columns = list()
-
-    # column is a tuple passed as argument to create()
-    for column in columns:
-      self._pending_columns.append(db_column.db_column(*column))
-
-    query = f"CREATE TABLE {self.name} ("
-
-    if self.has_composite_key:
-      primary_key_fields = []
-
-      # column is a db_column object
-      for column in self._pending_columns:
-        query += f"\r\n  {column.name} {column.sqlite3_type},"
-
-        if column.is_primary:
-          primary_key_fields.append(column.name)
-
-      query += f"\r\n  PRIMARY KEY ({', '.join(primary_key_fields)})"
-    
-    else:
-      for column in self._pending_columns:
-        query += f"\r\n  {column.name} {column.sqlite3_type}"
-
-        if column.is_primary:
-          query += " PRIMARY KEY"
-
-        query += ","
-
-      query = query[:-1]
-
-    query += "\r\n);"
-
-    self._pending_columns = None
-    self._handler.execute(query)
-
   def insert(self, **record):
     self._handler.insert_record(self.name, **record)
 
@@ -121,14 +65,10 @@ class db_table:
     self.name = new_name
 
   def primary_fields(self):
-    if self._has_pending_columns():
-      columns = self._pending_columns
-    else:
-      columns = self.list_columns()
 
     ret_val = list()
 
-    for column in columns:
+    for column in self.list_columns():
       if column.is_primary:
         ret_val.append(column.name)
 
@@ -179,9 +119,6 @@ class db_table:
 
   def has_column(self, column, type=None, primary=None):
     return self._handler.has_column(self.name, column, type, primary)
-
-  def _has_pending_columns(self):
-    return self._pending_columns is not None
 
   def debug(self):
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"

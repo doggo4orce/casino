@@ -11,6 +11,8 @@ import text_data
 import unittest
 import zone_data
 
+  # check this against database.schemas property
+  #
   # ALIAS_TABLE        = "alias_table"
   # EXIT_TABLE         = "ex_table"
   # PREF_NUMERIC_TABLE = "pref_table_numeric"
@@ -28,22 +30,27 @@ class TestDatabase(unittest.TestCase):
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
-    db._state = database.database_state.VERIFIED
 
-    # make sure all the game tables exist
-    self.assertTrue(db.table_exists(database.database.ALIAS_TABLE))
-    self.assertTrue(db.table_exists(database.database.EXIT_TABLE))
-    self.assertTrue(db.table_exists(database.database.PREF_NUMERIC_TABLE))
-    self.assertTrue(db.table_exists(database.database.PREF_TEXT_TABLE))
-    self.assertTrue(db.table_exists(database.database.PREF_FLAG_TABLE))
-    self.assertTrue(db.table_exists(database.database.NPC_PROTO_TABLE))
-    self.assertTrue(db.table_exists(database.database.OBJ_PROTO_TABLE))
-    self.assertTrue(db.table_exists(database.database.WORLD_TABLE))
-    self.assertTrue(db.table_exists(database.database.PLAYER_TABLE))
-    self.assertTrue(db.table_exists(database.database.ZONE_TABLE))
+    # these are the tables our schema defines
+    tables_in_schema = [
+      database.database.ALIAS_TABLE,
+      database.database.EXIT_TABLE,
+      database.database.PREF_NUMERIC_TABLE,
+      database.database.PREF_TEXT_TABLE,
+      database.database.PREF_FLAG_TABLE,
+      database.database.NPC_PROTO_TABLE,
+      database.database.OBJ_PROTO_TABLE,
+      database.database.WORLD_TABLE,
+      database.database.PLAYER_TABLE,
+      database.database.ZONE_TABLE
+    ]
 
-    # but others don't
-    self.assertFalse(db.table_exists("some_other_table"))
+    # make sure all these exist
+    for name in tables_in_schema:
+      self.assertTrue(db.table_exists(name))
+
+    # and no others
+    self.assertEqual(db.num_tables(), len(tables_in_schema))
 
     # load the tables as table objects
     alias_table = db.table_by_name(database.database.ALIAS_TABLE)
@@ -58,72 +65,65 @@ class TestDatabase(unittest.TestCase):
     z_table = db.table_by_name(database.database.ZONE_TABLE)
 
     # alias_table has correct columns
-    self.assertTrue(alias_table.has_column("zone_id", str, True))
-    self.assertTrue(alias_table.has_column("id", str, True))
-    self.assertTrue(alias_table.has_column("type", str, True))
-    self.assertTrue(alias_table.has_column("alias", str, True))
-    self.assertEqual(alias_table.num_columns(), 4)
+    for tuple in db.schemas[database.database.ALIAS_TABLE]:
+      self.assertTrue(alias_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(alias_table.num_columns(), len(db.schemas[database.database.ALIAS_TABLE]))
 
     # exit_table has correct columns
-    self.assertTrue(ex_table.has_column("o_zone_id", str, True))
-    self.assertTrue(ex_table.has_column("o_id", str, True))
-    self.assertTrue(ex_table.has_column("direction", int, True))
-    self.assertTrue(ex_table.has_column("d_zone_id", str, False))
-    self.assertTrue(ex_table.has_column("d_id", str, False))
-    self.assertEqual(ex_table.num_columns(), 5)
+    for tuple in db.schemas[database.database.EXIT_TABLE]:
+      self.assertTrue(ex_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(ex_table.num_columns(), len(db.schemas[database.database.EXIT_TABLE]))
 
     # pref_numeric_table has correct columns
-    self.assertTrue(pref_numeric_table.has_column("id", int, True))
-    self.assertTrue(pref_numeric_table.has_column("field", str, True))
-    self.assertTrue(pref_numeric_table.has_column("value", int, False))
-    self.assertEqual(pref_numeric_table.num_columns(), 3)
+    for tuple in db.schemas[database.database.PREF_NUMERIC_TABLE]:
+      self.assertTrue(pref_numeric_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(pref_numeric_table.num_columns(), len(db.schemas[database.database.PREF_NUMERIC_TABLE]))
 
     # pref_text_table has correct columns
-    self.assertTrue(pref_text_table.has_column("id", int, True))
-    self.assertTrue(pref_text_table.has_column("field", str, True))
-    self.assertTrue(pref_text_table.has_column("value", str, False))
-    self.assertEqual(pref_text_table.num_columns(), 3)
+    for tuple in db.schemas[database.database.PREF_TEXT_TABLE]:
+      self.assertTrue(pref_text_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(pref_text_table.num_columns(), len(db.schemas[database.database.PREF_TEXT_TABLE]))
 
     # pref_flag_table has correct columns
-    self.assertTrue(pref_flag_table.has_column("id", int, True))
-    self.assertTrue(pref_flag_table.has_column("field", str, True))
-    self.assertTrue(pref_flag_table.has_column("value", int, False))
-    self.assertEqual(pref_flag_table.num_columns(), 3)
+    for tuple in db.schemas[database.database.PREF_FLAG_TABLE]:
+      self.assertTrue(pref_flag_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(pref_flag_table.num_columns(), len(db.schemas[database.database.PREF_FLAG_TABLE]))
 
     # npc_proto_table has correct columns
-    self.assertTrue(npc_proto_table.has_column("zone_id", str, True))
-    self.assertTrue(npc_proto_table.has_column("id", str, True))
-    self.assertTrue(npc_proto_table.has_column("name", str, False))
-    self.assertTrue(npc_proto_table.has_column("desc", str, False))
-    self.assertTrue(npc_proto_table.has_column("ldesc", str, False))
-    self.assertEqual(npc_proto_table.num_columns(), 5)
+    for tuple in db.schemas[database.database.NPC_PROTO_TABLE]:
+      self.assertTrue(npc_proto_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(npc_proto_table.num_columns(), len(db.schemas[database.database.NPC_PROTO_TABLE]))
 
     # obj_proto_table has correct columns
-    self.assertTrue(obj_proto_table.has_column("zone_id", str, True))
-    self.assertTrue(obj_proto_table.has_column("id", str, True))
-    self.assertTrue(obj_proto_table.has_column("name", str, False))
-    self.assertTrue(obj_proto_table.has_column("desc", str, False))
-    self.assertTrue(obj_proto_table.has_column("ldesc", str, False))
-    self.assertEqual(obj_proto_table.num_columns(), 5)
+    for tuple in db.schemas[database.database.OBJ_PROTO_TABLE]:
+      self.assertTrue(obj_proto_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(obj_proto_table.num_columns(), len(db.schemas[database.database.OBJ_PROTO_TABLE]))
 
     # wld_table has correct columns
-    self.assertTrue(wld_table.has_column("zone_id", str, True))
-    self.assertTrue(wld_table.has_column("id", str, True))
-    self.assertTrue(wld_table.has_column("name", str, False))
-    self.assertTrue(wld_table.has_column("desc", str, False))
-    self.assertEqual(wld_table.num_columns(), 4)
+    for tuple in db.schemas[database.database.WORLD_TABLE]:
+      self.assertTrue(wld_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(wld_table.num_columns(), len(db.schemas[database.database.WORLD_TABLE]))
 
     # p_table has correct columns
-    self.assertTrue(p_table.has_column("id", int, True))
-    self.assertTrue(p_table.has_column("name", str, False))
-    self.assertTrue(p_table.has_column("password", str, False))
-    self.assertEqual(p_table.num_columns(), 3)
+    for tuple in db.schemas[database.database.PLAYER_TABLE]:
+      self.assertTrue(p_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(p_table.num_columns(), len(db.schemas[database.database.PLAYER_TABLE]))
 
     # z_table has correct columns
-    self.assertTrue(z_table.has_column("id", str, True))
-    self.assertTrue(z_table.has_column("name", str, False))
-    self.assertTrue(z_table.has_column("author", str, False))
-    self.assertEqual(z_table.num_columns(), 3)
+    for tuple in db.schemas[database.database.ZONE_TABLE]:
+      self.assertTrue(z_table.has_column(tuple[0], tuple[1], tuple[2]))
+
+    self.assertEqual(z_table.num_columns(), len(db.schemas[database.database.ZONE_TABLE]))
+
 
     # teardown
     db.close()
@@ -133,7 +133,6 @@ class TestDatabase(unittest.TestCase):
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
-    db._state = database.database_state.VERIFIED
 
     # add a few aliases
     db.save_alias("castle_black", "jon_snow", "npc", "jon")
@@ -166,7 +165,6 @@ class TestDatabase(unittest.TestCase):
     db = database.database(":memory:")
     db.connect()
     db.create_tables()
-    db._state = database.database_state.VERIFIED
 
     # add a few exits
     db.save_exit("stockville", "recall", exit_data.exit_data(exit_data.direction.NORTH, "castle_black", "ice_wall01"))

@@ -37,6 +37,7 @@ class database:
      create_table(name, columns)         <- create table with given columns
      table_by_name(table_name)           <- look up table by name
      table_exists(table_name)            <- check if table exists
+     num_tables()                        <- count tables in database
      list_tables()                       <- list all tables loaded in db_file
      list_table_names()                  <- list names of all tables loaded in db_file
      list_columns(table)                 <- list all columns in table
@@ -138,6 +139,9 @@ class database:
 
   def table_exists(self, table_name):
     return self._handler.table_exists(table_name)
+
+  def num_tables(self):
+    return self._handler.num_tables()
 
   def list_tables(self):
     return self._handler.list_tables()

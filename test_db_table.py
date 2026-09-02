@@ -259,4 +259,11 @@ class TestDBTable(unittest.TestCase):
 
 if __name__ == "__main__":
   unittest.main()
-  # unittest.main(defaultTest="TestDBTable.test_num_records")
+  #unittest.main(defaultTest="TestDBTable.test_create_drop")
+  #unittest.main(defaultTest="TestDBTable.test_num_records")
+  #unittest.main(defaultTest="TestDBTable.test_composite_key")
+  #unittest.main(defaultTest="TestDBTable.test_columns")
+  #unittest.main(defaultTest="TestDBTable.test_insert_delete_search")
+  #unittest.main(defaultTest="TestDBTable.test_rename")
+  #unittest.main(defaultTest="TestDBTable.test_primary_fields")
+  #unittest.main(defaultTest="TestDBTable.test_get_by_pk")

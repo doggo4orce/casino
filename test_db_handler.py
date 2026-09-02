@@ -325,7 +325,32 @@ class TestDBHandler(unittest.TestCase):
     self.assertEqual(baker["name"], "the baker")
     self.assertEqual(baker["age"], 52)
     self.assertEqual(baker["desc"], "He's got an apostrophe in his description.")
-    
+
+  def test_create_table_new(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should fire error message and fail because 'name;' is not a valid column name
+    handler.create_table("npcs",
+      ("name;", str, False),
+      ("age", int, False),
+      ("desc", str, False)
+    )
+
+    # has composite primary
+    handler.create_table("npcs",
+      ("name", str, True),
+      ("last_name", str, True),
+      ("desc", str, False)
+    )
+
+    # does not
+    handler.create_table("pcs",
+      ("name", str, True),
+      ("age", int, False),
+      ("desc", str, False)
+    )
+
 if __name__ == "__main__":
   unittest.main()
-  # unittest.main(defaultTest="TestDBHandler.test_num_records")
+  #unittest.main(defaultTest="TestDBHandler.test_create_table_new")

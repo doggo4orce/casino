@@ -54,6 +54,9 @@ class db_table:
      has_column(name, type, primary)   <- check if column exists"""
 
   def create(self, *columns):
+    self._handler.create_table(self.name, *columns)
+
+  def create_old(self, *columns):
     if self.exists():
       mudlog.error(f"tried to create table {self.name} which already exists")
       raise RuntimeError

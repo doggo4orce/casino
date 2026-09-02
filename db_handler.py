@@ -68,36 +68,40 @@ class db_handler:
   def commit(self):
     self._connection.commit()
 
-  # TODO, re-write this so the db_table function calls THIS one, and just check for composite-key during creation manually,
-  # no need to call the property has_composite_key, that just forces the need for the ugly pending columns which are confusing
-  def create_table(self, table_name, *columns):
-    table = db_table.db_table(self, table_name)
-
-    table.create(*columns)
-
-  def create_table2(self, table_name, *columns):
+  def create_table(self, table_name, *column_tuples):
     has_primary = False
-    has_composite_primary = False
+    has_composite = False
 
-    # if table_name is invalid, abort
+    def sql_type(python_type):
+      if python_type == int:
+        return "int"
+      if python_type == str:
+        return "text"
+
+    if self.table_exists(table_name):
+      mudlog.error(f"tried to create table '{table_name}' which already exists")
+      raise RuntimeError
+
+    # sanity checks
     if not valid_table_name(table_name):
       mudlog.error(f"Trying to create table with invalid name '{table_name}'.")
       return
 
-    # require non-zero number of columns
-    if len(columns) == 0:
+    if len(column_tuples) == 0:
       mudlog.error(f"Trying to create table '{table_name}' without any columns.")
-      return
+      raise RuntimeError
 
-    # all column names must be valid
-    for triple in columns:
-      col = db_column.db_column(triple[0], triple[1], triple[2])
-      if not db_column.valid_column_name(col.name):
-        mudlog.error(f"Trying to create table '{table_name}' with invalid column name '{col.name}'.")
+    for tuple in column_tuples:
+      if not db_column.valid_column_name(tuple[0]):
+        mudlog.error(f"Trying to create table '{table_name}' with invalid column name '{tuple[0]}'.")
         return
-      if triple[2] and has_primary:
-        has_composite_primary = True
-      elif triple[2]:
+
+    # determine if composite key
+    for tuple in column_tuples:
+      if has_primary and tuple[2]:
+        has_composite = True
+        break
+      elif tuple[2]:
         has_primary = True
 
     # if table_name has already been used, abort
@@ -105,19 +109,42 @@ class db_handler:
       mudlog.error(f"Trying to create table '{table_name}' which already exists.")
       return
 
-    column_string = ""
+    query = f"CREATE TABLE {table_name} ("
 
-    # turn ("column1", str, bool), ("column2", int, bool) into "column1 text, column2 int,"
-    for pair in columns:
-      col = db_column.db_column(pair[0], pair[1])
-      column_string += f"{col.name} {col.sqlite3_type},"
+    if has_composite:
+      primary_key_fields = []
 
-    # this adds one too many commas at the very end
-    column_string = column_string[:-1]
+      # column is a db_column object
+      for tuple in column_tuples:
+        query += f"\r\n  {tuple[0]} {sql_type(tuple[1])},"
 
-    sql = f"CREATE TABLE {table_name}({column_string})"
-    print(sql)
-    self.execute(sql)
+        if tuple[2]:
+          primary_key_fields.append(tuple[0])
+
+      query += f"\r\n  PRIMARY KEY ({', '.join(primary_key_fields)})"
+    
+    else:
+      for tuple in column_tuples:
+        query += f"\r\n  {tuple[0]} {sql_type(tuple[1])}"
+
+        if tuple[2]:
+          query += " PRIMARY KEY"
+
+        query += ","
+
+      # there will be one too many columns
+      query = query[:-1]
+
+    query += "\r\n);"
+
+    self.execute(query)
+    
+  # TODO, re-write this so the db_table function calls THIS one, and just check for composite-key during creation manually,
+  # no need to call the property has_composite_key, that just forces the need for the ugly pending columns which are confusing
+  # def create_table(self, table_name, *columns):
+  #   table = db_table.db_table(self, table_name)
+
+  #   table.create(*columns)
 
   def drop_table(self, table_name):
     sql = f"DROP TABLE {table_name}"

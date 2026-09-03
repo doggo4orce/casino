@@ -96,7 +96,6 @@ class TestDBHandler(unittest.TestCase):
 
     handler.insert_record("players",
       name='deglo',
-      age=33,
       drink="coffee",
       food="nachos"
     )
@@ -351,6 +350,21 @@ class TestDBHandler(unittest.TestCase):
       ("desc", str, False)
     )
 
+  def test_insert_records(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table('p_table', ('first_name', str, True), ('last_name', str, False), ('age', int, False))
+
+    handler.insert_records('p_table', [
+      {'first_name':'bob', 'last_name':'ross'},
+      {'first_name':'kyle', 'last_name':'schlitt', 'age':42},
+      {'first_name':'stacey', 'last_name':'baddy', 'age':43}
+      ]
+    )
+
+    print(handler.search_table('p_table'))
+
 if __name__ == "__main__":
   unittest.main()
-  #unittest.main(defaultTest="TestDBHandler.test_create_table_new")
+  #unittest.main(defaultTest="TestDBHandler.test_get_record")

@@ -19,9 +19,11 @@ class db_handler:
   """connect(db_file)                       <- establish connection with database
      close()                                <- close connection to database
      execute(query, params)                 <- execute raw SQL query
+     execute_many(query, params)            <- execute(many) raw SQL query
      commit()                               <- not necessary (due to auto-commit)
      create_table(name, *columns)           <- create new table with given columns
      drop_table(name)                       <- delete table
+     copy_table(old, new)                   <- copy contents of old table to new table
      rename_table(table, name)              <- rename a table
      create_backup(file)                    <- dump all contents into new database file
      drop_all_tables()                      <- back anything up you might be attached to!
@@ -62,8 +64,10 @@ class db_handler:
     self._cursor = self._connection.cursor()
 
   def execute(self, query, parameters = ()):
-    # print(query)
     return self._cursor.execute(query, parameters)
+
+  def execute_many(self, query, parameter_list):
+    return self._cursor.executemany(query, parameter_list)
 
   def commit(self):
     self._connection.commit()
@@ -136,12 +140,18 @@ class db_handler:
       query = query[:-1]
 
     query += "\r\n);"
-
+    print(query)
     self.execute(query)
     
   def drop_table(self, table_name):
-    sql = f"DROP TABLE {table_name}"
+    sql = f"DROP TABLE {table_name};"
     self.execute(sql)
+
+  # def copy_table(self, old, new):
+  #   rs = self.search_table(old)
+
+  #   for result in rs:
+  #     return
 
   def rename_table(self, old, new):
     if not valid_table_name(new):
@@ -157,7 +167,7 @@ class db_handler:
     self.execute(sql)
 
   def drop_column(self, table, name):
-    sql = f"ALTER TABLE {table} DROP COLUMN {name}"
+    sql = f"ALTER TABLE {table} DROP COLUMN {name};"
     self.execute(sql)
 
   def rename_column(self, table, old, new):
@@ -202,7 +212,7 @@ class db_handler:
       return None
 
     # TODO: write pragma function?
-    sql = f"PRAGMA table_info({table_name})"
+    sql = f"PRAGMA table_info({table_name});"
 
     self.execute(sql)
     self.commit()
@@ -228,8 +238,8 @@ class db_handler:
 
   def insert_record(self, table, **record):
     table_columns = self.list_columns(table)
-    column_names = self.list_column_names(table)
-    num_records = len(record.keys())
+    column_names = [col.name for col in table_columns]
+    num_fields = len(column_names)
     extra_fields = [field for field in record.keys() if field not in column_names]
 
     # do not accept a record with an extra field
@@ -242,8 +252,9 @@ class db_handler:
       return
 
     for column in table_columns:
-      # but if fields are missing that's OK
+      # if record has missing fields are missing pad them with null values
       if column.name not in record.keys():
+        record[column.name] = None
         continue
 
       if type(record[column.name]) != column.type:
@@ -251,12 +262,50 @@ class db_handler:
         return
 
     columns = ', '.join(record.keys())
-    values = ', '.join('?' * num_records)
+    values = ', '.join('?' * num_fields)
 
-    syntax = f"INSERT INTO {table} ({columns}) VALUES ({values})"
+    syntax = f"INSERT INTO {table} ({columns}) VALUES ({values});"
 
     self.execute(syntax, tuple(record.values()))
     self.commit()
+
+  def insert_records(self, table, record_list):
+    table_columns = self.list_columns(table)
+    column_names = [col.name for col in table_columns]
+
+    if len(record_list) == 0:
+      return
+
+    num_fields = len(column_names)
+
+    for record in record_list:
+      for column in table_columns:
+        extra_fields = [field for field in record.keys() if field not in column_names]
+
+        # do not accept a record with an extra field
+        # TODO: instead of checking for extra fields, we could just catch an
+        # exception:
+        # eg.
+        # sqlite3.OperationalError: table testtable has no column named father
+        if len(extra_fields) > 0:
+          mudlog.error(f"Trying to insert record\r\n{str(record)}\r\ninto table '{table}' with unexpected field '{extra_fields[0]}'.")
+          return
+
+        # if record has missing fields are missing pad them with null values
+        if column.name not in record.keys():
+          record[column.name] = None
+          continue
+
+        if type(record[column.name]) != column.type:
+          mudlog.error(f"Trying to insert record into table {table}, but {record[column.name]} is not of type {column.type}.")
+          return
+
+    columns = ', '.join(column_names)
+    values = ', '.join('?' * num_fields)
+    
+    syntax = f"INSERT INTO {table} ({columns}) VALUES ({values});"
+
+    self.execute_many(syntax, [tuple(record.values()) for record in record_list])
 
   def delete_records(self, table, **record):
     sql = f"DELETE FROM {table}"

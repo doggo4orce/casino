@@ -16,40 +16,41 @@ class db_handler:
     self._connection = None
     self._cursor = None
 
-  """connect(db_file)                       <- establish connection with database
-     close()                                <- close connection to database
-     execute(query, params)                 <- execute raw SQL query
-     execute_many(query, params)            <- execute(many) raw SQL query
-     commit()                               <- not necessary (due to auto-commit)
-     create_table(name, *columns)           <- create new table with given columns
-     drop_table(name)                       <- delete table
-     copy_table(old, new)                   <- copy contents of old table to new table
-     rename_table(table, name)              <- rename a table
-     create_backup(file)                    <- dump all contents into new database file
-     drop_all_tables()                      <- back anything up you might be attached to!
-     add_column(table, name, type)          <- add new column to table
-     drop_column(table, name)               <- delete column from table
-     rename_column(table, old, new)         <- rename column in a table
-     has_column(table, name, type, primary) <- check if table has column (type and primary optional)
-     column_type(table, name)               <- check data type of column in field
-     list_columns(table)                    <- show actual columns in a table
-     list_column_names(table)               <- show column names in table
-     num_columns(table)                     <- count columns in table
-     num_tables()                           <- count tables in database
-     num_records(table)                     <- count records in a table
-     list_records(table)                    <- return table as result set
-     insert_record(table, **record)         <- insert record to table
-     delete_records(table, **record)        <- delete records from table
-     list_tables()                          <- returns list of tables created
-     list_table_names()                     <- returns list of names of tables created
-     table_by_name(name)                    <- look up table in database by its name
-     table_exists(name)                     <- check if a table has already been created
-     fetch_one()                            <- fetch one result
-     fetch_all()                            <- fetch all results
-     show_table(name)                       <- display table as a string
-     search_table(table, **clause)          <- search table for records, returns result set
-     get_record(table, **key)               <- 
-     verify_columns(table, *columns)        <- add columns to table if missing"""
+  """connect(db_file)                        <- establish connection with database
+     close()                                 <- close connection to database
+     execute(query, params)                  <- execute raw SQL query
+     execute_many(query, params)             <- execute(many) raw SQL query
+     commit()                                <- not necessary (due to auto-commit)
+     create_table(name, *columns)            <- create new table with given columns
+     drop_table(name)                        <- delete table
+     rename_table(table, name)               <- rename a table
+     create_backup(file)                     <- dump all contents into new database file
+     drop_all_tables()                       <- back anything up you might be attached to!
+     add_column(table, name, type)           <- add new column to table
+     drop_column(table, name)                <- delete column from table
+     rename_column(table, old, new)          <- rename column in a table
+     has_column(table, name, type, primary)  <- check if table has column (type and primary optional)
+     column_type(table, name)                <- check data type of column in field
+     list_columns(table)                     <- show actual columns in a table
+     list_column_names(table)                <- show column names in table
+     num_columns(table)                      <- count columns in table
+     num_tables()                            <- count tables in database
+     num_records(table)                      <- count records in a table
+     list_records(table)                     <- return table as result set
+     insert_record(table, **record)          <- insert record into table
+     insert_records(table, record_list)      <- insert records into table
+     trim_insert_records(table, record_list) <- inserts records into table, trimming source only fields
+     delete_records(table, **record)         <- delete records from table
+     list_tables()                           <- returns list of tables created
+     list_table_names()                      <- returns list of names of tables created
+     table_by_name(name)                     <- look up table in database by its name
+     table_exists(name)                      <- check if a table has already been created
+     fetch_one()                             <- fetch one result
+     fetch_all()                             <- fetch all results
+     show_table(name)                        <- display table as a string
+     search_table(table, **clause)           <- search table for records, returns result set
+     get_record(table, **key)                <- 
+     verify_columns(table, *columns)         <- add columns to table if missing"""
 
   def close(self):
     self._connection.close()
@@ -147,11 +148,15 @@ class db_handler:
     sql = f"DROP TABLE {table_name};"
     self.execute(sql)
 
-  # def copy_table(self, old, new):
-  #   rs = self.search_table(old)
+  def trim_insert_records(self, table, record_list):
+    target_fields = self.list_column_names(table)
 
-  #   for result in rs:
-  #     return
+    # trim any fields that don't correspond to columns in empty table
+    for record in record_list:
+      for key in [field for field in record.keys() if field not in target_fields]:
+        del record[key]
+
+    self.insert_records(table, record_list)
 
   def rename_table(self, old, new):
     if not valid_table_name(new):

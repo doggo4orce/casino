@@ -359,12 +359,25 @@ class TestDBHandler(unittest.TestCase):
     handler.insert_records('p_table', [
       {'first_name':'bob', 'last_name':'ross'},
       {'first_name':'kyle', 'last_name':'schlitt', 'age':42},
-      {'first_name':'stacey', 'last_name':'baddy', 'age':43}
-      ]
-    )
+      {'first_name':'paddy', 'last_name':'baddy', 'age':43}
+    ])
+
+    print(handler.search_table('p_table'))
+
+  def test_trim_insert_records(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table('p_table', ('first_name', str, True), ('last_name', str, False), ('age', int, False))
+
+    handler.trim_insert_records('p_table', [
+      {'first_name':'bob', 'last_name':'ross', 'food':'pizza'},
+      {'first_name':'kyle', 'last_name':'schlitt', 'age':42, 'drink':'beer'},
+      {'first_name':'paddy', 'last_name':'baddy'}
+    ])
 
     print(handler.search_table('p_table'))
 
 if __name__ == "__main__":
   unittest.main()
-  #unittest.main(defaultTest="TestDBHandler.test_get_record")
+  #unittest.main(defaultTest="TestDBHandler.test_trim_insert_records")

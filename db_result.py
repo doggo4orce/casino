@@ -1,3 +1,7 @@
+# Python Modules
+import copy
+
+# Local Modules
 from color import *
 import string_handling
 
@@ -69,6 +73,9 @@ class db_result:
       ret_val += f"{field.capitalize()}: {CYAN}{self[field]}{NORMAL}\r\n"
 
     return ret_val
+
+  def dict(self):
+    return copy.copy(self._values)
 
   def __iter__(self):
     return result_iterator(self)

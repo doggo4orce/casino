@@ -33,6 +33,8 @@ class db_table:
 
   """create(*columns)                  <- create table with columns as arguments
      insert(**record)                  <- insert record into table
+     insert_many(record_list)          <- insert many records into table
+     trim_insert_many(record_list)     <- insert many records, skip incompatible fields
      delete(**clause)                  <- delete records from table satisfying clause
      rename(new_name)                  <- change only name of table
      primary_fields()                  <- returns (possibly singleton) list
@@ -42,6 +44,7 @@ class db_table:
      exists()                          <- ask handler if this table has been created
      drop()                            <- CAUTION: does what it says, drop the table
      list_columns()                    <- ask handler to list columns of this table
+     transfer_records
      add_column(column, type)          <- adds new column to table
      drop_column(column)               <- drops a column from the table
      rename_column(old_name, new_name) <- rename a column in the table
@@ -52,6 +55,12 @@ class db_table:
 
   def insert(self, **record):
     self._handler.insert_record(self.name, **record)
+
+  def insert_many(self, record_list):
+    self._handler.insert_records(self.name, record_list)
+
+  def trim_insert_many(self, record_list):
+    self._handler.trim_insert_records(self.name, record_list)
 
   def delete(self, **clause):
     self._handler.delete_records(self.name, **clause)

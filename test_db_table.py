@@ -257,8 +257,45 @@ class TestDBTable(unittest.TestCase):
 
     record = p_table.get_by_pk(first_name='roobiki', last_name="tendo")
 
+  def test_trim_insert_many(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should have zero tables at first
+    self.assertEqual(handler.num_tables(), 0)
+
+    p_table = db_table.db_table(handler, "players")
+    p_table.create(
+      ("first_name", str, True),
+      ("last_name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    p_table.insert_many(
+      [
+        {"first_name":"kyle", "last_name":"schlitt", "age":42, "drink":"beer", "food":"pizza", "job":"professor"},
+        {"first_name":"dylan", "last_name":"pianta", "age":12, "drink":"whiskey-bend", "food":"soy", "job":"software engineer"}
+      ]
+    )
+
+    q_table = db_table.db_table(handler, "quayers")
+    q_table.create(
+      ("id", int, True),
+      ("last_name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    q_table.trim_insert_many([result.dict() for result in p_table.search()])
+
+    print(q_table.search())
 if __name__ == "__main__":
-  unittest.main()
+  #unittest.main()
   #unittest.main(defaultTest="TestDBTable.test_create_drop")
   #unittest.main(defaultTest="TestDBTable.test_num_records")
   #unittest.main(defaultTest="TestDBTable.test_composite_key")
@@ -267,3 +304,4 @@ if __name__ == "__main__":
   #unittest.main(defaultTest="TestDBTable.test_rename")
   #unittest.main(defaultTest="TestDBTable.test_primary_fields")
   #unittest.main(defaultTest="TestDBTable.test_get_by_pk")
+  unittest.main(defaultTest="TestDBTable.test_trim_insert_many")

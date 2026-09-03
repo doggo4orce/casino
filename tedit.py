@@ -246,33 +246,65 @@ def tedit_parse_confirm_save_table(d, input, db):
     case 'Y':  # we save changes
       tedit_save = d.olc.save_data
 
+      table = db.table_by_name(tedit_save.name)
+      
       # if table doesn't exist, then create it
       if not db.has_table(tedit_save.name):
         db.create_table(tedit_save.name, tedit_save.columns)
-        d.olc = None
-        d.state = descriptor_data.descriptor_state.CHATTING
-        d.write("Table saved to database.\r\n")
+        
+      # if we renamed it, there's an old table to worry about
+      if tedit_save.name != tedit_save.original_name:
+        old_table = db.table_by_name(tedit_save.original_name)
+        table = db.table_by_name(tedit_save.name)
+
+        # copy the data, trimming fields if we dropped some columns
+        data = [record.dict() for record in old_table.search()]
+        table.trim_insert_many(data)
+
+        # delete old table
+        old_table.drop()
         return
 
-      # otherwise we're editing an existing table
-      table = db.table_by_name(tedit_save.original_name)
+      # otherwise, only one table to worry about
 
-      # if name has changed, update it
-      if tedit_save.original_name != tedit_save.name:
+      # did we add a new private key?
+      new_private_key = False
+
+      # find out if we need to recreate the table
+      for column in tedit_save.columns:
+        if column.is_primary:
+          # we might have added a new column that is a private key
+          if column.name not in [col.name for col in tedit_save.original_columns]:
+            new_private_key = True
+          # or we might changed an existing column into a private key
+          elif not next((col.is_primary for col in tedit_save.original_columns if col.name == column.name)):
+            new_private_key = True
+
+      # we cannot add a new private key to an existing table, so we must recreate the table
+      if new_private_key:
+        old_table = db.table_by_name(tedit_save.name)
+        table = db.table_by_name(tedit_save.name + 'temp')
+      
+        data = [record.dict() for record in old_table.search()]
+        table.trim_insert_many(data)
+
+        old_table.drop()
         table.rename(tedit_save.name)
+        return
 
-      # drop/rename any columns that have been dropped/renamed
-      for name in [col.name for col in table.list_columns()]:
-        if name not in [kol.name for kol in tedit_save.columns]:
-          if name not in tedit_save.renamed_columns.keys():
-            table.drop_column(name)
-          else:
-            table.rename_column(name, tedit_save.renamed_columns[name])
+      # otherwise, just drop any deleted columns or if we changed the type, drop it and re-add it
+      for column in tedit_save.columns:
+        if column.name not in [col.name for col in tedit_save.new_columns]:
+          table.drop_column(column.name)
 
-      # add any new columns
-      for col in tedit_save.columns:
-        if col.name not in [kol.name for kol in table.list_columns()]:
-          table.add_column(col.name, col.type) # ignoring col.is_primary for now
+        elif column.type != next((col.type for col in tedit_save.new_columns if col.name == column.name)):
+          table.drop_column(column.name)
+          table.add_column(column.name, column.type)
+
+      # and insert any newly created ones
+      for column in tedit_save.old_columns:
+        if column.name not in [col.name for col in tedit_save.original_columns]:
+          table.add_column(column.name, column.type)
 
       d.olc = None
       d.state = descriptor_data.descriptor_state.CHATTING

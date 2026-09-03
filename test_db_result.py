@@ -59,5 +59,9 @@ class TestDbResult(unittest.TestCase):
     with self.assertRaises(KeyError):
       r.delete_field("age")
 
+  def test_dict(self):
+    r = db_result.db_result(name="kyle", age=40)
+
+    print(r.dict())
 if __name__ == "__main__":
   unittest.main()

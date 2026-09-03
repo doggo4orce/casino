@@ -148,16 +148,6 @@ class db_handler:
     sql = f"DROP TABLE {table_name};"
     self.execute(sql)
 
-  def trim_insert_records(self, table, record_list):
-    target_fields = self.list_column_names(table)
-
-    # trim any fields that don't correspond to columns in empty table
-    for record in record_list:
-      for key in [field for field in record.keys() if field not in target_fields]:
-        del record[key]
-
-    self.insert_records(table, record_list)
-
   def rename_table(self, old, new):
     if not valid_table_name(new):
       mudlog.error(f"Passing invalid new='{new}' to handler.rename_table function.")
@@ -310,7 +300,27 @@ class db_handler:
     
     syntax = f"INSERT INTO {table} ({columns}) VALUES ({values});"
 
-    self.execute_many(syntax, [tuple(record.values()) for record in record_list])
+    # convert each record into a tuple to pass as execute params
+    def as_tuple(r):
+      tuple([r[field] for field in column_names])
+
+    # executemany requires a list of such tuples
+    self.execute_many(syntax, [as_tuple(record) for record in record_list])
+
+  def trim_insert_records(self, table, record_list):
+    target_columns = self.list_columns(table)
+
+    # build book of field:type key-value pairs
+    columns_dict = dict()
+    for column in target_columns:
+      columns_dict[column.name] = column.type
+
+    # trim any fields that don't correspond to columns in empty table
+    for record in record_list:
+      for key in [field for field in record.keys() if (field not in columns_dict.keys()) or (columns_dict[field] != type(record[field]))]:
+        del record[key]
+
+    self.insert_records(table, record_list)
 
   def delete_records(self, table, **record):
     sql = f"DELETE FROM {table}"

@@ -246,14 +246,14 @@ def tedit_parse_confirm_save_table(d, input, db):
     case 'Y':  # we save changes
       tedit_save = d.olc.save_data
 
-      table = db.table_by_name(tedit_save.name)
-      
       # if table doesn't exist, then create it
       if not db.has_table(tedit_save.name):
-        db.create_table(tedit_save.name, tedit_save.columns)
-        
+        db.create_table(tedit_save.name, *[col.tuple() for col in tedit_save.columns])
+      
+      table = db.table_by_name(tedit_save.name)
+
       # if we renamed it, there's an old table to worry about
-      if tedit_save.name != tedit_save.original_name:
+      if tedit_save.name != tedit_save.original_name and db.table_exists(tedit_save.original_name):
         old_table = db.table_by_name(tedit_save.original_name)
         table = db.table_by_name(tedit_save.name)
 
@@ -270,14 +270,17 @@ def tedit_parse_confirm_save_table(d, input, db):
       # did we add a new private key?
       new_private_key = False
 
+      old_columns = table.list_columns()
+      new_columns = tedit_save.columns
+
       # find out if we need to recreate the table
-      for column in tedit_save.columns:
+      for column in new_columns:
         if column.is_primary:
           # we might have added a new column that is a private key
-          if column.name not in [col.name for col in tedit_save.original_columns]:
+          if column.name not in [col.name for col in old_columns]:
             new_private_key = True
           # or we might changed an existing column into a private key
-          elif not next((col.is_primary for col in tedit_save.original_columns if col.name == column.name)):
+          elif not next((col.is_primary for col in old_columns if col.name == column.name)):
             new_private_key = True
 
       # we cannot add a new private key to an existing table, so we must recreate the table
@@ -293,17 +296,17 @@ def tedit_parse_confirm_save_table(d, input, db):
         return
 
       # otherwise, just drop any deleted columns or if we changed the type, drop it and re-add it
-      for column in tedit_save.columns:
-        if column.name not in [col.name for col in tedit_save.new_columns]:
+      for column in old_columns:
+        if column.name not in [col.name for col in new_columns]:
           table.drop_column(column.name)
 
-        elif column.type != next((col.type for col in tedit_save.new_columns if col.name == column.name)):
+        elif column.type != next((col.type for col in new_columns if col.name == column.name)):
           table.drop_column(column.name)
           table.add_column(column.name, column.type)
 
       # and insert any newly created ones
-      for column in tedit_save.old_columns:
-        if column.name not in [col.name for col in tedit_save.original_columns]:
+      for column in old_columns:
+        if column.name not in [col.name for col in old_columns]:
           table.add_column(column.name, column.type)
 
       d.olc = None

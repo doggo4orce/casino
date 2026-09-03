@@ -418,36 +418,6 @@ class TestOLC(unittest.TestCase):
     self.assertEqual(new_zone.author, "Charles Dickens")
     self.assertEqual(new_zone.name, "The Haunted Castle")
 
-  def test_tedit_new_table(self):
-    mud = game_data.game_data()
-
-    db = database.database(":memory:")
-    db.connect()
-
-    # create player/descriptor combo
-    player = pc_data.pc_data()
-    d = descriptor_data.descriptor_data(None, "localhost")
-
-    # connect them
-    player.descriptor = d
-    d.character = player
-    d.state = descriptor_data.descriptor_state.CHATTING
-
-    # create a single room so they can perform tedit command
-    mud, zone, room = test_utilities.create_single_room_test_world()
-
-    mud.add_character_to_room(player, room)
-
-    # make a new table and change its name    
-    olc.do_tedit(player, None, "table", None, mud, db, None)
-    tedit.tedit_parse_main_menu(d, "1", db)
-    tedit.tedit_parse_edit_name(d, "new_table")
-    tedit.tedit_parse_main_menu(d, "q", db)
-    tedit.tedit_parse_confirm_save_table(d, "y", db)
- 
-
-    print(d.out_buf)
 if __name__ == "__main__":
-  unittest.main(defaultTest="TestOLC.test_tedit_new_table")
   config.DEBUG_MODE = True
   #unittest.main()

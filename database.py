@@ -35,6 +35,7 @@ class database:
 
      has_table(table_name)               <- check whether table exists
      create_table(name, columns)         <- create table with given columns
+     drop_table(name)                    <- drop table with given name
      table_by_name(table_name)           <- look up table by name
      table_exists(table_name)            <- check if table exists
      num_tables()                        <- count tables in database
@@ -131,8 +132,11 @@ class database:
   def has_table(self, table_name):
     return self.table_by_name(table_name) != None
 
-  def create_table(self, name, columns):
-    self._handler.create_table(name, *[col.tuple() for col in columns])
+  def create_table(self, name, *columns):
+    self._handler.create_table(name, *columns)
+
+  def drop_table(self, name):
+    self._handler.drop_table(name)
     
   def table_by_name(self, table_name):
     return self._handler.table_by_name(table_name)
@@ -586,7 +590,7 @@ class database:
 
       # and that we have each column from the schema
       for column in self.schemas[table_name]:
-        if not table.has_column(column[0], column[1], column[2]):
+        if not self._handler.has_column(table_name, column[0], column[1], column[2]):
           message = f"Table {table_name} has missing column {str(db_column.db_column(column[0], column[1], column[2]))}."
           mudlog.error(message);
           self.error_messages.append(message)

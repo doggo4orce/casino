@@ -141,7 +141,7 @@ class db_handler:
       query = query[:-1]
 
     query += "\r\n);"
-    print(query)
+
     self.execute(query)
     
   def drop_table(self, table_name):

@@ -124,6 +124,14 @@ class TestDatabase(unittest.TestCase):
 
     self.assertEqual(z_table.num_columns(), len(db.schemas[database.database.ZONE_TABLE]))
 
+    # we just verified them manually, now check that the the verify_tables function works
+    self.assertTrue(db.verify_tables())
+
+    # drop a table so it doesn't work
+    db.drop_table(database.database.NPC_PROTO_TABLE)
+
+    # now verify should fail
+    self.assertFalse(db.verify_tables())
 
     # teardown
     db.close()

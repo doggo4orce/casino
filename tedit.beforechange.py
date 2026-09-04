@@ -22,12 +22,41 @@ class tedit_state(enum.IntEnum):
   TEDIT_DROP_COLUMN = 10
   TEDIT_CONFIRM_SAVE = 11
 
+def tedit_display_main_menu2(d):
+  tedit_save = d.olc.save_data
+
+  out_str = f"-- Table Edit : [{CYAN}{tedit_save.original_name}{NORMAL}]\r\n\r\n"
+  
+  name_width = 1
+  
+  for col in tedit_save.columns:
+    name_width = max(name_width, len(col.name))
+
+  for col in tedit_save.columns:
+    out_str += f"{col.name:<{name_width}} {col.sqlite3_type:<5}"
+    if col.is_primary:
+      out_str += f"{RED}PRIMARY KEY{NORMAL}"
+    out_str += "\r\n"
+
+  if len(tedit_save.columns) > 0:
+    out_str += "\r\n"
+
+  out_str += f"{GREEN}1{NORMAL}) Table Name  : {YELLOW}{tedit_save.name}{NORMAL}\r\n"
+  out_str += f"{GREEN}2{NORMAL}) Add Column\r\n"
+  out_str += f"{GREEN}3{NORMAL}) Edit Column\r\n"
+  out_str += f"{GREEN}4{NORMAL}) Drop Column\r\n"
+  out_str += f"{GREEN}5{NORMAL}) Insect Records\r\n"
+  out_str += f"{GREEN}X{NORMAL}) Drop Table\r\n"
+  out_str += f"{GREEN}Q{NORMAL}) Quit\r\n"
+  out_str += "Enter choice : "
+  d.write(out_str)
+
 def tedit_display_main_menu(d):
   tedit_save = d.olc.save_data
 
   out_str = f"-- Table Edit : [{CYAN}{tedit_save.original_name}{NORMAL}]\r\n"
-  out_str += f"{GREEN}1{NORMAL}) Save as  : {YELLOW}{tedit_save.name}{NORMAL}\r\n"
-  out_str += f"{GREEN}2{NORMAL}) Schema\r\n"
+  out_str += f"{GREEN}1{NORMAL}) Table Name  : {YELLOW}{tedit_save.name}{NORMAL}\r\n"
+  out_str += f"{GREEN}2{NORMAL}) Edit Schema\r\n"
   out_str += f"{GREEN}3{NORMAL}) Inspect Records\r\n"
   out_str += f"{GREEN}X{NORMAL}) Drop Table\r\n"
   out_str += f"{GREEN}Q{NORMAL}) Quit\r\n"
@@ -172,24 +201,12 @@ def tedit_parse_rename_column_get_name(d, input):
 
   tedit_save = d.olc.save_data
   column_list = tedit_save.columns
-  renamed_columns = tedit_save.renamed_columns
 
   for col in column_list:
     if col.name == tedit_save.old_name:
-      # update the column name
+      tedit_save.renamed_columns[col.name] = input
       col.name = input
       break
-
-  # if we've changed before, update the previous note
-  if tedit_save.old_name in renamed_columns.values():
-    for key in renamed_columns.keys():
-      if renamed_columns[key] == tedit_save.old_name:
-        renamed_columns[key] = input
-        break
-
-  # otherwise note the change
-  else:
-    renamed_columns[tedit_save.old_name] = input
 
   d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
   tedit_display_schema_menu(d)
@@ -251,112 +268,6 @@ def tedit_parse_edit_column(d, input):
       d.write("Save column, are you sure? : ")
 
 def tedit_parse_confirm_save_table(d, input, db):
-  if input == "":
-    d.write("Enter yes or no (Y/N) : ")
-    return
-
-  response = input[0].upper()
-
-  tedit_save = d.olc.save_data
-
-  match response:
-    case 'Y':  # we save changes
-      tedit_save = d.olc.save_data
-
-      # if table doesn't exist, then create it
-      if not db.has_table(tedit_save.name):
-        db.create_table(tedit_save.name, *[col.tuple() for col in tedit_save.columns])
-      
-      table = db.table_by_name(tedit_save.name)
-
-      # if we renamed it, there's an old table to worry about
-      if tedit_save.name != tedit_save.original_name and db.table_exists(tedit_save.original_name):
-        old_table = db.table_by_name(tedit_save.original_name)
-        table = db.table_by_name(tedit_save.name)
-
-        # copy the data, trimming fields if we dropped some columns
-        data = [record.dict() for record in old_table.search()]
-        table.trim_insert_many(data)
-
-        # delete old table
-        old_table.drop()
-        return
-
-      # otherwise, only one table to worry about
-
-      # did we add a new private key?
-      new_private_key = False
-
-      old_columns = table.list_columns()
-      new_columns = tedit_save.columns
-      renamed_columns = tedit_save.renamed_columns
-
-      # find out if we need to recreate the table
-      for column in new_columns:
-        if column.is_primary:
-          # we might have added a new column that is a private key
-          if column.name not in [col.name for col in old_columns]:
-            # unless we renamed an old private key
-            if column.name in renamed_columns.values():
-              for key in renamed_columns.keys():
-                if renamed_columns[key] == column.name:
-                  continue
-            # we truly did create a new private key
-            else:
-              new_private_key = True
-          # or we might changed an existing column into a private key
-          elif not next((col.is_primary for col in old_columns if col.name == column.name)):
-            new_private_key = True
-
-      # we cannot add a new private key to an existing table, so we must recreate the table
-      if new_private_key:
-        old_table = db.table_by_name(tedit_save.name)
-        table = db.table_by_name(tedit_save.name + 'temp')
-      
-        data = [record.dict() for record in old_table.search()]
-        table.trim_insert_many(data)
-
-        old_table.drop()
-        table.rename(tedit_save.name)
-        return
-
-      # otherwise, just drop any deleted columns or if we changed the type, drop it and re-add it
-      for column in old_columns:
-        if column.name not in [col.name for col in new_columns]:
-          if column.name in renamed_columns.values():
-            for key in renamed_columns.keys():
-              if renamed_columns[key] == column.name:
-                table.rename_column(key, column.name)
-                break
-          else:
-            table.drop_column(column.name)
-
-        elif column.type != next((col.type for col in new_columns if col.name == column.name)):
-          table.drop_column(column.name)
-          table.add_column(column.name, column.type)
-
-      # and insert any newly created ones
-      for column in old_columns:
-        if column.name not in [col.name for col in old_columns]:
-          table.add_column(column.name, column.type)
-
-      d.olc = None
-      d.state = descriptor_data.descriptor_state.CHATTING
-      d.write("Table saved to database.\r\n")
-
-    case 'N':
-      d.olc = None
-      d.state = descriptor_data.descriptor_state.CHATTING
-      d.write("Changes discarded.\r\n")
-
-    case _:
-      d.write("Enter yes or no (Y/N) : ")
-      return
-
-  d.state = descriptor_data.descriptor_state.CHATTING
-  return
-
-def tedit_parse_confirm_save_table2(d, input, db):
   if input == "":
     d.write("Enter yes or no (Y/N) : ")
     return

@@ -190,7 +190,58 @@ class TestTEDIT(unittest.TestCase):
     self.assertTrue(table.has_column('last_name', str, False))
     self.assertTrue(table.has_column('first_name', str, True))
 
+  def test_rename_columns(self):
+    db = database.database(":memory:")
+    db.connect()
+
+    # create player/descriptor combo
+    player = pc_data.pc_data()
+    d = descriptor_data.descriptor_data(None, "localhost")
+
+    # connect them
+    player.descriptor = d
+    d.character = player
+    d.state = descriptor_data.descriptor_state.CHATTING
+
+    # create a single room so they can perform tedit command
+    mud, zone, room = test_utilities.create_single_room_test_world()
+
+    mud.add_character_to_room(player, room)
+
+    # setup table
+    db.create_table("test_table",
+      ("id", int, True),
+      ("name", str, False),
+      ("last_name", str, False)
+    )
+
+    # now edit it   
+    olc.do_tedit(player, None, "test_table", None, mud, db, None)
+
+    # select edit schema
+    tedit.tedit_parse(d, "2", db)
+
+    # select rename column
+    tedit.tedit_parse(d, "3", db)
+
+    # choose column to rename
+    tedit.tedit_parse(d, "id", db)
+
+    # select new name
+    tedit.tedit_parse(d, "new_id", db)
+
+    # back to main menu
+    tedit.tedit_parse(d, "q", db)
+
+    # save changes
+    tedit.tedit_parse(d, "q", db)
+
+    # confirm save
+    tedit.tedit_parse(d, "y", db)
+
+    print(db.table_by_name("test_table").debug())
+
 if __name__ == "__main__":
   config.DEBUG_MODE = False
-  unittest.main()
-  #unittest.main(defaultTest="TestTEDIT.test_edit_existing_table")
+  #unittest.main()
+  unittest.main(defaultTest="TestTEDIT.test_rename_columns")

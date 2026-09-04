@@ -42,21 +42,25 @@ def do_tedit(ch, scmd, argument, server, mud, db, nanny):
   tedit_save = tedit_save_data.tedit_save_data()
 
   if num_args == 1:
+
     if args[0] == "table":
       ch.write("Illegal table name.\r\n")
       return
-    if db.has_table(args[0]):
-      table = db.table_by_name(args[0])
-      tedit_save.original_name = args[0]
-      tedit_save.name = args[0]
-      tedit_save.columns = table.list_columns()
-    elif not db_handler.valid_table_name(args[0]):
+
+    if not db_handler.valid_table_name(args[0]):
       ch.write("Table names may consist of numbers, letters, or underscores.\r\n")
       return
+
+    if db.has_table(args[0]):
+      table = db.table_by_name(args[0])
+      tedit_save.columns = table.list_columns()
+      tedit_save.data = table.search()
     else:
       tedit_save.create_table = True
-      tedit_save.name = args[0]
-      tedit_save.original_name = args[0]
+ 
+    tedit_save.name = args[0]
+    tedit_save.original_name = args[0]
+ 
   else:
     ch.write(Usage)
     return

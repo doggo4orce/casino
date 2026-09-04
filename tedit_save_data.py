@@ -1,20 +1,23 @@
 from color import *
 
 class tedit_save_data:
-  """original_name <- the name of the table before any edits
-     name          <- new name, if name has been changed
-     old_name      <- old name if we are changing the name of a column
-     column        <- temporary storage for editing column
-     columns       <- list of columns in the table
-     create_column <- check if column is edited or new"""
+  """original_name      <- the name of the table before any edits
+     name               <- new name, if name has been changed
+     original_col_name  <- old name if we are changing the name of a column
+     column             <- temporary storage for editing column
+     columns            <- list of columns in the table
+     create_table       <- check if column is edited or new
+     create_column      <- check if column is edited or new
+     data               <- result set for temporarily storing table data"""
   def __init__(self):
     self.original_name = None
     self.name = None
-    self.old_name = None
+    self.original_col_name = None
     self.column = None
     self.columns = list()
-    self.renamed_columns = dict()
+    self.create_table = False
     self.create_column = False
+    self.data = None
 
   def debug(self):
     ret_val = f"Original Name: {CYAN}{self.original_name}{NORMAL}\r\n"

@@ -243,5 +243,5 @@ class TestTEDIT(unittest.TestCase):
 
 if __name__ == "__main__":
   config.DEBUG_MODE = False
-  #unittest.main()
-  unittest.main(defaultTest="TestTEDIT.test_rename_columns")
+  unittest.main()
+  #unittest.main(defaultTest="TestTEDIT.test_rename_columns")

@@ -253,7 +253,8 @@ def do_db(ch, scmd, argument, server, mud, db, command_interpreter):
   mudlog.debug(f"do_db function called on player {ch} with argument '{argument}'")
 
   db_help = "Use the following syntax:\r\n"
-  db_help += f"  db files                - list all db files in {config.DATABASE_FOLDER}/\r\n"
+  db_help += f"  db create <table name>  - create an empty table\r\n"
+  db_help += f"  db files                - list all db files in {config.DATABASE_FOLDER}\r\n"
   db_help += f"  db tables               - list table in database\r\n"
   db_help += f"  db records <table name> - show records in table\r\n"
   db_help += f"  db columns <table name> - show columns of table\r\n"
@@ -265,7 +266,12 @@ def do_db(ch, scmd, argument, server, mud, db, command_interpreter):
     ch.write(db_help)
     return
 
-  if args[0] == "tables":
+  if args[0] == "create":
+    if num_args > 2:
+      ch.write("Usage: db create <table name>\r\n")
+      return
+    
+  elif args[0] == "tables":
     if num_args > 1:
       ch.write("Usage: db tables\r\n")
       return
@@ -420,13 +426,21 @@ def do_pindex(ch, scmd, argument, server, mud, db, command_interpreter):
   out_str = ''.join(f"{p['id']} {p['name']}\r\n" for p in pbase.ptable)
   ch.write(out_str)
 
-def do_gossip(ch, scmd, argument, server, mud, db, command_interpreter): 
+def do_gossip(ch, scmd, argument, server, mud, db, command_interpreter):
+  if argument == "":
+    ch.write("What would you like to gossip?\r\n")
+    return
+
   # TODO: change this function to write to all characters in the game so that we can work towards
-  # not interacting with descriptors directly
+  # not interacting with the server or descriptors directly
   server.write_all(f"{YELLOW}{ch} gossips, '{argument}'{NORMAL}\r\n", exceptions=[ch.descriptor])
   ch.write(f"{YELLOW}You gossip, '{argument}'{NORMAL}\r\n")
 
 def do_say(ch, scmd, argument, server, mud, db, command_interpreter):
+  if argument == "":
+    ch.write("What would you like to say?\r\n")
+    return
+
   rm = mud.room_by_uid(ch.room)
   rm.echo(f"{ch} says, '{argument}'\r\n", exceptions=[ch])
   ch.write(f"You say, '{argument}'\r\n")

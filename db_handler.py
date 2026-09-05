@@ -16,36 +16,41 @@ class db_handler:
     self._connection = None
     self._cursor = None
 
-  """connect(db_file)                       <- establish connection with database
-     close()                                <- close connection to database
-     execute(query, params)                 <- execute raw SQL query
-     commit()                               <- not necessary (due to auto-commit)
-     create_table(name, *columns)           <- create new table with given columns
-     drop_table(name)                       <- delete table
-     create_backup(file)                    <- dump all contents into new database file
-     drop_all_tables()                      <- back anything up you might be attached to!
-     add_column(table, name, type)          <- add new column to table
-     drop_column(table, name)               <- delete column from table
-     has_column(table, name, type, primary) <- check if table has column (type and primary optional)
-     column_type(table, name)               <- check data type of column in field
-     list_columns(table)                    <- show actual columns in a table
-     list_column_names(table)               <- show column names in table
-     num_columns(table)                     <- count columns in table
-     num_tables()                           <- count tables in database
-     num_records(table)                     <- count records in a table
-     list_records(table)                    <- return table as result set
-     insert_record(table, **record)         <- insert record to table
-     delete_records(table, **record)        <- delete records from table
-     list_tables()                          <- returns list of tables created
-     list_table_names()                     <- returns list of names of tables created
-     table_by_name(name)                    <- look up table in database by its name
-     table_exists(name)                     <- check if a table has already been created
-     fetch_one()                            <- fetch one result
-     fetch_all()                            <- fetch all results
-     show_table(name)                       <- display table as a string
-     search_table(table, **clause)          <- search table for records, returns result set
-     get_record(table, **key)               <- 
-     verify_columns(table, *columns)        <- add columns to table if missing"""
+  """connect(db_file)                        <- establish connection with database
+     close()                                 <- close connection to database
+     execute(query, params)                  <- execute raw SQL query
+     execute_many(query, params)             <- execute(many) raw SQL query
+     commit()                                <- not necessary (due to auto-commit)
+     create_table(name, *columns)            <- create new table with given columns
+     drop_table(name)                        <- delete table
+     rename_table(table, name)               <- rename a table
+     create_backup(file)                     <- dump all contents into new database file
+     drop_all_tables()                       <- back anything up you might be attached to!
+     add_column(table, name, type)           <- add new column to table
+     drop_column(table, name)                <- delete column from table
+     rename_column(table, old, new)          <- rename column in a table
+     has_column(table, name, type, primary)  <- check if table has column (type and primary optional)
+     column_type(table, name)                <- check data type of column in field
+     list_columns(table)                     <- show actual columns in a table
+     list_column_names(table)                <- show column names in table
+     num_columns(table)                      <- count columns in table
+     num_tables()                            <- count tables in database
+     num_records(table)                      <- count records in a table
+     list_records(table)                     <- return table as result set
+     insert_record(table, **record)          <- insert record into table
+     insert_records(table, record_list)      <- insert records into table
+     trim_insert_records(table, record_list) <- inserts records into table, trimming source only fields
+     delete_records(table, **record)         <- delete records from table
+     list_tables()                           <- returns list of tables created
+     list_table_names()                      <- returns list of names of tables created
+     table_by_name(name)                     <- look up table in database by its name
+     table_exists(name)                      <- check if a table has already been created
+     fetch_one()                             <- fetch one result
+     fetch_all()                             <- fetch all results
+     show_table(name)                        <- display table as a string
+     search_table(table, **clause)           <- search table for records, returns result set
+     get_record(table, **key)                <- 
+     verify_columns(table, *columns)         <- add columns to table if missing"""
 
   def close(self):
     self._connection.close()
@@ -60,35 +65,48 @@ class db_handler:
     self._cursor = self._connection.cursor()
 
   def execute(self, query, parameters = ()):
-    # print(query)
     return self._cursor.execute(query, parameters)
+
+  def execute_many(self, query, parameter_list):
+    return self._cursor.executemany(query, parameter_list)
 
   def commit(self):
     self._connection.commit()
 
-  def create_table(self, table_name, *columns):
+  def create_table(self, table_name, *column_tuples):
     has_primary = False
-    has_composite_primary = False
+    has_composite = False
 
-    # if table_name is invalid, abort
+    def sql_type(python_type):
+      if python_type == int:
+        return "int"
+      if python_type == str:
+        return "text"
+
+    if self.table_exists(table_name):
+      mudlog.error(f"tried to create table '{table_name}' which already exists")
+      raise RuntimeError
+
+    # sanity checks
     if not valid_table_name(table_name):
       mudlog.error(f"Trying to create table with invalid name '{table_name}'.")
       return
 
-    # require non-zero number of columns
-    if len(columns) == 0:
+    if len(column_tuples) == 0:
       mudlog.error(f"Trying to create table '{table_name}' without any columns.")
-      return
+      raise RuntimeError
 
-    # all column names must be valid
-    for triple in columns:
-      col = db_column.db_column(triple[0], triple[1], triple[2])
-      if not db_column.valid_column_name(col.name):
-        mudlog.error(f"Trying to create table '{table_name}' with invalid column name '{col.name}'.")
+    for tuple in column_tuples:
+      if not db_column.valid_column_name(tuple[0]):
+        mudlog.error(f"Trying to create table '{table_name}' with invalid column name '{tuple[0]}'.")
         return
-      if triple[2] and has_primary:
-        has_composite_primary = True
-      elif triple[2]:
+
+    # determine if composite key
+    for tuple in column_tuples:
+      if has_primary and tuple[2]:
+        has_composite = True
+        break
+      elif tuple[2]:
         has_primary = True
 
     # if table_name has already been used, abort
@@ -96,30 +114,63 @@ class db_handler:
       mudlog.error(f"Trying to create table '{table_name}' which already exists.")
       return
 
-    column_string = ""
+    query = f"CREATE TABLE {table_name} ("
 
-    # turn ("column1", str, bool), ("column2", int, bool) into "column1 text, column2 int,"
-    for pair in columns:
-      col = db_column.db_column(pair[0], pair[1])
-      column_string += f"{col.name} {col.sqlite3_type},"
+    if has_composite:
+      primary_key_fields = []
 
-    # this adds one too many commas at the very end
-    column_string = column_string[:-1]
+      # column is a db_column object
+      for tuple in column_tuples:
+        query += f"\r\n  {tuple[0]} {sql_type(tuple[1])},"
 
-    sql = f"CREATE TABLE {table_name}({column_string})"
-    self.execute(sql)
+        if tuple[2]:
+          primary_key_fields.append(tuple[0])
 
+      query += f"\r\n  PRIMARY KEY ({', '.join(primary_key_fields)})"
+    
+    else:
+      for tuple in column_tuples:
+        query += f"\r\n  {tuple[0]} {sql_type(tuple[1])}"
+
+        if tuple[2]:
+          query += " PRIMARY KEY"
+
+        query += ","
+
+      # there will be one too many columns
+      query = query[:-1]
+
+    query += "\r\n);"
+
+    self.execute(query)
+    
   def drop_table(self, table_name):
-    sql = f"DROP TABLE {table_name}"
+    sql = f"DROP TABLE {table_name};"
     self.execute(sql)
+
+  def rename_table(self, old, new):
+    if not valid_table_name(new):
+      mudlog.error(f"Passing invalid new='{new}' to handler.rename_table function.")
+      return
+
+    query = f"ALTER TABLE '" + old + "' RENAME TO '" + new + "';"
+    self.execute(query)
 
   def add_column(self, table, name, type):
     column = db_column.db_column(name, type)
-    sql = f"ALTER TABLE {table} ADD {column.name} {column.sqlite3_type}"
+    sql = f"ALTER TABLE {table} ADD {column.name} {column.sqlite3_type};"
     self.execute(sql)
 
   def drop_column(self, table, name):
-    sql = f"ALTER TABLE {table} DROP COLUMN {name}"
+    sql = f"ALTER TABLE {table} DROP COLUMN {name};"
+    self.execute(sql)
+
+  def rename_column(self, table, old, new):
+    if not db_column.valid_column_name(new):
+      mudlog.error(f"Trying to rename column '{old}' in table '{self.name}' to invalid name '{new}'.")
+      return
+
+    sql = f"ALTER TABLE {table} RENAME COLUMN {old} TO {new};"
     self.execute(sql)
 
   def has_column(self, table, name, type=None, primary=None):
@@ -156,7 +207,7 @@ class db_handler:
       return None
 
     # TODO: write pragma function?
-    sql = f"PRAGMA table_info({table_name})"
+    sql = f"PRAGMA table_info({table_name});"
 
     self.execute(sql)
     self.commit()
@@ -182,8 +233,8 @@ class db_handler:
 
   def insert_record(self, table, **record):
     table_columns = self.list_columns(table)
-    column_names = self.list_column_names(table)
-    num_records = len(record.keys())
+    column_names = [col.name for col in table_columns]
+    num_fields = len(column_names)
     extra_fields = [field for field in record.keys() if field not in column_names]
 
     # do not accept a record with an extra field
@@ -196,8 +247,9 @@ class db_handler:
       return
 
     for column in table_columns:
-      # but if fields are missing that's OK
+      # if record has missing fields are missing pad them with null values
       if column.name not in record.keys():
+        record[column.name] = None
         continue
 
       if type(record[column.name]) != column.type:
@@ -205,12 +257,70 @@ class db_handler:
         return
 
     columns = ', '.join(record.keys())
-    values = ', '.join('?' * num_records)
+    values = ', '.join('?' * num_fields)
 
-    syntax = f"INSERT INTO {table} ({columns}) VALUES ({values})"
+    syntax = f"INSERT INTO {table} ({columns}) VALUES ({values});"
 
     self.execute(syntax, tuple(record.values()))
     self.commit()
+
+  def insert_records(self, table, record_list):
+    table_columns = self.list_columns(table)
+    column_names = [col.name for col in table_columns]
+
+    if len(record_list) == 0:
+      return
+
+    num_fields = len(column_names)
+
+    for record in record_list:
+      for column in table_columns:
+        extra_fields = [field for field in record.keys() if field not in column_names]
+
+        # do not accept a record with an extra field
+        # TODO: instead of checking for extra fields, we could just catch an
+        # exception:
+        # eg.
+        # sqlite3.OperationalError: table testtable has no column named father
+        if len(extra_fields) > 0:
+          mudlog.error(f"Trying to insert record\r\n{str(record)}\r\ninto table '{table}' with unexpected field '{extra_fields[0]}'.")
+          return
+
+        # if record has missing fields are missing pad them with null values
+        if column.name not in record.keys():
+          record[column.name] = None
+          continue
+
+        if type(record[column.name]) != column.type:
+          mudlog.error(f"Trying to insert record into table {table}, but {record[column.name]} is not of type {column.type}.")
+          return
+
+    columns = ', '.join(column_names)
+    values = ', '.join('?' * num_fields)
+    
+    syntax = f"INSERT INTO {table} ({columns}) VALUES ({values});"
+
+    # convert each record into a tuple to pass as execute params
+    def as_tuple(r):
+      return tuple([r[field] for field in column_names])
+
+    # executemany requires a list of such column_tuples
+    self.execute_many(syntax, [as_tuple(record) for record in record_list])
+
+  def trim_insert_records(self, table, record_list):
+    target_columns = self.list_columns(table)
+
+    # build book of field:type key-value pairs
+    columns_dict = dict()
+    for column in target_columns:
+      columns_dict[column.name] = column.type
+
+    # trim any fields that don't correspond to columns in empty table
+    for record in record_list:
+      for key in [field for field in record.keys() if (field not in columns_dict.keys()) or (columns_dict[field] != type(record[field]))]:
+        del record[key]
+
+    self.insert_records(table, record_list)
 
   def delete_records(self, table, **record):
     sql = f"DELETE FROM {table}"

@@ -37,6 +37,20 @@ class TestDBHandler(unittest.TestCase):
 
     self.assertEqual(handler.num_records("players"), 2)
 
+  def test_create_primary_key(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table("players",
+      ("name", str, True),
+      ("age", int, True),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    self.assertTrue(handler.has_column("players", "name", str, True))
+
   def test_db(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
@@ -66,10 +80,10 @@ class TestDBHandler(unittest.TestCase):
     self.assertEqual(handler.list_column_names("players"), ["name", "age", "drink", "food", "job"])
     self.assertEqual(handler.num_columns("players"), 5)
 
-    # this should cause an error
-    print("expecting error between here")
-    handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
-    print("and here")
+    # # this should cause an error
+    # print("expecting error between here")
+    # handler.create_table("players", ("field_one", str, False), ("field_two", int, False))
+    # print("and here")
 
     # manually use SQL syntax to add a row
     handler.insert_record("players",
@@ -82,7 +96,6 @@ class TestDBHandler(unittest.TestCase):
 
     handler.insert_record("players",
       name='deglo',
-      age=33,
       drink="coffee",
       food="nachos"
     )
@@ -311,7 +324,60 @@ class TestDBHandler(unittest.TestCase):
     self.assertEqual(baker["name"], "the baker")
     self.assertEqual(baker["age"], 52)
     self.assertEqual(baker["desc"], "He's got an apostrophe in his description.")
-    
+
+  def test_create_table_new(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should fire error message and fail because 'name;' is not a valid column name
+    handler.create_table("npcs",
+      ("name;", str, False),
+      ("age", int, False),
+      ("desc", str, False)
+    )
+
+    # has composite primary
+    handler.create_table("npcs",
+      ("name", str, True),
+      ("last_name", str, True),
+      ("desc", str, False)
+    )
+
+    # does not
+    handler.create_table("pcs",
+      ("name", str, True),
+      ("age", int, False),
+      ("desc", str, False)
+    )
+
+  def test_insert_records(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table('p_table', ('first_name', str, True), ('last_name', str, False), ('age', int, False))
+
+    handler.insert_records('p_table', [
+      {'first_name':'bob', 'last_name':'ross'},
+      {'first_name':'kyle', 'last_name':'schlitt', 'age':42},
+      {'first_name':'paddy', 'last_name':'baddy', 'age':43}
+    ])
+
+    print(handler.search_table('p_table'))
+
+  def test_trim_insert_records(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    handler.create_table('p_table', ('id', int, True), ('last_name', str, False), ('age', int, False))
+
+    handler.trim_insert_records('p_table', [
+      {'first_name':'bob', 'last_name':'ross', 'food':'pizza'},
+      {'first_name':'kyle', 'last_name':'schlitt', 'age':42, 'drink':'beer'},
+      {'first_name':'paddy', 'last_name':'baddy', 'age': '35'}
+    ])
+
+    print(handler.search_table('p_table'))
+
 if __name__ == "__main__":
-  unittest.main()
-  # unittest.main(defaultTest="TestDBHandler.test_num_records")
+  #unittest.main()
+  unittest.main(defaultTest="TestDBHandler.test_trim_insert_records")

@@ -27,14 +27,27 @@ class db_result_set:
   def num_results(self):
     return len(self._results)
 
-  """add_column(name)      <- insert new column, pads result fields with None
-     delete_column(name)   <- removes column and corresponding field from results
-     add_result(result)    <- insert new result to self._results
-     delete_result(result) <- remove result from self._results"""
+  """add_column(name)              <- insert new column, pads result fields with None
+     clear_column(name)            <- set all corresponding fields to None
+     delete_column(name)           <- removes column and corresponding field from results
+     has_column(name)              <- check data has field with name
+     rename_column(name, new_name) <- renames a column, keeps data the same
+     add_result(result)            <- insert new result to self._results
+     delete_result(result)         <- remove result from self._results"""
 
   def add_column(self, name):
-    if db_column.valid_column_name(name):
-      self._column_names.append(name)
+    if not db_column.valid_column_name(name):
+      return
+
+    self._column_names.append(name)
+    
+    for result in self._results:
+      result[name] = None
+
+  def clear_column(self, name):
+    if not name in self._column_names:
+      return
+
     for result in self._results:
       result[name] = None
 
@@ -45,6 +58,31 @@ class db_result_set:
     for result in self._results:
       if name in result:
         result.delete_field(name)
+
+  def has_column(self, name):
+    return name in self._column_names
+
+  def rename_column(self, name, new_name):
+    if name == new_name:
+      mudlog.error(f"Attempting to rename column '{name}' to its own name.")
+      return
+
+    if self.has_column(new_name):
+      mudlog.error(f"Attempting to rename column '{name}' to '{new_name}' which already exists.")
+      return
+
+    if not db_column.valid_column_name(name):
+      return
+
+    # create new column
+    self.add_column(new_name)
+
+    # copy the old one
+    for result in self._results:
+      result[new_name] = result[name]
+
+    # delete the old one
+    self.delete_column(name)
 
   def add_result(self, result):
     if result.fields != self._column_names:

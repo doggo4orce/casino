@@ -161,6 +161,52 @@ class TestDBTable(unittest.TestCase):
     # close handler object for good measure
     handler.close()
 
+  def test_rename(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should have zero tables at first
+    self.assertEqual(handler.num_tables(), 0)
+
+    table = db_table.db_table(handler, "players")
+    table.create(
+      ("name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    # make sure the tables exists
+    self.assertTrue(table.exists())
+
+    table.insert(name='roobiki', age=41, drink="beer", food='nachos', job='comedian')
+    table.insert(name='deglo', age=33, drink="coffee", food="nachos")
+    table.insert(name='bob',age=21, drink="coffee", food="nachos", job="janitor")
+
+    # change it's name
+    table.rename("wizards")
+
+    # make sure it exists with the correct new name
+    self.assertFalse(handler.table_exists("players"))
+    self.assertTrue(handler.table_exists("wizards"))
+
+    # and has the right columns
+    self.assertEqual(handler.list_column_names("wizards"), ["name", "age", "drink", "food", "job"])
+    self.assertEqual(handler.num_columns("wizards"), 5)
+
+    # with the correct records
+    self.assertEqual(table.num_records(), 3)
+
+    # should match with deglo and bob
+    rs = handler.search_table("wizards", drink="coffee", food="nachos")
+
+    # which means two matches
+    self.assertEqual(rs.num_results, 2)
+
+    # close handler object for good measure
+    handler.close()
+
   def test_primary_fields(self):
     handler = db_handler.db_handler()
     handler.connect(":memory:")
@@ -211,6 +257,51 @@ class TestDBTable(unittest.TestCase):
 
     record = p_table.get_by_pk(first_name='roobiki', last_name="tendo")
 
+  def test_trim_insert_many(self):
+    handler = db_handler.db_handler()
+    handler.connect(":memory:")
+
+    # should have zero tables at first
+    self.assertEqual(handler.num_tables(), 0)
+
+    p_table = db_table.db_table(handler, "players")
+    p_table.create(
+      ("first_name", str, True),
+      ("last_name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    p_table.insert_many(
+      [
+        {"first_name":"kyle", "last_name":"schlitt", "age":42, "drink":"beer", "food":"pizza", "job":"professor"},
+        {"first_name":"dylan", "last_name":"pianta", "age":12, "drink":"whiskey-bend", "food":"soy", "job":"software engineer"}
+      ]
+    )
+
+    q_table = db_table.db_table(handler, "quayers")
+    q_table.create(
+      ("id", int, True),
+      ("last_name", str, True),
+      ("age", int, False),
+      ("drink", str, False),
+      ("food", str, False),
+      ("job", str, False)
+    )
+
+    q_table.trim_insert_many([result.dict() for result in p_table.search()])
+
+    print(q_table.search())
 if __name__ == "__main__":
-  unittest.main()
-  # unittest.main(defaultTest="TestDBTable.test_num_records")
+  #unittest.main()
+  #unittest.main(defaultTest="TestDBTable.test_create_drop")
+  #unittest.main(defaultTest="TestDBTable.test_num_records")
+  #unittest.main(defaultTest="TestDBTable.test_composite_key")
+  #unittest.main(defaultTest="TestDBTable.test_columns")
+  #unittest.main(defaultTest="TestDBTable.test_insert_delete_search")
+  #unittest.main(defaultTest="TestDBTable.test_rename")
+  #unittest.main(defaultTest="TestDBTable.test_primary_fields")
+  #unittest.main(defaultTest="TestDBTable.test_get_by_pk")
+  unittest.main(defaultTest="TestDBTable.test_trim_insert_many")

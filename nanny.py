@@ -43,7 +43,25 @@ def input_handler_parse_get_name(d, mud, db, command, argument):
   # the database is unavailable, don't load anything just let them in
   if mud.mini_mode:
 
-    # create a player with the login name
+    # check if they are logged in already
+    ch = mud.pc_by_name(d.login_info.name)
+
+    # they are logged in with live connection
+    if ch and ch.descriptor:
+      d.write("You are already logged in.\r\nThrow yourself off (Y/N)? ")
+      d.state = descriptor_data.descriptor_state.GET_CONFIRM_REPLACE
+      return
+
+    # they are logged in with a dead connection
+    elif ch:
+      mud.reconnect(d, ch)
+      mudlog.info(f"{ch} recovering lost connection.")
+      mud.echo_around(ch, None, f"{ch} has reconnected.\r\n")
+      ch.write("You have reconnected.\r\n")
+      d.state = descriptor_data.descriptor_state.CHATTING
+      return
+
+    # they aren't reconnecting, so log in normally
     new_player = pc_data.pc_data()
     new_player.name = d.login_info.name
 
@@ -55,8 +73,6 @@ def input_handler_parse_get_name(d, mud, db, command, argument):
     emergency_room = unique_id_data.unique_id_data.from_string(config.VOID_ROOM)
     load_room = mud.room_by_uid(emergency_room)
     
-    print(load_room)
-
     mud.add_character_to_room(d.character, mud.room_by_uid(load_room))
 
     # let the user know we are an emergency mode
@@ -105,7 +121,7 @@ def input_handler_parse_get_password(d, mud, db, input):
   d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
 
   # check if they are logged in already
-  ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
+  ch = mud.pc_by_name(d.login_info.name)
 
   # they are logged in with live connection
   if ch and ch.descriptor:

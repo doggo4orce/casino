@@ -9,3 +9,6 @@ test.py
 .killscript
 */*/.DS_Store
 test.db
+data.db
+backup.db
+autorun.sh

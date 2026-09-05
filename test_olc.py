@@ -1,5 +1,5 @@
 import buffer_data
-import command_interpreter
+import command_interpreter_data
 import config
 import descriptor_data
 import database
@@ -9,7 +9,9 @@ import olc
 import olc_data
 import pc_data
 import redit
+import tedit
 import socket
+import test_utilities
 import unittest
 import unique_id_data
 import zedit
@@ -417,6 +419,5 @@ class TestOLC(unittest.TestCase):
     self.assertEqual(new_zone.name, "The Haunted Castle")
 
 if __name__ == "__main__":
-  unittest.main(defaultTest="TestOLC.test_redit_quit")
   config.DEBUG_MODE = True
   #unittest.main()

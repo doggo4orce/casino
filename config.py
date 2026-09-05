@@ -61,4 +61,4 @@ DEFAULT_TITLE          = "the title-less"
 GREETINGS = """                      OurouborosMud\r\n\r\n\r\nBy what name do you wish to be known? """
 
 # turn on mudlog.debug() messages
-DEBUG_MODE             = True
+DEBUG_MODE             = False

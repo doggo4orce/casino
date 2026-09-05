@@ -42,9 +42,11 @@ class database:
      list_tables()                       <- list all tables loaded in db_file
      list_table_names()                  <- list names of all tables loaded in db_file
      list_columns(table)                 <- list all columns in table
+     has_column(table, nam, typ, primry) <- check if table has column
      fetch_record(table, **clause)       <- fetch
      fetch_records(table, **clause)      <- view table as result set
      num_records(table)                  <- count records in table
+     num_columns(table)                  <- count columns in table
 
      name_used(name)                     <- check if player exists with name
      next_unused_pid()                   <- find smallest unused player ID
@@ -156,12 +158,18 @@ class database:
   def list_columns(self, table):
     return self._handler.list_columns(table)
 
+  def has_column(self, table, name, type, primary):
+    return self._handler.has_column(table, name, type, primary)
+    
   def list_records(self, table):
     return self._handler.list_records(table)
 
   def num_records(self, table):
     return self._handler.num_records(table)
 
+  def num_columns(self, table):
+    return self._handler.num_columns(table)
+    
   def name_used(self, name):
     return self._handler.get_record(database.PLAYER_TABLE,name=name) is not None
 

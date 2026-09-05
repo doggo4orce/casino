@@ -302,9 +302,9 @@ class db_handler:
 
     # convert each record into a tuple to pass as execute params
     def as_tuple(r):
-      tuple([r[field] for field in column_names])
+      return tuple([r[field] for field in column_names])
 
-    # executemany requires a list of such tuples
+    # executemany requires a list of such column_tuples
     self.execute_many(syntax, [as_tuple(record) for record in record_list])
 
   def trim_insert_records(self, table, record_list):

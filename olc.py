@@ -106,6 +106,70 @@ def do_rlist(ch, scmd, argument, server, mud, db, nanny):
   for id, room in zone._world.items():
     ch.write(f"[{GREEN}{id:>{config.MAX_ROOM_ID_LENGTH}}{NORMAL}] {CYAN}{room.name:<30}{NORMAL}\r\n")
 
+def do_medit(ch, scmd, argument, server, mud, db, nanny):
+  mudlog.debug(f"do_medit called by player {ch.Name} with argument {argument}")
+  Usage = "Usage: medit [[zone_id ]npc_id]"
+
+  zone_id = ch.room.zone_id
+
+  args = argument.split()
+  num_args = len(args)
+
+  medit_save = medit_save_data.medit_save_data()
+
+  if num_args == 2:
+    # both zone and room are specified
+    zone_id = args[0]
+    npc_id = args[1]
+  elif num_args == 1:
+    # only room specified, detault to current zone
+    npc_id = args[0]
+  elif num_args == 0:
+    # no arguments were passed, default to current room
+    pass
+  else:
+    ch.write(Usage)
+    return
+
+  # either it was specified as an argument, or its the zone we're in
+  zone = mud.zone_by_id(zone_id)
+
+  if zone == None:
+    # it must have been specified as an argument
+    ch.write("Sorry, that zone was not found, you'll have to create it first with ZEDIT.\r\n")
+    return
+
+  # one last sanity check
+  if not string_handling.valid_id(room_id):
+    ch.write("NPC ID's may consist of numbers, letters, or underscores.\r\n")
+    return
+
+  # otherwise zone was found and this is safe
+  npc_p = zone.npc_by_id(npc_id)
+
+  # we can copy the id into the redit_save now because it's the same even if we have to create the room
+  medit_save.uid = unique_id_data.unique_id_data(zone_id, npc_id)
+
+  # TODO: replace this with a function: redit_save.from_room(rm)
+  # if a room was found we'll load it's info into redit_save now
+  if npc_p != None:
+    medit_save.uid.zone_id = npc_p.zone_id
+    medit_save.uid.id = npc_p.id
+    medit_save.name = npc_p.name
+    medit_save.desc.text = npc_p.desc.text
+
+  mud.echo_around(ch, None, f"{ch.name} starts using OLC (medit).\r\n")
+
+  # this object gets attached to descriptor and keeps track of what user is doing
+  olc = olc_data.olc_data()
+  olc.mode = olc_data.olc_mode.OLC_MODE_MEDIT
+  olc.state = medit.medit_state.MEDIT_MAIN_MENU
+  olc.save_data = medit_save
+
+  ch.descriptor.olc = olc
+  ch.descriptor.state = descriptor_data.descriptor_state.OLC
+  medit.medit_display_main_menu(ch.descriptor)
+
 def do_redit(ch, scmd, argument, server, mud, db, nanny):
   mudlog.debug(f"do_redit called by player {ch.Name} with argument {argument}")
   Usage = "Usage: redit [[zone_id ]room_id]"

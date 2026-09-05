@@ -4,6 +4,8 @@ import db_handler          # for tedit
 import descriptor_data
 import enum
 import exit_data
+import medit
+import medit_save_data
 import mudlog
 import olc_data
 import redit
@@ -21,6 +23,8 @@ def handle_input(d, input, server, mud, db):
   	  zedit.zedit_parse(d, input, server, mud, db)
     case olc_data.olc_mode.OLC_MODE_REDIT:
       redit.redit_parse(d, input, server, mud, db)
+    case olc_data.olc_mode.OLC_MODE_MEDIT:
+      pass
     case olc_data.olc_mode.OLC_MODE_TEDIT:
       tedit.tedit_parse(d, input, db)
 
@@ -112,7 +116,7 @@ def do_medit(ch, scmd, argument, server, mud, db, nanny):
     return
 
   # one last sanity check
-  if not string_handling.valid_id(room_id):
+  if not string_handling.valid_id(npc_id):
     ch.write("NPC ID's may consist of numbers, letters, or underscores.\r\n")
     return
 

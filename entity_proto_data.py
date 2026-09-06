@@ -93,6 +93,6 @@ class entity_proto_data:
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"LDesc: {CYAN}{self.ldesc}{NORMAL}\r\n"
     ret_val += f"Alias: {CYAN}{self._namelist}{NORMAL}\r\n"
-    ret_val += f"Desc: {CYAN}{self.desc}{NORMAL}\r\n"
+    ret_val += f"Desc: {CYAN}{self.desc.text}{NORMAL}\r\n"
     ret_val += self.behaviour.debug()
     return ret_val

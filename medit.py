@@ -12,6 +12,7 @@ class medit_state(enum.IntEnum):
   MEDIT_EDIT_NAME      = 2
   MEDIT_CONFIRM_SAVE   = 3
   MEDIT_EDIT_DESC      = 4
+  MEDIT_EDIT_LDESC     = 5
 
 def medit_display_main_menu(d):
   medit_save = d.olc.save_data
@@ -34,9 +35,11 @@ def medit_parse(d, input, mud, db):
     case medit_state.MEDIT_MAIN_MENU:
       medit_parse_main_menu(d, input)
     case medit_state.MEDIT_EDIT_NAME:
-      medit_parse_edit_name(d, input, mud, db)
+      medit_parse_edit_name(d, input)
     case medit_state.MEDIT_CONFIRM_SAVE:
       medit_parse_confirm_save(d, input, mud, db)
+    case medit_state.MEDIT_EDIT_LDESC:
+      medit_parse_edit_ldesc(d, input)
 
 def medit_parse_main_menu(d, input):
   if input == "":
@@ -53,11 +56,15 @@ def medit_parse_main_menu(d, input):
   match response.upper():
     case '1':
       d.olc.state = medit_state.MEDIT_EDIT_NAME
-      d.write("Enter new name :")
+      d.write("Enter new name : ")
     case '2':
       medit_save = d.olc.save_data
       d.olc.state = medit_state.MEDIT_EDIT_DESC
       d.start_writing(medit_save.desc.text, medit_save.desc)
+    case '3':
+      medit_save = d.olc.save_data
+      d.olc.state = medit_state.MEDIT_EDIT_LDESC
+      d.write("Enter new L-Desc : ")
     case 'Q':
       if d.olc.changes:
         d.olc.state = medit_state.MEDIT_CONFIRM_SAVE
@@ -65,9 +72,15 @@ def medit_parse_main_menu(d, input):
     case _:
       d.write("Enter choice : ")
 
-def medit_parse_edit_name(d, input, mud, db):
+def medit_parse_edit_name(d, input):
   medit_save = d.olc.save_data
   medit_save.name = input
+  d.olc.state = medit_state.MEDIT_MAIN_MENU
+  medit_display_main_menu(d)
+
+def medit_parse_edit_ldesc(d, input):
+  medit_save = d.olc.save_data
+  medit_save.ldesc = input
   d.olc.state = medit_state.MEDIT_MAIN_MENU
   medit_display_main_menu(d)
 

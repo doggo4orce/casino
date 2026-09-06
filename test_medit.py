@@ -25,6 +25,7 @@ class TestZeditSave(unittest.TestCase):
   def test_create_npc(self):
     db = database.database(":memory:")
     db.connect()
+    db.create_tables()
 
     # create command interpreter
     CI = command_interpreter_data.command_interpreter_data()
@@ -72,7 +73,9 @@ class TestZeditSave(unittest.TestCase):
     for input in input_q:
       process_input(d, input, mud, db, verbose, CI)
 
-    print(d.out_buf)
+    self.assertEqual(npcp.name, "roobiki")
+    self.assertEqual(npcp.desc.text, "desc")
+    self.assertEqual(npcp.ldesc, "here")
 
 if __name__ == "__main__":
   unittest.main()

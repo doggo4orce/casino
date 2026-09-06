@@ -1,6 +1,7 @@
 import behaviour_data
 from color import *
 import namelist_data
+import text_data
 
 class entity_proto_data:
   """Acts as blueprints to create entities.
@@ -14,7 +15,7 @@ class entity_proto_data:
     self.name ="an unfinished entity proto"
     self._namelist = namelist_data.namelist_data("unfinished", "entity", "proto")
     self.ldesc = "An unfinished entity proto is here."
-    self.desc = "This entity proto looks unfinished."
+    self.desc = text_data.text_data("This entity proto looks unfinished.")
     self.behaviour = behaviour_data.behaviour_data()
 
   @property

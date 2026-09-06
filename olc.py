@@ -133,6 +133,7 @@ def do_medit(ch, scmd, argument, server, mud, db, nanny):
     medit_save.uid.id = npc_p.id
     medit_save.name = npc_p.name
     medit_save.desc.text = npc_p.desc.text
+    medit_save.ldesc = npc_p.ldesc
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (medit).\r\n")
 

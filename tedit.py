@@ -82,6 +82,13 @@ def tedit_parse_main_menu(d, input, db):
     case '2':
       d.olc.state = tedit_state.TEDIT_EDIT_SCHEMA
       tedit_display_schema_menu(d)
+    case '3':
+      out_str = "\r\n"
+      tedit_save = d.olc.save_data
+      for (index, result) in enumerate(tedit_save.data):
+        out_str += f"{RED}{index+1}{NORMAL}) {list(result.dict().values())}\r\n\r\n"
+      d.write(out_str)
+      tedit_display_main_menu(d)
     case 'X':
       d.olc.state = tedit_state.TEDIT_CONFIRM_DROP
       d.write("This action is final and cannot be reversed!\r\n\r\n")
@@ -103,6 +110,8 @@ def tedit_parse_main_menu(d, input, db):
 
       d.olc.state = tedit_state.TEDIT_CONFIRM_SAVE
       d.write("Save changes? : ")
+    case _:
+      d.write("Enter choice : ")
 
 def tedit_parse_edit_name(d, input, db):
   tedit_save = d.olc.save_data

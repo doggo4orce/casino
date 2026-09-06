@@ -310,7 +310,7 @@ class database:
 
   def save_npc_proto(self, proto):
     if self.has_npc_proto(proto.zone_id, proto.id):
-      self.delete_npc_proto(proto.zone_id. proto.id)
+      self.delete_npc_proto(proto.zone_id, proto.id)
 
     self.table_by_name(database.NPC_PROTO_TABLE).insert(
       zone_id=proto.zone_id,
@@ -346,7 +346,7 @@ class database:
       id=proto.id,
       name=proto.name,
       ldesc=proto.ldesc,
-      desc=proto.desc.text
+      desc=proto.desc
     )
 
     for alias in proto.aliases():
@@ -380,7 +380,7 @@ class database:
       zone_id=room.zone_id,
       id=room.id,
       name=room.name,
-      desc=room.desc.text,
+      desc=room.desc,
     )
 
     for ex in room.exits:
@@ -726,7 +726,7 @@ class database:
     rm.name = "The Void"
     rm.zone_id = "stockville"
     rm.id = "void"
-    rm.desc = text_data.text_data("<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because its last known location no longer exists. Head down to return to recall.</p>")
+    rm.desc = "<p>This is a nice, calm, relaxing space. Anything in this room probably wound up here because its last known location no longer exists. Head down to return to recall.</p>"
 
     rm.connect(exit_data.direction.DOWN, 'stockville', 'recall')
     stockville._world[rm.id] = rm
@@ -735,7 +735,7 @@ class database:
     rm.name = "Stockville Casino"
     rm.zone_id = "stockville"
     rm.id = "casino"
-    rm.desc = text_data.text_data("<p>The heavy weight of bad decisions hangs thick in the air.</p>")
+    rm.desc = "<p>The heavy weight of bad decisions hangs thick in the air.</p>"
     rm.connect(exit_data.direction.WEST, 'stockville', 'recall')
     stockville._world[rm.id] = rm
 
@@ -743,7 +743,7 @@ class database:
     rm.name = "Stockville Recall"
     rm.zone_id = "stockville"
     rm.id = "recall"
-    rm.desc = text_data.text_data("<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>")
+    rm.desc = "<p>This is the recall point of Stockville City.  You should be able to get here by typing <c11>RECALL<c0> at <c6>a<c2>n<c5>y<c0> time.</p>"
     rm.connect(exit_data.direction.EAST, 'stockville', 'casino')
     rm.connect(exit_data.direction.WEST, 'stockville', 'reading')
     stockville._world[rm.id] = rm
@@ -752,7 +752,7 @@ class database:
     rm.name = "Reading Room"
     rm.zone_id = "stockville"
     rm.id = "reading"
-    rm.desc = text_data.text_data("""<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
+    rm.desc = """<p>This would a great place to catch up on news from the non-existent message board that should be here!  To the north is the entrance to a different zone.</p>
 
   <c9>HINT HINT<c0>:  Time to make a message board!
   ---------
@@ -763,7 +763,7 @@ class database:
        room and this mini pargraph will not
        be harmed!  <(^_^)7   6(*-*)^
 
-<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>""")
+<p>But now I've entered paragraph mode again. So all of this text will be formatted according to my user-set preference of how wide I want my screen to be.</p>"""
     rm.connect(exit_data.direction.EAST, 'stockville', 'recall')
     rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway1')
     stockville.add_room(rm)
@@ -771,7 +771,7 @@ class database:
     npcp = npc_proto_data.npc_proto_data()
     npcp.reset_aliases('baccarat', 'dealer')
     npcp.name = 'the baccarat card dealer'
-    npcp.desc = text_data.text_data("<p>He looks like he's straight out of a bluegrass music video.</p>")
+    npcp.desc = "<p>He looks like he's straight out of a bluegrass music video.</p>"
     npcp.ldesc = 'A dealer stands here ready to hand out cards.'
     npcp.zone_id = 'stockville'
     npcp.id = 'baccarat_dealer'
@@ -780,7 +780,7 @@ class database:
     npcp = npc_proto_data.npc_proto_data()
     npcp.reset_aliases('baker', 'fat')
     npcp.name = 'the baker'
-    npcp.desc = text_data.text_data("<p>Hes a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>")
+    npcp.desc = "<p>Hes a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>"
     npcp.ldesc = "A baker is here, but dont give him a bottle."
     npcp.zone_id = 'stockville'
     npcp.id = 'baker'
@@ -789,7 +789,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('baccarat', 'gaming', 'table')
     op.name = 'a baccarat table'
-    op.desc = text_data.text_data("<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>")
+    op.desc = "<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>"
     op.ldesc = "A gaming table has been set up here."
     op.zone_id = 'stockville'
     op.id = 'baccarat_table'
@@ -798,7 +798,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('red', 'chip')
     op.name = 'a red chip'
-    op.desc = text_data.text_data("<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.desc = "<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A red casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'red_chip'
@@ -807,7 +807,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('green', 'chip')
     op.name = 'a green chip'
-    op.desc = text_data.text_data("<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.desc = "<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A green casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'green_chip'
@@ -816,7 +816,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('black', 'chip')
     op.name = 'a black chip'
-    op.desc = text_data.text_data("<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.desc = "<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A black casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'black_chip'
@@ -825,7 +825,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('purple', 'chip')
     op.name = 'a purple chip'
-    op.desc = text_data.text_data("<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
+    op.desc = "<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
     op.ldesc = "A purple casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'purple_chip'
@@ -834,7 +834,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('bottle')
     op.name = 'a bottle'
-    op.desc = text_data.text_data("<p>It's brown, sticky, and smells like stale beer inside.</p>")
+    op.desc = "<p>It's brown, sticky, and smells like stale beer inside.</p>"
     op.ldesc = 'An empty bottle has been dropped here.'
     op.zone_id = 'stockville'
     op.id = 'bottle'
@@ -851,7 +851,7 @@ class database:
     rm.name = "The Beginning of a Damp Hallway"
     rm.zone_id = "newbie_zone"
     rm.id = "hallway1"
-    rm.desc = text_data.text_data("<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>")
+    rm.desc = "<p>This hallway leads onward into the darkness.  The floors are made of hard, compact gravel and dirt.  The walls consist of red bricks with white grout.  This place gives off a real, negative vibe.  To the south is Stockville City.</p>"
     rm.connect(exit_data.direction.NORTH, 'newbie_zone', 'hallway2')
     rm.connect(exit_data.direction.SOUTH, 'stockville', 'reading')
     newbie_zone.add_room(rm)
@@ -860,20 +860,20 @@ class database:
     rm.name = "A Dark Corner in the Hallway"
     rm.zone_id = "newbie_zone"
     rm.id = "hallway2"
-    rm.desc = text_data.text_data("""<p>Ill start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
+    rm.desc = """<p>Ill start off with a paragraph tag. Then I will add some more lines haphazardly, as I think of
 them. Then I can close the tag whenever I want to, and I will!</p>
 
 <p>The proofread <c5>option is made for situations like <c1>this where you could have <c9>really
 <c0>awkard spaces between words and tags. Just simply due to the way you enter words through the
 editor, they may come through one at a time. And you may put a period after some spaces and forget to
-capitalize a word.</p>""")
+capitalize a word.</p>"""
     rm.connect(exit_data.direction.SOUTH, 'newbie_zone', 'hallway1')
     newbie_zone.add_room(rm)
 
     npcp = npc_proto_data.npc_proto_data()
     npcp.reset_aliases('newbie', 'monster')
     npcp.name = 'the newbie monster'
-    npcp.desc = text_data.text_data("<p>He has googly eyes and drools all over the place as he growls.</p>")
+    npcp.desc = "<p>He has googly eyes and drools all over the place as he growls.</p>"
     npcp.ldesc = 'A newbie monster snarls furiously here.'
     npcp.zone_id = 'newbie_zone'
     npcp.id = 'newbie_monster'
@@ -882,7 +882,7 @@ capitalize a word.</p>""")
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('newbie', 'dagger')
     op.name = 'a newbie dagger'
-    op.desc = text_data.text_data("<p>It's so bright and shiny, even you can't lose it.</p>")
+    op.desc = "<p>It's so bright and shiny, even you can't lose it.</p>"
     op.ldesk = 'Some idiot left a newbie dagger here.'
     op.zone_id = 'newbie_zone'
     op.id = 'newbie_dagger'
@@ -904,7 +904,7 @@ capitalize a word.</p>""")
       new_room.zone_id = room['zone_id']
       new_room.id = room['id']
       new_room.name = room['name']
-      new_room.desc.text = room['desc']
+      new_room.desc = room['desc']
       zone = mud.zone_by_id(new_room.zone_id)
 
       if zone is None:
@@ -949,7 +949,7 @@ capitalize a word.</p>""")
       nobjp.id = objp['id']
       nobjp.name = objp['name']
       nobjp.ldesc = objp['ldesc']
-      nobjp.desc.text = objp['desc']
+      nobjp.desc = objp['desc']
       zone = mud.zone_by_id(nobjp.zone_id)
 
       if zone is None:

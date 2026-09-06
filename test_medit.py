@@ -74,7 +74,7 @@ class TestMEDIT(unittest.TestCase):
       process_input(d, input, mud, db, verbose, CI)
 
     self.assertEqual(npcp.name, "roobiki")
-    self.assertEqual(npcp.desc.text, "desc")
+    self.assertEqual(npcp.desc, "desc")
     self.assertEqual(npcp.ldesc, "here")
 
 if __name__ == "__main__":

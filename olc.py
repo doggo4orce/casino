@@ -32,6 +32,8 @@ def olc_writing_follow_up(d):
   if d.olc.mode == olc_data.olc_mode.OLC_MODE_REDIT:
     if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
       d.olc.state = redit.redit_state.REDIT_MAIN_MENU
+      redit_save = d.olc.save_data
+      redit_save.attributes.desc = redit_save.mutable_desc.text
       redit.redit_display_main_menu(d)
   elif d.olc.mode == olc_data.olc_mode.OLC_MODE_MEDIT:
     if d.olc.state == medit.medit_state.MEDIT_EDIT_DESC:
@@ -136,7 +138,7 @@ def do_medit(ch, scmd, argument, server, mud, db, nanny):
     medit_save.uid.zone_id = npc_p.zone_id
     medit_save.uid.id = npc_p.id
     medit_save.name = npc_p.name
-    medit_save.desc.text = npc_p.desc.text
+    medit_save.desc.text = npc_p.desc
     medit_save.ldesc = npc_p.ldesc
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (medit).\r\n")
@@ -202,7 +204,7 @@ def do_redit(ch, scmd, argument, server, mud, db, nanny):
     redit_save.attributes.uid.zone_id = rm.zone_id
     redit_save.attributes.uid.id = rm.id
     redit_save.attributes.name = rm.name
-    redit_save.attributes.desc.text = rm.desc.text
+    redit_save.attributes.desc = rm.desc
 
     # make a copy of all the exits as virtual references
     for dir in exit_data.direction:

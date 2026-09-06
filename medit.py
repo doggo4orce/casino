@@ -69,6 +69,9 @@ def medit_parse_main_menu(d, input):
       if d.olc.changes:
         d.olc.state = medit_state.MEDIT_CONFIRM_SAVE
         d.write("Save changes? : ")
+      else:
+        d.olc = None
+        d.state = descriptor_data.descriptor_state.CHATTING
     case _:
       d.write("Enter choice : ")
 
@@ -110,7 +113,7 @@ def medit_parse_confirm_save(d, input, mud, db):
 
       # update in game npc_proto
       npcp.name = medit_save.name
-      npcp.desc.text = medit_save.desc.text
+      npcp.desc = medit_save.desc.text
       npcp.ldesc = medit_save.ldesc
 
       # update database entry
@@ -121,10 +124,12 @@ def medit_parse_confirm_save(d, input, mud, db):
       for char in mud.list_characters():
         if isinstance(char, npc_data.npc_data):
           if char.id == id and char.zone_id == zone_id:
-            npcp.name = npcp.name
-            npcp.desc.text = npcp.desc.text
-            npcp.ldesc = npcp.ldesc
+            char.name = npcp.name
+            char.desc = npcp.desc
+            char.ldesc = npcp.ldesc
 
+      d.olc = None
+      d.state = descriptor_data.descriptor_state.CHATTING
     case 'N':
       d.olc = None
-      d.state = descriptor_data.descriptor_data.CHATTING
+      d.state = descriptor_data.descriptor_state.CHATTING

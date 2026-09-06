@@ -11,12 +11,12 @@ class TestRoomData(unittest.TestCase):
     rm = room_data.room_data()
 
     rm.name = "A Long Dark Hallway"
-    rm.desc = text_data.text_data("<p>It is cold, dark, and damp, and miserable.</p>")
+    rm.desc = "<p>It is cold, dark, and damp, and miserable.</p>"
     rm.id = "cold_hallway"
     rm.zone_id = "newbie_zone"
 
     self.assertEqual(rm.name, "A Long Dark Hallway")
-    self.assertEqual(rm.desc.text, "<p>It is cold, dark, and damp, and miserable.</p>")
+    self.assertEqual(rm.desc, "<p>It is cold, dark, and damp, and miserable.</p>")
     self.assertEqual(rm.id, "cold_hallway")
     self.assertEqual(rm.zone_id, "newbie_zone")
 
@@ -28,7 +28,7 @@ class TestRoomData(unittest.TestCase):
     rad = room_attribute_data.room_attribute_data()
 
     rad.name = "a new room"
-    rad.desc = text_data.text_data("this room looks new")
+    rad.desc = "this room looks new"
     rad.id = "new_room"
     rad.zone_id = "new_zone"
 
@@ -36,7 +36,7 @@ class TestRoomData(unittest.TestCase):
     rm.load_attributes(rad)
 
     self.assertEqual(rm.name, "a new room")
-    self.assertEqual(rm.desc.text, "this room looks new")
+    self.assertEqual(rm.desc, "this room looks new")
     self.assertEqual(rm.id, "new_room")
     self.assertEqual(rm.zone_id, "new_zone")
 
@@ -44,7 +44,7 @@ class TestRoomData(unittest.TestCase):
     rm = room_data.room_data()
 
     rm.name = "A Long Dark Hallway"
-    rm.desc = text_data.text_data("<p>It is cold, dark, and damp, and miserable.</p>")
+    rm.desc = "<p>It is cold, dark, and damp, and miserable.</p>"
     rm.id = "cold_hallway"
     rm.zone_id = "newbie_zone"
 

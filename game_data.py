@@ -304,12 +304,12 @@ class game_data:
     room.zone_id = "stockville"
     room.name = "Database Recovery Room"
 
-    room.desc.text = "You are in this room because the database did not load correctly.\r\n\r\n"
+    room.desc = "You are in this room because the database did not load correctly.\r\n\r\n"
 
     for error in error_messages:
-      room.desc.text += f"{RED}*{NORMAL}  {error}\r\n"
+      room.desc += f"{RED}*{NORMAL}  {error}\r\n"
 
-    room.desc.text += "\r\nUse the database tools to resolve these issues, then reboot the MUD."    
+    room.desc += "\r\nUse the database tools to resolve these issues, then reboot the MUD."    
 
     zone.add_room(room)
     self.add_zone(zone)

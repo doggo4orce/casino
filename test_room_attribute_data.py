@@ -9,7 +9,7 @@ class TestRoomAttribute(unittest.TestCase):
     r_att = room_attribute_data.room_attribute_data("zone_id", "id", "name", "description")
 
     self.assertEqual(r_att.name, "name")
-    self.assertEqual(r_att.desc.text, "description")
+    self.assertEqual(r_att.desc, "description")
     self.assertEqual(r_att.id, "id")
     self.assertEqual(r_att.zone_id, "zone_id")
 
@@ -17,12 +17,12 @@ class TestRoomAttribute(unittest.TestCase):
     r_att = room_attribute_data.room_attribute_data()
 
     r_att.name = "name"
-    r_att.desc = text_data.text_data("description")
+    r_att.desc = "description"
     r_att.id = "id"
     r_att.zone_id = "zone_id"
 
     self.assertEqual(r_att.name, "name")
-    self.assertEqual(r_att.desc.text, "description")
+    self.assertEqual(r_att.desc, "description")
     self.assertEqual(r_att.id, "id")
     self.assertEqual(r_att.zone_id, "zone_id")
 

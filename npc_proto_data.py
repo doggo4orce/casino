@@ -12,7 +12,7 @@ class npc_proto_data(entity_proto_data.entity_proto_data):
     self.uid = unique_id_data.unique_id_data()
     self.behaviour = behaviour_data.behaviour_data()
     self.name = "an unfinished NPC"
-    self.desc = text_data.text_data("The NPC proto looks unfinished.")
+    self.desc = "The NPC proto looks unfinished."
 
   @property
   def id(self):

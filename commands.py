@@ -577,7 +577,7 @@ def show_room_to_char(ch, rm):
     brief_mode = False
 
   out_buf = f'{CYAN}{string_handling.paragraph(rm.name, page_width, False)}{NORMAL}\r\n'
-  room_desc = buffer_data.buffer_data(rm.desc.text)
+  room_desc = buffer_data.buffer_data(rm.desc)
   room_desc = room_desc.clean_up()
 
   if not brief_mode:

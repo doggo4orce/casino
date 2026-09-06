@@ -19,7 +19,7 @@ class redit_state(enum.IntEnum):
 
 def redit_display_main_menu(d):
   redit_save = d.olc.save_data
-  desc_buffer = buffer_data.buffer_data(redit_save.attributes.desc.text)
+  desc_buffer = buffer_data.buffer_data(redit_save.attributes.desc)
 
   #todo: make sure zedit_save is structs.redit_save_data
   d.write(f"-- Room ID : [{CYAN}{redit_save.attributes.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.attributes.uid.zone_id}{NORMAL}]\r\n")
@@ -71,7 +71,7 @@ def redit_parse_main_menu(d, input, server, mud):
   elif response == '2':
     redit_save = d.olc.save_data
     d.olc.state = redit_state.REDIT_EDIT_DESC
-    d.start_writing(redit_save.attributes.desc.text, redit_save.attributes.desc)
+    d.start_writing(redit_save.attributes.desc, redit_save.mutable_desc)
   elif response == '3':
     d.write("Will create duplicate room with new id : ")
     d.olc.state = redit_state.REDIT_EDIT_COPY
@@ -128,7 +128,7 @@ def redit_parse_confirm_save(d, input, server, mud, db):
       check_room.zone_id = redit_save.attributes.uid.zone_id
       check_room.name = redit_save.attributes.name
       check_room.id = redit_save.attributes.uid.id
-      check_room.desc.text = redit_save.attributes.desc.text
+      check_room.desc = redit_save.attributes.desc
 
       for dir in exit_data.direction:
         dest = redit_save.destination(dir)
@@ -145,7 +145,7 @@ def redit_parse_confirm_save(d, input, server, mud, db):
       new_room.zone_id = redit_save.attributes.uid.zone_id
       new_room.name = redit_save.attributes.name
       new_room.id = redit_save.attributes.uid.id
-      new_room.desc.text = redit_save.attributes.desc.text
+      new_room.desc = redit_save.attributes.desc
 
       for dir in exit_data.direction:
         dest = redit_save.destination(dir)

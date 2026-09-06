@@ -15,7 +15,7 @@ class entity_proto_data:
     self.name ="an unfinished entity proto"
     self._namelist = namelist_data.namelist_data("unfinished", "entity", "proto")
     self.ldesc = "An unfinished entity proto is here."
-    self.desc = text_data.text_data("This entity proto looks unfinished.")
+    self.desc = "This entity proto looks unfinished."
     self.behaviour = behaviour_data.behaviour_data()
 
   @property
@@ -93,6 +93,6 @@ class entity_proto_data:
     ret_val = f"Name: {CYAN}{self.name}{NORMAL}\r\n"
     ret_val += f"LDesc: {CYAN}{self.ldesc}{NORMAL}\r\n"
     ret_val += f"Alias: {CYAN}{self._namelist}{NORMAL}\r\n"
-    ret_val += f"Desc: {CYAN}{self.desc.text}{NORMAL}\r\n"
+    ret_val += f"Desc: {CYAN}{self.desc}{NORMAL}\r\n"
     ret_val += self.behaviour.debug()
     return ret_val

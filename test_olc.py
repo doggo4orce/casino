@@ -115,7 +115,7 @@ class TestOLC(unittest.TestCase):
     player.name = "test_char"
     room = mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.STARTING_ROOM))
     mud.add_character_to_room(player, room)
-    room.desc.text = "first line"
+    room.desc = "first line"
 
     # give them a descriptor because olc relies on it
     d = descriptor_data.descriptor_data(None, "localhost")
@@ -184,7 +184,7 @@ class TestOLC(unittest.TestCase):
 
     # check to make sure the changes were saved
     self.assertEqual(room.name, "New Room Name")
-    self.assertEqual(room.desc.text, "first line\r\nsecond line")
+    self.assertEqual(room.desc, "first line\r\nsecond line")
 
     # olc data should be gone and player back to normal game
     self.assertIsNone(d.olc)

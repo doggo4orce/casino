@@ -17,7 +17,7 @@ class room_attribute_data:
   def __init__(self, zone_id=None, id=None, name=None, desc=None):
     self.uid = unique_id_data.unique_id_data(zone_id, id)
     self.name = name
-    self.desc = text_data.text_data(desc)
+    self.desc = desc
     self._exits = list()
 
   @property
@@ -157,7 +157,7 @@ class room_attribute_data:
   def debug(self):
     ret_val = f"UID: {CYAN}{self.uid}{NORMAL}\r\n"
     ret_val += f"Name: {CYAN}{self.name}{NORMAL}\r\n"
-    ret_val += f"Desc: {CYAN}{self.desc.text}{NORMAL}\r\n"
+    ret_val += f"Desc: {CYAN}{self.desc}{NORMAL}\r\n"
 
     for ex in self._exits:
       ret_val += ex.debug()

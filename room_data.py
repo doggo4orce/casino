@@ -19,7 +19,7 @@ class room_data:
   def __init__(self):
     self._attributes = room_attribute_data.room_attribute_data()
     self.name = "Unfinished Room"
-    self.desc = text_data.text_data("<p>This room has no description.  Use the REDIT command while standing inside this room to give it one!</p>")
+    self.desc = "<p>This room has no description.  Use the REDIT command while standing inside this room to give it one!</p>"
     self._people = list()
     self._contents = inventory_data.inventory_data()
 
@@ -168,7 +168,7 @@ class room_data:
     self.attributes.uid.zone_id = attr.uid.zone_id
     self.attributes.uid.id = attr.uid.id
     self.attributes.name = attr.name
-    self.attributes.desc.text = attr.desc.text
+    self.attributes.desc = attr.desc
 
     for dir in exit_data.direction:
 

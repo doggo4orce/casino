@@ -3,7 +3,7 @@ import unittest
 # local modules
 import character_data
 import commands
-import command_interpreter
+import command_interpreter_data
 import config
 import database
 import descriptor_data
@@ -18,12 +18,14 @@ import test_utilities
 import unique_id_data
 import zone_data
 
+config.DEBUG_MODE = False
+
 class TestCommands(unittest.TestCase):
   def test_colors(self):
     # create a character
     ch = character_data.character_data()
 
-    commands.do_colors(ch, None, None, None, None, None)
+    commands.do_colors(ch, None, None, None, None, None, None)
 
   def test_look(self):
     # create tiny test world
@@ -43,9 +45,9 @@ class TestCommands(unittest.TestCase):
     npc.add_alias("npc")
     mud.add_character_to_room(npc, room)
 
-    commands.do_look(player, None, "", None, mud, None)
-    commands.do_look(player, None, "object", None, mud, None)
-    commands.do_look(player, None, "npc", None, mud, None)
+    commands.do_look(player, None, "", None, mud, None, None)
+    commands.do_look(player, None, "object", None, mud, None, None)
+    commands.do_look(player, None, "npc", None, mud, None, None)
 
   def test_get_drop_inventory(self):
     # create tiny test world
@@ -63,14 +65,14 @@ class TestCommands(unittest.TestCase):
     alias = obj.aliases()[0]
 
     # character picks up the item
-    commands.do_get(ch, None, alias, None, mud, None)
+    commands.do_get(ch, None, alias, None, mud, None, None)
 
     self.assertTrue(ch.has_object(obj))
 
-    commands.do_inventory(ch, None, "", None, mud, None)
+    commands.do_inventory(ch, None, "", None, mud, None, None)
 
     # character drops the item
-    commands.do_drop(ch, None, alias, None, mud, None)
+    commands.do_drop(ch, None, alias, None, mud, None, None)
 
     self.assertFalse(ch.has_object(obj))
 
@@ -115,38 +117,36 @@ class TestCommands(unittest.TestCase):
     mud.add_character_to_room(ch, c_room)
 
     # go north
-    commands.do_move(ch, exit_data.direction.NORTH, None, None, mud, None)
+    commands.do_move(ch, exit_data.direction.NORTH, None, None, mud, None, None)
     self.assertIn(ch, n_room.people)
     self.assertNotIn(ch, c_room.people)
 
     # go south
-    commands.do_move(ch, exit_data.direction.SOUTH, None, None, mud, None)
+    commands.do_move(ch, exit_data.direction.SOUTH, None, None, mud, None, None)
     self.assertIn(ch, c_room.people)
     self.assertNotIn(ch, n_room.people)
 
     # go west
-    commands.do_move(ch, exit_data.direction.WEST, None, None, mud, None)
+    commands.do_move(ch, exit_data.direction.WEST, None, None, mud, None, None)
     self.assertIn(ch, w_room.people)
     self.assertNotIn(ch, c_room.people)
 
     # go east
-    commands.do_move(ch, exit_data.direction.EAST, None, None, mud, None)
+    commands.do_move(ch, exit_data.direction.EAST, None, None, mud, None, None)
     self.assertIn(ch, c_room.people)
     self.assertNotIn(ch, w_room.people)
 
     # go up
-    commands.do_move(ch, exit_data.direction.UP, None, None, mud, None)
+    commands.do_move(ch, exit_data.direction.UP, None, None, mud, None, None)
     self.assertIn(ch, u_room.people)
     self.assertNotIn(ch, c_room.people)
 
     # go down
-    commands.do_move(ch, exit_data.direction.DOWN, None, None, mud, None)
+    commands.do_move(ch, exit_data.direction.DOWN, None, None, mud, None, None)
     self.assertIn(ch, c_room.people)
     self.assertNotIn(ch, u_room.people)
 
   def test_help(self):
-    debug_mode = config.DEBUG_MODE
-    config.DEBUG_MODE = False
     mud = game_data.game_data()
     db = database.database(":memory:")
     db.connect()
@@ -156,7 +156,7 @@ class TestCommands(unittest.TestCase):
     mud.startup()
 
     # load command interpreter
-    nanny = command_interpreter.command_interpreter(mud)
+    nanny = command_interpreter_data.command_interpreter_data()
     nanny.load_commands()
 
     # add player to starting room
@@ -173,19 +173,15 @@ class TestCommands(unittest.TestCase):
 
     while n > 1:
       # test redit command with page_width n
-      commands.do_prefs(player, None, f"set page_width {n}", None, mud, None)
+      commands.do_prefs(player, None, f"set page_width {n}", None, mud, None, None)
       d.input_stream.input_q.append("help")
-      nanny.handle_next_input(d, None, db)
+      nanny.handle_next_input(d, mud, None, db)
       # print(f"{'-'*n}")
       # print(d.out_buf)
       # d.out_buf = ""
       n -= 1
 
-    config.DEBUG_MODE = debug_mode
-
   def test_db(self):
-    debug_mode = config.DEBUG_MODE
-    config.DEBUG_MODE = True
 
     # create tiny test world
     mud = game_data.game_data()
@@ -195,11 +191,11 @@ class TestCommands(unittest.TestCase):
     db.connect()
     db.create_tables()
     db.load_stock() # hard codes content into DB, eventually this won't be here
-    mud.load_world(db)
+    db.load_world(mud)
     mud.startup()
 
     # load command interpreter
-    nanny = command_interpreter.command_interpreter(mud)
+    nanny = command_interpreter_data.command_interpreter_data()
     nanny.load_commands()
 
     # add a player to the room
@@ -212,7 +208,7 @@ class TestCommands(unittest.TestCase):
     player.descriptor, d.character = d, player
 
     d.input_stream.input_q.append("db show tables")
-    nanny.handle_next_input(d, None, db)
+    nanny.handle_next_input(d, mud, None, db)
 
     options = ['columns', 'records']
 
@@ -233,11 +229,9 @@ class TestCommands(unittest.TestCase):
     for opt in options:
       for table in tables:
         d.input_stream.input_q.append(f"db {opt} {table}")
-        nanny.handle_next_input(d, None, db)
+        nanny.handle_next_input(d, mud, None, db)
 
     print(d.out_buf)
-
-    config.DEBUG_MODE = debug_mode
 
     # teardown
     db.close()
@@ -250,7 +244,7 @@ class TestCommands(unittest.TestCase):
     # add a player to the room
     player = pc_data.pc_data()
 
-    commands.do_prefs(player, None, "", None, mud, None)
+    commands.do_prefs(player, None, "", None, mud, None, None)
 
   def test_give(self):
     mud, zone, room = test_utilities.create_single_room_test_world()
@@ -271,14 +265,13 @@ class TestCommands(unittest.TestCase):
     gift.add_alias("toy")
 
     # look around
-    commands.do_look(giver, None, "", None, mud, None)
+    commands.do_look(giver, None, "", None, mud, None, None)
 
     # perform the give
-    commands.do_give(giver, None, "toy greedy", None, mud, None)
+    commands.do_give(giver, None, "toy greedy", None, mud, None, None)
 
     self.assertFalse(giver.has_object(gift))
     self.assertTrue(receiver.has_object(gift))
 
 if __name__ == '__main__':
-  config.DEBUG_MODE = False
   unittest.main()

@@ -346,7 +346,7 @@ class database:
       id=proto.id,
       name=proto.name,
       ldesc=proto.ldesc,
-      desc=proto.desc
+      desc=proto.desc.text
     )
 
     for alias in proto.aliases():
@@ -949,7 +949,7 @@ capitalize a word.</p>""")
       nobjp.id = objp['id']
       nobjp.name = objp['name']
       nobjp.ldesc = objp['ldesc']
-      nobjp.desc = objp['desc']
+      nobjp.desc.text = objp['desc']
       zone = mud.zone_by_id(nobjp.zone_id)
 
       if zone is None:

@@ -21,7 +21,7 @@ def process_input(d, input, mud, db, verbose, CI):
 
   CI.handle_next_input(d, mud, None, db)
 
-class TestZeditSave(unittest.TestCase):
+class TestMEDIT(unittest.TestCase):
   def test_create_npc(self):
     db = database.database(":memory:")
     db.connect()

@@ -69,6 +69,8 @@ class descriptor_data:
 
   @property
   def type(self):
+    if self._socket == None:
+      return None
     return self._socket.type
 
   """close()                       <- closes socket
@@ -128,6 +130,8 @@ class descriptor_data:
     self.out_buf = ""
 
   def fileno(self):
+    if self._socket == None:
+      return None
     return self._socket.fileno()
 
   def write_prompt(self):
@@ -180,6 +184,8 @@ class descriptor_data:
     self.write_buffer = buffer_data.buffer_data(source)
     self.write_target = target
     self.writing = True
+    
+    self.write("Instructions: /s to save, /h for more options.")
 
   def stop_writing(self, save):
     self.writing = False
@@ -201,6 +207,9 @@ class descriptor_data:
       ret_val += self.client.debug()
 
     ret_val += f"State: {CYAN}{self.state.name.upper()}{NORMAL}\r\n"
+
+    if self.state == descriptor_state.OLC:
+      ret_val += self.olc.debug() + "\r\n"
 
     ret_val += f"OutBuf: {CYAN}{self.out_buf}{NORMAL}\r\n"
 

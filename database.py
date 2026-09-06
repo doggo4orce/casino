@@ -771,7 +771,7 @@ class database:
     npcp = npc_proto_data.npc_proto_data()
     npcp.reset_aliases('baccarat', 'dealer')
     npcp.name = 'the baccarat card dealer'
-    npcp.desc = "<p>He looks like he's straight out of a bluegrass music video.</p>"
+    npcp.desc = text_data.text_data("<p>He looks like he's straight out of a bluegrass music video.</p>")
     npcp.ldesc = 'A dealer stands here ready to hand out cards.'
     npcp.zone_id = 'stockville'
     npcp.id = 'baccarat_dealer'
@@ -780,7 +780,7 @@ class database:
     npcp = npc_proto_data.npc_proto_data()
     npcp.reset_aliases('baker', 'fat')
     npcp.name = 'the baker'
-    npcp.desc = "<p>Hes a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>"
+    npcp.desc = text_data.text_data("<p>Hes a nice looking person, but you can see that he has seen battle by the many scars on his body.</p>")
     npcp.ldesc = "A baker is here, but dont give him a bottle."
     npcp.zone_id = 'stockville'
     npcp.id = 'baker'
@@ -789,7 +789,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('baccarat', 'gaming', 'table')
     op.name = 'a baccarat table'
-    op.desc = "<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>"
+    op.desc = text_data.text_data("<p>It's rude to look over player's shoulders.  If you want to watch the game, sit down and play.</p>")
     op.ldesc = "A gaming table has been set up here."
     op.zone_id = 'stockville'
     op.id = 'baccarat_table'
@@ -798,7 +798,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('red', 'chip')
     op.name = 'a red chip'
-    op.desc = "<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.desc = text_data.text_data("<p>It's a <c1>red<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
     op.ldesc = "A red casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'red_chip'
@@ -807,7 +807,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('green', 'chip')
     op.name = 'a green chip'
-    op.desc = "<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.desc = text_data.text_data("<p>It's a <c2>green<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
     op.ldesc = "A green casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'green_chip'
@@ -816,7 +816,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('black', 'chip')
     op.name = 'a black chip'
-    op.desc = "<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.desc = text_data.text_data("<p>It's a <c6>black<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
     op.ldesc = "A black casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'black_chip'
@@ -825,7 +825,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('purple', 'chip')
     op.name = 'a purple chip'
-    op.desc = "<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>"
+    op.desc = text_data.text_data("<p>It's a <c5>purple<c0> coin with a Stockville Casino logo imprinted upon it.</p>")
     op.ldesc = "A purple casino chip has been left on the ground."
     op.zone_id = 'stockville'
     op.id = 'purple_chip'
@@ -834,7 +834,7 @@ class database:
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('bottle')
     op.name = 'a bottle'
-    op.desc = "<p>It's brown, sticky, and smells like stale beer inside.</p>"
+    op.desc = text_data.text_data("<p>It's brown, sticky, and smells like stale beer inside.</p>")
     op.ldesc = 'An empty bottle has been dropped here.'
     op.zone_id = 'stockville'
     op.id = 'bottle'
@@ -873,7 +873,7 @@ capitalize a word.</p>""")
     npcp = npc_proto_data.npc_proto_data()
     npcp.reset_aliases('newbie', 'monster')
     npcp.name = 'the newbie monster'
-    npcp.desc = "<p>He has googly eyes and drools all over the place as he growls.</p>"
+    npcp.desc = text_data.text_data("<p>He has googly eyes and drools all over the place as he growls.</p>")
     npcp.ldesc = 'A newbie monster snarls furiously here.'
     npcp.zone_id = 'newbie_zone'
     npcp.id = 'newbie_monster'
@@ -882,7 +882,7 @@ capitalize a word.</p>""")
     op = obj_proto_data.obj_proto_data()
     op.reset_aliases('newbie', 'dagger')
     op.name = 'a newbie dagger'
-    op.desc = "<p>It's so bright and shiny, even you can't lose it.</p>"
+    op.desc = text_data.text_data("<p>It's so bright and shiny, even you can't lose it.</p>")
     op.ldesk = 'Some idiot left a newbie dagger here.'
     op.zone_id = 'newbie_zone'
     op.id = 'newbie_dagger'

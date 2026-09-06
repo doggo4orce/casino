@@ -24,7 +24,7 @@ def handle_input(d, input, server, mud, db):
     case olc_data.olc_mode.OLC_MODE_REDIT:
       redit.redit_parse(d, input, server, mud, db)
     case olc_data.olc_mode.OLC_MODE_MEDIT:
-      pass
+      medit.medit_parse(d, input, mud, db)
     case olc_data.olc_mode.OLC_MODE_TEDIT:
       tedit.tedit_parse(d, input, db)
 
@@ -33,6 +33,10 @@ def olc_writing_follow_up(d):
     if d.olc.state == redit.redit_state.REDIT_EDIT_DESC:
       d.olc.state = redit.redit_state.REDIT_MAIN_MENU
       redit.redit_display_main_menu(d)
+  elif d.olc.mode == olc_data.olc_mode.OLC_MODE_MEDIT:
+    if d.olc.state == medit.medit_state.MEDIT_EDIT_DESC:
+      d.olc.state = medit.medit_state.MEDIT_MAIN_MENU
+      medit.medit_display_main_menu(d)
   else:
     d.write("You shouldn't see this!\r\n")
 

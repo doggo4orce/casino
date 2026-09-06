@@ -1,3 +1,4 @@
+from color import *
 import enum
 
 class olc_mode(enum.IntEnum):
@@ -43,3 +44,8 @@ class olc_data:
   @save_data.setter
   def save_data(self, new_save_data):
     self._save_data = new_save_data
+
+  def debug(self):
+    ret_val = f"OLC Mode: {CYAN}{self.mode.name}{NORMAL}\r\n"
+    ret_val += f"OLC State: {CYAN}{self.state.name}{NORMAL}"
+    return ret_val

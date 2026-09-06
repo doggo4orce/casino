@@ -69,7 +69,6 @@ def redit_parse_main_menu(d, input, server, mud):
     d.write("Enter new room name : ")
     d.olc.state = redit_state.REDIT_EDIT_NAME
   elif response == '2':
-    d.write("Instructions: /s to save, /h for more options.")
     redit_save = d.olc.save_data
     d.olc.state = redit_state.REDIT_EDIT_DESC
     d.start_writing(redit_save.attributes.desc.text, redit_save.attributes.desc)

@@ -2,25 +2,35 @@
 import unittest
 
 # Local Modules
+import command_interpreter_data
 import database
 import descriptor_data
 import medit
+import nanny
 import npc_proto_data
 import olc
 import pc_data
 import test_utilities
 
-def test_medit_parse(d, input, mud, db, verbose):
+def process_input(d, input, mud, db, verbose, CI):
   if verbose:
     print(d.out_buf, input)
     d.out_buf = ""
 
-  medit.medit_parse(d, input, mud, db)
+  d.input_stream.input_q.append(input)
+
+  CI.handle_next_input(d, mud, None, db)
 
 class TestZeditSave(unittest.TestCase):
   def test_create_npc(self):
     db = database.database(":memory:")
     db.connect()
+
+    # create command interpreter
+    CI = command_interpreter_data.command_interpreter_data()
+    
+    # only need one command
+    CI.enable("medit", olc.do_medit, None)
 
     # create player/descriptor combo
     player = pc_data.pc_data()
@@ -43,20 +53,26 @@ class TestZeditSave(unittest.TestCase):
     # must be in room to use tedit command
     mud.add_character_to_room(player, room)
 
-    # make a new table and change its name    
-    olc.do_medit(player, None, "new_npc", None, mud, db, None)
-
     verbose = True
 
     input_q = [
-      "1",          # select edit name
-      "roobiki",    # change name to roobiki
-      "q",          # save changes
-      "y"           # confirm save
+      "medit new_npc", # create new npc
+      "1",             # select edit name
+      "roobiki",       # change name to roobiki
+      "2",             # select edit description
+      "/c",            # clear buffer
+      "desc",          # set description to "desc"
+      "/s",            # save changes
+      "3",             # select edit ldesc
+      "here",          # set ldesc to "here"
+      "q",             # save changes
+      "y"              # confirm save
     ]
 
     for input in input_q:
-      test_medit_parse(d, input, mud, db, verbose)
+      process_input(d, input, mud, db, verbose, CI)
+
+    print(d.out_buf)
 
 if __name__ == "__main__":
   unittest.main()

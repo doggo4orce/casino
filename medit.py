@@ -1,12 +1,17 @@
 from color import *
 
+
 import buffer_data
+import descriptor_data
 import enum
+import npc_data
+import npc_proto_data
 
 class medit_state(enum.IntEnum):
   MEDIT_MAIN_MENU      = 1
   MEDIT_EDIT_NAME      = 2
   MEDIT_CONFIRM_SAVE   = 3
+  MEDIT_EDIT_DESC      = 4
 
 def medit_display_main_menu(d):
   medit_save = d.olc.save_data
@@ -38,17 +43,21 @@ def medit_parse_main_menu(d, input):
     d.write("Enter choice : ")
     return
 
+  response = input[0]
+
   # no changes to save if they quit or drop
   if response.upper() not in {'Q', 'X'}:
     # we've done at least one thing aside from quit
     d.olc.changes = True
 
-  response = input[0]
-
   match response.upper():
     case '1':
       d.olc.state = medit_state.MEDIT_EDIT_NAME
       d.write("Enter new name :")
+    case '2':
+      medit_save = d.olc.save_data
+      d.olc.state = medit_state.MEDIT_EDIT_DESC
+      d.start_writing(medit_save.desc.text, medit_save.desc)
     case 'Q':
       if d.olc.changes:
         d.olc.state = medit_state.MEDIT_CONFIRM_SAVE
@@ -63,4 +72,46 @@ def medit_parse_edit_name(d, input, mud, db):
   medit_display_main_menu(d)
 
 def medit_parse_confirm_save(d, input, mud, db):
-  pass
+  if input == "":
+    d.olc.state = medit_state.MEDIT_MAIN_MENU
+    medit_display_main_menu(d)
+    return
+
+  response = input[0].upper()
+
+  match response:
+    case 'Y':
+      medit_save = d.olc.save_data
+
+      zone_id = medit_save.uid.zone_id
+      id = medit_save.uid.id
+
+      npcp = mud.npc_by_uid(zone_id, id)
+
+      # if its not found, we're working on a new npc
+      if npcp == None:
+        npcp = npc_proto_data.npc_proto_data()
+
+        npcp.zone_id = zone_id
+        npcp.id = id
+
+      # update in game npc_proto
+      npcp.name = medit_save.name
+      npcp.desc.text = medit_save.desc.text
+      npcp.ldesc = medit_save.ldesc
+
+      # update database entry
+      db.save_npc_proto(npcp)
+      d.write("NPC saved to database.\r\n")
+
+      # update corresponding npcs
+      for char in mud.list_characters():
+        if isinstance(char, npc_data.npc_data):
+          if char.id == id and char.zone_id == zone_id:
+            npcp.name = npcp.name
+            npcp.desc.text = npcp.desc.text
+            npcp.ldesc = npcp.ldesc
+
+    case 'N':
+      d.olc = None
+      d.state = descriptor_data.descriptor_data.CHATTING

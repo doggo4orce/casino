@@ -10,3 +10,4 @@ class medit_save_data:
     self.name = "An unfinished NPC"
     self.desc = text_data.text_data("<p>It looks unfinished.</p>")
     self.ldesc = "An unfinished NPC stands here."
+    self.aliases = ["unfinished", "npc"]

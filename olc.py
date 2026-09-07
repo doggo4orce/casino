@@ -1,3 +1,7 @@
+# Python Modules
+import copy
+
+# Local Modules
 from color import *
 import config
 import db_handler          # for tedit
@@ -140,6 +144,7 @@ def do_medit(ch, scmd, argument, server, mud, db, nanny):
     medit_save.name = npc_p.name
     medit_save.desc.text = npc_p.desc
     medit_save.ldesc = npc_p.ldesc
+    medit_save.aliases = copy.copy(npc_p.aliases())
 
   mud.echo_around(ch, None, f"{ch.name} starts using OLC (medit).\r\n")
 

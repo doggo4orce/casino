@@ -66,6 +66,8 @@ class TestMEDIT(unittest.TestCase):
       "/s",            # save changes
       "3",             # select edit ldesc
       "here",          # set ldesc to "here"
+      "4",             # select edit aliases
+      "npc alias",     # enter npc and alias as aliases
       "q",             # save changes
       "y"              # confirm save
     ]
@@ -76,6 +78,10 @@ class TestMEDIT(unittest.TestCase):
     self.assertEqual(npcp.name, "roobiki")
     self.assertEqual(npcp.desc, "desc")
     self.assertEqual(npcp.ldesc, "here")
+
+    self.assertTrue(npcp.has_alias("npc"))
+    self.assertTrue(npcp.has_alias("alias"))
+    self.assertEqual(npcp.num_aliases, 2)
 
 if __name__ == "__main__":
   unittest.main()

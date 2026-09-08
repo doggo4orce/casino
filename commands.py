@@ -583,7 +583,7 @@ def show_room_to_char(ch, rm):
   if not brief_mode:
     out_buf += room_desc.display(page_width, indent=True, color=True, numbers=False) + '\r\n'
 
-  out_buf += f'{CYAN}{rm.display_exits()}{NORMAL}\r\n'
+  out_buf += f'{CYAN}{string_handling.proc_color(rm.display_exits())}{NORMAL}\r\n'
 
   for tch in rm.people:
     if tch != ch:
@@ -597,7 +597,7 @@ def show_room_to_char(ch, rm):
       out_buf += "\r\n"
 
   for obj in rm.contents:
-    out_buf += f"{GREEN}{string_handling.paragraph(obj.ldesc, ch.page_width, False)}{NORMAL}\r\n"
+    out_buf += f"{GREEN}{string_handling.proc_color(obj.ldesc)}{NORMAL}\r\n"
 
   ch.write(out_buf)
 

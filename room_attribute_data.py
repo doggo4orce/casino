@@ -134,7 +134,7 @@ class room_attribute_data:
 
   @property
   def display_exits(self):
-    return f"<c12>[ <c11>Exits: <c10>{self.exit_letters}<c12>]<c0>"
+    return f"[ Exits: {self.exit_letters}]"
 
   @property
   def num_exits(self):

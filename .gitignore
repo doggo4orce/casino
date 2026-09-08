@@ -10,3 +10,4 @@ test.py
 */*/.DS_Store
 *.db
 autorun.sh
+main.py

@@ -8,7 +8,5 @@ test.py
 */*/*/.DS_Store
 .killscript
 */*/.DS_Store
-test.db
-data.db
-backup.db
+*.db
 autorun.sh

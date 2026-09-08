@@ -576,12 +576,12 @@ def show_room_to_char(ch, rm):
     page_width = 60
     brief_mode = False
 
-  out_buf = f'{CYAN}{string_handling.paragraph(rm.name, page_width, False)}{NORMAL}\r\n'
+  out_buf = f'{CYAN}{string_handling.proc_color(rm.name)}{NORMAL}\r\n'
   room_desc = buffer_data.buffer_data(rm.desc)
   room_desc = room_desc.clean_up()
 
   if not brief_mode:
-    out_buf += room_desc.display(page_width, indent=True, color=True,numbers=False) + '\r\n'
+    out_buf += room_desc.display(page_width, indent=True, color=True, numbers=False) + '\r\n'
 
   out_buf += f'{CYAN}{rm.display_exits()}{NORMAL}\r\n'
 

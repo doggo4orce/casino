@@ -23,7 +23,7 @@ def redit_display_main_menu(d):
 
   #todo: make sure zedit_save is structs.redit_save_data
   d.write(f"-- Room ID : [{CYAN}{redit_save.attributes.uid.id}{NORMAL}]        Zone ID : [{CYAN}{redit_save.attributes.uid.zone_id}{NORMAL}]\r\n")
-  d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{redit_save.attributes.name}{NORMAL}\r\n")
+  d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{string_handling.proc_color(redit_save.attributes.name)}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
   d.write(f"{desc_buffer.clean_up().display(d.character.page_width, indent=True, color=True)}{NORMAL}\r\n")
   d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")

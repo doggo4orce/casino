@@ -1,5 +1,6 @@
 import buffer_data
 from color import *
+import config
 import descriptor_data
 import editor
 import enum
@@ -16,6 +17,7 @@ class redit_state(enum.IntEnum):
   REDIT_EDIT_COPY      = 4
   REDIT_CONFIRM_SAVE   = 5
   REDIT_CHANGE_EXIT    = 6
+  REDIT_CONFIRM_DELETE = 7
 
 def redit_display_main_menu(d):
   redit_save = d.olc.save_data
@@ -26,8 +28,7 @@ def redit_display_main_menu(d):
   d.write(f"{GREEN}1{NORMAL}) Room Name    : {YELLOW}{string_handling.proc_color(redit_save.attributes.name)}{NORMAL}\r\n")
   d.write(f"{GREEN}2{NORMAL}) Description  :\r\n")
   d.write(f"{desc_buffer.clean_up().display(d.character.page_width, indent=True, color=True)}{NORMAL}\r\n")
-  d.write(f"{GREEN}3{NORMAL}) Copy Room\r\n")
-
+  
   # index through the next 4 - 9 as exits
   k = 4
   for dir in exit_data.direction:
@@ -38,6 +39,7 @@ def redit_display_main_menu(d):
       d.write(f"{GREEN}{k}{NORMAL}) Exit {dir.name.lower():<8}: {CYAN}None{NORMAL}\r\n")
     k = k + 1
 
+  d.write(f"{GREEN}C{NORMAL}) Copy Room\r\n")
   d.write(f"{GREEN}X{NORMAL}) Delete Room\r\n")
   d.write(f"{GREEN}Q{NORMAL}) Quit\r\n")
   d.write(f"\r\nEnter your choice : ")
@@ -49,20 +51,22 @@ def redit_parse(d, input, server, mud, db):
   elif d.olc.state == redit_state.REDIT_EDIT_NAME:
     redit_parse_edit_name(d, input, server, mud)
   elif d.olc.state == redit_state.REDIT_EDIT_COPY:
-    redit_parse_edit_copy(d, input, server, mud)
+    redit_parse_edit_copy(d, input, server, mud, db)
   elif d.olc.state == redit_state.REDIT_CONFIRM_SAVE:
     redit_parse_confirm_save(d, input, server, mud, db)
   elif d.olc.state == redit_state.REDIT_CHANGE_EXIT:
     redit_parse_change_exit(d, input, server, mud)
+  elif d.olc.state == redit_state.REDIT_CONFIRM_DELETE:
+    redit_parse_confirm_delete(d, input, server, mud, db)
 
 def redit_parse_main_menu(d, input, server, mud):
   if input == "":
     response = 'q'
   else:
-    response = input[0]
+    response = input[0].upper()
 
-  if response not in {'q', 'Q'}:
-    # we've done at least one thing aside from quit
+  if response not in {'C', 'Q', 'X'}:
+    # we've done at least one thing aside from copy, delete, or quit
     d.olc.changes = True
 
   if response == '1':
@@ -72,16 +76,19 @@ def redit_parse_main_menu(d, input, server, mud):
     redit_save = d.olc.save_data
     d.olc.state = redit_state.REDIT_EDIT_DESC
     d.start_writing(redit_save.attributes.desc, redit_save.mutable_desc)
-  elif response == '3':
-    d.write("Will create duplicate room with new id : ")
-    d.olc.state = redit_state.REDIT_EDIT_COPY
-
   elif response in {'4', '5', '6', '7', '8', '9'}:
-    # this is a bit sloppy but it works for now
+    # this is a bit weird but it works for now
     d.write(f"Enter new room to the {exit_data.direction(int(response) - 4).name.lower()} : ")
     d.olc.state = redit_state.REDIT_CHANGE_EXIT
     d.olc.save_data.dir_edit = exit_data.direction(int(response) - 4)
-  elif response in {'q', 'Q'}:
+  elif response == 'C':
+    d.write("Will create duplicate room with new id : ")
+    d.olc.state = redit_state.REDIT_EDIT_COPY
+  elif response == 'X':
+    d.write("Delete room -- are you sure? : ")
+    d.olc.state = redit_state.REDIT_CONFIRM_DELETE
+    pass # TODO -implement delete room
+  elif response == 'Q':
     if d.olc.changes:
       d.write("Save internally? : ")
       d.olc.state = redit_state.REDIT_CONFIRM_SAVE
@@ -102,11 +109,34 @@ def redit_parse_edit_name(d, input, server, mud):
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
 
-def redit_parse_edit_copy(d, input, server, mud):
+def redit_parse_edit_copy(d, input, server, mud, db):
   args = input.split()
   new_room_id = args[0]
 
-  d.olc.save_data.room_id = args[0]
+  redit_save = d.olc.save_data
+  zone_id = redit_save.attributes.uid.zone_id
+  print(zone_id)
+  if mud.room_by_uid(zone_id, new_room_id) != None:
+    d.write("That room already exists!\r\nTry again : ")
+    return
+
+  new_room = room_data.room_data()
+  new_room.zone_id = redit_save.attributes.uid.zone_id
+  new_room.id = args[0]
+  new_room.name = redit_save.attributes.name
+  new_room.desc = redit_save.attributes.desc
+
+  for dir in exit_data.direction:
+    dest = redit_save.destination(dir)
+    if dest is not None:
+      new_room.connect(dir, dest.zone_id, dest.id)
+
+  zone = mud.zone_by_id(zone_id)
+  zone.add_room(new_room)
+
+  db.save_zone(zone)
+
+  d.write(f"Data saved to room {args[0]}@{zone_id}\r\n.")
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
 
@@ -198,3 +228,29 @@ def redit_parse_change_exit(d, input, server, mud):
 
   d.olc.state = redit_state.REDIT_MAIN_MENU
   redit_display_main_menu(d)
+
+def redit_parse_confirm_delete(d, input, server, mud, db):
+  if input == "":
+    d.olc.state = REDIT_MAIN_MENU
+    redit_display_main_menu(d)
+    return
+
+  response = input[0].upper()
+
+  match response:
+    case 'Y':
+      redit_save = d.olc.save_data
+      zone_id = redit_save.attributes.uid.zone_id
+      room_id = redit_save.attributes.uid.id
+      zone = mud.zone_by_id(zone_id)
+      room = mud.room_by_uid(zone_id, room_id)
+      db.delete_room(zone_id, room_id)
+      zone.delete_room(room_id)
+      d.write("Deleting room from database.\r\n")
+
+      d.olc = None
+      mud.add_character_to_room(d.character, mud.room_by_uid(unique_id_data.unique_id_data.from_string(config.VOID_ROOM)))
+      d.state = descriptor_data.descriptor_state.CHATTING
+    case 'N':
+      d.olc.state = redit_state.REDIT_MAIN_MENU
+      redit_display_main_menu(d)

@@ -394,9 +394,11 @@ class database:
       mudlog.error(f"Trying to delete non-existent room {id}@{zone_id}.")
       return
 
+    # delete the room itself
     wld_table = self.table_by_name(database.WORLD_TABLE)
     wld_table.delete(zone_id=zone_id, id=id)
 
+    # delete all exits out of the room
     ex_table = self.table_by_name(database.EXIT_TABLE)
     ex_table.delete(o_zone_id=zone_id, o_id=id)
 

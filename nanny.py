@@ -202,6 +202,7 @@ def input_handler_parse_confirm_pass(d, mud, db, input):
 
   new_player = pc_data.pc_data()
   new_player.name = d.login_info.name
+  new_player.title = ""
   new_player.password = d.login_info.password
   new_player.room = unique_id_data.unique_id_data.from_string(config.STARTING_ROOM)
   new_player.player_id = db.next_unused_pid()

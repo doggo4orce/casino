@@ -225,7 +225,7 @@ def input_handler_parse_confirm_pass(d, mud, db, input):
   d.send(bytes(telnet.wont_echo) + bytes([ord('\r'),ord('\n')]))
   d.write("Welcome!  Have a great time!\r\n")
   d.state = descriptor_data.descriptor_state.CHATTING
-  mudlog.info(f"{d.login_info.Name} has entered the game.")
+  mudlog.info(f"{d.login_info.name.capitalize()} has entered the game.")
 
 def input_handler_parse_confirm_replace(d, mud, input, db):
   if input != "" and input[0] in ['Y', 'y']:

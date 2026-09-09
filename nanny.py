@@ -21,7 +21,7 @@ def input_handler_generic(d, mud, server, db, command, argument, input):
     case descriptor_data.descriptor_state.CONFIRM_PASS:
       input_handler_parse_confirm_pass(d, mud, db, input)
     case descriptor_data.descriptor_state.GET_CONFIRM_REPLACE:
-      input_handler_parse_confirm_replace(d, mud, command)
+      input_handler_parse_confirm_replace(d, mud, input, db)
 
 def input_handler_parse_get_name(d, mud, db, command, argument):
   # drop anyone who gives a carriage return instead of a name
@@ -226,14 +226,14 @@ def input_handler_parse_confirm_pass(d, mud, db, input):
   d.state = descriptor_data.descriptor_state.CHATTING
   mudlog.info(f"{d.login_info.name} has entered the game.")
 
-def input_handler_parse_confirm_replace(d):
-  if first_arg != "" and first_arg[0] in ['Y', 'y']:
+def input_handler_parse_confirm_replace(d, mud, input, db):
+  if input != "" and input[0] in ['Y', 'y']:
     ch = mud.pc_by_id(db.player_id_by_name(d.login_info.name))
     if not ch:
-      d.write("The situation has changed.  Please log in again from scratch.\r\n")
+      d.write("The situation has changed.  You may now close this window and log in normally.\r\n")
       d.disconnected = True
     else:
-      ch.d.write("Your connection is being usurped!\r\n")
+      ch.descriptor.write("Your connection is being usurped!\r\n")
       mud.reconnect(d, ch)
       mudlog.info(f"{ch} usurping existing connection.")
       mud.echo_around(ch, None, f"{ch} suddenly keels over in pain, surrounded by a white aura...\r\n")

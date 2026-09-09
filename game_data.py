@@ -369,7 +369,7 @@ class game_data:
     return None
     
   def lose_link(self, ch):
-    self.room_by_uid(ch.room).echo(f"{ch} has lost his link.\r\n")
+    self.room_by_uid(ch.room).echo(f"{ch.Name} has lost his link.\r\n")
     ch.descriptor = None
 
   def reconnect(self, d, ch):

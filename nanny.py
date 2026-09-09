@@ -167,7 +167,7 @@ def input_handler_parse_get_password(d, mud, db, input):
     d.character.room = unique_id_data.unique_id.from_string(config.VOID_ROOM)
 
   # put them in the game
-  mudlog.info(f"{d.login_info.name} has entered the game.")
+  mudlog.info(f"{d.login_info.Name} has entered the game.")
   mud.add_character_to_room(d.character, mud.room_by_uid(d.character.room))
   mud.echo_around(d.character, None, f"{d.login_info.name} has entered the game.\r\n")
 

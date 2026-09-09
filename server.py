@@ -218,7 +218,7 @@ class server:
   def handle_quits(self):
     for id in self._just_leaving:
       d = self._descriptors[id]
-      mudlog.info(f"{d.character.name} has left the game.")
+      mudlog.info(f"{d.character.Name} has left the game.")
       self.remove_descriptor_by_id(id)
 
     self._just_leaving.clear()

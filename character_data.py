@@ -70,4 +70,4 @@ class character_data(entity_data.entity_data):
     return ret_val
 
   def __str__(self):
-    return self.name
+    return self.Name

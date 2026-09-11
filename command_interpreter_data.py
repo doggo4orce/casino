@@ -180,6 +180,8 @@ class command_interpreter_data:
 
     self.enable("inventory", commands.do_inventory, None)
     
+    self.enable("load", commands.do_load, None)
+    
     self.enable("medit", olc.do_medit, None)
     self.enable("pindex", commands.do_pindex, None)
     self.enable("prefs", commands.do_prefs, None)

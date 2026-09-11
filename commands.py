@@ -13,11 +13,65 @@ import olc
 import os
 import mudlog
 import npc_data
+import object_data
 import pc_data
 import room_data
 import string_handling
 import zedit
 import zone_data
+
+def do_load(ch, scmd, argument, server, mud, db, command_interpreter):
+  args = argument.split()
+  num_args = len(args)
+
+  if num_args == 0:
+    ch.write("Give what to whom?\r\n")
+    return
+
+  if args[0] == "obj":
+    if num_args != 3:
+      ch.write("Usage: load obj <zone_id> <id>\r\n")
+      return
+    else:
+      zone = mud.zone_by_id(args[1])
+
+      if zone == None:
+        ch.write("That zone does not exist.\r\n")
+        return
+
+      op = zone.obj_by_id(args[2])
+
+      if op == None:
+        ch.write(f"Object '{args[2]}' does not exist in zone '{args[0]}'.\r\n")
+        return
+
+      obj = object_data.object_data(op)
+      ch.give_object(obj)
+      ch.write(f"You load {obj.name}.\r\n")
+
+  elif args[0] == "npc":
+    if num_args != 3:
+      ch.write("Usage: load npc <zone_id> <id>\r\n")
+      return
+    else:
+      zone = mud.zone_by_id(args[1])
+
+      if zone == None:
+        ch.write("That zone does not exist.\r\n")
+        return
+
+      np = zone.npc_by_id(args[2])
+
+      if np == None:
+        ch.write(f"NPC '{args[2]}' does not exist in zone '{args[0]}'.\r\n")
+        return
+
+      npc = npc_data.npc_data(np)
+      mud.add_character_to_room(npc, mud.room_by_uid(ch.room))
+      ch.write(f"You load {npc.name}.\r\n")
+  else:
+    ch.write("Usage: load {obj|npc} <zone_id> <id>\r\n")
+
 
 def do_colors(ch, scmd, argument, server, mud, db, command_interpreter):
   out_str = ""

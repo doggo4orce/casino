@@ -11,7 +11,7 @@ class entity_data:
      ldesc     = what to see when the entity is in a room
      desc      = shown when closely examined
      TODO: room should be renamed to location, to be less misleading
-     room      = reference to room if it is in one, and None otherwise
+     room      = unique_id for room if it is in one, and None otherwise
 
      Additional Properties:
      Name      = same as name but capitalized

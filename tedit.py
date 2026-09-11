@@ -71,7 +71,7 @@ def tedit_parse_main_menu(d, input, db):
   response = input[0]
 
   # no changes to save if they quit or drop
-  if response.upper() not in {'Q', 'X'}:
+  if response.upper() not in {'Q', 'X', '3'}:
     # we've done at least one thing aside from quit
     d.olc.changes = True
 

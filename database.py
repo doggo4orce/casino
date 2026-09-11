@@ -320,6 +320,8 @@ class database:
       desc=proto.ldesc
     )
 
+    self.table_by_name(database.ALIAS_TABLE).delete(zone_id=proto.zone_id, id=proto.id, type='npc')
+
     for alias in proto.aliases():
       self.save_alias(proto.zone_id, proto.id, 'npc', alias)
 
@@ -932,6 +934,7 @@ capitalize a word.</p>"""
 
     for npcp in self.npc_table():
       new_npcp = npc_proto_data.npc_proto_data()
+      new_npcp.remove_all_aliases() # TODO: shouldn't have to do this.  edit entity_proto_data's constructor to avoid this line
       new_npcp.zone_id = npcp['zone_id']
       new_npcp.id = npcp['id']
       new_npcp.name = npcp['name']

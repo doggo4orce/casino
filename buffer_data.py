@@ -210,6 +210,12 @@ class buffer_data:
       
     return ""
 
+  def __contains__(self, str):
+    for line in self:
+      if str in line:
+        return True
+    return False
+
   def __str__(self):
     return self.str(numbers=False)
 

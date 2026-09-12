@@ -172,6 +172,10 @@ def editor_find_replace_text(d, replace, replace_all=False):
   old_text = match.group(1)
   new_text = match.group(2)
 
+  if old_text not in d.write_buffer:
+    d.write(f"String '{old_text}' not found.\r\n")
+    return
+    
   if replace_all:
     d.write(f"Replacing all occurances of '{old_text}' with '{new_text}'.")
     for line in d.write_buffer:

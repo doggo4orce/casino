@@ -96,11 +96,12 @@ def input_handler_parse_get_name(d, mud, db, command, argument):
   mudlog.info(f"{command.capitalize()} is logging in.")
 
 def input_handler_parse_confirm_name(d, command):
-  if command[0] in ['y', 'Y']:
+  
+  if command != "" and command[0] in ['y', 'Y']:
     d.state = descriptor_data.descriptor_state.GET_NEW_PASS
     d.send(bytes(telnet.will_echo))
     d.write(f"Give me a password for {d.login_info.name}: ")
-  elif command[0] in ['n', 'N']:
+  elif command != "" and command[0] in ['n', 'N']:
     d.state = descriptor_data.descriptor_state.GET_NAME
     d.write("Okay, what IS it, then? ")
   else:

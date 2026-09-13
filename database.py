@@ -317,7 +317,7 @@ class database:
       id=proto.id,
       name=proto.name,
       ldesc=proto.ldesc,
-      desc=proto.ldesc
+      desc=proto.desc
     )
 
     self.table_by_name(database.ALIAS_TABLE).delete(zone_id=proto.zone_id, id=proto.id, type='npc')

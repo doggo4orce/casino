@@ -112,7 +112,7 @@ class descriptor_data:
       ret_val = self._socket.recv(size)
     except Exception as e:
       mudlog.error(e)
-      return
+      return ""
     return ret_val
 
   def poll_for_input(self, timeout=0):

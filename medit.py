@@ -10,12 +10,13 @@ import npc_data
 import npc_proto_data
 
 class medit_state(enum.IntEnum):
-  MEDIT_MAIN_MENU      = 1
-  MEDIT_EDIT_NAME      = 2
-  MEDIT_CONFIRM_SAVE   = 3
-  MEDIT_EDIT_DESC      = 4
-  MEDIT_EDIT_LDESC     = 5
-  MEDIT_EDIT_ALIAS     = 6
+  MEDIT_MAIN_MENU       = 1
+  MEDIT_EDIT_NAME       = 2
+  MEDIT_CONFIRM_SAVE    = 3
+  MEDIT_EDIT_DESC       = 4
+  MEDIT_EDIT_LDESC      = 5
+  MEDIT_EDIT_ALIAS      = 6
+  MEDIT_GET_COPY_TARGET = 7
 
 def medit_display_main_menu(d):
   medit_save = d.olc.save_data
@@ -28,7 +29,7 @@ def medit_display_main_menu(d):
   out_str += f"{desc_buffer.clean_up().display(d.character.page_width, indent=True, color=True)}{NORMAL}\r\n"
   out_str += f"{GREEN}3{NORMAL}) L-Desc:-\r\n{YELLOW}{medit_save.ldesc}{NORMAL}\r\n"
   out_str += f"{GREEN}4{NORMAL}) Aliases: {YELLOW}{', '.join(medit_save.aliases)}{NORMAL}\r\n"
-  out_str += f"{GREEN}C{NORMAL}) Copy NPC\r\n"
+  out_str += f"{GREEN}C{NORMAL}) Make Copy NPC\r\n"
   out_str += f"{GREEN}X{NORMAL}) Delete NPC\r\n"
   out_str += f"{GREEN}Q{NORMAL}) Quit\r\n"
   out_str += "Enter choice : "
@@ -85,6 +86,10 @@ def medit_parse_main_menu(d, input):
       medit_save = d.olc.save_data
       d.olc.state = medit_state.MEDIT_EDIT_ALIAS
       d.write("Enter aliases, separated by spaces : ")
+    case 'C':
+      medit_save = d.olc.save_data
+      d.olc.state = medit_state.MEDIT_GET_COPY_TARGET
+      d.write("Make copy with which (internal) ID? : ")
     case 'Q':
       if d.olc.changes:
         d.olc.state = medit_state.MEDIT_CONFIRM_SAVE
@@ -106,6 +111,15 @@ def medit_parse_edit_ldesc(d, input):
   medit_save.ldesc = input
   d.olc.state = medit_state.MEDIT_MAIN_MENU
   medit_display_main_menu(d)
+
+def medit_parse_get_copy_target(d, input, mud, db):
+  if input == "":
+    d.olc.state = medit_state.MEDIT_MAIN_MENU
+    medit_display_main_menu(d)
+    return
+
+  if not string_handling.valid_id(input):
+    pass
 
 def medit_parse_confirm_save(d, input, mud, db):
   if input == "":

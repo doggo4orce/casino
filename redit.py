@@ -115,7 +115,7 @@ def redit_parse_edit_copy(d, input, server, mud, db):
 
   redit_save = d.olc.save_data
   zone_id = redit_save.attributes.uid.zone_id
-  print(zone_id)
+
   if mud.room_by_uid(zone_id, new_room_id) != None:
     d.write("That room already exists!\r\nTry again : ")
     return

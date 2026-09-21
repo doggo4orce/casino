@@ -104,7 +104,7 @@ class descriptor_data:
     try:
       self._socket.send(bytes)
     except socket.error:
-      mudlog.warning("Trying to write to disconnected socket: {}.".format(self.addr))
+      mudlog.warning(f"Trying to write to disconnected socket: {self.client.term_host}.")
       self.disconnected = True
 
   def recv(self, size):

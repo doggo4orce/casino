@@ -106,6 +106,22 @@ def do_colors(ch, scmd, argument, server, mud, db, command_interpreter):
 
   ch.write(out_str)
 
+def do_missile(ch, scmd, argument, server, mud, db, command_interpreter):
+
+  def missile(c, mu, db):
+    mu.echo_around(c, None, f"{BRIGHT_YELLOW}{c} fires a magical missile at their target.\r\n{NORMAL}")
+    c.write(f"{BRIGHT_YELLOW}You fire a magical missile at your target.\r\n{NORMAL}")
+
+  mud.add_event(event_data.event_data(ch, missile, 60))
+  mud.add_event(event_data.event_data(ch, missile, 120))
+  mud.add_event(event_data.event_data(ch, missile, 180))
+  mud.add_event(event_data.event_data(ch, missile, 210))
+  mud.add_event(event_data.event_data(ch, missile, 225))
+  mud.add_event(event_data.event_data(ch, missile, 232))
+  mud.add_event(event_data.event_data(ch, missile, 235))
+  mud.add_event(event_data.event_data(ch, missile, 237))
+  mud.add_event(event_data.event_data(ch, missile, 238))
+
 def do_give(ch, scmd, argument, server, mud, db, command_interpreter):
   args = argument.split()
   num_args = len(args)
